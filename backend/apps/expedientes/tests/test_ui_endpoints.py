@@ -1,6 +1,6 @@
 import pytest
 from rest_framework.test import APIClient
-from .tests_factories import create_user, create_expediente
+from .factories import create_user, create_expediente
 
 @pytest.fixture
 def api_client():
