@@ -24,7 +24,7 @@ class LoginView(APIView):
                 'user': {
                     'id': user.id,
                     'username': user.username,
-                    'is_staff': user.is_staff
+                    'role': 'CEO' if user.is_superuser else 'User'
                 },
                 'csrfToken': csrf_token
             }, status=status.HTTP_200_OK)
@@ -42,10 +42,11 @@ class MeView(APIView):
 
     def get(self, request):
         return Response({
-            'id': request.user.id,
-            'username': request.user.username,
-            'is_staff': request.user.is_staff,
-            'email': request.user.email,
+            'user': {
+                'id': request.user.id,
+                'username': request.user.username,
+                'role': 'CEO' if request.user.is_superuser else 'User'
+            }
         })
 
 class DashboardView(APIView):

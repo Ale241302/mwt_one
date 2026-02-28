@@ -1,8 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import api from '@/lib/api';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export interface User {
     id: number;
@@ -24,29 +24,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
-    const pathname = usePathname();
 
-    const checkAuth = async () => {
+    const checkAuth = useCallback(async () => {
         try {
             const response = await api.get('/core/auth/me/');
             setUser(response.data.user);
-            if (pathname === '/login') {
-                router.push('/');
-            }
         } catch {
             setUser(null);
-            if (pathname !== '/login') {
-                router.push('/login');
-            }
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
+    // ✅ Solo corre UNA VEZ al montar, no en cada cambio de ruta
     useEffect(() => {
         checkAuth();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pathname]);
+    }, [checkAuth]);
 
     const login = (newUser: User) => {
         setUser(newUser);

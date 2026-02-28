@@ -3,7 +3,8 @@
 import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
@@ -13,6 +14,14 @@ export default function DashboardLayout({
 }) {
     const { user, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const router = useRouter();
+
+    // ✅ Redirect explícito cuando no hay sesión
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push('/login');
+        }
+    }, [loading, user, router]);
 
     if (loading) {
         return (
@@ -26,23 +35,18 @@ export default function DashboardLayout({
         );
     }
 
-    // If no user, the interceptor or AuthContext will redirect to /login
     if (!user) {
-        return null;
+        return null; // ← router.push('/login') ya fue llamado arriba
     }
 
     return (
         <div className="flex min-h-screen bg-bg">
             <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-
-            <div
-                className={cn(
-                    "flex-1 flex flex-col min-w-0 transition-all-custom",
-                    sidebarOpen ? "ml-60" : "ml-16"
-                )}
-            >
+            <div className={cn(
+                "flex-1 flex flex-col min-w-0 transition-all-custom",
+                sidebarOpen ? "ml-60" : "ml-16"
+            )}>
                 <Header />
-
                 <main className="flex-1 p-6 md:p-8 overflow-x-hidden">
                     <div className="max-w-7xl mx-auto">
                         {children}
