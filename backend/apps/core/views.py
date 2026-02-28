@@ -6,6 +6,7 @@ from rest_framework import status, permissions
 from apps.expedientes.models import Expediente
 from django.db.models import Sum
 from apps.expedientes.enums import ExpedienteStatus
+from apps.core.serializers import UserSerializer
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -17,15 +18,10 @@ class LoginView(APIView):
         
         if user is not None:
             login(request, user)
-            # Fetch CSRF token to send back or just ensure it is rotated
             csrf_token = get_token(request)
             return Response({
                 'detail': 'Login successful.',
-                'user': {
-                    'id': user.id,
-                    'username': user.username,
-                    'role': 'CEO' if user.is_superuser else 'User'
-                },
+                'user': UserSerializer(user).data,
                 'csrfToken': csrf_token
             }, status=status.HTTP_200_OK)
         return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -42,11 +38,7 @@ class MeView(APIView):
 
     def get(self, request):
         return Response({
-            'user': {
-                'id': request.user.id,
-                'username': request.user.username,
-                'role': 'CEO' if request.user.is_superuser else 'User'
-            }
+            'user': UserSerializer(request.user).data
         })
 
 class DashboardView(APIView):
