@@ -50,13 +50,14 @@ class TestSprint3API:
         
         response = api_client.get('/api/expedientes/')
         assert response.status_code == 200
-        assert isinstance(response.data, list)
-        assert len(response.data) >= 2
+        assert 'results' in response.data
+        assert isinstance(response.data['results'], list)
+        assert len(response.data['results']) >= 2
         
         # Test filtering
         response_filtered = api_client.get('/api/expedientes/?status=REGISTRO')
         assert response_filtered.status_code == 200
-        assert all(exp['status'] == 'REGISTRO' for exp in response_filtered.data)
+        assert all(exp['status'] == 'REGISTRO' for exp in response_filtered.data['results'])
 
     def test_expediente_detail_bundle(self, api_client, user):
         api_client.force_authenticate(user=user)

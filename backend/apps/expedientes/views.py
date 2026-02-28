@@ -53,58 +53,88 @@ from apps.expedientes.services import get_available_commands, COMMAND_SPEC
 from apps.expedientes.serializers_ui import UIExpedienteListSerializer, ExpedienteBundleSerializer
 from django.utils import timezone
 
+from rest_framework.pagination import PageNumberPagination
+
+class ExpedientePagination(PageNumberPagination):
+    page_size = 25
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 class ListExpedientesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         qs = Expediente.objects.select_related('client').prefetch_related(
             'artifacts', 'cost_lines'
-        ).all().order_by('-created_at')
-        
+        ).all()
+
+        # Filtros
         status_param = request.query_params.get('status')
-        client_id = request.query_params.get('client_id')
-        
+        brand_param  = request.query_params.get('brand_name')
+        client_param = request.query_params.get('client_name__icontains')
+        is_blocked   = request.query_params.get('is_blocked')
+        ordering     = request.query_params.get('ordering', '-created_at')
+
         if status_param:
             qs = qs.filter(status=status_param)
-        if client_id:
-            qs = qs.filter(client_id=client_id)
-            
-        exp_list = list(qs)
-        exp_ids = [e.pk for e in exp_list]
-        events_by_exp = {}
-        if exp_ids:
-            from apps.expedientes.models import EventLog
-            from apps.expedientes.enums import AggregateType
-            all_events = EventLog.objects.filter(
-                aggregate_id__in=exp_ids, 
-                aggregate_type=AggregateType.EXPEDIENTE
-            ).order_by('occurred_at')
-            for ev in all_events:
-                events_by_exp.setdefault(ev.aggregate_id, []).append(ev)
+        if brand_param:
+            qs = qs.filter(brand=brand_param)
+        if client_param:
+            qs = qs.filter(client__legal_name__icontains=client_param)
+        if is_blocked == 'true':
+            qs = qs.filter(is_blocked=True)
+
+        # Ordenamiento seguro
+        ALLOWED_ORDERINGS = {
+            'created_at', '-created_at',
+            'credit_days_elapsed', '-credit_days_elapsed',
+            'total_cost', '-total_cost',
+            'last_event_at', '-last_event_at',
+            'status', '-status',
+        }
+        if ordering not in ALLOWED_ORDERINGS:
+            ordering = '-created_at'
+        # Nota: credit_days_elapsed, total_cost, last_event_at son calculados, usamos DB fallback
+        db_ordering = ordering if ordering.lstrip('-') in ('created_at', 'status') else '-created_at'
+        qs = qs.order_by(db_ordering)
 
         now = timezone.now()
+        exp_list = list(qs)
+        exp_ids  = [e.pk for e in exp_list]
+
+        events_by_exp = {}
+        if exp_ids:
+            from apps.expedientes.enums import AggregateType
+            for ev in EventLog.objects.filter(
+                aggregate_id__in=exp_ids,
+                aggregate_type=AggregateType.EXPEDIENTE
+            ).order_by('occurred_at'):
+                events_by_exp.setdefault(ev.aggregate_id, []).append(ev)
+
         for exp in exp_list:
-            exp.total_cost = sum(c.amount for c in exp.cost_lines.all())
+            exp.total_cost    = sum(c.amount for c in exp.cost_lines.all())
             exp.artifact_count = exp.artifacts.count()
-            
-            exp_events = events_by_exp.get(exp.pk, [])
-            exp.last_event_at = exp_events[-1].occurred_at if exp_events else None
-            
+            evs = events_by_exp.get(exp.pk, [])
+            exp.last_event_at = evs[-1].occurred_at if evs else None
+
             if exp.credit_clock_started_at:
                 days = (now - exp.credit_clock_started_at).days
                 exp.credit_days_elapsed = days
-                if days <= 15:
-                    exp.credit_band = 'OK'
-                elif days <= 30:
-                    exp.credit_band = 'WARNING'
+                if days >= 75:
+                    exp.credit_band = 'CORAL'
+                elif days >= 60:
+                    exp.credit_band = 'AMBER'
                 else:
-                    exp.credit_band = 'CRITICAL'
+                    exp.credit_band = 'MINT'
             else:
                 exp.credit_days_elapsed = 0
                 exp.credit_band = 'MINT'
-                
-        data = UIExpedienteListSerializer(exp_list, many=True).data
-        return Response(data)
+
+        # Paginación — retorna {count, next, previous, results}
+        paginator = ExpedientePagination()
+        page = paginator.paginate_queryset(exp_list, request)
+        data = UIExpedienteListSerializer(page, many=True).data
+        return paginator.get_paginated_response(data)
 
 class ExpedienteBundleView(APIView):
     permission_classes = [IsAuthenticated]
