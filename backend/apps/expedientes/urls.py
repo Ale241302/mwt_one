@@ -1,7 +1,10 @@
 """
-Sprint 1 — URL Registry (Tarea 8)
-18 URL patterns under /api/expedientes/
+Sprint 1 — URL Registry (Item 7)
+21 URL patterns under /api/expedientes/
 Ref: LOTE_SM_SPRINT1 Item 7
+
+FIX-4: NO routes for C19 SupersedeArtifact, C20 VoidArtifact (Sprint 2).
+FIX-4: NO routes for ListExpedientes, ExpedienteBundle (Sprint 3).
 """
 from django.urls import path
 from apps.expedientes.views import (
@@ -24,10 +27,6 @@ from apps.expedientes.views import (
     BlockExpedienteView,
     UnblockExpedienteView,
     RegisterPaymentView,
-    SupersedeArtifactView,
-    VoidArtifactView,
-    ListExpedientesView,
-    ExpedienteBundleView,
 )
 
 app_name = 'expedientes'
@@ -35,7 +34,7 @@ app_name = 'expedientes'
 urlpatterns = [
     # C1: CreateExpediente (POST /api/expedientes/)
     path('', CreateExpedienteView.as_view(), name='create'),
-    
+
     # C2-C5: REGISTRO phase
     path('<uuid:pk>/register-oc/', RegisterOCView.as_view(), name='register-oc'),
     path('<uuid:pk>/register-proforma/', RegisterProformaView.as_view(), name='register-proforma'),
@@ -65,4 +64,12 @@ urlpatterns = [
 
     # C21: RegisterPayment
     path('<uuid:pk>/register-payment/', RegisterPaymentView.as_view(), name='register-payment'),
+
+    # ────────────────────────────────────────────────
+    # SPRINT 2 — Will be added here:
+    # path('<uuid:pk>/supersede-artifact/', SupersedeArtifactView.as_view(), name='supersede-artifact'),
+    # path('<uuid:pk>/void-artifact/', VoidArtifactView.as_view(), name='void-artifact'),
+    # SPRINT 3 — Will be added to config/urls.py under /api/ui/:
+    # path('', ListExpedientesView.as_view(), name='list'),
+    # path('<uuid:pk>/', ExpedienteBundleView.as_view(), name='bundle'),
 ]
