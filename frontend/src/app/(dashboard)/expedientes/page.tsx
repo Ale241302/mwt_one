@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/api";
 import { Search, ShieldAlert, X, ArrowUp, ArrowDown, Folder, ChevronLeft, ChevronRight } from "lucide-react";
@@ -9,7 +9,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 interface Expediente {
-    id: number;
+    id: string;
     custom_ref: string;
     status: string;
     brand_name: string;
@@ -37,7 +37,7 @@ const brandOptions = [
     "SKECHERS", "ON", "SPEEDO", "TOMS", "ASICS", "VIVAIA"
 ];
 
-export default function ExpedientesListPage() {
+function ExpedientesContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -331,5 +331,17 @@ export default function ExpedientesListPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function ExpedientesListPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-64 text-text-tertiary">
+                Cargando expedientes...
+            </div>
+        }>
+            <ExpedientesContent />
+        </Suspense>
     );
 }
