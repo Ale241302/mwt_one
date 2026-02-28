@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mwt.one — Sprint 3 Visual Spec para AG-03 Frontend</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════
+   DESIGN TOKENS — from ENT_PLAT_DESIGN_TOKENS v1
+   ══════════════════════════════════════════════════ */
+:root {
+  --navy: #013A57;
+  --navy-light: #014A73;
+  --navy-dark: #012B42;
+  --mint: #75CBB3;
+  --mint-soft: #E8F5F0;
+  --mint-dark: #5BB89E;
+  --ice: #A8D8EA;
+  --ice-soft: #EDF6FB;
+
+  --amber: #E8A23E;
+  --amber-soft: #FFF3DC;
+  --coral: #E85D5D;
+  --coral-soft: #FDECEC;
+  --success: #22A06B;
+  --success-soft: #DCFFF0;
+
+  --bg: #F8F9FB;
+  --bg-alt: #F0F2F5;
+  --surface: #FFFFFF;
+  --surface-hover: #F5F6F8;
+  --border: #E2E5EA;
+  --border-strong: #C8CDD5;
+  --divider: #ECEEF1;
+
+  --text-primary: #013A57;
+  --text-secondary: #3D4F5C;
+  --text-tertiary: #7A8A96;
+  --text-disabled: #B0BAC4;
+  --text-inverse: #FFFFFF;
+
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+  --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px;
+
+  --radius-sm:4px; --radius-md:6px; --radius-lg:8px;
+  --radius-xl:12px; --radius-2xl:16px; --radius-full:9999px;
+
+  --shadow-sm: 0 1px 3px rgba(1,58,87,.06), 0 1px 2px rgba(1,58,87,.04);
+  --shadow-md: 0 4px 12px rgba(1,58,87,.08), 0 2px 4px rgba(1,58,87,.04);
+  --shadow-lg: 0 12px 32px rgba(1,58,87,.12), 0 4px 8px rgba(1,58,87,.06);
+
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 200ms ease-out;
+
+  --sidebar-w: 240px;
+  --sidebar-collapsed: 64px;
+  --header-h: 56px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: var(--font-body); background: var(--bg); color: var(--text-primary); font-size: 14px; line-height: 1.5; }
+
+/* ══════════════════════════════════════════════════
+   SPEC NAVIGATION (top bar to switch views)
+   ══════════════════════════════════════════════════ */
+.spec-nav {
+  position: sticky; top: 0; z-index: 1000;
+  background: var(--navy); color: var(--text-inverse);
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 20px;
+  border-bottom: 3px solid var(--mint);
+  font-size: 13px;
+}
+.spec-nav .logo { font-weight: 800; font-size: 16px; letter-spacing: -.5px; margin-right: 16px; }
+.spec-nav .logo span { color: var(--mint); }
+.spec-nav button {
+  background: transparent; border: 1px solid rgba(255,255,255,.2); color: var(--text-inverse);
+  padding: 6px 14px; border-radius: var(--radius-full); cursor: pointer;
+  font-family: var(--font-body); font-size: 12px; font-weight: 600;
+  transition: all var(--transition-fast);
+}
+.spec-nav button:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.4); }
+.spec-nav button.active { background: var(--mint); color: var(--navy); border-color: var(--mint); }
+.spec-nav .badge { background: var(--coral); color: white; font-size: 10px; padding: 2px 8px; border-radius: var(--radius-full); font-weight: 700; margin-left: auto; }
+
+/* ══════════════════════════════════════════════════
+   SCREEN CONTAINER
+   ══════════════════════════════════════════════════ */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ══════════════════════════════════════════════════
+   SCREEN 0: LOGIN
+   ══════════════════════════════════════════════════ */
+.login-wrap {
+  min-height: calc(100vh - 50px);
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 60%, #001824 100%);
+}
+.login-card {
+  background: var(--surface); border-radius: var(--radius-2xl);
+  padding: 48px 40px; width: 380px; box-shadow: var(--shadow-lg);
+}
+.login-card .brand { text-align: center; margin-bottom: 32px; }
+.login-card .brand h1 { font-size: 28px; font-weight: 800; color: var(--navy); letter-spacing: -1px; }
+.login-card .brand h1 span { color: var(--mint); }
+.login-card .brand p { color: var(--text-tertiary); font-size: 13px; margin-top: 4px; }
+.login-card label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; margin-top: 16px; }
+.login-card input {
+  width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-lg);
+  font-family: var(--font-body); font-size: 14px; color: var(--text-primary);
+  transition: border var(--transition-fast);
+  outline: none;
+}
+.login-card input:focus { border-color: var(--mint); box-shadow: 0 0 0 3px var(--mint-soft); }
+.login-card .btn-login {
+  width: 100%; margin-top: 24px; padding: 12px; border: none; border-radius: var(--radius-lg);
+  background: var(--navy); color: white; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: background var(--transition-fast);
+}
+.login-card .btn-login:hover { background: var(--navy-light); }
+.login-card .footnote { text-align: center; margin-top: 16px; font-size: 11px; color: var(--text-disabled); }
+
+/* ══════════════════════════════════════════════════
+   LAYOUT: SIDEBAR + MAIN
+   ══════════════════════════════════════════════════ */
+.app-layout { display: flex; min-height: calc(100vh - 50px); }
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-w); background: var(--navy); color: var(--text-inverse);
+  display: flex; flex-direction: column;
+  position: sticky; top: 50px; height: calc(100vh - 50px);
+  transition: width var(--transition-normal);
+  overflow: hidden;
+}
+.sidebar-brand { padding: 20px 20px 24px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.sidebar-brand h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.sidebar-brand h2 span { color: var(--mint); }
+.sidebar-brand p { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 2px; }
+.sidebar-nav { flex: 1; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: var(--radius-lg);
+  cursor: pointer; transition: all var(--transition-fast);
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.65);
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { background: rgba(255,255,255,.06); color: white; }
+.nav-item.active {
+  background: rgba(117,203,179,.08); color: white;
+  border-left-color: var(--mint);
+}
+.nav-item .icon { width: 20px; text-align: center; flex-shrink: 0; font-size: 16px; }
+.nav-item.disabled { opacity: .3; cursor: default; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,.08); font-size: 12px; color: rgba(255,255,255,.35); }
+
+/* Main content */
+.main { flex: 1; min-width: 0; }
+.main-header {
+  height: var(--header-h); background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px; justify-content: space-between;
+  position: sticky; top: 50px; z-index: 100;
+}
+.main-header h3 { font-size: 15px; font-weight: 700; }
+.main-content { padding: 24px; }
+
+/* ══════════════════════════════════════════════════
+   SCREEN 1: DASHBOARD
+   ══════════════════════════════════════════════════ */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface); border-radius: var(--radius-xl); padding: 20px 24px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+  transition: box-shadow var(--transition-fast);
+}
+.stat-card:hover { box-shadow: var(--shadow-md); }
+.stat-card .label { font-size: 12px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .5px; }
+.stat-card .value { font-size: 36px; font-weight: 800; margin-top: 4px; letter-spacing: -1.5px; color: var(--navy); }
+.stat-card .sub { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; }
+.stat-card.alert .value { color: var(--coral); }
+.stat-card.warning .value { color: var(--amber); }
+.stat-card.ok .value { color: var(--success); }
+
+.panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.panel {
+  background: var(--surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border); overflow: hidden;
+}
+.panel-head {
+  padding: 14px 20px; font-size: 13px; font-weight: 700; color: var(--text-primary);
+  border-bottom: 1px solid var(--divider); display: flex; align-items: center; gap: 8px;
+}
+.panel-head .dot { width: 8px; height: 8px; border-radius: 50%; }
+.panel-body { padding: 0; }
+
+/* ══════════════════════════════════════════════════
+   SHARED: TABLE
+   ══════════════════════════════════════════════════ */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; font-size: 11px; font-weight: 700; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: .5px; padding: 10px 16px;
+  border-bottom: 1.5px solid var(--border);
+  cursor: pointer; user-select: none;
+}
+.data-table th:hover { color: var(--navy); }
+.data-table td { padding: 12px 16px; border-bottom: 1px solid var(--divider); font-size: 13px; }
+.data-table tr:nth-child(even) td { background: var(--bg-alt); }
+.data-table tr:hover td { background: var(--surface-hover); }
+.data-table tr.blocked td { border-right: 3px solid var(--coral); }
+.data-table .ref { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--navy); cursor: pointer; }
+.data-table .ref:hover { text-decoration: underline; color: var(--navy-light); }
+.data-table .amount { font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
+.data-table .time { color: var(--text-tertiary); font-size: 12px; }
+
+/* ══════════════════════════════════════════════════
+   SHARED: BADGES
+   ══════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: var(--radius-full); font-size: 11px; font-weight: 700;
+}
+.badge-mint { background: var(--mint-soft); color: #1A7A5C; }
+.badge-amber { background: var(--amber-soft); color: #9A6A10; }
+.badge-coral { background: var(--coral-soft); color: #B93636; }
+.badge-navy { background: var(--ice-soft); color: var(--navy); }
+.badge-gray { background: var(--bg-alt); color: var(--text-tertiary); }
+.badge-success { background: var(--success-soft); color: #0D6E48; }
+.badge-blocked { background: var(--coral); color: white; }
+
+/* Credit dot */
+.credit-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: 6px; }
+.credit-dot.mint { background: var(--mint); }
+.credit-dot.amber { background: var(--amber); }
+.credit-dot.coral { background: var(--coral); }
+
+/* ══════════════════════════════════════════════════
+   SHARED: BUTTONS
+   ══════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius-lg); border: none;
+  font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all var(--transition-fast);
+}
+.btn-primary { background: var(--navy); color: white; }
+.btn-primary:hover { background: var(--navy-light); }
+.btn-secondary { background: var(--surface); color: var(--navy); border: 1.5px solid var(--border); }
+.btn-secondary:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+.btn-danger { background: var(--coral); color: white; }
+.btn-danger:hover { background: #D04848; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════════════
+   FILTERS BAR
+   ══════════════════════════════════════════════════ */
+.filters {
+  display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;
+}
+.filter-select {
+  padding: 7px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-lg);
+  font-family: var(--font-body); font-size: 12px; color: var(--text-secondary);
+  background: var(--surface); cursor: pointer;
+}
+.filter-select:focus { border-color: var(--mint); outline: none; }
+.filter-toggle {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer;
+}
+.filter-toggle input[type="checkbox"] { accent-color: var(--coral); }
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; font-size: 12px; color: var(--text-tertiary);
+}
+.pagination .pages { display: flex; gap: 4px; }
+.pagination .pages button {
+  padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--surface); font-size: 12px; cursor: pointer; font-family: var(--font-body);
+}
+.pagination .pages button.active-page { background: var(--navy); color: white; border-color: var(--navy); }
+
+/* ══════════════════════════════════════════════════
+   SCREEN 3: DETAIL
+   ══════════════════════════════════════════════════ */
+.detail-header {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
+}
+.detail-header .ref-big { font-family: var(--font-mono); font-size: 24px; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
+.detail-header .badges { display: flex; gap: 8px; align-items: center; }
+.back-btn { color: var(--text-tertiary); font-size: 12px; cursor: pointer; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 4px; }
+.back-btn:hover { color: var(--navy); }
+
+/* Timeline */
+.timeline-wrap {
+  background: var(--surface); border-radius: var(--radius-xl); padding: 24px 28px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 20px;
+}
+.timeline-wrap h4 { font-size: 13px; font-weight: 700; color: var(--text-tertiary); margin-bottom: 20px; text-transform: uppercase; letter-spacing: .5px; }
+.timeline {
+  display: flex; align-items: flex-start; position: relative;
+  padding: 0 8px;
+}
+.timeline-step {
+  flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2;
+  min-width: 90px;
+}
+.timeline-node {
+  width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; position: relative;
+}
+.timeline-node.completed { background: var(--mint); color: white; }
+.timeline-node.current { background: var(--navy); color: white; box-shadow: 0 0 0 6px rgba(1,58,87,.15); animation: pulse 2s infinite; }
+.timeline-node.future { background: transparent; border: 2px dashed var(--border-strong); color: var(--text-disabled); }
+.timeline-node.blocked { background: var(--coral); color: white; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 6px rgba(1,58,87,.15); } 50% { box-shadow: 0 0 0 10px rgba(1,58,87,.08); } }
+.timeline-label { margin-top: 10px; font-size: 11px; font-weight: 600; color: var(--text-secondary); text-align: center; }
+.timeline-days { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; }
+/* Lines between nodes */
+.timeline-line {
+  position: absolute; top: 16px; height: 3px; z-index: 1;
+  left: calc(50% + 16px); right: calc(-50% + 16px);
+}
+.timeline-step:last-child .timeline-line { display: none; }
+.timeline-line.completed { background: var(--mint); }
+.timeline-line.current { background: linear-gradient(90deg, var(--mint), var(--border)); }
+.timeline-line.future { background: var(--border); border-top: 2px dashed var(--border-strong); height: 0; top: 17px; }
+
+/* Detail sections grid */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.detail-section {
+  background: var(--surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border); overflow: hidden;
+}
+.detail-section.full-width { grid-column: 1 / -1; }
+.section-head {
+  padding: 14px 20px; font-size: 13px; font-weight: 700; border-bottom: 1px solid var(--divider);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.section-body { padding: 16px 20px; }
+
+/* Info grid inside detail */
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+.info-item .info-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .3px; }
+.info-item .info-value { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-top: 2px; }
+
+/* Actions panel */
+.actions-panel {
+  background: var(--surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border); padding: 20px; margin-bottom: 20px;
+}
+.actions-panel h4 { font-size: 12px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 14px; }
+.actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.actions-row:last-child { margin-bottom: 0; }
+.action-divider { width: 100%; height: 1px; background: var(--divider); margin: 4px 0; }
+.btn .tooltip {
+  display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  background: var(--navy); color: white; padding: 6px 12px; border-radius: var(--radius-md);
+  font-size: 11px; white-space: nowrap; pointer-events: none;
+}
+.btn:disabled:hover .tooltip { display: block; }
+.btn { position: relative; }
+
+/* Costs table total */
+.cost-total { display: flex; justify-content: space-between; padding: 12px 16px; font-weight: 700; background: var(--bg-alt); border-top: 2px solid var(--border); }
+
+/* Toast */
+.toast-demo {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  padding: 14px 20px; border-radius: var(--radius-xl); font-size: 13px; font-weight: 600;
+  display: none; align-items: center; gap: 8px; box-shadow: var(--shadow-lg);
+  animation: slideUp .3s ease-out;
+}
+.toast-success { background: var(--mint); color: var(--navy); }
+.toast-error { background: var(--coral); color: white; }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(1,58,87,.5); z-index: 5000;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--surface); border-radius: var(--radius-2xl); padding: 32px;
+  width: 420px; max-width: 90vw; box-shadow: var(--shadow-lg);
+}
+.modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.modal p { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
+.modal textarea {
+  width: 100%; min-height: 80px; padding: 10px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg); font-family: var(--font-body); font-size: 13px;
+  resize: vertical; margin-bottom: 16px;
+}
+.modal textarea:focus { border-color: var(--coral); outline: none; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ══════════════════════════════════════════════════
+   SPEC ANNOTATIONS
+   ══════════════════════════════════════════════════ */
+.spec-note {
+  background: #FFFCE6; border: 1px solid #E8D44D; border-radius: var(--radius-lg);
+  padding: 10px 14px; font-size: 11px; color: #6B5E00; margin: 12px 0;
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.spec-note::before { content: "📐"; flex-shrink: 0; }
+.spec-note code { background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 10px; }
+
+/* Loading skeleton */
+.skeleton { background: linear-gradient(90deg, var(--bg-alt) 25%, var(--bg) 50%, var(--bg-alt) 75%); background-size: 200%; animation: shimmer 1.5s infinite; border-radius: var(--radius-md); }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SPEC NAVIGATION BAR
+     ══════════════════════════════════════════════════ -->
+<nav class="spec-nav">
+  <div class="logo">mwt<span>.one</span></div>
+  <button class="active" onclick="showScreen('login')">① Login</button>
+  <button onclick="showScreen('dashboard')">② Dashboard</button>
+  <button onclick="showScreen('list')">③ Lista</button>
+  <button onclick="showScreen('detail')">④ Detalle</button>
+  <span class="badge">SPRINT 3 — VISUAL SPEC v1.0</span>
+</nav>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 0: LOGIN
+     ══════════════════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="brand">
+        <h1>mwt<span>.one</span></h1>
+        <p>Centro de Operaciones</p>
+      </div>
+      <label>Usuario</label>
+      <input type="text" placeholder="alvaro@muitowork.com" value="alvaro@muitowork.com">
+      <label>Contraseña</label>
+      <input type="password" placeholder="••••••••" value="password">
+      <button class="btn-login" onclick="showScreen('dashboard')">Ingresar</button>
+      <div class="footnote">Django session + CSRF cookie · S3-D01</div>
+    </div>
+  </div>
+  <div style="max-width:600px;margin:0 auto;padding:24px;">
+    <div class="spec-note">
+      <b>Item 3 + Item 7:</b> Login via <code>POST /api/auth/login/</code>. Al montar app, <code>GET /api/auth/me/</code> setea CSRF cookie (siempre, incluso en 401). Next.js envía <code>X-CSRFToken</code> header en toda mutación. Redirect a <code>/</code> (dashboard) on success. 401 → error message. Interceptor global: 401 en cualquier call → redirect a login.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 1: DASHBOARD
+     ══════════════════════════════════════════════════ -->
+<div id="screen-dashboard" class="screen">
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>mwt<span>.one</span></h2>
+        <p>Muito Work · v0.3</p>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active"><span class="icon">📊</span> Dashboard</div>
+        <div class="nav-item" onclick="showScreen('list')" style="cursor:pointer"><span class="icon">📁</span> Expedientes</div>
+        <div class="nav-item disabled"><span class="icon">💰</span> Costos <span style="font-size:10px;opacity:.5;margin-left:auto">Sprint 4</span></div>
+        <div class="nav-item disabled"><span class="icon">📈</span> Financiero <span style="font-size:10px;opacity:.5;margin-left:auto">Sprint 5</span></div>
+        <div class="nav-item disabled"><span class="icon">⚙️</span> Config <span style="font-size:10px;opacity:.5;margin-left:auto">Post-MVP</span></div>
+      </nav>
+      <div class="sidebar-footer">
+        <div style="cursor:pointer" onclick="showScreen('login')">🚪 Cerrar sesión</div>
+        <div style="margin-top:8px;font-size:10px;">Alvaro · CEO</div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="main-header">
+        <h3>Dashboard</h3>
+        <span style="font-size:11px;color:var(--text-tertiary)">Auto-refresh cada 60s · Polling</span>
+      </header>
+      <div class="main-content">
+        <div class="spec-note">
+          <b>Item 6:</b> Consume exclusivamente <code>GET /api/ui/dashboard/</code>. No hace calls a <code>/api/ui/expedientes/</code>. Polling 60s con <code>setInterval</code>, no WebSocket.
+        </div>
+
+        <!-- Stat cards -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="label">Expedientes activos</div>
+            <div class="value">47</div>
+            <div class="sub">+3 esta semana</div>
+          </div>
+          <div class="stat-card alert">
+            <div class="label">Alertas crédito</div>
+            <div class="value">8</div>
+            <div class="sub"><span class="credit-dot amber"></span>5 ámbar · <span class="credit-dot coral"></span>3 coral</div>
+          </div>
+          <div class="stat-card alert">
+            <div class="label">Bloqueados</div>
+            <div class="value">2</div>
+            <div class="sub">Día 75+ crédito</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Costo acumulado</div>
+            <div class="value" style="font-variant-numeric:tabular-nums;font-family:var(--font-body)">$284,350</div>
+            <div class="sub">USD · 47 expedientes</div>
+          </div>
+        </div>
+
+        <!-- Panels -->
+        <div class="panel-grid">
+          <!-- Top Risk -->
+          <div class="panel">
+            <div class="panel-head"><span class="dot" style="background:var(--coral)"></span> Top Riesgo Crédito</div>
+            <div class="panel-body">
+              <table class="data-table">
+                <thead><tr><th>Ref</th><th>Estado</th><th>Días</th><th>Band</th></tr></thead>
+                <tbody>
+                  <tr class="blocked"><td class="ref" onclick="showScreen('detail')">EXP-2026-0012</td><td><span class="badge badge-navy">En Tránsito</span></td><td>82</td><td><span class="credit-dot coral"></span> CORAL</td></tr>
+                  <tr class="blocked"><td class="ref">EXP-2026-0019</td><td><span class="badge badge-navy">En Destino</span></td><td>78</td><td><span class="credit-dot coral"></span> CORAL</td></tr>
+                  <tr><td class="ref">EXP-2026-0031</td><td><span class="badge badge-navy">En Tránsito</span></td><td>76</td><td><span class="credit-dot coral"></span> CORAL</td></tr>
+                  <tr><td class="ref">EXP-2026-0008</td><td><span class="badge badge-mint">Producción</span></td><td>68</td><td><span class="credit-dot amber"></span> AMBER</td></tr>
+                  <tr><td class="ref">EXP-2026-0044</td><td><span class="badge badge-mint">Preparación</span></td><td>63</td><td><span class="credit-dot amber"></span> AMBER</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Blocked -->
+          <div class="panel">
+            <div class="panel-head"><span class="dot" style="background:var(--coral)"></span> Bloqueados</div>
+            <div class="panel-body">
+              <table class="data-table">
+                <thead><tr><th>Ref</th><th>Estado</th><th>Razón</th></tr></thead>
+                <tbody>
+                  <tr><td class="ref" onclick="showScreen('detail')">EXP-2026-0012</td><td><span class="badge badge-navy">En Tránsito</span></td><td style="font-size:12px;color:var(--coral)">Crédito día 75 — bloqueado automático</td></tr>
+                  <tr><td class="ref">EXP-2026-0019</td><td><span class="badge badge-navy">En Destino</span></td><td style="font-size:12px;color:var(--coral)">Crédito día 75 — bloqueado automático</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 2: LISTA EXPEDIENTES
+     ══════════════════════════════════════════════════ -->
+<div id="screen-list" class="screen">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><h2>mwt<span>.one</span></h2><p>Muito Work · v0.3</p></div>
+      <nav class="sidebar-nav">
+        <div class="nav-item" onclick="showScreen('dashboard')" style="cursor:pointer"><span class="icon">📊</span> Dashboard</div>
+        <div class="nav-item active"><span class="icon">📁</span> Expedientes</div>
+        <div class="nav-item disabled"><span class="icon">💰</span> Costos</div>
+        <div class="nav-item disabled"><span class="icon">📈</span> Financiero</div>
+        <div class="nav-item disabled"><span class="icon">⚙️</span> Config</div>
+      </nav>
+      <div class="sidebar-footer"><div>🚪 Cerrar sesión</div><div style="margin-top:8px;font-size:10px;">Alvaro · CEO</div></div>
+    </aside>
+    <div class="main">
+      <header class="main-header">
+        <h3>Expedientes</h3>
+        <span style="font-size:12px;color:var(--text-tertiary)">47 activos</span>
+      </header>
+      <div class="main-content">
+        <div class="spec-note">
+          <b>Item 4:</b> Consume <code>GET /api/ui/expedientes/?status=&brand=&client=&is_blocked=&ordering=-credit_days_elapsed&page=1</code>. Paginado default 25, max 100. Tabla con zebra striping. Row bloqueado = <code>border-right 3px coral</code>. Click fila → detalle.
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+          <select class="filter-select">
+            <option>Todos los estados</option>
+            <option>Registro</option>
+            <option>Producción</option>
+            <option>Preparación</option>
+            <option>Tránsito</option>
+            <option>En Destino</option>
+            <option>Facturado</option>
+            <option>Cerrado</option>
+            <option>Cancelado</option>
+          </select>
+          <select class="filter-select">
+            <option>Todas las marcas</option>
+            <option>Marluvas</option>
+          </select>
+          <select class="filter-select">
+            <option>Todos los clientes</option>
+            <option>Sondel</option>
+            <option>MedTech Hub</option>
+          </select>
+          <label class="filter-toggle">
+            <input type="checkbox"> Solo bloqueados
+          </label>
+        </div>
+
+        <!-- Table -->
+        <div style="background:var(--surface);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Ref ↕</th>
+                <th>Estado</th>
+                <th>Cliente</th>
+                <th>Marca</th>
+                <th>Días crédito ↓</th>
+                <th style="text-align:right">Monto ↕</th>
+                <th>Última actividad</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="blocked">
+                <td class="ref" onclick="showScreen('detail')">EXP-2026-0012</td>
+                <td><span class="badge badge-navy">En Tránsito</span></td>
+                <td>Sondel</td>
+                <td>Marluvas</td>
+                <td><span class="credit-dot coral"></span> 82</td>
+                <td class="amount">$18,420.00</td>
+                <td class="time">hace 2h</td>
+              </tr>
+              <tr class="blocked">
+                <td class="ref">EXP-2026-0019</td>
+                <td><span class="badge badge-navy">En Destino</span></td>
+                <td>MedTech Hub</td>
+                <td>Marluvas</td>
+                <td><span class="credit-dot coral"></span> 78</td>
+                <td class="amount">$24,180.00</td>
+                <td class="time">hace 1d</td>
+              </tr>
+              <tr>
+                <td class="ref">EXP-2026-0031</td>
+                <td><span class="badge badge-navy">En Tránsito</span></td>
+                <td>Sondel</td>
+                <td>Marluvas</td>
+                <td><span class="credit-dot coral"></span> 76</td>
+                <td class="amount">$12,850.00</td>
+                <td class="time">hace 3d</td>
+              </tr>
+              <tr>
+                <td class="ref">EXP-2026-0008</td>
+                <td><span class="badge badge-mint">Producción</span></td>
+                <td>Sondel</td>
+                <td>Marluvas</td>
+                <td><span class="credit-dot amber"></span> 68</td>
+                <td class="amount">$9,340.00</td>
+                <td class="time">hace 5d</td>
+              </tr>
+              <tr>
+                <td class="ref">EXP-2026-0044</td>
+                <td><span class="badge badge-mint">Preparación</span></td>
+                <td>MedTech Hub</td>
+                <td>Marluvas</td>
+                <td><span class="credit-dot amber"></span> 63</td>
+                <td class="amount">$15,720.00</td>
+                <td class="time">hace 1d</td>
+              </tr>
+              <tr>
+                <td class="ref">EXP-2026-0047</td>
+                <td><span class="badge badge-mint">Producción</span></td>
+                <td>Sondel</td>
+                <td>Marluvas</td>
+                <td><span class="credit-dot mint"></span> 45</td>
+                <td class="amount">$14,350.00</td>
+                <td class="time">hace 6h</td>
+              </tr>
+              <tr>
+                <td class="ref">EXP-2026-0051</td>
+                <td><span class="badge badge-gray">Registro</span></td>
+                <td>Sondel</td>
+                <td>Marluvas</td>
+                <td><span class="credit-dot mint"></span> 12</td>
+                <td class="amount">$3,200.00</td>
+                <td class="time">hace 12h</td>
+              </tr>
+              <tr>
+                <td class="ref">EXP-2026-0053</td>
+                <td><span class="badge badge-success">Cerrado</span></td>
+                <td>MedTech Hub</td>
+                <td>Marluvas</td>
+                <td><span style="color:var(--text-disabled)">—</span></td>
+                <td class="amount">$22,100.00</td>
+                <td class="time">hace 2sem</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <span>Mostrando 1–8 de 47 expedientes</span>
+          <div class="pages">
+            <button class="active-page">1</button>
+            <button>2</button>
+            <button>→</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 3: DETALLE EXPEDIENTE
+     ══════════════════════════════════════════════════ -->
+<div id="screen-detail" class="screen">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><h2>mwt<span>.one</span></h2><p>Muito Work · v0.3</p></div>
+      <nav class="sidebar-nav">
+        <div class="nav-item" onclick="showScreen('dashboard')" style="cursor:pointer"><span class="icon">📊</span> Dashboard</div>
+        <div class="nav-item active"><span class="icon">📁</span> Expedientes</div>
+        <div class="nav-item disabled"><span class="icon">💰</span> Costos</div>
+        <div class="nav-item disabled"><span class="icon">📈</span> Financiero</div>
+        <div class="nav-item disabled"><span class="icon">⚙️</span> Config</div>
+      </nav>
+      <div class="sidebar-footer"><div>🚪 Cerrar sesión</div><div style="margin-top:8px;font-size:10px;">Alvaro · CEO</div></div>
+    </aside>
+    <div class="main">
+      <header class="main-header">
+        <h3>Detalle expediente</h3>
+      </header>
+      <div class="main-content">
+        <div class="spec-note">
+          <b>Item 5:</b> Consume <code>GET /api/ui/expedientes/{id}</code> (un solo fetch → bundle completo). Re-fetch después de cada acción. <code>available_actions[]</code> viene ordenado por backend: Pipeline PRIMARY → SECONDARY → Ops.
+        </div>
+
+        <div class="back-btn" onclick="showScreen('list')">← Volver a expedientes</div>
+
+        <!-- Header -->
+        <div class="detail-header">
+          <span class="ref-big">EXP-2026-0012</span>
+          <div class="badges">
+            <span class="badge badge-navy">En Tránsito</span>
+            <span class="badge badge-coral">🔴 CORAL · 82 días</span>
+            <span class="badge badge-blocked">⛔ BLOQUEADO</span>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline-wrap">
+          <h4>Timeline del expediente</h4>
+          <div class="timeline">
+            <div class="timeline-step">
+              <div class="timeline-node completed">✓</div>
+              <div class="timeline-line completed"></div>
+              <div class="timeline-label">Registro</div>
+              <div class="timeline-days">2 días</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-node completed">✓</div>
+              <div class="timeline-line completed"></div>
+              <div class="timeline-label">Producción</div>
+              <div class="timeline-days">18 días</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-node completed">✓</div>
+              <div class="timeline-line completed"></div>
+              <div class="timeline-label">Preparación</div>
+              <div class="timeline-days">5 días</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-node current">●</div>
+              <div class="timeline-line current"></div>
+              <div class="timeline-label">En Tránsito</div>
+              <div class="timeline-days">57 días ⚠️</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-node future">5</div>
+              <div class="timeline-line future"></div>
+              <div class="timeline-label">En Destino</div>
+              <div class="timeline-days">—</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-node future">6</div>
+              <div class="timeline-line future"></div>
+              <div class="timeline-label">Facturado</div>
+              <div class="timeline-days">—</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-node future">7</div>
+              <div class="timeline-line future"></div>
+              <div class="timeline-label">Cerrado</div>
+              <div class="timeline-days">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions panel -->
+        <div class="actions-panel">
+          <h4>⚡ Acciones Pipeline (contextuales)</h4>
+          <div class="actions-row">
+            <button class="btn btn-primary" disabled>
+              Confirmar Arribo (C12)
+              <span class="tooltip">Expediente bloqueado — desbloquear primero</span>
+            </button>
+          </div>
+          <div class="action-divider"></div>
+          <h4>🔧 Acciones Ops (siempre visibles)</h4>
+          <div class="actions-row">
+            <button class="btn btn-danger btn-sm" onclick="showModal()">⛔ Desbloquear</button>
+            <button class="btn btn-secondary btn-sm" onclick="showToast('success','Costo registrado: Flete marítimo $2,400')">💰 Registrar Costo</button>
+            <button class="btn btn-danger btn-sm">🔄 Corregir Artefacto</button>
+            <button class="btn btn-danger btn-sm">🗑️ Anular Artefacto</button>
+          </div>
+          <div class="spec-note" style="margin-top:12px;">
+            <b>Contrato:</b> Pipeline actions con <code>enabled:false</code> aparecen greyed out + tooltip con <code>disabled_reason</code>. Ops actions: Block/Unblock según <code>is_blocked</code>. C15 = formulario 4 campos. C19/C20 = <code>artifact_selector</code> (COMPLETED_SAME_TYPE | VOIDABLE_ONLY).
+          </div>
+        </div>
+
+        <!-- Detail grid -->
+        <div class="detail-grid">
+          <!-- Info -->
+          <div class="detail-section">
+            <div class="section-head">📋 Datos del expediente</div>
+            <div class="section-body">
+              <div class="info-grid">
+                <div class="info-item"><div class="info-label">Cliente</div><div class="info-value">Sondel</div></div>
+                <div class="info-item"><div class="info-label">Marca</div><div class="info-value">Marluvas</div></div>
+                <div class="info-item"><div class="info-label">Modo</div><div class="info-value">B — Distribución directa</div></div>
+                <div class="info-item"><div class="info-label">Entidad</div><div class="info-value">Muito Work Limitada</div></div>
+                <div class="info-item"><div class="info-label">Creado</div><div class="info-value">10 Ene 2026</div></div>
+                <div class="info-item"><div class="info-label">Reloj crédito</div><div class="info-value"><span class="credit-dot coral"></span> 82/90 días</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artifacts -->
+          <div class="detail-section">
+            <div class="section-head">📎 Artefactos <span class="badge badge-gray" style="margin-left:auto">4</span></div>
+            <div class="section-body" style="padding:0;">
+              <table class="data-table">
+                <thead><tr><th>Tipo</th><th>Status</th><th>Fecha</th></tr></thead>
+                <tbody>
+                  <tr><td>ART-01 · OC Cliente</td><td><span class="badge badge-success">Completado</span></td><td class="time">10 Ene</td></tr>
+                  <tr><td>ART-02 · Proforma</td><td><span class="badge badge-success">Completado</span></td><td class="time">12 Ene</td></tr>
+                  <tr><td>ART-05 · AWB/BL</td><td><span class="badge badge-success">Completado</span></td><td class="time">7 Feb</td></tr>
+                  <tr><td>ART-09 · Factura MWT</td><td><span class="badge badge-gray">Pendiente</span></td><td class="time">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Documents -->
+          <div class="detail-section">
+            <div class="section-head">📄 Documentos <span class="badge badge-gray" style="margin-left:auto">3</span></div>
+            <div class="section-body" style="padding:0;">
+              <table class="data-table">
+                <thead><tr><th>Nombre</th><th>Tipo</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td>PI-2026-0012.pdf</td><td class="time">Proforma</td><td><a href="#" style="color:var(--navy);font-size:12px;font-weight:600;">⬇ Descargar</a></td></tr>
+                  <tr><td>BL-COSCO-2026-0012.pdf</td><td class="time">BL</td><td><a href="#" style="color:var(--navy);font-size:12px;font-weight:600;">⬇ Descargar</a></td></tr>
+                  <tr><td>OC-Sondel-0012.pdf</td><td class="time">OC</td><td><a href="#" style="color:var(--navy);font-size:12px;font-weight:600;">⬇ Descargar</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Costs -->
+          <div class="detail-section">
+            <div class="section-head">💰 Costos <span class="badge badge-gray" style="margin-left:auto">$18,420</span></div>
+            <div class="section-body" style="padding:0;">
+              <table class="data-table">
+                <thead><tr><th>Concepto</th><th>Categoría</th><th style="text-align:right">Monto</th></tr></thead>
+                <tbody>
+                  <tr><td>Producto Marluvas</td><td><span class="badge badge-gray">product</span></td><td class="amount">$12,800.00</td></tr>
+                  <tr><td>Flete marítimo COSCO</td><td><span class="badge badge-gray">freight</span></td><td class="amount">$2,400.00</td></tr>
+                  <tr><td>Seguro carga</td><td><span class="badge badge-gray">insurance</span></td><td class="amount">$620.00</td></tr>
+                  <tr><td>Agente aduanal CR</td><td><span class="badge badge-gray">customs</span></td><td class="amount">$1,800.00</td></tr>
+                  <tr><td>Handling puerto Caldera</td><td><span class="badge badge-gray">handling</span></td><td class="amount">$800.00</td></tr>
+                </tbody>
+              </table>
+              <div class="cost-total">
+                <span>Total costos</span>
+                <span style="font-variant-numeric:tabular-nums">$18,420.00 USD</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MODAL: CONFIRM ACTION (Block/Unblock example)
+     ══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>⛔ Desbloquear expediente</h3>
+    <p>¿Confirmar desbloqueo de <strong>EXP-2026-0012</strong>? El expediente podrá avanzar de estado nuevamente.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="hideModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="hideModal();showToast('success','Expediente desbloqueado correctamente')">Confirmar desbloqueo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-demo toast-success" id="toast-success">✅ <span id="toast-text"></span></div>
+<div class="toast-demo toast-error" id="toast-error">❌ Error al ejecutar acción</div>
+
+<script>
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  document.querySelectorAll('.spec-nav button').forEach(b => b.classList.remove('active'));
+  const labels = { login: '①', dashboard: '②', list: '③', detail: '④' };
+  document.querySelectorAll('.spec-nav button').forEach(b => {
+    if (b.textContent.includes(labels[id])) b.classList.add('active');
+  });
+}
+
+function showModal() {
+  document.getElementById('modal').classList.add('show');
+}
+function hideModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+function showToast(type, text) {
+  const t = document.getElementById('toast-' + type);
+  if (type === 'success') document.getElementById('toast-text').textContent = text;
+  t.style.display = 'flex';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+// Close modal on overlay click
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) hideModal();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy: #013A57;
+  --navy-light: #014A73;
+  --navy-dark: #012B42;
+  --mint: #75CBB3;
+  --mint-soft: #E8F5F0;
+  --mint-dark: #5BB89E;
+  --ice: #A8D8EA;
+  --ice-soft: #EDF6FB;
+  --amber: #E8A23E;
+  --amber-soft: #FFF3DC;
+  --coral: #E85D5D;
+  --coral-soft: #FDECEC;
+  --success: #22A06B;
+  --success-soft: #DCFFF0;
+  --bg: #F8F9FB;
+  --bg-alt: #F0F2F5;
+  --surface: #FFFFFF;
+  --surface-hover: #F5F6F8;
+  --border: #E2E5EA;
+  --border-strong: #C8CDD5;
+  --divider: #ECEEF1;
+  --text-primary: #013A57;
+  --text-secondary: #3D4F5C;
+  --text-tertiary: #7A8A96;
+  --text-disabled: #B0BAC4;
+  --text-inverse: #FFFFFF;
+
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+  --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px;
+
+  --radius-sm:4px; --radius-md:6px; --radius-lg:8px;
+  --radius-xl:12px; --radius-2xl:16px; --radius-full:9999px;
+
+  --shadow-sm: 0 1px 3px rgba(1,58,87,.06), 0 1px 2px rgba(1,58,87,.04);
+  --shadow-md: 0 4px 12px rgba(1,58,87,.08), 0 2px 4px rgba(1,58,87,.04);
+  --shadow-lg: 0 12px 32px rgba(1,58,87,.12), 0 4px 8px rgba(1,58,87,.06);
+
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 200ms ease-out;
+
+  --sidebar-w: 240px;
+  --sidebar-collapsed: 64px;
+  --header-h: 56px;
+}
+
+[data-theme="dark"] {
+  --bg: #0B1929;
+  --bg-alt: #0E1E30;
+  --surface: #0F2337;
+  --surface-hover: #132D47;
+  --border: #1E3A54;
+  --border-strong: #2A4D6B;
+  --divider: #172E45;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #5A6E82;
+  --text-disabled: #3A4F63;
+  --text-inverse: #0B1929;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.4), 0 2px 4px rgba(0,0,0,.2);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,.5), 0 4px 8px rgba(0,0,0,.3);
+  --navy: #013A57;
+  --navy-light: #1A5A7A;
+  --navy-dark: #060F1A;
+  --mint: #75CBB3;
+  --mint-soft: rgba(117,203,179,.12);
+  --mint-dark: #5BB89E;
+  --ice-soft: rgba(168,216,234,.08);
+  --amber: #FFB347;
+  --amber-soft: rgba(255,179,71,.12);
+  --coral: #FF6B72;
+  --coral-soft: rgba(255,107,114,.12);
+  --success: #75CBB3;
+  --success-soft: rgba(117,203,179,.12);
+}
+
+body {
+  color: var(--text-primary);
+  background: var(--bg);
+  @apply font-body antialiased;
+}
+
+.transition-all-custom {
+  transition: all var(--transition-normal);
+}

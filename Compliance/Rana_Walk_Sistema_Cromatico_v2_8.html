@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rana Walk® — Sistema Cromático v2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@100;200;300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Lexend:wght@400;500;600&family=Roboto:ital,wght@0,400;0,700;1,700&display=swap" rel="stylesheet">
+<style>
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --navy: #013A57;
+    --mint: #75CBB3;
+    --teal: #066383;
+    --dark-slate: #0F172A;
+    --light-mint: #E6FFFB;
+    --lime: #9FE493;
+    --off-white: #F8FAFC;
+    --slate-400: #94A3B8;
+    --slate-600: #475569;
+    --slate-800: #1E293B;
+    --ice-blue: #A8D8EA;
+    --violet: #7B2DBF;
+    --lavanda: #5A1D8E;
+    --magenta: #E040FB;
+    --gold: #C5A05C;
+    --tierra: #5C3A1E;
+    --carbon: #3B3B3B;
+    --cobre: #D4956B;
+    --coral: #EF4E54;
+    --rosa: #F7A8AB;
+    --melocoton: #FFDDC1;
+  }
+  
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: var(--off-white);
+    color: var(--slate-800);
+    line-height: 1.6;
+  }
+  
+  /* ── HEADER ── */
+  .hero {
+    background: var(--dark-slate);
+    color: white;
+    padding: 60px 40px;
+    text-align: center;
+  }
+  .hero h1 {
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: -1px;
+  }
+  .hero h1 span { color: var(--mint); }
+  .hero p { color: var(--slate-400); margin-top: 12px; font-size: 16px; }
+  .hero .badge {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 6px 20px;
+    border: 1px solid var(--mint);
+    border-radius: 999px;
+    color: var(--mint);
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  
+  /* ── LAYOUT ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  
+  section {
+    padding: 60px 0;
+  }
+  section + section { border-top: 1px solid #e2e8f0; }
+  
+  h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  h2 span { color: var(--mint); }
+  
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 32px 0 16px;
+  }
+  
+  .subtitle {
+    color: var(--slate-600);
+    font-size: 15px;
+    margin-bottom: 32px;
+  }
+  
+  .divider {
+    width: 48px;
+    height: 4px;
+    background: var(--mint);
+    border-radius: 2px;
+    margin: 12px 0 24px;
+  }
+  
+  /* ── COLOR SWATCHES ── */
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+  }
+  
+  .swatch {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    background: white;
+  }
+  .swatch-color {
+    height: 80px;
+    display: flex;
+    align-items: flex-end;
+    padding: 8px 12px;
+  }
+  .swatch-color span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.85);
+    color: #333;
+  }
+  .swatch-info {
+    padding: 10px 12px;
+  }
+  .swatch-info .name {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--slate-800);
+  }
+  .swatch-info .use {
+    font-size: 11px;
+    color: var(--slate-600);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+  
+  /* ── PRODUCT SECTIONS ── */
+  .product-section {
+    border-radius: 16px;
+    padding: 32px;
+    margin: 24px 0;
+  }
+  
+  .product-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .product-header .dot {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+  .product-header h3 {
+    margin: 0;
+    font-size: 22px;
+  }
+  .product-header .tag {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  /* ── WCAG TABLE ── */
+  .wcag-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+  }
+  .wcag-table th {
+    background: var(--navy);
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .wcag-table th:first-child { border-radius: 8px 0 0 0; }
+  .wcag-table th:last-child { border-radius: 0 8px 0 0; }
+  .wcag-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+  }
+  .wcag-table tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+  .wcag-table tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+  .wcag-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    min-width: 100px;
+  }
+  .status-block { font-size: 13px; font-weight: 600; display:flex; align-items:center; gap:6px; }
+  .status-block::before { content:''; display:inline-block; width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .status-block.prohibited { color: #DC2626; }
+  .status-block.prohibited::before { background: #DC2626; }
+  .status-block.large-only { color: #D97706; }
+  .status-block.large-only::before { background: #D97706; }
+  
+  /* ── COMPONENT EXAMPLES ── */
+  .component-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+    margin: 24px 0;
+  }
+  
+  .component-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .component-card .preview {
+    padding: 32px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+  }
+  .component-card .label {
+    padding: 12px 16px;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+  }
+  .component-card .label .name {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--slate-800);
+  }
+  .component-card .label .code {
+    font-size: 11px;
+    color: var(--slate-600);
+    font-family: 'Courier New', monospace;
+    margin-top: 4px;
+  }
+  
+  /* ── BUTTONS DEMO ── */
+  .btn-primary {
+    background: var(--mint);
+    color: var(--navy);
+    padding: 12px 32px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .btn-secondary-dark {
+    background: transparent;
+    color: white;
+    padding: 12px 32px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid rgba(117,203,179,0.5);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .btn-secondary-light {
+    background: transparent;
+    color: var(--navy);
+    padding: 12px 32px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid var(--mint);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .btn-consultor {
+    background: transparent;
+    color: var(--mint);
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 13px;
+    border: 1px solid var(--mint);
+    cursor: pointer;
+  }
+  
+  /* ── SHELF SIMULATION ── */
+  .shelf {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .shelf-box {
+    border-radius: 12px;
+    padding: 24px 16px;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+  }
+  .shelf-box .product-name {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    white-space: nowrap;
+  }
+  .shelf-box .temp-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .shelf-box .price-tag {
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 8px;
+    opacity: 0.8;
+  }
+  
+  /* ── PRODUCT GIRO WEB ── */
+  .giro-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 24px 0;
+  }
+  .giro-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .giro-hero {
+    padding: 32px 24px;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .giro-hero h4 {
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .giro-hero p {
+    font-size: 12px;
+    margin-top: 4px;
+    opacity: 0.85;
+  }
+  .giro-body {
+    padding: 16px 24px;
+    background: white;
+    font-size: 13px;
+    color: var(--slate-600);
+  }
+  .giro-body strong { color: var(--navy); }
+  
+  /* ── TOKEN TABLE ── */
+  .token-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 100px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+    align-items: center;
+    font-size: 13px;
+  }
+  .token-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+  .token-name { font-weight: 700; color: var(--slate-800); }
+  .token-hex { font-family: 'Courier New', monospace; color: var(--slate-600); font-size: 12px; }
+  .token-class { font-family: 'Courier New', monospace; color: var(--teal); font-size: 11px; }
+  
+  @media (max-width: 768px) {
+    .shelf { grid-template-columns: repeat(2, 1fr); }
+    .giro-grid { grid-template-columns: 1fr; }
+    .palette-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <h1>Sistema <span>Cromático</span> v2.0</h1>
+  <p>Rana Walk® — Brand Book · Paleta Institucional + Paletas de Producto</p>
+  <div class="badge">Auditoría RW-Copy Aprobada · WCAG AA Validado</div>
+</div>
+
+<div class="container">
+
+<!-- ═══ NIVEL 1: INSTITUCIONAL ═══ -->
+<section>
+  <h2><span>01</span> Paleta Institucional</h2>
+  <div class="divider"></div>
+  <p class="subtitle">Colores permanentes de marca. Extraídos del logo oficial y del sitio web en producción. Presentes en TODA pieza.</p>
+  
+  <h3>Primarios</h3>
+  <div class="palette-grid">
+    <div class="swatch">
+      <div class="swatch-color" style="background:#013A57"><span>#013A57</span></div>
+      <div class="swatch-info"><div class="name">Deep Navy</div><div class="use">Logo, títulos, fondos premium</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#75CBB3"><span>#75CBB3</span></div>
+      <div class="swatch-info"><div class="name">Mint</div><div class="use">CTAs, "WALK", acentos</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#066383"><span>#066383</span></div>
+      <div class="swatch-info"><div class="name">Teal Blue</div><div class="use">Subtítulos, iconografía</div></div>
+    </div>
+  </div>
+  
+  <h3>Soporte</h3>
+  <div class="palette-grid">
+    <div class="swatch">
+      <div class="swatch-color" style="background:#0F172A"><span style="color:#fff;background:rgba(0,0,0,0.4)">#0F172A</span></div>
+      <div class="swatch-info"><div class="name">Dark Slate</div><div class="use">Hero, secciones dark</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#E6FFFB"><span>#E6FFFB</span></div>
+      <div class="swatch-info"><div class="name">Light Mint</div><div class="use">Tints, hover states</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#9FE493"><span>#9FE493</span></div>
+      <div class="swatch-info"><div class="name">Lima Verde</div><div class="use">Rana detail, packaging</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#F8FAFC;border:1px solid #e2e8f0"><span>#F8FAFC</span></div>
+      <div class="swatch-info"><div class="name">Off White</div><div class="use">Secciones claras alt.</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#94A3B8"><span>#94A3B8</span></div>
+      <div class="swatch-info"><div class="name">Slate Gray</div><div class="use">Texto secundario dark</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#475569"><span style="color:#fff;background:rgba(0,0,0,0.3)">#475569</span></div>
+      <div class="swatch-info"><div class="name">Dark Gray</div><div class="use">Texto cuerpo light</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#1E293B"><span style="color:#fff;background:rgba(0,0,0,0.4)">#1E293B</span></div>
+      <div class="swatch-info"><div class="name">Slate 800</div><div class="use">Texto primario</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ NIVEL 2: PRODUCTOS ═══ -->
+<section>
+  <h2><span>02</span> Paletas de Producto — 4 Colores × 4 Líneas</h2>
+  <div class="divider"></div>
+  <p class="subtitle">Cada producto tiene 4 colores propios que complementan la paleta institucional. Auditados para cero superposición cross-product.</p>
+  
+  <!-- GOLIATH -->
+  <div class="product-section" style="background: linear-gradient(135deg, #013A57 0%, #02486d 100%); color: white;">
+    <div class="product-header">
+      <div class="dot" style="background:#013A57; border: 2px solid #75CBB3;"></div>
+      <div>
+        <h3 style="color:white; font-family:'Big Shoulders Display',sans-serif; font-weight:900; letter-spacing:3px; font-size:28px">GOLIATH</h3>
+        <span class="tag" style="background:rgba(117,203,179,0.2); color:#75CBB3;">Familia Fría · Premium</span>
+      </div>
+    </div>
+    <div class="palette-grid">
+      <div class="swatch"><div class="swatch-color" style="background:#013A57"><span style="color:#fff;background:rgba(0,0,0,0.5)">#013A57</span></div><div class="swatch-info"><div class="name">Deep Navy</div><div class="use">Fondo dominante</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#75CBB3"><span>#75CBB3</span></div><div class="swatch-info"><div class="name">Mint</div><div class="use">Tipografía "GOLIATH", iconos</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#9FE493"><span>#9FE493</span></div><div class="swatch-info"><div class="name">Lima Verde</div><div class="use">Detalles rana</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#A8D8EA"><span>#A8D8EA</span></div><div class="swatch-info"><div class="name">Ice Blue</div><div class="use">Badges, specs, cards tech</div></div></div>
+    </div>
+  </div>
+  
+  <!-- VELOX -->
+  <div class="product-section" style="background: linear-gradient(135deg, #7B2DBF 0%, #5A1D8E 100%); color: white;">
+    <div class="product-header">
+      <div class="dot" style="background:#7B2DBF; border: 2px solid #E040FB;"></div>
+      <div>
+        <h3 style="color:white; font-family:'Big Shoulders Display',sans-serif; font-weight:900; letter-spacing:3px; font-size:28px">VELOX</h3>
+        <span class="tag" style="background:rgba(224,64,251,0.2); color:#E040FB;">Familia Eléctrica · Velocidad</span>
+      </div>
+    </div>
+    <div class="palette-grid">
+      <div class="swatch"><div class="swatch-color" style="background:#7B2DBF"><span style="color:#fff;background:rgba(0,0,0,0.4)">#7B2DBF</span></div><div class="swatch-info"><div class="name">Violeta</div><div class="use">Fondo frontal dominante</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#5A1D8E"><span style="color:#fff;background:rgba(0,0,0,0.4)">#5A1D8E</span></div><div class="swatch-info"><div class="name">Lavanda Profundo</div><div class="use">Profundidad, reverso</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#E040FB"><span>#E040FB</span></div><div class="swatch-info"><div class="name">Magenta Neón</div><div class="use">Highlights ThinBoom™</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FFFFFF;border:1px solid #e2e8f0"><span>#FFFFFF</span></div><div class="swatch-info"><div class="name">Blanco</div><div class="use">Reverso limpio</div></div></div>
+    </div>
+  </div>
+  
+  <!-- LEOPARD -->
+  <div class="product-section" style="background: linear-gradient(135deg, #C5A05C 0%, #D4956B 100%); color: white;">
+    <div class="product-header">
+      <div class="dot" style="background:#C5A05C; border: 2px solid #5C3A1E;"></div>
+      <div>
+        <h3 style="color:white; text-shadow: 0 1px 3px rgba(0,0,0,0.3); font-family:'Big Shoulders Display',sans-serif; font-weight:900; letter-spacing:3px; font-size:28px">LEOPARD</h3>
+        <span class="tag" style="background:rgba(92,58,30,0.4); color:white;">Familia Tierra · Adaptabilidad · CEO-Approved</span>
+      </div>
+    </div>
+    <div class="palette-grid">
+      <div class="swatch"><div class="swatch-color" style="background:#C5A05C"><span>#C5A05C</span></div><div class="swatch-info"><div class="name">Arena Dorado</div><div class="use">Fondo frontal — PRESERVADO</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#5C3A1E"><span style="color:#fff;background:rgba(0,0,0,0.4)">#5C3A1E</span></div><div class="swatch-info"><div class="name">Tierra Oscuro</div><div class="use">Fondo reverso</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#3B3B3B"><span style="color:#fff;background:rgba(0,0,0,0.4)">#3B3B3B</span></div><div class="swatch-info"><div class="name">Carbón Profundo</div><div class="use">Reverso alt. técnico</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#D4956B"><span>#D4956B</span></div><div class="swatch-info"><div class="name">Cobre</div><div class="use">Líneas acento, trazos</div></div></div>
+    </div>
+  </div>
+  
+  <!-- ORBIS -->
+  <div class="product-section" style="background: linear-gradient(135deg, #EF4E54 0%, #F7A8AB 100%); color: white;">
+    <div class="product-header">
+      <div class="dot" style="background:#EF4E54; border: 2px solid white;"></div>
+      <div>
+        <h3 style="color:white; font-family:'Big Shoulders Display',sans-serif; font-weight:900; letter-spacing:3px; font-size:28px">ORBIS</h3>
+        <span class="tag" style="background:rgba(255,255,255,0.2); color:white;">Familia Vital · Accesibilidad</span>
+      </div>
+    </div>
+    <div class="palette-grid">
+      <div class="swatch"><div class="swatch-color" style="background:#EF4E54"><span style="color:#fff;background:rgba(0,0,0,0.3)">#EF4E54</span></div><div class="swatch-info"><div class="name">Coral Rojo</div><div class="use">Dominante, reverso completo</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#F7A8AB"><span>#F7A8AB</span></div><div class="swatch-info"><div class="name">Rosa Suave</div><div class="use">Cards, hover states</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FFDDC1"><span>#FFDDC1</span></div><div class="swatch-info"><div class="name">Melocotón</div><div class="use">Fondos accesibles</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FFFFFF;border:1px solid #e2e8f0"><span>#FFFFFF</span></div><div class="swatch-info"><div class="name">Blanco</div><div class="use">Panel frontal</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SHELF SIMULATION ═══ -->
+<section>
+  <h2><span>03</span> Diferenciación en Shelf</h2>
+  <div class="divider"></div>
+  <p class="subtitle">4 temperaturas cromáticas distintas. Cero superposición. Nombres en Big Shoulders Display Black 900 — siempre completos, una sola línea.</p>
+  
+  <div class="shelf">
+    <div class="shelf-box" style="background:#013A57; color:white;">
+      <div class="product-name" style="color:#75CBB3; font-family:'Big Shoulders Display',sans-serif; font-weight:900; font-size:36px; letter-spacing:3px">GOLIATH</div>
+      <div style="font-family:'Montserrat'; font-size:9px; color:#A8D8EA; letter-spacing:1.5px; text-transform:uppercase; margin-top:4px">Unyielding support. Unbreakable structure.</div>
+      <div class="temp-tag" style="background:rgba(168,216,234,0.2); color:#A8D8EA"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#A8D8EA;margin-right:4px;vertical-align:middle"></span>Fría</div>
+      <div class="price-tag">$45–70+</div>
+    </div>
+    <div class="shelf-box" style="background:#7B2DBF; color:white;">
+      <div class="product-name" style="color:white; font-family:'Big Shoulders Display',sans-serif; font-weight:900; font-size:36px; letter-spacing:3px">VELOX</div>
+      <div style="font-family:'Montserrat'; font-size:9px; color:#E040FB; letter-spacing:1.5px; text-transform:uppercase; margin-top:4px">Explosive energy. Ultra-thin precision.</div>
+      <div class="temp-tag" style="background:rgba(224,64,251,0.2); color:#E040FB"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#E040FB;margin-right:4px;vertical-align:middle"></span>Eléctrica</div>
+      <div class="price-tag">$28–40</div>
+    </div>
+    <div class="shelf-box" style="background:#C5A05C; color:#013A57;">
+      <div class="product-name" style="color:#013A57; font-family:'Big Shoulders Display',sans-serif; font-weight:900; font-size:36px; letter-spacing:3px">LEOPARD</div>
+      <div style="font-family:'Montserrat'; font-size:9px; color:#5C3A1E; letter-spacing:1.5px; text-transform:uppercase; margin-top:4px">Low. Medium. High. One is yours.</div>
+      <div class="temp-tag" style="background:rgba(92,58,30,0.3); color:#5C3A1E"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#5C3A1E;margin-right:4px;vertical-align:middle"></span>Tierra</div>
+      <div class="price-tag" style="color:#5C3A1E">$28–40</div>
+    </div>
+    <div class="shelf-box" style="background:white; color:#EF4E54; border: 2px solid #F7A8AB;">
+      <div class="product-name" style="color:#EF4E54; font-family:'Big Shoulders Display',sans-serif; font-weight:900; font-size:36px; letter-spacing:3px">ORBIS</div>
+      <div style="font-family:'Montserrat'; font-size:9px; color:var(--slate-600); letter-spacing:1.5px; text-transform:uppercase; margin-top:4px">Feet breathe. Stand longer. Last longer.</div>
+      <div class="temp-tag" style="background:rgba(239,78,84,0.1); color:#EF4E54"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#EF4E54;margin-right:4px;vertical-align:middle"></span>Vital</div>
+      <div class="price-tag" style="color:#013A57">$18–25</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ WCAG RESTRICTIONS ═══ -->
+<section>
+  <h2><span>04</span> Restricciones WCAG AA</h2>
+  <div class="divider"></div>
+  <p class="subtitle">Combinaciones con restricciones validadas por auditoría. Reglas obligatorias para material digital y empaque.</p>
+  
+  <table class="wcag-table">
+    <thead>
+      <tr><th>Producto</th><th>Combinación</th><th>Preview</th><th>Ratio</th><th>Regla</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Goliath</strong></td>
+        <td>Ice Blue / Blanco</td>
+        <td><div class="wcag-preview" style="background:#FFFFFF;color:#A8D8EA;border:1px solid #e2e8f0">Texto</div></td>
+        <td>1.54:1</td>
+        <td><span class="status-block prohibited">PROHIBIDO — No usar como texto/fondo</span></td>
+      </tr>
+      <tr>
+        <td><strong>Velox</strong></td>
+        <td>Magenta / Violeta</td>
+        <td><div class="wcag-preview" style="background:#7B2DBF;color:#E040FB">Texto</div></td>
+        <td>2.12:1</td>
+        <td><span class="status-block prohibited">PROHIBIDO — Solo decorativo/highlights</span></td>
+      </tr>
+      <tr>
+        <td><strong>Velox</strong></td>
+        <td>Magenta / Blanco</td>
+        <td><div class="wcag-preview" style="background:#FFFFFF;color:#E040FB;border:1px solid #e2e8f0">Texto</div></td>
+        <td>3.34:1</td>
+        <td><span class="status-block large-only">PRECAUCIÓN — Solo texto grande (≥18pt bold)</span></td>
+      </tr>
+      <tr>
+        <td><strong>Leopard</strong></td>
+        <td>Cobre / Tierra Oscuro</td>
+        <td><div class="wcag-preview" style="background:#5C3A1E;color:#D4956B">Texto</div></td>
+        <td>4.00:1</td>
+        <td><span class="status-block large-only">PRECAUCIÓN — Solo texto grande o decorativo</span></td>
+      </tr>
+      <tr>
+        <td><strong>Orbis</strong></td>
+        <td>Blanco / Coral</td>
+        <td><div class="wcag-preview" style="background:#EF4E54;color:#FFFFFF">Texto</div></td>
+        <td>3.57:1</td>
+        <td><span class="status-block large-only">PRECAUCIÓN — Solo headings/claims. Texto normal → Deep Navy</span></td>
+      </tr>
+      <tr>
+        <td><strong>Orbis</strong></td>
+        <td>Coral / Rosa Suave</td>
+        <td><div class="wcag-preview" style="background:#F7A8AB;color:#EF4E54">Texto</div></td>
+        <td>1.89:1</td>
+        <td><span class="status-block prohibited">PROHIBIDO — Solo bordes decorativos</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══ WEB COMPONENTS ═══ -->
+<section>
+  <h2><span>05</span> Componentes Web — Ejemplos Vivos</h2>
+  <div class="divider"></div>
+  <p class="subtitle">Patrones de componentes extraídos del sitio actual. Estos son los bloques autorizados.</p>
+  
+  <div class="component-grid">
+    <!-- CTA Primary -->
+    <div class="component-card">
+      <div class="preview" style="background:var(--dark-slate)">
+        <button class="btn-primary">Explorar Sistemas →</button>
+      </div>
+      <div class="label">
+        <div class="name">CTA Primario</div>
+        <div class="code">bg-[#75CBB3] text-[#013A57] rounded-full</div>
+      </div>
+    </div>
+    
+    <!-- CTA Secondary Dark -->
+    <div class="component-card">
+      <div class="preview" style="background:var(--dark-slate)">
+        <button class="btn-secondary-dark">¿Cuál es mi sistema?</button>
+      </div>
+      <div class="label">
+        <div class="name">CTA Secundario (Dark)</div>
+        <div class="code">border-[#75CBB3]/50 text-white rounded-full</div>
+      </div>
+    </div>
+    
+    <!-- CTA Consultor -->
+    <div class="component-card">
+      <div class="preview" style="background:var(--dark-slate)">
+        <button class="btn-consultor">Consultor IA</button>
+      </div>
+      <div class="label">
+        <div class="name">CTA Consultor IA (Nav)</div>
+        <div class="code">border-[#75CBB3] text-[#75CBB3]</div>
+      </div>
+    </div>
+    
+    <!-- Card Dark -->
+    <div class="component-card">
+      <div class="preview" style="background:var(--dark-slate)">
+        <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:20px; width:200px; text-align:center">
+          <div style="color:var(--mint); font-size:28px; margin-bottom:8px">⬡</div>
+          <div style="color:white; font-weight:700; font-size:13px">LEAPCORE™</div>
+        </div>
+      </div>
+      <div class="label">
+        <div class="name">Card Dark (Tech)</div>
+        <div class="code">bg-white/5 border-white/10 rounded-xl</div>
+      </div>
+    </div>
+    
+    <!-- Card Light -->
+    <div class="component-card">
+      <div class="preview" style="background:var(--off-white)">
+        <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:20px; width:200px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--mint);margin:0 auto 8px;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L19 7"/></svg></div>
+          <div style="color:var(--slate-800); font-weight:700; font-size:13px">Precisión Biomecánica</div>
+          <div style="color:var(--slate-600); font-size:11px; margin-top:4px">Rigor de dispositivo médico</div>
+        </div>
+      </div>
+      <div class="label">
+        <div class="name">Card Light (ADN)</div>
+        <div class="code">bg-white border-slate-200 rounded-xl shadow-sm</div>
+      </div>
+    </div>
+    
+    <!-- Table Header -->
+    <div class="component-card">
+      <div class="preview" style="background:white; padding:16px">
+        <div style="width:100%; border-radius:8px; overflow:hidden">
+          <div style="background:var(--navy); color:white; padding:10px 16px; display:grid; grid-template-columns:1fr 1fr 1fr; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px">
+            <span>Tecnología</span><span>Modelo</span><span>Beneficio</span>
+          </div>
+          <div style="padding:10px 16px; display:grid; grid-template-columns:1fr 1fr 1fr; font-size:12px; color:var(--slate-600); border:1px solid #e2e8f0; border-top:none">
+            <span style="font-weight:700; color:var(--navy)">Goliath</span><span>Elefante</span><span>Soporte extremo</span>
+          </div>
+        </div>
+      </div>
+      <div class="label">
+        <div class="name">Tabla Header</div>
+        <div class="code">bg-[#013A57] text-white rounded-t-xl</div>
+      </div>
+    </div>
+    
+    <!-- Divider -->
+    <div class="component-card">
+      <div class="preview" style="background:white; flex-direction:column; gap:8px">
+        <div style="font-size:24px; font-weight:800; color:var(--slate-800)">Título Principal</div>
+        <div style="width:48px; height:4px; background:var(--mint); border-radius:2px"></div>
+        <div style="font-size:13px; color:var(--slate-600)">Subtítulo descriptivo</div>
+      </div>
+      <div class="label">
+        <div class="name">Divider Mint</div>
+        <div class="code">bg-[#75CBB3] h-1 w-16</div>
+      </div>
+    </div>
+    
+    <!-- Nav Active -->
+    <div class="component-card">
+      <div class="preview" style="background:var(--dark-slate)">
+        <div style="display:flex; gap:24px; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:1px">
+          <span style="color:var(--mint)">Inicio</span>
+          <span style="color:var(--slate-400)">Sistemas</span>
+          <span style="color:var(--slate-400)">Contacto</span>
+        </div>
+      </div>
+      <div class="label">
+        <div class="name">Nav Links</div>
+        <div class="code">activo: text-[#75CBB3] · inactivo: text-slate-400</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRODUCT GIRO WEB ═══ -->
+<section>
+  <h2><span>06</span> Giro por Producto en Web</h2>
+  <div class="divider"></div>
+  <p class="subtitle">Secciones de producto en el sitio pueden incorporar colores de su línea. La estructura institucional (nav, footer, CTAs) no cambia.</p>
+  
+  <div class="giro-grid">
+    <div class="giro-card">
+      <div class="giro-hero" style="background: linear-gradient(135deg, #013A57, #02486d); color:white">
+        <div style="color:var(--mint); font-size:11px; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px">Producto Destacado</div>
+        <h4>GOLIATH</h4>
+        <p style="color:var(--slate-400)">Se mantiene institucional. <span style="color:#A8D8EA">Ice Blue</span> como acento en cards de specs.</p>
+      </div>
+      <div class="giro-body"><strong>Lo que NO cambia:</strong> Todo. Goliath = paleta institucional.</div>
+    </div>
+    
+    <div class="giro-card">
+      <div class="giro-hero" style="background: linear-gradient(135deg, #7B2DBF, #5A1D8E); color:white">
+        <div style="color:#E040FB; font-size:11px; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px">Producto Destacado</div>
+        <h4>VELOX</h4>
+        <p><span style="color:#E040FB">Violeta</span> como acento de sección o fondo de hero de producto.</p>
+      </div>
+      <div class="giro-body"><strong>Lo que NO cambia:</strong> Nav, footer, CTAs siguen institucionales.</div>
+    </div>
+    
+    <div class="giro-card">
+      <div class="giro-hero" style="background: linear-gradient(135deg, #C5A05C, #D4956B); color:white">
+        <div style="color:#5C3A1E; font-size:11px; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px">Producto Destacado</div>
+        <h4 style="text-shadow:0 1px 3px rgba(0,0,0,0.2)">LEOPARD</h4>
+        <p><span style="color:white">Arena Dorado</span> como fondo de hero. <span style="color:#5C3A1E">Cobre</span> en detalles.</p>
+      </div>
+      <div class="giro-body"><strong>Lo que NO cambia:</strong> Logo Deep Navy o Blanco. Nav institucional.</div>
+    </div>
+    
+    <div class="giro-card">
+      <div class="giro-hero" style="background: linear-gradient(135deg, #EF4E54, #F7A8AB); color:white">
+        <div style="color:white; font-size:11px; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px; opacity:0.8">Producto Destacado</div>
+        <h4>ORBIS</h4>
+        <p><span style="color:white">Coral</span> como acento. <span style="color:#FFDDC1">Melocotón</span> en fondos suaves.</p>
+      </div>
+      <div class="giro-body"><strong>Lo que NO cambia:</strong> Texto cuerpo: Deep Navy (no blanco sobre coral para texto pequeño).</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TOKENS ═══ -->
+<section>
+  <h2><span>07</span> Tokens de Color Web</h2>
+  <div class="divider"></div>
+  <p class="subtitle">Inventario completo de colores en uso en el sitio. Cada token tiene su clase Tailwind correspondiente.</p>
+  
+  <div style="background:white; border-radius:12px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+    <div class="token-row" style="font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--slate-400); border-bottom: 2px solid #e2e8f0">
+      <div></div><div>Token</div><div>HEX</div><div>Clase Tailwind</div>
+    </div>
+    
+    <div class="token-row"><div class="token-dot" style="background:#013A57"></div><div class="token-name">Brand Primary</div><div class="token-hex">#013A57</div><div class="token-class">bg-[#013A57] / text-[#013A57]</div></div>
+    <div class="token-row"><div class="token-dot" style="background:#75CBB3"></div><div class="token-name">Brand Accent</div><div class="token-hex">#75CBB3</div><div class="token-class">bg-[#75CBB3] / text-[#75CBB3]</div></div>
+    <div class="token-row"><div class="token-dot" style="background:#066383"></div><div class="token-name">Brand Secondary</div><div class="token-hex">#066383</div><div class="token-class">bg-[#066383]</div></div>
+    <div class="token-row"><div class="token-dot" style="background:#0F172A"></div><div class="token-name">Surface Dark</div><div class="token-hex">#0F172A</div><div class="token-class">bg-slate-900</div></div>
+    <div class="token-row"><div class="token-dot" style="background:#F8FAFC; border-color:#cbd5e1"></div><div class="token-name">Surface Light</div><div class="token-hex">#F8FAFC</div><div class="token-class">bg-slate-50</div></div>
+    <div class="token-row"><div class="token-dot" style="background:#FFFFFF; border-color:#cbd5e1"></div><div class="token-name">Surface White</div><div class="token-hex">#FFFFFF</div><div class="token-class">bg-white</div></div>
+    <div class="token-row"><div class="token-dot" style="background:#E6FFFB; border-color:#cbd5e1"></div><div class="token-name">Tint Mint</div><div class="token-hex">#E6FFFB</div><div class="token-class">bg-[#e6fffb]</div></div>
+    <div class="token-row"><div class="token-dot" style="background:rgba(117,203,179,0.2); border-color:#75CBB3"></div><div class="token-name">Tint Mint 20%</div><div class="token-hex">75CBB3/20</div><div class="token-class">bg-[#75CBB3]/20</div></div>
+    <div class="token-row"><div class="token-dot" style="background:rgba(117,203,179,0.3); border-color:#75CBB3"></div><div class="token-name">Border Accent</div><div class="token-hex">75CBB3/30</div><div class="token-class">border-[#75CBB3]/30</div></div>
+    <div class="token-row"><div class="token-dot" style="background:rgba(255,255,255,0.1); border-color:#475569"></div><div class="token-name">Border Subtle</div><div class="token-hex">white/10</div><div class="token-class">border-white/10</div></div>
+    <div class="token-row"><div class="token-dot" style="background:#475569"></div><div class="token-name">Text Body</div><div class="token-hex">#475569</div><div class="token-class">text-slate-600</div></div>
+    <div class="token-row"><div class="token-dot" style="background:#94A3B8"></div><div class="token-name">Text Muted</div><div class="token-hex">#94A3B8</div><div class="token-class">text-slate-400</div></div>
+    <div class="token-row"><div class="token-dot" style="background:#1E293B"></div><div class="token-name">Text Heading</div><div class="token-hex">#1E293B</div><div class="token-class">text-slate-900</div></div>
+  </div>
+</section>
+
+</div>
+
+
+<div class="container">
+
+<!-- ═══ TYPOGRAPHY SYSTEM ═══ -->
+<section>
+  <h2><span>08</span> Sistema Tipográfico</h2>
+  <div class="divider"></div>
+  <p class="subtitle">3 familias: Montserrat (marca), Big Shoulders Display (nombres de producto), Custom del logo. Todas Google Fonts OFL — libres para uso comercial.</p>
+  
+  <!-- TYPE HIERARCHY LIVE -->
+  <h3>Jerarquía Tipográfica — Rendering en Vivo</h3>
+  
+  <div style="background:white; border-radius:16px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin:20px 0 40px">
+    <div style="padding:32px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:24px; flex-wrap:wrap">
+      <div style="min-width:200px">
+        <div style="font-size:11px; color:var(--slate-400); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px">Nombre de Producto</div>
+        <div style="font-size:12px; color:var(--teal); font-family:'Courier New',monospace">Big Shoulders Display · 900</div>
+      </div>
+      <div style="font-family:'Big Shoulders Display'; font-weight:900; font-size:48px; color:var(--navy); letter-spacing:3px; line-height:1">GOLIATH</div>
+    </div>
+    <div style="padding:24px 32px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:24px; flex-wrap:wrap">
+      <div style="min-width:200px">
+        <div style="font-size:11px; color:var(--slate-400); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px">Claim</div>
+        <div style="font-size:12px; color:var(--teal); font-family:'Courier New',monospace">Montserrat · 800 (ExtraBold)</div>
+      </div>
+      <div style="font-family:'Montserrat'; font-weight:800; font-size:22px; color:var(--navy); line-height:1.3">Built for the ones who never sit down.</div>
+    </div>
+    <div style="padding:24px 32px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:24px; flex-wrap:wrap">
+      <div style="min-width:200px">
+        <div style="font-size:11px; color:var(--slate-400); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px">Subhead</div>
+        <div style="font-size:12px; color:var(--teal); font-family:'Courier New',monospace">Montserrat · 600 (SemiBold)</div>
+      </div>
+      <div style="font-family:'Montserrat'; font-weight:600; font-size:15px; color:var(--slate-600); line-height:1.4">Unyielding support. Unbreakable structure.</div>
+    </div>
+    <div style="padding:24px 32px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:24px; flex-wrap:wrap">
+      <div style="min-width:200px">
+        <div style="font-size:11px; color:var(--slate-400); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px">Título H1 (Web)</div>
+        <div style="font-size:12px; color:var(--teal); font-family:'Courier New',monospace">Montserrat · 800–900</div>
+      </div>
+      <div style="font-family:'Montserrat'; font-weight:800; font-size:30px; color:var(--slate-800); line-height:1.2">Dominamos el impacto.</div>
+    </div>
+    <div style="padding:20px 32px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:24px; flex-wrap:wrap">
+      <div style="min-width:200px">
+        <div style="font-size:11px; color:var(--slate-400); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px">Cuerpo</div>
+        <div style="font-size:12px; color:var(--teal); font-family:'Courier New',monospace">Montserrat · 400–500</div>
+      </div>
+      <div style="font-family:'Montserrat'; font-weight:400; font-size:15px; color:var(--slate-600); line-height:1.6">Cada componente emula una función biológica para proteger tu biomecánica.</div>
+    </div>
+    <div style="padding:20px 32px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:24px; flex-wrap:wrap">
+      <div style="min-width:200px">
+        <div style="font-size:11px; color:var(--slate-400); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px">CTAs y Nav</div>
+        <div style="font-size:12px; color:var(--teal); font-family:'Courier New',monospace">Montserrat · 600–700</div>
+      </div>
+      <div><button class="btn-primary">EXPLORAR SISTEMAS →</button></div>
+    </div>
+    <div style="padding:20px 32px; display:flex; align-items:center; gap:24px; flex-wrap:wrap">
+      <div style="min-width:200px">
+        <div style="font-size:11px; color:var(--slate-400); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px">Labels Técnicos</div>
+        <div style="font-size:12px; color:var(--teal); font-family:'Courier New',monospace">Montserrat · 600</div>
+      </div>
+      <div style="font-family:'Montserrat'; font-weight:600; font-size:14px; color:var(--navy); letter-spacing:1px">LEAPCORE™ · PORON® XRD® · THINBOOM™ · NANOSPREAD™</div>
+    </div>
+  </div>
+  
+  <!-- 4 PRODUCT COMBOS -->
+  <h3>Combinaciones por Producto — Nombre + Claim + Subhead</h3>
+  <p style="font-size:13px; color:var(--slate-600); margin-bottom:16px">Cada producto combina Big Shoulders Display (nombre) + Montserrat (claim + subhead). El color diferencia, la tipografía unifica.</p>
+  
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:20px 0">
+    <div style="background:#013A57; border-radius:12px; padding:40px 28px; text-align:center">
+      <div style="font-family:'Montserrat'; font-size:10px; color:var(--slate-400); letter-spacing:2px; text-transform:uppercase; margin-bottom:16px">Premium · $45–70+</div>
+      <div style="font-family:'Big Shoulders Display'; font-weight:900; font-size:52px; color:#75CBB3; letter-spacing:4px; line-height:1">GOLIATH</div>
+      <div style="font-family:'Montserrat'; font-weight:800; font-size:13px; color:white; margin-top:16px; line-height:1.5">Built for the ones who never sit down.</div>
+      <div style="font-family:'Montserrat'; font-weight:500; font-size:11px; color:#A8D8EA; margin-top:6px; letter-spacing:0.5px">Unyielding support. Unbreakable structure.</div>
+      <div style="margin-top:16px; padding:4px 14px; border:1px solid rgba(168,216,234,0.4); border-radius:4px; display:inline-block; font-family:'Montserrat'; font-size:9px; color:#A8D8EA; letter-spacing:1.5px; text-transform:uppercase">American Technology Inside</div>
+    </div>
+    <div style="background:#7B2DBF; border-radius:12px; padding:40px 28px; text-align:center">
+      <div style="font-family:'Montserrat'; font-size:10px; color:rgba(255,255,255,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:16px">Ultra-Thin · $28–40</div>
+      <div style="font-family:'Big Shoulders Display'; font-weight:900; font-size:52px; color:white; letter-spacing:4px; line-height:1">VELOX</div>
+      <div style="font-family:'Montserrat'; font-weight:800; font-size:13px; color:white; margin-top:16px; line-height:1.5">So thin you forget it. So good you feel it.</div>
+      <div style="font-family:'Montserrat'; font-weight:500; font-size:11px; color:#E040FB; margin-top:6px; letter-spacing:0.5px">Explosive energy. Ultra-thin precision.</div>
+    </div>
+    <div style="background:#C5A05C; border-radius:12px; padding:40px 28px; text-align:center">
+      <div style="font-family:'Montserrat'; font-size:10px; color:#5C3A1E; letter-spacing:2px; text-transform:uppercase; margin-bottom:16px">3 Arch Profiles · $28–40</div>
+      <div style="font-family:'Big Shoulders Display'; font-weight:900; font-size:52px; color:#013A57; letter-spacing:4px; line-height:1">LEOPARD</div>
+      <div style="font-family:'Montserrat'; font-weight:800; font-size:13px; color:#013A57; margin-top:16px; line-height:1.5">Adapt. Absorb. Align.</div>
+      <div style="font-family:'Montserrat'; font-weight:500; font-size:11px; color:#5C3A1E; margin-top:6px; letter-spacing:0.5px">Low. Medium. High. One is yours.</div>
+    </div>
+    <div style="background:white; border:2px solid #F7A8AB; border-radius:12px; padding:40px 28px; text-align:center">
+      <div style="font-family:'Montserrat'; font-size:10px; color:var(--slate-400); letter-spacing:2px; text-transform:uppercase; margin-bottom:16px">Daily Upgrade · $18–25</div>
+      <div style="font-family:'Big Shoulders Display'; font-weight:900; font-size:52px; color:#EF4E54; letter-spacing:4px; line-height:1">ORBIS</div>
+      <div style="font-family:'Montserrat'; font-weight:800; font-size:13px; color:#013A57; margin-top:16px; line-height:1.5">The upgrade your body feels.</div>
+      <div style="font-family:'Montserrat'; font-weight:500; font-size:11px; color:var(--slate-600); margin-top:6px; letter-spacing:0.5px">Feet breathe. Stand longer. Last longer.</div>
+    </div>
+  </div>
+  
+  <!-- NAME RULE -->
+  <div style="background:#FEF2F2; border:2px solid #FECACA; border-radius:12px; padding:20px 24px; margin:32px 0">
+    <div style="font-weight:800; color:#DC2626; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#DC2626"></span>Regla de Nombre en Packaging</div>
+    <div style="font-size:14px; color:var(--slate-600)">
+      El nombre del producto se escribe <strong>COMPLETO en una sola línea</strong>. NUNCA dividir el nombre en múltiples líneas. Aplica a packaging, A+ Content, listing images, y toda pieza.
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; font-size:13px">
+      <div style="background:white; padding:12px 16px; border-radius:8px">
+        <div style="color:#16A34A; font-weight:700; margin-bottom:4px; display:flex; align-items:center; gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16A34A"></span>Correcto</div>
+        <div style="font-family:'Big Shoulders Display'; font-weight:900; font-size:24px; color:var(--navy); letter-spacing:2px">GOLIATH</div>
+      </div>
+      <div style="background:white; padding:12px 16px; border-radius:8px">
+        <div style="color:#DC2626; font-weight:700; margin-bottom:4px; display:flex; align-items:center; gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#DC2626"></span>Prohibido</div>
+        <div style="font-family:'Big Shoulders Display'; font-weight:900; font-size:24px; color:#DC2626; letter-spacing:2px; text-decoration:line-through">GO<br>LIA<br>TH</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- FONT INFO -->
+  <h3>Especificaciones de Big Shoulders Display</h3>
+  <table class="wcag-table">
+    <thead><tr><th>Atributo</th><th>Valor</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Google Fonts</strong></td><td>fonts.google.com/specimen/Big+Shoulders+Display</td></tr>
+      <tr><td><strong>Licencia</strong></td><td>SIL Open Font License 1.1 — libre para uso comercial, packaging, web</td></tr>
+      <tr><td><strong>Pesos disponibles</strong></td><td>100 (Thin) → 900 (Black) — 9 pesos</td></tr>
+      <tr><td><strong>Peso primario</strong></td><td>900 (Black) — SIEMPRE para nombres de producto</td></tr>
+      <tr><td><strong>Peso secundario</strong></td><td>700 (Bold) — Specs de empaque, titulares secundarios packaging</td></tr>
+      <tr><td><strong>Transform</strong></td><td>SIEMPRE mayúsculas (text-transform: uppercase)</td></tr>
+      <tr><td><strong>Letter-spacing</strong></td><td>2–4px packaging · 1–2px digital</td></tr>
+      <tr><td><strong>Clase Tailwind</strong></td><td><code>font-['Big_Shoulders_Display'] font-black uppercase tracking-wider</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══ 09 · TECHNOLOGY IDENTITY SYSTEM ═══ -->
+<section>
+  <h2><span>09</span> Identidad Visual de Tecnologías</h2>
+  <div class="divider"></div>
+  <p class="subtitle">Cada tecnología tiene su propio ADN visual (logo + font + color). Es intencional — funcionan como Intel Inside® o Gore-Tex®: componentes internos con identidad propia.</p>
+  
+  <!-- 2 FAMILIES -->
+  <h3>2 Familias Tipográficas</h3>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:20px 0 40px">
+    <div style="background:#F1F5F9; border-radius:14px; padding:28px; border-left:4px solid var(--navy)">
+      <div style="font-weight:800; color:var(--navy); font-size:16px; margin-bottom:8px; display:flex; align-items:center; gap:8px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--navy)"></span>Familia Estructural</div>
+      <div style="font-size:13px; color:var(--slate-600); margin-bottom:16px">Chasis + soporte. Comparten Montserrat = estabilidad, fundamento.</div>
+      <div style="display:flex; gap:16px; align-items:center; margin-bottom:12px">
+        <div style="background:white; border-radius:10px; padding:16px 20px; flex:1; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <div style="font-family:'Montserrat'; font-size:22px; line-height:1"><span style="font-weight:700; color:#000">Leap</span><span style="font-weight:300; color:#2D71B8">Core</span><span style="font-weight:300; color:#2D71B8; font-size:14px">™</span></div>
+          <div style="font-size:10px; color:var(--slate-400); margin-top:6px">Montserrat Bold + Light</div>
+        </div>
+        <div style="background:white; border-radius:10px; padding:16px 20px; flex:1; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <div style="font-family:'Montserrat'; font-weight:300; font-size:20px; color:#1B406C; letter-spacing:5px; line-height:1">ARCH SYSTEM</div>
+          <div style="font-size:10px; color:var(--slate-400); margin-top:6px">Montserrat Light UPPERCASE</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#F1F5F9; border-radius:14px; padding:28px; border-left:4px solid var(--mint)">
+      <div style="font-weight:800; color:var(--navy); font-size:16px; margin-bottom:8px; display:flex; align-items:center; gap:8px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--mint)"></span>Familia Performance</div>
+      <div style="font-size:13px; color:var(--slate-600); margin-bottom:16px">Impacto + energía + confort. Font individual = personalidad de cada capacidad.</div>
+      <div style="display:flex; gap:12px; align-items:center">
+        <div style="background:white; border-radius:10px; padding:14px 16px; flex:1; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <div style="font-family:'Roboto',sans-serif; font-weight:700; font-style:italic; font-size:20px; color:#000; line-height:1">ThinBoom<span style="font-style:normal; font-size:12px">™</span></div>
+          <div style="font-size:9px; color:var(--slate-400); margin-top:6px">Roboto Bold Italic</div>
+        </div>
+        <div style="background:white; border-radius:10px; padding:14px 16px; flex:1; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <div style="font-family:'Lexend',sans-serif; font-size:18px; color:#000; line-height:1">ShockSphere<span style="font-size:12px">™</span></div>
+          <div style="font-size:9px; color:var(--slate-400); margin-top:6px">Lexend</div>
+        </div>
+        <div style="background:white; border-radius:10px; padding:14px 16px; flex:1; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <div style="font-family:'Google Sans','Product Sans',sans-serif; font-style:italic; font-size:18px; color:#000; line-height:1">NanoSpread<span style="font-style:normal; font-size:12px">™</span></div>
+          <div style="font-size:9px; color:var(--slate-400); margin-top:6px">Google Sans Flex Italic</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- TECH COLOR PALETTE -->
+  <h3>Colores Exclusivos de Tecnología</h3>
+  <p style="font-size:13px; color:var(--slate-600); margin-bottom:16px">Estos colores pertenecen al sistema de logos de tecnología. NO forman parte de las paletas de producto ni institucional.</p>
+  
+  <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin:16px 0 40px">
+    <!-- LeapCore Blue -->
+    <div style="text-align:center">
+      <div style="width:100%; aspect-ratio:1; background:#2D71B8; border-radius:10px; margin-bottom:8px"></div>
+      <div style="font-size:11px; font-weight:700; color:var(--navy)">LeapCore Azul</div>
+      <div style="font-size:10px; color:var(--slate-400)">#2D71B8</div>
+    </div>
+    <!-- LeapCore Dark -->
+    <div style="text-align:center">
+      <div style="width:100%; aspect-ratio:1; background:#494949; border-radius:10px; margin-bottom:8px"></div>
+      <div style="font-size:11px; font-weight:700; color:var(--navy)">LeapCore Gris</div>
+      <div style="font-size:10px; color:var(--slate-400)">#494949</div>
+    </div>
+    <!-- LeapCore Mid -->
+    <div style="text-align:center">
+      <div style="width:100%; aspect-ratio:1; background:#6D6D6D; border-radius:10px; margin-bottom:8px"></div>
+      <div style="font-size:11px; font-weight:700; color:var(--navy)">LeapCore Medio</div>
+      <div style="font-size:10px; color:var(--slate-400)">#6D6D6D</div>
+    </div>
+    <!-- Arch System -->
+    <div style="text-align:center">
+      <div style="width:100%; aspect-ratio:1; background:#1B406C; border-radius:10px; margin-bottom:8px"></div>
+      <div style="font-size:11px; font-weight:700; color:var(--navy)">Arch System</div>
+      <div style="font-size:10px; color:var(--slate-400)">#1B406C</div>
+    </div>
+    <!-- ShockSphere Teal -->
+    <div style="text-align:center">
+      <div style="width:100%; aspect-ratio:1; background:#34C2C3; border-radius:10px; margin-bottom:8px"></div>
+      <div style="font-size:11px; font-weight:700; color:var(--navy)">ShockSphere Teal</div>
+      <div style="font-size:10px; color:var(--slate-400)">#34C2C3</div>
+    </div>
+    <!-- ShockSphere Red -->
+    <div style="text-align:center">
+      <div style="width:100%; aspect-ratio:1; background:#E92028; border-radius:10px; margin-bottom:8px"></div>
+      <div style="font-size:11px; font-weight:700; color:var(--navy)">ShockSphere Rojo</div>
+      <div style="font-size:10px; color:var(--slate-400)">#E92028</div>
+    </div>
+    <!-- NanoSpread Green -->
+    <div style="text-align:center">
+      <div style="width:100%; aspect-ratio:1; background:#3DCB21; border-radius:10px; margin-bottom:8px"></div>
+      <div style="font-size:11px; font-weight:700; color:var(--navy)">NanoSpread Verde</div>
+      <div style="font-size:10px; color:var(--slate-400)">#3DCB21</div>
+    </div>
+  </div>
+
+  <!-- TECH CARDS - FULL DETAIL -->
+  <h3>Fichas de Identidad</h3>
+  
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0">
+    <!-- LeapCore -->
+    <div style="background:white; border-radius:14px; border:1px solid #e2e8f0; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.04)">
+      <div style="background:linear-gradient(135deg, #494949, #2D71B8); padding:24px; text-align:center">
+        <div style="font-family:'Montserrat'; font-size:32px; line-height:1"><span style="font-weight:700; color:white">Leap</span><span style="font-weight:300; color:white">Core</span><span style="font-weight:300; color:rgba(255,255,255,0.6); font-size:18px">™</span></div>
+      </div>
+      <div style="padding:20px">
+        <div style="display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:12px">
+          <div style="color:var(--slate-400)">Font:</div><div style="color:var(--navy); font-weight:600">Montserrat Bold + Light</div>
+          <div style="color:var(--slate-400)">Bio-mímesis:</div><div style="color:var(--navy)">Elefante (bi-densidad)</div>
+          <div style="color:var(--slate-400)">Productos:</div><div style="color:var(--navy)">Goliath, Orbis, Leopard</div>
+          <div style="color:var(--slate-400)">Nota:</div><div style="color:var(--navy)">Bold/Light = contraste visual de las 2 densidades del PU</div>
+        </div>
+      </div>
+    </div>
+    <!-- Arch System -->
+    <div style="background:white; border-radius:14px; border:1px solid #e2e8f0; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.04)">
+      <div style="background:#1B406C; padding:20px; text-align:center">
+        <div style="font-family:'Montserrat'; font-weight:300; font-size:28px; color:white; letter-spacing:6px; line-height:1">ARCH SYSTEM</div>
+      </div>
+      <div style="padding:16px 20px">
+        <div style="font-size:11px; color:var(--slate-400); margin-bottom:12px">3 opciones — mismo color #1B406C, mismo tracking 5-6px</div>
+        <!-- Option A: Light 300 -->
+        <div style="background:#1B406C; border-radius:8px; padding:14px 20px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between">
+          <div style="font-family:'Montserrat'; font-weight:300; font-size:22px; color:white; letter-spacing:5px">ARCH SYSTEM</div>
+          <div style="font-size:10px; color:rgba(255,255,255,0.5)">Light 300</div>
+        </div>
+        <!-- Option B: Regular 400 -->
+        <div style="background:#1B406C; border-radius:8px; padding:14px 20px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between">
+          <div style="font-family:'Montserrat'; font-weight:400; font-size:22px; color:white; letter-spacing:5px">ARCH SYSTEM</div>
+          <div style="font-size:10px; color:rgba(255,255,255,0.5)">Regular 400</div>
+        </div>
+        <!-- Option C: Medium 500 -->
+        <div style="background:#1B406C; border-radius:8px; padding:14px 20px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between">
+          <div style="font-family:'Montserrat'; font-weight:500; font-size:22px; color:white; letter-spacing:5px">ARCH SYSTEM</div>
+          <div style="font-size:10px; color:rgba(255,255,255,0.5)">Medium 500</div>
+        </div>
+        <div style="display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:12px; margin-top:12px">
+          <div style="color:var(--slate-400)">Bio-mímesis:</div><div style="color:var(--navy)">Exoesqueleto</div>
+          <div style="color:var(--slate-400)">Productos:</div><div style="color:var(--navy)">Goliath (exclusivo)</div>
+          <div style="color:var(--slate-400)">Nota:</div><div style="color:var(--navy)">Light crea contraste con LeapCore Bold. Precision > Fuerza.</div>
+        </div>
+      </div>
+    </div>
+    <!-- ThinBoom -->
+    <div style="background:white; border-radius:14px; border:1px solid #e2e8f0; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.04)">
+      <div style="background:#000; padding:24px; text-align:center">
+        <div style="font-family:'Roboto',sans-serif; font-weight:700; font-style:italic; font-size:32px; color:white; line-height:1">ThinBoom<span style="font-style:normal; font-size:18px">™</span></div>
+      </div>
+      <div style="padding:20px">
+        <div style="display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:12px">
+          <div style="color:var(--slate-400)">Font:</div><div style="color:var(--navy); font-weight:600">Roboto Bold Italic</div>
+          <div style="color:var(--slate-400)">Bio-mímesis:</div><div style="color:var(--navy)">Tendón felino (velocidad)</div>
+          <div style="color:var(--slate-400)">Productos:</div><div style="color:var(--navy)">Goliath (antepié), Velox (full)</div>
+          <div style="color:var(--slate-400)">Nota:</div><div style="color:var(--navy)">Itálica = movimiento, velocidad. Monocromático negro.</div>
+        </div>
+      </div>
+    </div>
+    <!-- ShockSphere -->
+    <div style="background:white; border-radius:14px; border:1px solid #e2e8f0; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.04)">
+      <div style="background:linear-gradient(135deg, #34C2C3, #E92028); padding:24px; text-align:center">
+        <div style="font-family:'Lexend',sans-serif; font-size:30px; color:white; line-height:1">ShockSphere<span style="font-size:18px">™</span></div>
+      </div>
+      <div style="padding:20px">
+        <div style="display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:12px">
+          <div style="color:var(--slate-400)">Font:</div><div style="color:var(--navy); font-weight:600">Lexend Regular</div>
+          <div style="color:var(--slate-400)">Bio-mímesis:</div><div style="color:var(--navy)">Rana (absorción focalizada)</div>
+          <div style="color:var(--slate-400)">Productos:</div><div style="color:var(--navy)">Leopard (exclusivo)</div>
+          <div style="color:var(--slate-400)">Nota:</div><div style="color:var(--navy)">Geométrica + estable. Teal #34C2C3 + Rojo #E92028.</div>
+        </div>
+      </div>
+    </div>
+    <!-- NanoSpread -->
+    <div style="background:white; border-radius:14px; border:1px solid #e2e8f0; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.04); grid-column:1/-1">
+      <div style="background:linear-gradient(135deg, #3DCB21, #2da018); padding:24px; text-align:center">
+        <div style="font-family:'Google Sans','Product Sans',sans-serif; font-style:italic; font-size:32px; color:white; line-height:1">NanoSpread<span style="font-style:normal; font-size:18px">™</span></div>
+      </div>
+      <div style="padding:20px">
+        <div style="display:grid; grid-template-columns:auto 1fr auto 1fr; gap:4px 12px; font-size:12px">
+          <div style="color:var(--slate-400)">Font:</div><div style="color:var(--navy); font-weight:600">Google Sans Flex Italic</div>
+          <div style="color:var(--slate-400)">Bio-mímesis:</div><div style="color:var(--navy)">Reptil (capilaridad activa)</div>
+          <div style="color:var(--slate-400)">Productos:</div><div style="color:var(--navy)">Todas las líneas</div>
+          <div style="color:var(--slate-400)">Nota:</div><div style="color:var(--navy)">Itálica redondeada = fluidez, dispersión. Verde #3DCB21.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- PORON® XRD® COMPLIANCE -->
+  <div style="background:white; border:2px solid #1B406C; border-radius:14px; overflow:hidden; margin-top:32px">
+    <div style="background:#1B406C; padding:16px 24px">
+      <div style="font-weight:800; color:white; font-size:16px; letter-spacing:0.5px">Guía de Cumplimiento PORON® XRD® — Rogers Corporation</div>
+    </div>
+    <div style="padding:24px">
+      <p style="font-size:13px; color:var(--slate-600); margin-bottom:20px">Rana Walk es el PRODUCTO. PORON®/XRD® son los INGREDIENTES. Esta jerarquía debe reflejarse en toda comunicación.</p>
+      
+      <!-- Co-Branding Rules -->
+      <div style="font-weight:700; color:var(--navy); font-size:14px; margin-bottom:12px; display:flex; align-items:center; gap:8px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#DC2626"></span>Nomenclatura (Co-Branding)</div>
+      <div style="display:grid; grid-template-columns:100px 1fr; gap:8px; font-size:12px; margin-bottom:20px; padding-left:16px">
+        <div style="color:#DC2626; font-weight:700">PROHIBIDO</div><div style="color:var(--navy)">"La plantilla PORON" / "Insoles XRD" / nombrar producto por ingrediente</div>
+        <div style="color:#16A34A; font-weight:700">CORRECTO</div><div style="color:var(--navy)">"Rana Walk Goliath, con tecnología XRD®" / "Powered by PORON®"</div>
+        <div style="color:var(--slate-400); font-weight:700">JERARQUÍA</div><div style="color:var(--navy)">Logo Rana Walk = protagonista. PORON®/XRD® = sello de ingrediente (más pequeño, esquina)</div>
+      </div>
+      
+      <!-- Trademark Usage -->
+      <div style="font-weight:700; color:var(--navy); font-size:14px; margin-bottom:12px; display:flex; align-items:center; gap:8px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#D97706"></span>Marcas Registradas</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; margin-bottom:20px; padding-left:16px">
+        <div style="color:var(--navy)"><strong>® obligatorio</strong> — primera mención por página/cara de empaque</div>
+        <div style="color:var(--navy)"><strong>NUNCA genérico</strong> — "Material PORON®", no "el poron"</div>
+        <div style="color:var(--navy)"><strong>Siempre MAYÚSCULAS</strong> — PORON® y XRD®, nunca "Poron" ni "Xrd"</div>
+        <div style="color:var(--navy)"><strong>Eslogan Rogers</strong> — prohibido usar sin autorización</div>
+      </div>
+      
+      <!-- Disclaimers -->
+      <div style="font-weight:700; color:var(--navy); font-size:14px; margin-bottom:12px; display:flex; align-items:center; gap:8px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--navy)"></span>Disclaimers Obligatorios</div>
+      <div style="background:#F1F5F9; border-radius:8px; padding:14px 18px; margin-bottom:10px; font-size:11px">
+        <div style="font-weight:700; color:var(--navy); margin-bottom:4px">Propiedad de Marca</div>
+        <div style="color:var(--slate-600); font-style:italic">"The Rogers logo, PORON and XRD are licensed trademarks of Rogers Corporation. All rights reserved."</div>
+      </div>
+      <div style="background:#F1F5F9; border-radius:8px; padding:14px 18px; margin-bottom:20px; font-size:11px">
+        <div style="font-weight:700; color:var(--navy); margin-bottom:4px">Limitación de Responsabilidad</div>
+        <div style="color:var(--slate-600); font-style:italic">"XRD® technology is designed to dissipate impact energy, but no cushioning material can prevent all injuries. Proper fit and use of Rana Walk insoles are responsibility of the user."</div>
+      </div>
+      
+      <!-- Claims -->
+      <div style="font-weight:700; color:var(--navy); font-size:14px; margin-bottom:12px; display:flex; align-items:center; gap:8px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16A34A"></span>Claims Permitidos vs Prohibidos</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; padding-left:16px">
+        <div style="background:#F0FDF4; border-radius:6px; padding:10px 14px">
+          <div style="font-weight:700; color:#16A34A; margin-bottom:4px">PERMITIDO</div>
+          <div style="color:var(--navy)">"Absorción de impactos extrema" · "Protección contra vibraciones" · "Absorbs up to 90% of impact energy (ASTM F1614)" · "American Technology Inside"</div>
+        </div>
+        <div style="background:#FEF2F2; border-radius:6px; padding:10px 14px">
+          <div style="font-weight:700; color:#DC2626; margin-bottom:4px">PROHIBIDO</div>
+          <div style="color:var(--navy)">"Cura fascitis plantar" · "Corrige pronación" · "Previene lesiones" · "Made in USA" · cualquier claim médico sin certificación</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+<div style="background:var(--dark-slate); color:var(--slate-400); padding:40px; text-align:center; font-size:13px; margin-top:40px">
+  <div style="color:white; font-weight:700; font-size:16px; margin-bottom:4px">RANA WALK<span style="color:var(--mint)">®</span></div>
+  <div style="color:var(--mint); font-size:12px; letter-spacing:2px; margin-bottom:16px">NAME IT, LEAP BEYOND</div>
+  <div>Sistema Cromático v2.0 · Auditoría RW-Copy · WCAG AA Validado · Febrero 2026</div>
+</div>
+
+</body>
+</html>
