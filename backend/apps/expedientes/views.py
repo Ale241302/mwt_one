@@ -160,12 +160,12 @@ class ExpedienteBundleView(APIView):
         if exp.credit_clock_started_at:
             days = (now - exp.credit_clock_started_at).days
             exp.credit_days_elapsed = days
-            if days <= 15:
-                exp.credit_band = 'OK'
-            elif days <= 30:
-                exp.credit_band = 'WARNING'
+            if days >= 75:
+                exp.credit_band = 'CORAL'
+            elif days >= 60:
+                exp.credit_band = 'AMBER'
             else:
-                exp.credit_band = 'CRITICAL'
+                exp.credit_band = 'MINT'
         else:
             exp.credit_days_elapsed = 0
             exp.credit_band = 'MINT'

@@ -33,13 +33,9 @@ from apps.expedientes.views import (
 app_name = 'expedientes'
 
 urlpatterns = [
-    # C1: CreateExpediente + List
-    path('', ListExpedientesView.as_view(), name='list'),
-    path('create/', CreateExpedienteView.as_view(), name='create'),
+    # C1: CreateExpediente (POST /api/expedientes/)
+    path('', CreateExpedienteView.as_view(), name='create'),
     
-    # Bundle 
-    path('<uuid:pk>/bundle/', ExpedienteBundleView.as_view(), name='bundle'),
-
     # C2-C5: REGISTRO phase
     path('<uuid:pk>/register-oc/', RegisterOCView.as_view(), name='register-oc'),
     path('<uuid:pk>/register-proforma/', RegisterProformaView.as_view(), name='register-proforma'),
@@ -69,8 +65,4 @@ urlpatterns = [
 
     # C21: RegisterPayment
     path('<uuid:pk>/register-payment/', RegisterPaymentView.as_view(), name='register-payment'),
-
-    # C19 & C20: Artifact Correction
-    path('<uuid:pk>/artifacts/<uuid:artifact_id>/supersede/', SupersedeArtifactView.as_view(), name='supersede-artifact'),
-    path('<uuid:pk>/artifacts/<uuid:artifact_id>/void/', VoidArtifactView.as_view(), name='void-artifact'),
 ]

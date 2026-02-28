@@ -62,7 +62,7 @@ class ExpedienteSerializer(serializers.ModelSerializer):
     payment_status_display = serializers.CharField(
         source='get_payment_status_display', read_only=True)
     legal_entity_name = serializers.CharField(
-        source='legal_entity.name', read_only=True, default=None)
+        source='legal_entity.legal_name', read_only=True, default=None)
 
     class Meta:
         model = Expediente
@@ -121,9 +121,4 @@ class RegisterPaymentSerializer(serializers.Serializer):
     currency = serializers.CharField(max_length=3)
     method = serializers.CharField(max_length=50)
     reference = serializers.CharField(max_length=100)
-
-class SupersedeArtifactSerializer(serializers.Serializer):
-    """C19: SupersedeArtifact — inputs."""
-    payload = serializers.DictField(required=True)
-    reason = serializers.CharField(required=True)
 
