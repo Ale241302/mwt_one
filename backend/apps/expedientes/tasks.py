@@ -109,11 +109,19 @@ def evaluar_relojes_credito():
     
     logger.info("Finished evaluar_relojes_credito task")
 
-from django.core.management import call_command
+from django.utils import timezone
 
 @shared_task
 def dispatch_events():
-    """ Runs the management command to process pending EventLogs. """
+    """ Processes pending EventLogs and marks them as processed. """
     logger.info("Starting dispatch_events task to process outbox queue")
-    call_command('process_events')
+    pending_events = EventLog.objects.filter(processed_at__isnull=True).order_by('occurred_at')
+    
+    with transaction.atomic():
+        for event in pending_events:
+            # Simulate processing (e.g. sending to external system)
+            logger.info(f"Processing event: {event.event_type} for aggregate {event.aggregate_id}")
+            event.processed_at = timezone.now()
+            event.save(update_fields=['processed_at'])
+            
     logger.info("Finished dispatch_events task")
