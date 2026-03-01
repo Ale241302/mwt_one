@@ -8,15 +8,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.expedientes.models import Expediente, EventLog
 from apps.expedientes.serializers import (
     ExpedienteSerializer, EventLogSerializer, ArtifactInstanceSerializer,
     ExpedienteCreateSerializer, ArtifactPayloadSerializer,
     RegisterCostSerializer, RegisterPaymentSerializer,
-    SupersedeArtifactSerializer,
+    # SupersedeArtifactSerializer,  # Sprint 2
 )
 from apps.expedientes.services import (
-    create_expediente, execute_command, supersede_artifact, void_artifact
+    create_expediente, execute_command, # supersede_artifact, void_artifact # Sprint 2
 )
 from apps.expedientes.permissions import IsCEO, EnsureNotBlocked
 
@@ -45,6 +44,7 @@ def _get_expediente(pk):
         raise NotFound(f'Expediente {pk} not found.')
 
 
+"""
 # ══════════════════════════════════════════════════
 # LIST & BUNDLE (Sprint 3)
 # ══════════════════════════════════════════════════
@@ -177,6 +177,7 @@ class ExpedienteBundleView(APIView):
         
         data = ExpedienteBundleSerializer(exp).data
         return Response(data)
+"""
 
 
 # ══════════════════════════════════════════════════
@@ -475,42 +476,23 @@ class RegisterPaymentView(APIView):
         return _command_response(exp, events, status.HTTP_201_CREATED)
 
 
+"""
 # ══════════════════════════════════════════════════
-# C19 & C20: Artifact Correction
+# C19 & C20: Artifact Correction (Sprint 2)
 # ══════════════════════════════════════════════════
 
 class SupersedeArtifactView(APIView):
     permission_classes = [IsAuthenticated, IsCEO]
 
     def post(self, request, pk, artifact_id):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = SupersedeArtifactSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, new_art, event = supersede_artifact(artifact_id, ser.validated_data['payload'], request.user)
-        return Response(
-            {
-                'expediente': ExpedienteSerializer(exp).data,
-                'artifact': ArtifactInstanceSerializer(new_art).data,
-                'events': EventLogSerializer([event], many=True).data
-            },
-            status=status.HTTP_201_CREATED
-        )
-
+        # ...
+        pass
 
 class VoidArtifactView(APIView):
     permission_classes = [IsAuthenticated, IsCEO]
 
     def post(self, request, pk, artifact_id):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        exp, voided_art, event = void_artifact(artifact_id, request.user)
-        return Response(
-            {
-                'expediente': ExpedienteSerializer(exp).data,
-                'artifact': ArtifactInstanceSerializer(voided_art).data,
-                'events': EventLogSerializer([event], many=True).data
-            },
-            status=status.HTTP_200_OK
-        )
+        # ...
+        pass
+"""
 
