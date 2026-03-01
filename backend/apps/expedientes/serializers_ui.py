@@ -67,10 +67,10 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     artifacts = ArtifactSummarySerializer(many=True)
     costs = CostLineSummarySerializer(source='cost_lines', many=True)
     documents = serializers.SerializerMethodField()
-    available_actions = serializers.ListField(child=serializers.DictField())
+    available_actions = serializers.JSONField() # Now a structured object from services.py
+    credit_clock = serializers.SerializerMethodField()
 
     def get_expediente(self, obj):
-        # We can reuse the list serializer for the core fields and append more
         data = UIExpedienteListSerializer(obj).data
         data.update({
             'mode': obj.mode,
@@ -78,14 +78,27 @@ class ExpedienteBundleSerializer(serializers.Serializer):
             'transport_mode': obj.transport_mode,
             'dispatch_mode': obj.dispatch_mode,
             'payment_status': obj.payment_status,
+            'price_basis': obj.price_basis,
+            'legal_entity_id': str(obj.legal_entity_id),
+            'client_id': str(obj.client_id) if obj.client_id else None,
         })
         return data
+
+    def get_credit_clock(self, obj):
+        return {
+            'days': getattr(obj, 'credit_days_elapsed', 0),
+            'band': getattr(obj, 'credit_band', 'MINT'),
+            'started_at': obj.credit_clock_started_at,
+            'is_ignored': obj.status in ['CERRADO', 'CANCELADO']
+        }
 
     def get_documents(self, obj):
         docs = []
         for art in obj.artifacts.all():
-            if art.status == 'COMPLETED' and 'file_url' in art.payload: # Simplified stub
+            # BUG 7 FIX: Use lowercase 'completed'
+            if art.status == 'completed' and 'file_url' in art.payload:
                 docs.append({
+                    'id': str(art.artifact_id),
                     'name': art.payload.get('filename', f"Documento_{art.artifact_type}"),
                     'type': art.artifact_type,
                     'date': art.created_at,

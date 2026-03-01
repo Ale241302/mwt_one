@@ -18,14 +18,12 @@ def evaluar_relojes_credito():
     """
     logger.info("Starting evaluar_relojes_credito task")
     
-    # BUG 5: Derive active statuses from enum excluding terminal ones
-    terminal_statuses = [ExpedienteStatus.CERRADO, ExpedienteStatus.CANCELADO]
-    estados_activos = [s[0] for s in ExpedienteStatus.choices if s[0] not in terminal_statuses]
+    from .enums import CREDIT_CLOCK_IGNORED_STATUSES
+    estados_activos = [s[0] for s in ExpedienteStatus.choices if s[0] not in CREDIT_CLOCK_IGNORED_STATUSES]
     
     hoy = timezone.now().date()
     now_time = timezone.now()
 
-    # BUG 3: Move transaction inside loop. BUG 1 & 2: Independent steps for enforcement and events.
     # We fetch IDs first to avoid long-lived transaction across the whole batch
     expediente_ids = Expediente.objects.filter(
         credit_clock_started_at__isnull=False,
@@ -38,8 +36,8 @@ def evaluar_relojes_credito():
                 try:
                     exp = Expediente.objects.select_for_update(skip_locked=True).get(expediente_id=eid)
                 except Expediente.DoesNotExist:
-                    # Issue 3: Handle skipped due to lock gracefully
-                    logger.info(f"Expediente {eid} skipped (locked by another worker)")
+                    # ISSUE-8: Handle skipped due to lock gracefully with warning
+                    logger.warning(f"Expediente {eid} skipped (locked by another worker)")
                     continue
                 
                 fecha_inicio = exp.credit_clock_started_at.date()

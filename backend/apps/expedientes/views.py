@@ -16,9 +16,24 @@ from apps.expedientes.serializers import (
     SupersedeArtifactSerializer,
 )
 from apps.expedientes.services import (
-    create_expediente, execute_command, supersede_artifact, void_artifact
+    create_expediente, execute_command, supersede_artifact, void_artifact,
+    get_available_commands, COMMAND_SPEC
 )
 from apps.expedientes.permissions import IsCEO, EnsureNotBlocked
+from apps.expedientes.serializers_ui import (
+    UIExpedienteListSerializer, ExpedienteBundleSerializer
+)
+from apps.expedientes.enums import AggregateType, CREDIT_CLOCK_IGNORED_STATUSES
+
+from django.db.models import (
+    Sum, Count, Max, Q, F, OuterRef, Subquery, ExpressionWrapper, 
+    IntegerField, CharField, Case, When, Value
+)
+from django.db.models.functions import Coalesce, ExtractDay, Now
+from django.utils import timezone
+from django.conf import settings
+from decimal import Decimal
+from minio import Minio
 
 
 # ══════════════════════════════════════════════════
@@ -45,16 +60,12 @@ def _get_expediente(pk):
         raise NotFound(f'Expediente {pk} not found.')
 
 
-"""
 # ══════════════════════════════════════════════════
 # LIST & BUNDLE (Sprint 3)
 # ══════════════════════════════════════════════════
 
-from apps.expedientes.services import get_available_commands, COMMAND_SPEC
-from apps.expedientes.serializers_ui import UIExpedienteListSerializer, ExpedienteBundleSerializer
-from django.utils import timezone
-
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.exceptions import NotFound, PermissionDenied
 
 class ExpedientePagination(PageNumberPagination):
     page_size = 25
@@ -65,8 +76,31 @@ class ListExpedientesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        qs = Expediente.objects.select_related('client').prefetch_related(
-            'artifacts', 'cost_lines'
+        # Subquery for last_event_at
+        last_event_subquery = EventLog.objects.filter(
+            aggregate_id=OuterRef('pk'),
+            aggregate_type=AggregateType.EXPEDIENTE
+        ).order_by('-occurred_at').values('occurred_at')[:1]
+
+        qs = Expediente.objects.select_related('client').annotate(
+            total_cost=Coalesce(Sum('cost_lines__amount'), Decimal('0')),
+            artifact_count=Count('artifacts', filter=Q(artifacts__status='completed')),
+            last_event_at=Subquery(last_event_subquery),
+            # Credit clock calculation
+            credit_days_elapsed=Coalesce(
+                ExpressionWrapper(
+                    ExtractDay(Now() - F('credit_clock_started_at')),
+                    output_field=IntegerField()
+                ),
+                0
+            )
+        ).annotate(
+            credit_band=Case(
+                When(credit_days_elapsed__gte=75, then=Value('CORAL')),
+                When(credit_days_elapsed__gte=60, then=Value('AMBER')),
+                default=Value('MINT'),
+                output_field=CharField()
+            )
         ).all()
 
         # Filtros
@@ -95,45 +129,13 @@ class ListExpedientesView(APIView):
         }
         if ordering not in ALLOWED_ORDERINGS:
             ordering = '-created_at'
-        # Nota: credit_days_elapsed, total_cost, last_event_at son calculados, usamos DB fallback
-        db_ordering = ordering if ordering.lstrip('-') in ('created_at', 'status') else '-created_at'
-        qs = qs.order_by(db_ordering)
+        
+        # Determine if we order by DB field or annotated field
+        qs = qs.order_by(ordering)
 
-        now = timezone.now()
-        exp_list = list(qs)
-        exp_ids  = [e.pk for e in exp_list]
-
-        events_by_exp = {}
-        if exp_ids:
-            from apps.expedientes.enums import AggregateType
-            for ev in EventLog.objects.filter(
-                aggregate_id__in=exp_ids,
-                aggregate_type=AggregateType.EXPEDIENTE
-            ).order_by('occurred_at'):
-                events_by_exp.setdefault(ev.aggregate_id, []).append(ev)
-
-        for exp in exp_list:
-            exp.total_cost    = sum(c.amount for c in exp.cost_lines.all())
-            exp.artifact_count = exp.artifacts.count()
-            evs = events_by_exp.get(exp.pk, [])
-            exp.last_event_at = evs[-1].occurred_at if evs else None
-
-            if exp.credit_clock_started_at:
-                days = (now - exp.credit_clock_started_at).days
-                exp.credit_days_elapsed = days
-                if days >= 75:
-                    exp.credit_band = 'CORAL'
-                elif days >= 60:
-                    exp.credit_band = 'AMBER'
-                else:
-                    exp.credit_band = 'MINT'
-            else:
-                exp.credit_days_elapsed = 0
-                exp.credit_band = 'MINT'
-
-        # Paginación — retorna {count, next, previous, results}
+        # Pagination
         paginator = ExpedientePagination()
-        page = paginator.paginate_queryset(exp_list, request)
+        page = paginator.paginate_queryset(qs, request)
         data = UIExpedienteListSerializer(page, many=True).data
         return paginator.get_paginated_response(data)
 
@@ -141,44 +143,82 @@ class ExpedienteBundleView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        exp = _get_expediente(pk)
+        # Annotate same fields as list for consistency and performance
+        last_event_subquery = EventLog.objects.filter(
+            aggregate_id=OuterRef('pk'),
+            aggregate_type=AggregateType.EXPEDIENTE
+        ).order_by('-occurred_at').values('occurred_at')[:1]
+
+        try:
+            exp = Expediente.objects.select_related('client').prefetch_related(
+                'artifacts', 'cost_lines'
+            ).annotate(
+                total_cost=Coalesce(Sum('cost_lines__amount'), Decimal('0')),
+                artifact_count=Count('artifacts', filter=Q(artifacts__status='completed')),
+                last_event_at=Subquery(last_event_subquery),
+                credit_days_elapsed=Coalesce(
+                    ExpressionWrapper(
+                        ExtractDay(Now() - F('credit_clock_started_at')),
+                        output_field=IntegerField()
+                    ),
+                    0
+                )
+            ).annotate(
+                credit_band=Case(
+                    When(credit_days_elapsed__gte=75, then=Value('CORAL')),
+                    When(credit_days_elapsed__gte=60, then=Value('AMBER')),
+                    default=Value('MINT'),
+                    output_field=CharField()
+                )
+            ).get(pk=pk)
+        except Expediente.DoesNotExist:
+            raise NotFound(f"Expediente {pk} not found.")
         
-        now = timezone.now()
-        exp.total_cost = sum(c.amount for c in exp.cost_lines.all())
-        exp.artifact_count = exp.artifacts.count()
-        
-        from apps.expedientes.models import EventLog
-        from apps.expedientes.enums import AggregateType
-        
-        exp_events = list(EventLog.objects.filter(
+        # Attach events for serializer
+        exp_events = EventLog.objects.filter(
             aggregate_id=exp.pk, 
             aggregate_type=AggregateType.EXPEDIENTE
-        ).order_by('occurred_at'))
-        
+        ).order_by('occurred_at')
         exp.events = exp_events
-        exp.last_event_at = exp_events[-1].occurred_at if exp_events else None
         
-        if exp.credit_clock_started_at:
-            days = (now - exp.credit_clock_started_at).days
-            exp.credit_days_elapsed = days
-            if days >= 75:
-                exp.credit_band = 'CORAL'
-            elif days >= 60:
-                exp.credit_band = 'AMBER'
-            else:
-                exp.credit_band = 'MINT'
-        else:
-            exp.credit_days_elapsed = 0
-            exp.credit_band = 'MINT'
-        
-        available_cmds = get_available_commands(exp, request.user)
-        exp.available_actions = [
-            {'command': c, 'name': COMMAND_SPEC[c]['name']} for c in available_cmds
-        ]
+        # Inject available actions object
+        exp.available_actions = get_available_commands(exp, request.user)
         
         data = ExpedienteBundleSerializer(exp).data
         return Response(data)
-"""
+
+class DocumentDownloadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, artifact_id):
+        from apps.expedientes.models import ArtifactInstance
+        try:
+            artifact = ArtifactInstance.objects.get(pk=artifact_id, status='completed')
+        except ArtifactInstance.DoesNotExist:
+            raise NotFound("Artifact not found or not completed.")
+
+        file_url = artifact.payload.get('file_url')
+        if not file_url:
+            from apps.expedientes.exceptions import CommandValidationError
+            raise CommandValidationError("Artifact has no file_url.")
+
+        # Initialize Minio client
+        client = Minio(
+            settings.MINIO_ENDPOINT,
+            access_key=settings.MINIO_ACCESS_KEY,
+            secret_key=settings.MINIO_SECRET_KEY,
+            secure=settings.MINIO_SECURE,
+        )
+
+        bucket = settings.MINIO_BUCKET_NAME
+        object_name = file_url
+
+        try:
+            # Presigned URL valid for 1 hour
+            url = client.presigned_get_object(bucket, object_name)
+            return Response({'download_url': url})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ══════════════════════════════════════════════════

@@ -5,6 +5,9 @@ env = environ.Env()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Load .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='change-me-in-production')
 DEBUG = env.bool('DJANGO_DEBUG', default=False)
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['*'])
@@ -85,7 +88,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'America/Costa_Rica'
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+# CELERY_BEAT_SCHEDULER removed as redundant (schedule is hardcoded in celery.py)
 
 # --- MINIO ---
 MINIO_ENDPOINT = env('MINIO_ENDPOINT', default='minio:9000')
@@ -157,7 +160,7 @@ CSRF_TRUSTED_ORIGINS = [
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # --- Shared Cookies / Session ---
-SESSION_COOKIE_DOMAIN = env('SESSION_COOKIE_DOMAIN', default=None)
+SESSION_COOKIE_DOMAIN = env('SESSION_COOKIE_DOMAIN', default='.mwt.one')
 CSRF_COOKIE_HTTPONLY = False
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=False)

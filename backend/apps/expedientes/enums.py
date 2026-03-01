@@ -54,6 +54,12 @@ class ExpedienteStatus(models.TextChoices):
     CERRADO = 'CERRADO', 'Cerrado'
     CANCELADO = 'CANCELADO', 'Cancelado'
 
+    @property
+    def is_terminal(self):
+        return self in [self.CERRADO, self.CANCELADO]
+
+CREDIT_CLOCK_IGNORED_STATUSES = [ExpedienteStatus.CERRADO, ExpedienteStatus.CANCELADO]
+
 
 class BlockedByType(models.TextChoices):
     CEO = 'ceo', 'CEO'

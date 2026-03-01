@@ -594,18 +594,37 @@ def void_artifact(old_artifact_id, user):
 
 def get_available_commands(expediente, user):
     """
-    Returns a list of command IDs (e.g., ['C2', 'C3', 'C15']) that the given user
-    can execute on the given expediente in its current state.
+    Returns available actions based on availableActions v1 FROZEN contract.
+    Divided in 'pipeline' (state changes) and 'operations' (other actions).
     """
-    available = []
-    for cmd in COMMAND_SPEC.keys():
-        if cmd == 'C1':
+    actions = {
+        'pipeline': [],
+        'operations': []
+    }
+
+    # Iterate over commands sorted by ID
+    for cmd_id in sorted(COMMAND_SPEC.keys(), key=lambda x: int(x[1:])):
+        if cmd_id == 'C1':
             continue
+
+        spec = COMMAND_SPEC[cmd_id]
         try:
-            can_execute_command(expediente, cmd, user)
-            available.append(cmd)
-        except Exception:
-            # If any validation error is raised, the command is not available
-            pass
+            can_execute_command(expediente, cmd_id, user)
             
-    return available
+            cmd_info = {
+                'id': cmd_id,
+                'name': spec['name'],
+            }
+            if 'creates_art' in spec:
+                cmd_info['creates_artifact'] = spec['creates_art']
+
+            # Categorize: Pipeline vs Operations
+            if 'transition_to' in spec or 'auto_transition' in spec:
+                actions['pipeline'].append(cmd_info)
+            else:
+                actions['operations'].append(cmd_info)
+
+        except Exception:
+            continue
+
+    return actions
