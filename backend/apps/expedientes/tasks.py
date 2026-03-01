@@ -18,85 +18,91 @@ def evaluar_relojes_credito():
     """
     logger.info("Starting evaluar_relojes_credito task")
     
-    estados_activos = [
-        ExpedienteStatus.PRODUCCION,
-        ExpedienteStatus.PREPARACION,
-        ExpedienteStatus.DESPACHO
-    ]
+    # BUG 5: Derive active statuses from enum excluding terminal ones
+    terminal_statuses = [ExpedienteStatus.CERRADO, ExpedienteStatus.CANCELADO]
+    estados_activos = [s[0] for s in ExpedienteStatus.choices if s[0] not in terminal_statuses]
     
     hoy = timezone.now().date()
     now_time = timezone.now()
 
-    # Wrap in transaction for select_for_update
-    with transaction.atomic():
-        # Lock active expedientes with started credit clocks
-        expedientes = Expediente.objects.select_for_update(skip_locked=True).filter(
-            credit_clock_started_at__isnull=False,
-            status__in=estados_activos,
-            is_blocked=False # Don't process already blocked
-        )
+    # BUG 3: Move transaction inside loop. BUG 1 & 2: Independent steps for enforcement and events.
+    # We fetch IDs first to avoid long-lived transaction across the whole batch
+    expediente_ids = Expediente.objects.filter(
+        credit_clock_started_at__isnull=False,
+        status__in=estados_activos
+    ).values_list('expediente_id', flat=True)
 
-        for exp in expedientes:
-            fecha_inicio = exp.credit_clock_started_at.date()
-            dias_transcurridos = (hoy - fecha_inicio).days
+    for eid in expediente_ids:
+        try:
+            with transaction.atomic():
+                exp = Expediente.objects.select_for_update(skip_locked=True).get(expediente_id=eid)
+                
+                fecha_inicio = exp.credit_clock_started_at.date()
+                dias_transcurridos = (hoy - fecha_inicio).days
 
-            # 1. Block at 75 days (Audit Fix: moved from 90 to 75)
-            if dias_transcurridos >= 75:
-                ya_bloqueado = EventLog.objects.filter(
-                    aggregate_id=exp.expediente_id,
-                    event_type='BLOCKED_POR_MORA'
-                ).exists()
-
-                if not ya_bloqueado:
-                    logger.info(f"Expediente {exp.expediente_id} reached {dias_transcurridos} days (>=75). Blocking.")
-                    
-                    # Block expediente
-                    exp.is_blocked = True
-                    exp.blocked_reason = f"Automated block: {dias_transcurridos} days since credit clock started."
-                    exp.blocked_at = now_time
-                    exp.blocked_by_type = BlockedByType.SYSTEM
-                    exp.blocked_by_id = "CREDIT_CLOCK_MONITOR"
-                    exp.save(update_fields=['is_blocked', 'blocked_reason', 'blocked_at', 'blocked_by_type', 'blocked_by_id'])
-                    
-                    # Dispatch event
-                    EventLog.objects.create(
-                        aggregate_id=exp.expediente_id,
-                        aggregate_type=AggregateType.EXPEDIENTE,
-                        event_type='BLOCKED_POR_MORA',
-                        emitted_by='SYSTEM:CREDIT_CLOCK',
-                        occurred_at=now_time,
-                        payload={"dias": dias_transcurridos},
-                        correlation_id=uuid.uuid4()
+                # STEP 1: Enforcement (SIEMPRE si >= 75) - BUG 2
+                if dias_transcurridos >= 75 and not exp.is_blocked:
+                    logger.info(f"Expediente {exp.expediente_id} reached {dias_transcurridos} days. Blocking via SYSTEM.")
+                    # We use service to ensure consistency, but need to pass null user for SYSTEM actor
+                    # Note: execute_command will be updated to handle user=None as SYSTEM
+                    from .services import execute_command
+                    execute_command(
+                        exp, 
+                        'C17', 
+                        {'reason': f"Automated block: {dias_transcurridos} days since credit clock started.", 'actor_type': 'system'}, 
+                        user=None
                     )
-
-            # 2. Warning at 60 days
-            elif 60 <= dias_transcurridos < 75:
-                ya_notificado = EventLog.objects.filter(
-                    aggregate_id=exp.expediente_id,
-                    event_type='WARNING_60_DIAS'
-                ).exists()
-
-                if not ya_notificado:
-                    logger.info(f"Expediente {exp.expediente_id} reached {dias_transcurridos} days (>=60). Warning.")
-                    EventLog.objects.create(
+                
+                # STEP 2: Emisión de eventos (Una vez por vida) - BUG 2
+                if dias_transcurridos >= 75:
+                    ya_emitido = EventLog.objects.filter(
                         aggregate_id=exp.expediente_id,
-                        aggregate_type=AggregateType.EXPEDIENTE,
-                        event_type='WARNING_60_DIAS',
-                        emitted_by='SYSTEM:CREDIT_CLOCK',
-                        occurred_at=now_time,
-                        payload={"dias": dias_transcurridos},
-                        correlation_id=uuid.uuid4()
-                    )
+                        event_type='BLOCKED_POR_MORA'
+                    ).exists()
+
+                    if not ya_emitido:
+                        logger.info(f"Emitting BLOCKED_POR_MORA for {exp.expediente_id}")
+                        EventLog.objects.create(
+                            aggregate_id=exp.expediente_id,
+                            aggregate_type=AggregateType.EXPEDIENTE,
+                            event_type='BLOCKED_POR_MORA',
+                            emitted_by='SYSTEM:CREDIT_CLOCK',
+                            occurred_at=now_time,
+                            payload={"dias": dias_transcurridos},
+                            correlation_id=uuid.uuid4()
+                        )
+
+                # STEP 3: Warning at 60 days (Independent step)
+                if 60 <= dias_transcurridos < 75:
+                    ya_notificado = EventLog.objects.filter(
+                        aggregate_id=exp.expediente_id,
+                        event_type='WARNING_60_DIAS'
+                    ).exists()
+
+                    if not ya_notificado:
+                        logger.info(f"Expediente {exp.expediente_id} reached {dias_transcurridos} days. Warning.")
+                        EventLog.objects.create(
+                            aggregate_id=exp.expediente_id,
+                            aggregate_type=AggregateType.EXPEDIENTE,
+                            event_type='WARNING_60_DIAS',
+                            emitted_by='SYSTEM:CREDIT_CLOCK',
+                            occurred_at=now_time,
+                            payload={"dias": dias_transcurridos},
+                            correlation_id=uuid.uuid4()
+                        )
+        except Exception as e:
+            logger.error(f"Error processing expediente {eid}: {str(e)}")
+            continue
     
     logger.info("Finished evaluar_relojes_credito task")
 
 from django.utils import timezone
 
 @shared_task
-def dispatch_events():
+def process_pending_events():
     """ 
     Processes pending EventLogs and marks them as processed.
-    Ref: LOTE_SM_SPRINT2 Item 5 — Audit Fix: Added batch limit of 100 and select_for_update.
+    Ref: LOTE_SM_SPRINT2 Item 5 — Audit Fix: Added batch limit of 100 and renamed to process_pending_events.
     """
     logger.info("Starting dispatch_events task to process outbox queue")
     

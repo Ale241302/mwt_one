@@ -56,8 +56,8 @@ class ExpedienteStatus(models.TextChoices):
 
 
 class BlockedByType(models.TextChoices):
-    CEO = 'CEO', 'CEO'
-    SYSTEM = 'SYSTEM', 'System'
+    CEO = 'ceo', 'CEO'
+    SYSTEM = 'system', 'System'
 
 
 class DispatchMode(models.TextChoices):
@@ -66,9 +66,9 @@ class DispatchMode(models.TextChoices):
 
 
 class PaymentStatus(models.TextChoices):
-    PENDING = 'PENDING', 'Pending'
-    PARTIAL = 'PARTIAL', 'Partial'
-    PAID = 'PAID', 'Paid'
+    PENDING = 'pending', 'Pending'
+    PARTIAL = 'partial', 'Partial'
+    PAID = 'paid', 'Paid'
 
 
 class CreditClockStartRule(models.TextChoices):
@@ -83,23 +83,23 @@ class Brand(models.TextChoices):
 # --- ArtifactInstance enums ---
 
 class ArtifactStatus(models.TextChoices):
-    DRAFT = 'DRAFT', 'Draft'
-    COMPLETED = 'COMPLETED', 'Completed'
-    SUPERSEDED = 'SUPERSEDED', 'Superseded'
-    VOID = 'VOID', 'Void'
+    DRAFT = 'draft', 'Draft'
+    COMPLETED = 'completed', 'Completed'
+    SUPERSEDED = 'superseded', 'Superseded'
+    VOID = 'void', 'Void'
 
 
 # --- EventLog enums ---
 
 class AggregateType(models.TextChoices):
-    EXPEDIENTE = 'EXPEDIENTE', 'Expediente'
-    TRANSFER = 'TRANSFER', 'Transfer'
-    NODE = 'NODE', 'Node'
-    ARTIFACT = 'ARTIFACT', 'Artifact'
+    EXPEDIENTE = 'expediente', 'Expediente'
+    TRANSFER = 'transfer', 'Transfer'
+    NODE = 'node', 'Node'
+    ARTIFACT = 'artifact', 'Artifact'
 
 
 # --- PaymentLine enums ---
 
 class RegisteredByType(models.TextChoices):
-    CEO = 'CEO', 'CEO'
-    SYSTEM = 'SYSTEM', 'System'
+    CEO = 'ceo', 'CEO'
+    SYSTEM = 'system', 'System'

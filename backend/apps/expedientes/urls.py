@@ -27,6 +27,8 @@ from apps.expedientes.views import (
     BlockExpedienteView,
     UnblockExpedienteView,
     RegisterPaymentView,
+    SupersedeArtifactView,
+    VoidArtifactView,
 )
 
 app_name = 'expedientes'

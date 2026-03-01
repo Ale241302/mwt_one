@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from apps.expedientes.models import Expediente
 from apps.expedientes.serializers import (
-    ExpedienteSerializer, EventLogSerializer,
+    ExpedienteSerializer, ArtifactInstanceSerializer, EventLogSerializer,
     ExpedienteCreateSerializer, ArtifactPayloadSerializer,
     RegisterCostSerializer, RegisterPaymentSerializer,
     SupersedeArtifactSerializer,

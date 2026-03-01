@@ -246,7 +246,8 @@ def can_execute_command(expediente, command_name, user):
         raise CommandValidationError(f'Unknown command: {command_name}')
 
     # --- CEO-only check ---
-    if spec.get('ceo_only') and not user.is_superuser:
+    # BUG 6: Bypass if user is None (SYSTEM actor)
+    if user is not None and spec.get('ceo_only') and not user.is_superuser:
         from rest_framework.exceptions import PermissionDenied
         raise PermissionDenied(
             f'{command_name} ({spec["name"]}) requires CEO (superuser) permissions.'
@@ -373,8 +374,9 @@ def execute_command(expediente, command_name, data, user):
             expediente.is_blocked = True
             expediente.blocked_reason = data.get('reason', '')
             expediente.blocked_at = timezone.now()
-            expediente.blocked_by_type = 'ceo'
-            expediente.blocked_by_id = str(user.pk)
+            # BUG 6: Handle user=None
+            expediente.blocked_by_type = data.get('actor_type', 'ceo')
+            expediente.blocked_by_id = str(user.pk) if user else data.get('actor_id', 'SYSTEM')
             expediente.save(update_fields=[
                 'is_blocked', 'blocked_reason', 'blocked_at',
                 'blocked_by_type', 'blocked_by_id',
@@ -401,8 +403,8 @@ def execute_command(expediente, command_name, data, user):
                 method=data['method'],
                 reference=data['reference'],
                 registered_at=timezone.now(),
-                registered_by_type='ceo',
-                registered_by_id=str(user.pk),
+                registered_by_type = 'ceo' if user else 'system',
+                registered_by_id = str(user.pk) if user else 'SYSTEM',
             )
             # Accumulation: §L3
             _update_payment_status(expediente)
@@ -484,34 +486,16 @@ def _update_payment_status(expediente):
 # C19 & C20: Artifact Correction (Sprint 2)
 # ══════════════════════════════════════════════════
 
-def _check_post_transition_block(expediente, artifact_type):
-    """
-    Check if the artifact was a precondition for an executed transition.
-    If yes, block the Expediente.
-    MVP heuristic: If the Expediente's current state is beyond the state
-    where this artifact usually gets generated, we block it.
-    """
+def _is_post_transition(expediente, artifact_type):
+    """BUG 8: Check if artifact is a precondition for an already executed transition."""
     created_in_state = None
     for cmd, spec in COMMAND_SPEC.items():
         if spec.get('creates_art') == artifact_type:
             created_in_state = spec.get('required_state')
             break
             
-    if created_in_state and expediente.status != created_in_state:
-        if not expediente.is_blocked:
-            expediente.is_blocked = True
-            expediente.blocked_reason = f"Artifact {artifact_type} was corrected/voided while in downstream state {expediente.status}."
-            expediente.blocked_at = timezone.now()
-            expediente.blocked_by_type = 'SYSTEM'
-            expediente.blocked_by_id = 'ARTIFACT_CORRECTION'
-            expediente.save(update_fields=['is_blocked', 'blocked_reason', 'blocked_at', 'blocked_by_type', 'blocked_by_id'])
-            
-            _create_event(
-                expediente,
-                event_type='BLOCKED_POR_CAMBIO_PRECONDICION',
-                emitted_by='SYSTEM:ARTIFACT_CORRECTION',
-                payload={'artifact_type': artifact_type}
-            )
+    # If the current status is NOT where it's created, it's a post-transition scenario
+    return created_in_state and expediente.status != created_in_state
 
 def supersede_artifact(old_artifact_id, new_payload, user):
     with transaction.atomic():
@@ -522,21 +506,30 @@ def supersede_artifact(old_artifact_id, new_payload, user):
             
         expediente = Expediente.objects.select_for_update().get(pk=old_art.expediente_id)
         
-        if old_art.status != 'COMPLETED':
+        # BUG 7: Use lowercase 'completed'
+        if old_art.status != 'completed':
             raise CommandValidationError(f"Cannot supersede artifact in status {old_art.status}")
             
         if expediente.status in TERMINAL_STATES:
             raise CommandValidationError("Cannot supersede artifact in terminal state Expediente")
 
+        # BUG 8: Raise 409 if post-transition and NOT blocked
+        if _is_post_transition(expediente, old_art.artifact_type) and not expediente.is_blocked:
+            from rest_framework.exceptions import APIException
+            class Conflict409(APIException):
+                status_code = 409
+                default_detail = 'Expediente must be blocked (C17) before correcting an artifact in a downstream state.'
+            raise Conflict409()
+
         new_art = ArtifactInstance.objects.create(
             expediente=expediente,
             artifact_type=old_art.artifact_type,
-            status='COMPLETED',
+            status='completed',
             payload=new_payload,
             supersedes=old_art
         )
         
-        old_art.status = 'SUPERSEDED'
+        old_art.status = 'superseded'
         old_art.superseded_by = new_art
         old_art.save(update_fields=['status', 'superseded_by'])
         
@@ -550,7 +543,6 @@ def supersede_artifact(old_artifact_id, new_payload, user):
             }
         )
         
-        _check_post_transition_block(expediente, old_art.artifact_type)
         return expediente, new_art, event
 
 
@@ -566,13 +558,22 @@ def void_artifact(old_artifact_id, user):
         if old_art.artifact_type != 'ART-09':
             raise CommandValidationError("Only ART-09 can be voided in MVP.")
             
-        if old_art.status != 'COMPLETED':
+        # BUG 7: Use lowercase 'completed'
+        if old_art.status != 'completed':
             raise CommandValidationError(f"Cannot void artifact in status {old_art.status}")
             
         if expediente.status in TERMINAL_STATES:
             raise CommandValidationError("Cannot void artifact in terminal state Expediente")
 
-        old_art.status = 'VOID'
+        # BUG 8: Raise 409 if post-transition and NOT blocked
+        if _is_post_transition(expediente, old_art.artifact_type) and not expediente.is_blocked:
+            from rest_framework.exceptions import APIException
+            class Conflict409(APIException):
+                status_code = 409
+                default_detail = 'Expediente must be blocked (C17) before voiding an artifact in a downstream state.'
+            raise Conflict409()
+
+        old_art.status = 'void'
         old_art.save(update_fields=['status'])
         
         event = _create_event(
@@ -584,7 +585,6 @@ def void_artifact(old_artifact_id, user):
             }
         )
         
-        _check_post_transition_block(expediente, old_art.artifact_type)
         return expediente, old_art, event
 
 
