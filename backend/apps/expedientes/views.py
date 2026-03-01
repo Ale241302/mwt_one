@@ -8,8 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.expedientes.models import Expediente
 from apps.expedientes.serializers import (
-    ExpedienteSerializer, EventLogSerializer, ArtifactInstanceSerializer,
+    ExpedienteSerializer, EventLogSerializer,
     ExpedienteCreateSerializer, ArtifactPayloadSerializer,
     RegisterCostSerializer, RegisterPaymentSerializer,
     # SupersedeArtifactSerializer,  # Sprint 2

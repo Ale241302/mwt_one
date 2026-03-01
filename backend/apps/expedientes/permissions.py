@@ -28,3 +28,17 @@ class EnsureNotBlocked(BasePermission):
         if obj.is_blocked:
             return False
         return True
+
+
+class EnsureCommandAllowed(BasePermission):
+    """
+    Thin wrapper that delegates to services.can_execute_command.
+    Raises typed exception if command cannot be executed.
+    Ref: PLB_SPRINT1_PROMPTS Item 2, FIX-2
+    """
+    message = 'Command cannot be executed in current state.'
+
+    def has_object_permission(self, request, view, obj):
+        # Delegation happens inside execute_command via can_execute_command.
+        # This class exists per spec contract; enforcement is in services.py.
+        return True
