@@ -45,85 +45,59 @@ def evaluar_relojes_credito():
                 fecha_inicio = exp.credit_clock_started_at.date()
                 dias_transcurridos = (hoy - fecha_inicio).days
 
-                # STEP 1: Enforcement (SIEMPRE si >= 75) - BUG 2
+                # STEP 1: Enforcement (SIEMPRE si >= 75) - FIX-13
                 if dias_transcurridos >= 75 and not exp.is_blocked:
-                    logger.info(f"Expediente {exp.expediente_id} reached {dias_transcurridos} days. Blocking via SYSTEM.")
-                    # We use service to ensure consistency, but need to pass null user for SYSTEM actor
-                    # Note: execute_command will be updated to handle user=None as SYSTEM
+                    actor_id = "credit_clock_90d" if dias_transcurridos >= 90 else "credit_clock_75d"
+                    logger.info(f"Expediente {exp.expediente_id} reached {dias_transcurridos} days. Enforcement block by {actor_id}.")
                     from .services import execute_command
                     execute_command(
                         exp, 
                         'C17', 
-                        {'reason': f"Automated block: {dias_transcurridos} days since credit clock started.", 'actor_type': 'system'}, 
+                        {
+                            'reason': f"Automated block: {dias_transcurridos} days since credit clock started.", 
+                            'actor_type': 'system',
+                            'actor_id': actor_id
+                        }, 
                         user=None
                     )
                 
-                # STEP 2: Emisión de eventos (Una vez por vida)
+                # STEP 2: Emisión de eventos (Una vez por vida por umbral) - FIX-13
                 # Spec: credit_clock.warning (60d), credit_clock.critical (75d), credit_clock.expired (90d)
                 
-                # Critical Event at 75 days (was BLOCKED_POR_MORA)
-                if dias_transcurridos >= 75:
-                    ya_emitido = EventLog.objects.filter(
-                        aggregate_id=exp.expediente_id,
-                        event_type='credit_clock.critical'
-                    ).exists()
+                event_thresholds = [
+                    (90, 'credit_clock.expired'),
+                    (75, 'credit_clock.critical'),
+                    (60, 'credit_clock.warning'),
+                ]
 
-                    if not ya_emitido:
-                        logger.info(f"Emitting credit_clock.critical for {exp.expediente_id}")
-                        EventLog.objects.create(
+                for threshold, event_type in event_thresholds:
+                    if dias_transcurridos >= threshold:
+                        ya_emitido = EventLog.objects.filter(
                             aggregate_id=exp.expediente_id,
-                            aggregate_type=AggregateType.EXPEDIENTE,
-                            event_type='credit_clock.critical',
-                            emitted_by='SYSTEM:CREDIT_CLOCK',
-                            occurred_at=now_time,
-                            payload={"dias": dias_transcurridos},
-                            correlation_id=uuid.uuid4()
-                        )
+                            event_type=event_type
+                        ).exists()
 
-                # Expired Event at 90 days - Issue 1
-                if dias_transcurridos >= 90:
-                    ya_expired = EventLog.objects.filter(
-                        aggregate_id=exp.expediente_id,
-                        event_type='credit_clock.expired'
-                    ).exists()
-
-                    if not ya_expired:
-                        logger.info(f"Emitting credit_clock.expired for {exp.expediente_id}")
-                        EventLog.objects.create(
-                            aggregate_id=exp.expediente_id,
-                            aggregate_type=AggregateType.EXPEDIENTE,
-                            event_type='credit_clock.expired',
-                            emitted_by='SYSTEM:CREDIT_CLOCK',
-                            occurred_at=now_time,
-                            payload={"dias": dias_transcurridos},
-                            correlation_id=uuid.uuid4()
-                        )
-
-                # Warning Event at 60 days
-                if 60 <= dias_transcurridos < 75:
-                    ya_notificado = EventLog.objects.filter(
-                        aggregate_id=exp.expediente_id,
-                        event_type='credit_clock.warning'
-                    ).exists()
-
-                    if not ya_notificado:
-                        logger.info(f"Expediente {exp.expediente_id} reached {dias_transcurridos} days. Warning.")
-                        EventLog.objects.create(
-                            aggregate_id=exp.expediente_id,
-                            aggregate_type=AggregateType.EXPEDIENTE,
-                            event_type='credit_clock.warning',
-                            emitted_by='SYSTEM:CREDIT_CLOCK',
-                            occurred_at=now_time,
-                            payload={"dias": dias_transcurridos},
-                            correlation_id=uuid.uuid4()
-                        )
+                        if not ya_emitido:
+                            logger.info(f"Emitting {event_type} for {exp.expediente_id} at {dias_transcurridos} days")
+                            EventLog.objects.create(
+                                aggregate_id=exp.expediente_id,
+                                aggregate_type=AggregateType.EXPEDIENTE,
+                                event_type=event_type,
+                                emitted_by='SYSTEM:CREDIT_CLOCK',
+                                occurred_at=now_time,
+                                payload={
+                                    "days_elapsed": dias_transcurridos,
+                                    "threshold": threshold,
+                                    "actor_type": "SYSTEM",
+                                    "actor_id": f"credit_clock_{threshold}d"
+                                },
+                                correlation_id=uuid.uuid4()
+                            )
         except Exception as e:
             logger.error(f"Error processing expediente {eid}: {str(e)}")
             continue
     
     logger.info("Finished evaluar_relojes_credito task")
-
-from django.utils import timezone
 
 @shared_task
 def process_pending_events():
@@ -131,7 +105,7 @@ def process_pending_events():
     Processes pending EventLogs and marks them as processed.
     Ref: LOTE_SM_SPRINT2 Item 5 — Audit Fix: Added batch limit of 100 and renamed to process_pending_events.
     """
-    logger.info("Starting dispatch_events task to process outbox queue")
+    logger.info("Starting process_pending_events task to process outbox queue")
     
     with transaction.atomic():
         # Select for update to prevent multiple workers processing same events
@@ -146,4 +120,4 @@ def process_pending_events():
             event.processed_at = timezone.now()
             event.save(update_fields=['processed_at'])
             
-    logger.info("Finished dispatch_events task")
+    logger.info("Finished process_pending_events task")
