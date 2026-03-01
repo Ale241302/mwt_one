@@ -100,6 +100,10 @@ COMMAND_SPEC = {
             'bypass_block': True},
     'C21': {'name': 'RegisterPayment',         'event': 'payment.registered',
             'not_in_state': ['CERRADO', 'CANCELADO']},
+    'C19': {'name': 'SupersedeArtifact',       'event': 'artifact.superseded',
+            'ceo_only': True},
+    'C20': {'name': 'VoidArtifact',            'event': 'artifact.voided',
+            'ceo_only': True},
 }
 
 

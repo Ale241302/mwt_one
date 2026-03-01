@@ -122,3 +122,7 @@ class RegisterPaymentSerializer(serializers.Serializer):
     method = serializers.CharField(max_length=50)
     reference = serializers.CharField(max_length=100)
 
+
+class SupersedeArtifactSerializer(serializers.Serializer):
+    """C19: SupersedeArtifact — inputs."""
+    payload = serializers.DictField(required=True)

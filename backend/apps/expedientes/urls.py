@@ -66,9 +66,9 @@ urlpatterns = [
     path('<uuid:pk>/register-payment/', RegisterPaymentView.as_view(), name='register-payment'),
 
     # ────────────────────────────────────────────────
-    # SPRINT 2 — Will be added here:
-    # path('<uuid:pk>/supersede-artifact/', SupersedeArtifactView.as_view(), name='supersede-artifact'),
-    # path('<uuid:pk>/void-artifact/', VoidArtifactView.as_view(), name='void-artifact'),
+    # SPRINT 2
+    path('<uuid:pk>/artifacts/<uuid:artifact_id>/supersede/', SupersedeArtifactView.as_view(), name='supersede-artifact'),
+    path('<uuid:pk>/artifacts/<uuid:artifact_id>/void/', VoidArtifactView.as_view(), name='void-artifact'),
     # SPRINT 3 — Will be added to config/urls.py under /api/ui/:
     # path('', ListExpedientesView.as_view(), name='list'),
     # path('<uuid:pk>/', ExpedienteBundleView.as_view(), name='bundle'),

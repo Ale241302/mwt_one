@@ -13,10 +13,10 @@ from apps.expedientes.serializers import (
     ExpedienteSerializer, EventLogSerializer,
     ExpedienteCreateSerializer, ArtifactPayloadSerializer,
     RegisterCostSerializer, RegisterPaymentSerializer,
-    # SupersedeArtifactSerializer,  # Sprint 2
+    SupersedeArtifactSerializer,
 )
 from apps.expedientes.services import (
-    create_expediente, execute_command, # supersede_artifact, void_artifact # Sprint 2
+    create_expediente, execute_command, supersede_artifact, void_artifact
 )
 from apps.expedientes.permissions import IsCEO, EnsureNotBlocked
 
@@ -477,7 +477,6 @@ class RegisterPaymentView(APIView):
         return _command_response(exp, events, status.HTTP_201_CREATED)
 
 
-"""
 # ══════════════════════════════════════════════════
 # C19 & C20: Artifact Correction (Sprint 2)
 # ══════════════════════════════════════════════════
@@ -486,14 +485,41 @@ class SupersedeArtifactView(APIView):
     permission_classes = [IsAuthenticated, IsCEO]
 
     def post(self, request, pk, artifact_id):
-        # ...
-        pass
+        _get_expediente(pk)  # Validate exp exists
+        ser = SupersedeArtifactSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        
+        exp, new_art, event = supersede_artifact(
+            old_artifact_id=artifact_id,
+            new_payload=ser.validated_data['payload'],
+            user=request.user
+        )
+        
+        return Response(
+            {
+                'expediente': ExpedienteSerializer(exp).data,
+                'new_artifact': ArtifactInstanceSerializer(new_art).data,
+                'event': EventLogSerializer(event).data,
+            },
+            status=status.HTTP_201_CREATED
+        )
 
 class VoidArtifactView(APIView):
     permission_classes = [IsAuthenticated, IsCEO]
 
     def post(self, request, pk, artifact_id):
-        # ...
-        pass
-"""
+        _get_expediente(pk)  # Validate exp exists
+        exp, old_art, event = void_artifact(
+            old_artifact_id=artifact_id,
+            user=request.user
+        )
+        
+        return Response(
+            {
+                'expediente': ExpedienteSerializer(exp).data,
+                'artifact': ArtifactInstanceSerializer(old_art).data,
+                'event': EventLogSerializer(event).data,
+            },
+            status=status.HTTP_200_OK
+        )
 
