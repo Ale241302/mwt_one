@@ -1,6 +1,9 @@
 import pytest
 from apps.expedientes.models import EventLog
-from apps.expedientes.tasks import process_pending_events
+from apps.expedientes.tasks import dispatch_events
+from apps.expedientes.enums import AggregateType
+import uuid
+from django.utils import timezone
 from .factories import ExpedienteFactory
 
 @pytest.mark.django_db
@@ -11,21 +14,26 @@ def test_process_pending_events():
     # Create some events
     EventLog.objects.create(
         aggregate_id=exp.expediente_id,
+        aggregate_type=AggregateType.EXPEDIENTE,
         event_type='TEST_EVENT_1',
         payload={},
-        actor_id='TEST'
+        emitted_by='TEST',
+        occurred_at=timezone.now(),
+        correlation_id=uuid.uuid4()
     )
     EventLog.objects.create(
         aggregate_id=exp.expediente_id,
+        aggregate_type=AggregateType.EXPEDIENTE,
         event_type='TEST_EVENT_2',
         payload={},
-        actor_id='TEST'
+        emitted_by='TEST',
+        occurred_at=timezone.now(),
+        correlation_id=uuid.uuid4()
     )
     
     # Run task
-    processed_count = process_pending_events()
+    dispatch_events()
     
-    assert processed_count == 2
     assert EventLog.objects.filter(processed_at__isnull=False).count() == 2
 
 @pytest.mark.django_db
@@ -38,15 +46,17 @@ def test_process_pending_events_limit():
     for i in range(150):
         events.append(EventLog(
             aggregate_id=exp.expediente_id,
+            aggregate_type=AggregateType.EXPEDIENTE,
             event_type=f'TEST_EVENT_{i}',
             payload={},
-            actor_id='TEST'
+            emitted_by='TEST',
+            occurred_at=timezone.now(),
+            correlation_id=uuid.uuid4()
         ))
     EventLog.objects.bulk_create(events)
     
     # Run task
-    processed_count = process_pending_events()
+    dispatch_events()
     
-    assert processed_count == 100
     assert EventLog.objects.filter(processed_at__isnull=False).count() == 100
     assert EventLog.objects.filter(processed_at__isnull=True).count() == 50
