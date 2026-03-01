@@ -34,9 +34,12 @@ class LogoutView(APIView):
         return Response({'detail': 'Logout successful.'}, status=status.HTTP_200_OK)
 
 class MeView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        get_token(request) # Force CSRF cookie (S3-D06)
+        if not request.user.is_authenticated:
+            return Response({"detail": "Not authenticated"}, status=status.HTTP_403_FORBIDDEN)
         return Response({
             'user': UserSerializer(request.user).data
         })

@@ -12,7 +12,7 @@ A continuación se detalla la lista de tareas a importar en Asana bajo el proyec
 
 ## Tareas
 
-### Tarea 1: Sprint 2 - Item 1: Infra — [DONE]
+### Tarea 1: Sprint 2 - Item 1: Infra 
 - **Responsable (Agente):** AG-07 DevOps
 - **Dependencia:** Sprint 1 DONE.
 - **Descripción:** Garantizar que Redis 7, Celery Worker y Celery Beat están funcionales en el stack Docker. Crear `config/celery.py` con app Celery configurada. Configurar `CELERY_BROKER_URL=redis://redis:6379/0` y `CELERY_RESULT_BACKEND=redis://redis:6379/1`. Beat schedule definido ÚNICAMENTE en `app.conf.beat_schedule` dentro de `config/celery.py` (FIX-14 — NO django-celery-beat, NO settings.py). Schedules canónicos: `evaluate_credit_clocks` (crontab hour=6, minute=0) y `process_pending_events` (cada 300s).
@@ -31,7 +31,7 @@ A continuación se detalla la lista de tareas a importar en Asana bajo el proyec
 
 ---
 
-### Tarea 2: Sprint 2 - Item 2: Reloj de Crédito — [DONE]
+### Tarea 2: Sprint 2 - Item 2: Reloj de Crédito 
 - **Responsable (Agente):** AG-02 API Builder
 - **Dependencia:** Item 1 aprobado (Celery funcional).
 - **Descripción:** Primer proceso automático del sistema. Task Celery `evaluate_credit_clocks()` que corre diariamente (6AM UTC via Beat) y evalúa todos los expedientes activos con credit_clock_started_at. Dos pasos independientes por expediente (FIX-13): Paso 1 — Enforcement de bloqueo (SIEMPRE, sin importar EventLog): si days≥75 AND is_blocked=false → C17 con actor SYSTEM. Paso 2 — Emisión de eventos (una sola vez por vida por umbral): 60d→warning, 75d→critical, 90d→expired. Cada expediente en `transaction.atomic()` con `select_for_update(skip_locked=True)` para protección anti-carreras. Estados ignorados via constante `CREDIT_CLOCK_IGNORED_STATUSES` derivada de enum `is_terminal=True` (FIX-15).
@@ -54,7 +54,7 @@ A continuación se detalla la lista de tareas a importar en Asana bajo el proyec
 
 ---
 
-### Tarea 3: Sprint 2 - Item 3: C19 SupersedeArtifact — [DONE]
+### Tarea 3: Sprint 2 - Item 3: C19 SupersedeArtifact 
 - **Responsable (Agente):** AG-02 API Builder
 - **Dependencia:** Item 2 aprobado + Item 6 aprobado (campos superseded_by, supersedes existen).
 - **Descripción:** Endpoint nuevo para corregir artefactos con error sin romper la state machine. POST /api/expedientes/{pk}/supersede-artifact/ → C19. Input: original_artifact_id, new_payload, reason. CEO only. Precondiciones (§I3): original.status=completed, expediente.status≠CERRADO, mismo artifact_type, new_payload válido. Regla post-transición (§I3.1.3): si artefacto fue precondición de transición ya ejecutada → expediente debe estar bloqueado (is_blocked=true), si no → 409. Regla pre-transición (§I3.1.4): transición no ejecutada → supersede libre. Mutaciones atómicas: UPDATE original→superseded, INSERT nuevo ArtifactInstance (completed, supersedes=original.id), INSERT event_log. Flujo corrección: Block → Supersede → Unblock.
@@ -74,7 +74,7 @@ A continuación se detalla la lista de tareas a importar en Asana bajo el proyec
 
 ---
 
-### Tarea 4: Sprint 2 - Item 4: C20 VoidArtifact — [DONE]
+### Tarea 4: Sprint 2 - Item 4: C20 VoidArtifact 
 - **Responsable (Agente):** AG-02 API Builder
 - **Dependencia:** Item 3 aprobado.
 - **Descripción:** Endpoint para anular artefactos fiscales sin reemplazo. POST /api/expedientes/{pk}/void-artifact/ → C20. Input: artifact_id, reason. CEO only. Precondiciones (§I5): artifact.status=completed, artifact_type ∈ voidable_list (Sprint 2: solo ART-09). ART-01 a ART-08 NO son voidables (usar C19). Misma regla post-transición que C19. Mutaciones: UPDATE artifact.status→void, INSERT event_log. Efecto cascada: después de void ART-09, C14 (CloseExpediente) ya no puede ejecutarse (precondición ART-09.status=completed no cumplida). CEO debe emitir nueva factura (C13) antes de cerrar. NO implementar conector fiscal.
@@ -94,7 +94,7 @@ A continuación se detalla la lista de tareas a importar en Asana bajo el proyec
 
 ---
 
-### Tarea 5: Sprint 2 - Item 5: Event Dispatcher Mínimo — [DONE]
+### Tarea 5: Sprint 2 - Item 5: Event Dispatcher Mínimo 
 - **Responsable (Agente):** AG-02 API Builder
 - **Dependencia:** Item 1 aprobado (Celery funcional).
 - **Descripción:** Task Celery `process_pending_events()` que cada 5 minutos marca eventos pendientes como procesados. Consulta: EventLog WHERE processed_at IS NULL, ORDER BY occurred_at ASC, LIMIT 100. Para cada evento: UPDATE processed_at = now(). Sin side effects adicionales en Sprint 2. Propósito: validar pipeline outbox end-to-end y mantener processed_at limpio para Sprint 3+ (consumers reales). Intencionalmente mínimo.
@@ -111,7 +111,7 @@ A continuación se detalla la lista de tareas a importar en Asana bajo el proyec
 
 ---
 
-### Tarea 6: Sprint 2 - Item 6: Migraciones de Modelo — [DONE]
+### Tarea 6: Sprint 2 - Item 6: Migraciones de Modelo 
 - **Responsable (Agente):** AG-01 Architect
 - **Dependencia:** Ninguna (puede correr al inicio del sprint, en paralelo con Item 1).
 - **Descripción:** Verificar si ArtifactInstance tiene los campos necesarios para C19/C20. Si faltan → crear migración puntual. Si existen de Sprint 0 → marcar DONE sin cambios (no-op). Campos a verificar: `superseded_by` (UUIDField nullable FK self — el nuevo que me reemplaza), `supersedes` (UUIDField nullable FK self — el original que reemplazo). Status enum de ArtifactInstance debe incluir valores `superseded` y `void`. Mismo patrón FIX-7 de Sprint 1 (addendum de compatibilidad, no reabre Sprint 0).
@@ -128,7 +128,7 @@ A continuación se detalla la lista de tareas a importar en Asana bajo el proyec
 
 ---
 
-### Tarea 7: Sprint 2 - Item 7: Tests Sprint 2 — [DONE]
+### Tarea 7: Sprint 2 - Item 7: Tests Sprint 2 
 - **Responsable (Agente):** AG-06 QA
 - **Dependencia:** Items 2-6 aprobados (modelo completo + lógica completa).
 - **Descripción:** Tests para todas las features nuevas de Sprint 2 en 3 archivos: test_credit_clock.py (~10 tests), test_corrections.py (~15 tests C19+C20), test_dispatcher.py (~3 tests). Incluye: idempotencia del reloj, concurrencia select_for_update, enforcement vs emisión, regla post-transición de C19/C20, cascada void ART-09→C14 falla, response format, y no-regresión Sprint 1 (happy path completo sigue funcional). Total esperado: ~31 tests.

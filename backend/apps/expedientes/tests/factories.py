@@ -41,7 +41,6 @@ def ArtifactInstanceFactory(**kwargs):
     defaults = {
         'artifact_type': 'ART-01',
         'status': ArtifactStatus.DRAFT,
-        'version': 1,
         'payload': {}
     }
     defaults.update(kwargs)

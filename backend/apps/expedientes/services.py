@@ -93,17 +93,21 @@ COMMAND_SPEC = {
             'bypass_block': True},
     'C17': {'name': 'BlockExpediente',         'event': 'expediente.blocked',
             'requires_unblocked': True,
-            'bypass_block': True},
+            'bypass_block': True,
+            'not_in_state': ['CERRADO', 'CANCELADO']},
     'C18': {'name': 'UnblockExpediente',       'event': 'expediente.unblocked',
             'requires_blocked': True,
             'ceo_only': True,
-            'bypass_block': True},
+            'bypass_block': True,
+            'not_in_state': ['CERRADO', 'CANCELADO']},
     'C21': {'name': 'RegisterPayment',         'event': 'payment.registered',
             'not_in_state': ['CERRADO', 'CANCELADO']},
     'C19': {'name': 'SupersedeArtifact',       'event': 'artifact.superseded',
-            'ceo_only': True},
+            'ceo_only': True,
+            'not_in_state': ['CERRADO', 'CANCELADO']},
     'C20': {'name': 'VoidArtifact',            'event': 'artifact.voided',
-            'ceo_only': True},
+            'ceo_only': True,
+            'not_in_state': ['CERRADO', 'CANCELADO']},
 }
 
 
@@ -594,13 +598,21 @@ def void_artifact(old_artifact_id, user):
 
 def get_available_commands(expediente, user):
     """
-    Returns available actions based on availableActions v1 FROZEN contract.
-    Divided in 'pipeline' (state changes) and 'operations' (other actions).
+    Returns available actions categorized for UI.
+    primary: happy path transitions
+    secondary: terminal/alternative transitions
+    ops: maintenance/operational commands
     """
     actions = {
-        'pipeline': [],
-        'operations': []
+        'primary': [],
+        'secondary': [],
+        'ops': []
     }
+
+    # Categories based on S3 requirements
+    PRIMARY_IDS = {'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11', 'C12', 'C13'}
+    SECONDARY_IDS = {'C14', 'C16'}
+    # OPS_IDS = {'C15', 'C17', 'C18', 'C19', 'C20', 'C21'} # Everything else
 
     # Iterate over commands sorted by ID
     for cmd_id in sorted(COMMAND_SPEC.keys(), key=lambda x: int(x[1:])):
@@ -608,23 +620,61 @@ def get_available_commands(expediente, user):
             continue
 
         spec = COMMAND_SPEC[cmd_id]
+        
+        # Logic to decide if we show it in UI (even if disabled)
+        req_state = spec.get('required_state')
+        not_in = spec.get('not_in_state', [])
+        
+        show_in_ui = False
+        if not req_state or req_state == expediente.status:
+            show_in_ui = True
+        
+        # SPRINT 3 REQUIREMENT: Always show secondary actions (C14, C16) even if disabled
+        if cmd_id in SECONDARY_IDS:
+             show_in_ui = True
+
+        # Exceptions: if in not_in_state, we definitely don't show it
+        if expediente.status in not_in:
+            show_in_ui = False
+            
+        # Exception: terminal states hide almost everything
+        if expediente.status in TERMINAL_STATES and cmd_id not in ['C15', 'C17', 'C18', 'C19', 'C20', 'C21']:
+             show_in_ui = False
+
+        if not show_in_ui:
+            continue
+
+        # Check if enabled
+        enabled = True
+        disabled_reason = None
         try:
             can_execute_command(expediente, cmd_id, user)
+        except Exception as e:
+            enabled = False
+            disabled_reason = str(e)
             
-            cmd_info = {
-                'id': cmd_id,
-                'name': spec['name'],
-            }
-            if 'creates_art' in spec:
-                cmd_info['creates_artifact'] = spec['creates_art']
+        cmd_info = {
+            'id': cmd_id,
+            'name': spec['name'],
+            'enabled': enabled,
+        }
+        if disabled_reason:
+            cmd_info['disabled_reason'] = disabled_reason
+        if 'creates_art' in spec:
+            cmd_info['creates_artifact'] = spec['creates_art']
 
-            # Categorize: Pipeline vs Operations
-            if 'transition_to' in spec or 'auto_transition' in spec:
-                actions['pipeline'].append(cmd_info)
-            else:
-                actions['operations'].append(cmd_info)
+        # Add fields for dynamic forms (C15, C21)
+        if cmd_id == 'C15':
+            cmd_info['fields'] = ['cost_type', 'amount', 'currency', 'phase', 'description']
+        elif cmd_id == 'C21':
+            cmd_info['fields'] = ['payment_type', 'amount', 'currency', 'reference', 'date']
 
-        except Exception:
-            continue
+        # Categorize
+        if cmd_id in PRIMARY_IDS:
+            actions['primary'].append(cmd_info)
+        elif cmd_id in SECONDARY_IDS:
+            actions['secondary'].append(cmd_info)
+        else:
+            actions['ops'].append(cmd_info)
 
     return actions
