@@ -204,7 +204,7 @@ class TestUIAPI:
         Expediente.objects.all().delete()
         ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
         ExpedienteFactory(status=ExpedienteStatus.CERRADO)
-        url = reverse('core:dashboard')
+        url = reverse('core-ui:dashboard')
         response = self.client_auth.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.data['active_count'] == 1
@@ -215,7 +215,7 @@ class TestUIAPI:
         Expediente.objects.all().delete()
         ExpedienteFactory(credit_clock_started_at=now - timedelta(days=20)) # WARNING/AMBER
         ExpedienteFactory(credit_clock_started_at=now - timedelta(days=40)) # CRITICAL/CORAL
-        url = reverse('core:dashboard')
+        url = reverse('core-ui:dashboard')
         response = self.client_auth.get(url)
         assert response.data['alert_count'] >= 2
 
@@ -223,7 +223,7 @@ class TestUIAPI:
         """test_dashboard_blocked_count() → is_blocked=True correctamente"""
         Expediente.objects.all().delete()
         ExpedienteFactory(is_blocked=True)
-        url = reverse('core:dashboard')
+        url = reverse('core-ui:dashboard')
         response = self.client_auth.get(url)
         assert response.data['blocked_count'] == 1
 
@@ -232,7 +232,7 @@ class TestUIAPI:
         Expediente.objects.all().delete()
         exp = ExpedienteFactory()
         CostLine.objects.create(expediente=exp, amount=Decimal('1000.00'), currency='USD', cost_type='TEST')
-        url = reverse('core:dashboard')
+        url = reverse('core-ui:dashboard')
         response = self.client_auth.get(url)
         assert Decimal(response.data['total_cost']) >= Decimal('1000.00')
 
@@ -242,7 +242,7 @@ class TestUIAPI:
         Expediente.objects.all().delete()
         for i in range(10):
             ExpedienteFactory(credit_clock_started_at=now - timedelta(days=31+i))
-        url = reverse('core:dashboard')
+        url = reverse('core-ui:dashboard')
         response = self.client_auth.get(url)
         assert len(response.data['top_risk']) == 5
         assert response.data['top_risk'][0]['credit_days_elapsed'] > response.data['top_risk'][4]['credit_days_elapsed']
@@ -251,7 +251,7 @@ class TestUIAPI:
         """test_dashboard_blocked_list() → lista completa de bloqueados"""
         Expediente.objects.all().delete()
         exp = ExpedienteFactory(is_blocked=True)
-        url = reverse('core:dashboard')
+        url = reverse('core-ui:dashboard')
         response = self.client_auth.get(url)
         assert any(item['id'] == str(exp.pk) for item in response.data['blocked_list'])
 

@@ -12,6 +12,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/expedientes/', include('apps.expedientes.urls', namespace='expedientes')),
+    path('api/ui/', include('apps.core.urls_ui', namespace='core-ui')),
     path('api/ui/expedientes/', include('apps.expedientes.urls_ui', namespace='expedientes-ui')),
     path('api/core/', include('apps.core.urls', namespace='core')),
 ]

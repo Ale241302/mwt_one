@@ -19,7 +19,7 @@ test.describe('MWT.ONE Smoke Tests', () => {
     test('login exitoso redirige a dashboard', async ({ page }) => {
         await page.goto('/login');
         await page.getByPlaceholder('admin').fill('admin');
-        await page.getByPlaceholder('••••••••').fill('admin');
+        await page.getByPlaceholder('••••••••').fill('MuitoWork2026?');
         await page.getByRole('button', { name: 'Ingresar a la plataforma' }).click();
         await expect(page).toHaveURL(/.*\/dashboard/);
     });
@@ -35,7 +35,7 @@ test.describe('MWT.ONE Smoke Tests', () => {
     test('dashboard muestra 4 stat cards', async ({ page }) => {
         await page.goto('/login');
         await page.getByPlaceholder('admin').fill('admin');
-        await page.getByPlaceholder('••••••••').fill('admin');
+        await page.getByPlaceholder('••••••••').fill('MuitoWork2026?');
         await page.getByRole('button', { name: 'Ingresar a la plataforma' }).click();
 
         await expect(page.locator('.stat-card')).toHaveCount(4);
