@@ -17,6 +17,9 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "MWT.ONE",
   description: "MWT Expedientes Management",
+  icons: {
+    icon: "/Recurso 3logo_login.png",
+  },
 };
 
 export default function RootLayout({

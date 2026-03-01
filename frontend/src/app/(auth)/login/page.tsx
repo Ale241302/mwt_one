@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import Image from "next/image";
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
@@ -49,9 +50,15 @@ export default function LoginPage() {
             <div className="w-full max-w-md p-8 bg-surface rounded-2xl shadow-xl border border-border">
 
                 <div className="mb-8 text-center">
-                    <h1 className="text-2xl font-display font-bold text-text-primary">
-                        mwt<span className="text-mint">.one</span>
-                    </h1>
+                    <div className="flex justify-center">
+                        <Image
+                            src="/recurso-1logo_largo.png"
+                            alt="MWT.ONE"
+                            width={220}
+                            height={60}
+                            priority
+                        />
+                    </div>
                     <p className="text-text-secondary mt-2">Ingresa tus credenciales para continuar</p>
                 </div>
 

@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   postgres:
@@ -11,7 +11,7 @@ services:
     ports:
       - "5433:5432"
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U mwt -d mwt']
+      test: ["CMD-SHELL", "pg_isready -U mwt -d mwt"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,7 +23,7 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,9 +38,9 @@ services:
       - minio_data:/data
     ports:
       - "9000:9000"
-    #   - "9001:9001"
+      - "9001:9001"
     healthcheck:
-      test: ['CMD', 'mc', 'ready', 'local']
+      test: ["CMD", "mc", "ready", "local"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -68,7 +68,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'curl -f http://localhost:8000/admin/ || exit 1']
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/admin/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5

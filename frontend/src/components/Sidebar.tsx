@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, FolderOpen, PieChart, Users, Settings, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,8 +54,14 @@ export default function Sidebar({
             {/* Brand */}
             <div className="h-header flex items-center justify-between px-4 border-b border-[rgba(255,255,255,0.06)]">
                 {isOpen && (
-                    <Link href="/" className="font-display font-extrabold text-lg tracking-tight">
-                        mwt<span className="text-mint">.one</span>
+                    <Link href="/" className="flex items-center">
+                        <Image
+                            src="/recurso-1logo_foot.png"
+                            alt="MWT.ONE"
+                            width={140}
+                            height={35}
+                            priority
+                        />
                     </Link>
                 )}
                 <button
