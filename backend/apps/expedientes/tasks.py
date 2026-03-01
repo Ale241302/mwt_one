@@ -35,7 +35,12 @@ def evaluar_relojes_credito():
     for eid in expediente_ids:
         try:
             with transaction.atomic():
-                exp = Expediente.objects.select_for_update(skip_locked=True).get(expediente_id=eid)
+                try:
+                    exp = Expediente.objects.select_for_update(skip_locked=True).get(expediente_id=eid)
+                except Expediente.DoesNotExist:
+                    # Issue 3: Handle skipped due to lock gracefully
+                    logger.info(f"Expediente {eid} skipped (locked by another worker)")
+                    continue
                 
                 fecha_inicio = exp.credit_clock_started_at.date()
                 dias_transcurridos = (hoy - fecha_inicio).days
@@ -53,30 +58,52 @@ def evaluar_relojes_credito():
                         user=None
                     )
                 
-                # STEP 2: Emisión de eventos (Una vez por vida) - BUG 2
+                # STEP 2: Emisión de eventos (Una vez por vida)
+                # Spec: credit_clock.warning (60d), credit_clock.critical (75d), credit_clock.expired (90d)
+                
+                # Critical Event at 75 days (was BLOCKED_POR_MORA)
                 if dias_transcurridos >= 75:
                     ya_emitido = EventLog.objects.filter(
                         aggregate_id=exp.expediente_id,
-                        event_type='BLOCKED_POR_MORA'
+                        event_type='credit_clock.critical'
                     ).exists()
 
                     if not ya_emitido:
-                        logger.info(f"Emitting BLOCKED_POR_MORA for {exp.expediente_id}")
+                        logger.info(f"Emitting credit_clock.critical for {exp.expediente_id}")
                         EventLog.objects.create(
                             aggregate_id=exp.expediente_id,
                             aggregate_type=AggregateType.EXPEDIENTE,
-                            event_type='BLOCKED_POR_MORA',
+                            event_type='credit_clock.critical',
                             emitted_by='SYSTEM:CREDIT_CLOCK',
                             occurred_at=now_time,
                             payload={"dias": dias_transcurridos},
                             correlation_id=uuid.uuid4()
                         )
 
-                # STEP 3: Warning at 60 days (Independent step)
+                # Expired Event at 90 days - Issue 1
+                if dias_transcurridos >= 90:
+                    ya_expired = EventLog.objects.filter(
+                        aggregate_id=exp.expediente_id,
+                        event_type='credit_clock.expired'
+                    ).exists()
+
+                    if not ya_expired:
+                        logger.info(f"Emitting credit_clock.expired for {exp.expediente_id}")
+                        EventLog.objects.create(
+                            aggregate_id=exp.expediente_id,
+                            aggregate_type=AggregateType.EXPEDIENTE,
+                            event_type='credit_clock.expired',
+                            emitted_by='SYSTEM:CREDIT_CLOCK',
+                            occurred_at=now_time,
+                            payload={"dias": dias_transcurridos},
+                            correlation_id=uuid.uuid4()
+                        )
+
+                # Warning Event at 60 days
                 if 60 <= dias_transcurridos < 75:
                     ya_notificado = EventLog.objects.filter(
                         aggregate_id=exp.expediente_id,
-                        event_type='WARNING_60_DIAS'
+                        event_type='credit_clock.warning'
                     ).exists()
 
                     if not ya_notificado:
@@ -84,7 +111,7 @@ def evaluar_relojes_credito():
                         EventLog.objects.create(
                             aggregate_id=exp.expediente_id,
                             aggregate_type=AggregateType.EXPEDIENTE,
-                            event_type='WARNING_60_DIAS',
+                            event_type='credit_clock.warning',
                             emitted_by='SYSTEM:CREDIT_CLOCK',
                             occurred_at=now_time,
                             payload={"dias": dias_transcurridos},

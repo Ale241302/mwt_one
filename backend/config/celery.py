@@ -13,7 +13,7 @@ app.conf.beat_schedule = {
         'schedule': crontab(hour=2, minute=0),
     },
     'dispatch-events-5min': {
-        'task': 'apps.expedientes.tasks.dispatch_events',
+        'task': 'apps.expedientes.tasks.process_pending_events',
         'schedule': crontab(minute='*/5'),
     },
 }
