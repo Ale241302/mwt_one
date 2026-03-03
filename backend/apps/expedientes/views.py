@@ -449,12 +449,11 @@ class MirrorPDFView(APIView):
 # ═══════════════════════════════════════════════════
 
 class FinancialDashboardView(APIView):
-    """GET /api/ui/dashboard/financial/  [CEO-ONLY]"""
-    permission_classes = [IsCEO]
+    """GET /api/ui/dashboard/financial/"""
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from django.db.models import Sum, Count, Avg
-        from django.utils import timezone
+        from django.db.models import Sum, Count
 
         # Financial cards data
         active_expedientes = Expediente.objects.exclude(
@@ -462,7 +461,7 @@ class FinancialDashboardView(APIView):
         )
 
         # Total active costs
-        total_active_costs = CostLine.objects.filter(
+        total_cost = CostLine.objects.filter(
             expediente__in=active_expedientes
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
@@ -481,33 +480,46 @@ class FinancialDashboardView(APIView):
             expediente__in=active_expedientes
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
-        # Receivables
-        receivables = total_invoiced - total_paid
+        # Receivables & Margin
+        total_receivables = total_invoiced - total_paid
+        margin = total_invoiced - total_cost
 
-        # Margin
-        margin = total_invoiced - total_active_costs
-        margin_pct = (margin / total_invoiced * 100) if total_invoiced > 0 else Decimal('0')
+        # Count
+        active_count = active_expedientes.count()
 
-        # Counts
-        total_active = active_expedientes.count()
-        total_blocked = active_expedientes.filter(is_blocked=True).count()
-
-        # Brand breakdown
-        brand_breakdown = active_expedientes.values('brand').annotate(
+        # Brand breakdown — include total_invoiced per brand
+        brands_qs = active_expedientes.values('brand').annotate(
             count=Count('expediente_id'),
             total_cost=Sum('cost_lines__amount'),
         )
+        brand_breakdown = []
+        for b in brands_qs:
+            # Calculate invoiced per brand
+            brand_invoiced = Decimal('0')
+            brand_arts = ArtifactInstance.objects.filter(
+                artifact_type='ART-09',
+                status='completed',
+                expediente__brand=b['brand'],
+                expediente__in=active_expedientes,
+            )
+            for art in brand_arts:
+                brand_invoiced += Decimal(str(art.payload.get('total_client_view', 0)))
+            brand_breakdown.append({
+                'brand': b['brand'] or 'Sin marca',
+                'count': b['count'],
+                'total_cost': float(b['total_cost'] or 0),
+                'total_invoiced': float(brand_invoiced),
+            })
 
         return Response({
             'cards': {
-                'total_active_expedientes': total_active,
-                'total_blocked': total_blocked,
-                'total_active_costs': float(total_active_costs),
+                'active_count': active_count,
+                'total_cost': float(total_cost),
                 'total_invoiced': float(total_invoiced),
                 'total_paid': float(total_paid),
-                'receivables': float(receivables),
+                'total_receivables': float(total_receivables),
                 'margin': float(margin),
-                'margin_pct': float(margin_pct),
+                'currency': 'USD',
             },
-            'brand_breakdown': list(brand_breakdown),
+            'brand_breakdown': brand_breakdown,
         })

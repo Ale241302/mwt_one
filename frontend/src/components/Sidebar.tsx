@@ -36,10 +36,10 @@ export default function Sidebar({
     const navItems = [
         { label: "Dashboard", href: "/", icon: <LayoutDashboard size={20} /> },
         { label: "Expedientes", href: "/expedientes", icon: <FolderOpen size={20} /> },
+        { label: "Financiero", href: "/dashboard/financial", icon: <PieChart size={20} /> },
     ];
 
     const placeholderItems = [
-        { label: "Reportes", icon: <PieChart size={20} /> },
         { label: "Usuarios", icon: <Users size={20} /> },
         { label: "Configuración", icon: <Settings size={20} /> },
     ];

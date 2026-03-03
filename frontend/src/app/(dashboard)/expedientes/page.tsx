@@ -70,7 +70,7 @@ function ExpedientesContent() {
             params.append("page", page.toString());
             params.append("page_size", pageSize.toString());
 
-            const res = await api.get(`/ui/expedientes/?${params.toString()}`);
+            const res = await api.get(`/api/ui/expedientes/?${params.toString()}`);
             setData(res.data);
 
             // Update URL for shareability
