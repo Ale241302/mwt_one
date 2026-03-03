@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import LegalEntity, Expediente, ArtifactInstance, EventLog, CostLine, PaymentLine
+from .models import LegalEntity, Expediente, ArtifactInstance, EventLog, CostLine, PaymentLine, LogisticsOption
 
 @admin.register(LegalEntity)
 class LegalEntityAdmin(admin.ModelAdmin):
@@ -11,7 +11,7 @@ class LegalEntityAdmin(admin.ModelAdmin):
 class ExpedienteAdmin(admin.ModelAdmin):
     list_display = ('expediente_id', 'client', 'brand', 'mode', 'status', 'created_at', 'is_blocked')
     search_fields = ('brand', 'mode')
-    list_filter = ('status', 'is_blocked')
+    list_filter = ('status', 'is_blocked', 'brand')
 
 @admin.register(ArtifactInstance)
 class ArtifactInstanceAdmin(admin.ModelAdmin):
@@ -27,12 +27,18 @@ class EventLogAdmin(admin.ModelAdmin):
 
 @admin.register(CostLine)
 class CostLineAdmin(admin.ModelAdmin):
-    list_display = ('cost_line_id', 'expediente', 'cost_type', 'amount', 'currency', 'phase')
+    list_display = ('cost_line_id', 'expediente', 'cost_type', 'amount', 'currency', 'phase', 'visibility')
     search_fields = ('cost_type', 'description')
-    list_filter = ('cost_type', 'currency', 'phase')
+    list_filter = ('cost_type', 'currency', 'phase', 'visibility')
 
 @admin.register(PaymentLine)
 class PaymentLineAdmin(admin.ModelAdmin):
     list_display = ('payment_line_id', 'expediente', 'amount', 'currency', 'registered_at', 'method')
     search_fields = ('reference', 'method')
     list_filter = ('currency', 'method')
+
+@admin.register(LogisticsOption)
+class LogisticsOptionAdmin(admin.ModelAdmin):
+    list_display = ('logistics_option_id', 'artifact_instance', 'option_id', 'mode', 'carrier', 'estimated_cost', 'is_selected')
+    search_fields = ('carrier', 'route', 'option_id')
+    list_filter = ('mode', 'source', 'is_selected')

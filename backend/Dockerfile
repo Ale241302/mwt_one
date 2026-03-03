@@ -5,10 +5,16 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+# Sprint 4: Added weasyprint system deps (libpango, libcairo, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
     curl \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libgdk-pixbuf-2.0-0 \
+    libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

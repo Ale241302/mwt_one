@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16
@@ -137,8 +135,44 @@ services:
       frontend:
         condition: service_started
 
+  # ────────────────────────────────────────────────
+  # Sprint 4 S4-10: Paperless-ngx (standalone)
+  # ────────────────────────────────────────────────
+  paperless-ngx:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    container_name: mwt-paperless
+    restart: unless-stopped
+    ports:
+      - "8888:8000"
+    volumes:
+      - paperless_data:/usr/src/paperless/data
+      - paperless_media:/usr/src/paperless/media
+      - paperless_consume:/usr/src/paperless/consume
+      - paperless_export:/usr/src/paperless/export
+    environment:
+      PAPERLESS_REDIS: redis://redis:6379
+      PAPERLESS_DBHOST: postgres
+      PAPERLESS_DBPORT: 5432
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER: mwt
+      PAPERLESS_DBPASS: ${POSTGRES_PASSWORD:-mwt}
+      PAPERLESS_ADMIN_USER: admin
+      PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD:-paperless2024}
+      PAPERLESS_URL: http://localhost:8888
+      PAPERLESS_TIME_ZONE: America/Costa_Rica
+      PAPERLESS_OCR_LANGUAGE: spa
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   minio_data:
   static_volume:
   media_volume:
+  paperless_data:
+  paperless_media:
+  paperless_consume:
+  paperless_export:

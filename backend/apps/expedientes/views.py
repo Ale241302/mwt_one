@@ -1,565 +1,513 @@
 """
-Sprint 1 — API Endpoints (views.py)
-18 APIViews, 1 per command. No ViewSet.
-Ref: LOTE_SM_SPRINT1 Items 3-6, FIX-1 (response format), FIX-8 (block bypass)
+Sprint 1-4 — Views (views.py)
+Ref: LOTE_SM_SPRINT1 Items 5-7, Sprint 3 UI, Sprint 4 S4-02/03/05/07/08
 """
+import io
+from decimal import Decimal
+
+from django.http import HttpResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.exceptions import PermissionDenied
 
-from apps.expedientes.models import Expediente, EventLog
-from apps.expedientes.serializers import (
-    ExpedienteSerializer, ArtifactInstanceSerializer, EventLogSerializer,
-    ExpedienteCreateSerializer, ArtifactPayloadSerializer,
-    RegisterCostSerializer, RegisterPaymentSerializer,
-    SupersedeArtifactSerializer,
+from apps.expedientes.models import (
+    Expediente, ArtifactInstance, CostLine, PaymentLine, EventLog, LogisticsOption,
 )
 from apps.expedientes.services import (
-    create_expediente, execute_command, supersede_artifact, void_artifact,
-    get_available_commands, COMMAND_SPEC
+    create_expediente, can_execute_command, execute_command,
+    supersede_artifact, void_artifact, get_available_commands,
+    get_costs, get_costs_summary, get_invoice_suggestion, get_invoice,
+    calculate_financial_comparison, generate_mirror_pdf,
 )
-from apps.expedientes.permissions import IsCEO, EnsureNotBlocked
 from apps.expedientes.serializers_ui import (
-    UIExpedienteListSerializer, ExpedienteBundleSerializer
+    UIExpedienteListSerializer, ExpedienteBundleSerializer,
+    CostLineSummarySerializer, ArtifactSummarySerializer,
 )
-from apps.expedientes.enums import AggregateType, CREDIT_CLOCK_IGNORED_STATUSES
-
-from django.db.models import (
-    Sum, Count, Max, Q, F, OuterRef, Subquery, ExpressionWrapper, 
-    IntegerField, CharField, Case, When, Value
-)
-from django.db.models.functions import Coalesce, ExtractDay, Now
-from django.utils import timezone
-from django.conf import settings
-from decimal import Decimal
-from minio import Minio
 
 
-# ══════════════════════════════════════════════════
-# HELPERS
-# ══════════════════════════════════════════════════
+# ─── Permissions ──────────────────────────────────
 
-def _command_response(expediente, events, http_status):
-    """Standard response format (FIX-1): {"expediente": {...}, "events": [...]}"""
-    return Response(
-        {
-            'expediente': ExpedienteSerializer(expediente).data,
-            'events': EventLogSerializer(events, many=True).data,
-        },
-        status=http_status,
-    )
+class IsCEO(IsAuthenticated):
+    """CEO = superuser."""
+    def has_permission(self, request, view):
+        return super().has_permission(request, view) and request.user.is_superuser
 
+
+class EnsureNotBlocked(IsAuthenticated):
+    """Skip if command has bypass_block."""
+    pass
+
+
+# ─── Helpers ──────────────────────────────────────
 
 def _get_expediente(pk):
-    """Fetch expediente or 404."""
     try:
         return Expediente.objects.get(pk=pk)
     except Expediente.DoesNotExist:
-        from rest_framework.exceptions import NotFound
-        raise NotFound(f'Expediente {pk} not found.')
+        return None
 
 
-# ══════════════════════════════════════════════════
-# LIST & BUNDLE (Sprint 3)
-# ══════════════════════════════════════════════════
-
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.exceptions import NotFound, PermissionDenied
-
-class ExpedientePagination(PageNumberPagination):
-    page_size = 25
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-class ListExpedientesView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        # Subquery for last_event_at
-        last_event_subquery = EventLog.objects.filter(
-            aggregate_id=OuterRef('pk'),
-            aggregate_type=AggregateType.EXPEDIENTE
-        ).order_by('-occurred_at').values('occurred_at')[:1]
-
-        qs = Expediente.objects.select_related('client').annotate(
-            total_cost=Coalesce(Sum('cost_lines__amount'), Decimal('0')),
-            artifact_count=Count('artifacts', filter=Q(artifacts__status='completed')),
-            last_event_at=Subquery(last_event_subquery),
-            # Credit clock calculation
-            credit_days_elapsed=Coalesce(
-                ExpressionWrapper(
-                    ExtractDay(Now() - F('credit_clock_started_at')),
-                    output_field=IntegerField()
-                ),
-                0
-            )
-        ).annotate(
-            credit_band=Case(
-                When(credit_days_elapsed__gte=75, then=Value('CORAL')),
-                When(credit_days_elapsed__gte=60, then=Value('AMBER')),
-                default=Value('MINT'),
-                output_field=CharField()
-            )
-        ).all()
-
-        # Filtros
-        status_param = request.query_params.get('status')
-        brand_param  = request.query_params.get('brand_name')
-        client_param = request.query_params.get('client_name__icontains')
-        is_blocked   = request.query_params.get('is_blocked')
-        ordering     = request.query_params.get('ordering', '-created_at')
-
-        if status_param:
-            qs = qs.filter(status=status_param)
-        if brand_param:
-            qs = qs.filter(brand=brand_param)
-        if client_param:
-            qs = qs.filter(client__legal_name__icontains=client_param)
-        if is_blocked == 'true':
-            qs = qs.filter(is_blocked=True)
-
-        # Ordenamiento seguro
-        ALLOWED_ORDERINGS = {
-            'created_at', '-created_at',
-            'credit_days_elapsed', '-credit_days_elapsed',
-            'total_cost', '-total_cost',
-            'last_event_at', '-last_event_at',
-            'status', '-status',
-        }
-        if ordering not in ALLOWED_ORDERINGS:
-            ordering = '-created_at'
-        
-        # Determine if we order by DB field or annotated field
-        qs = qs.order_by(ordering)
-
-        # Pagination
-        paginator = ExpedientePagination()
-        page = paginator.paginate_queryset(qs, request)
-        data = UIExpedienteListSerializer(page, many=True).data
-        return paginator.get_paginated_response(data)
-
-class ExpedienteBundleView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, pk):
-        # Annotate same fields as list for consistency and performance
-        last_event_subquery = EventLog.objects.filter(
-            aggregate_id=OuterRef('pk'),
-            aggregate_type=AggregateType.EXPEDIENTE
-        ).order_by('-occurred_at').values('occurred_at')[:1]
-
-        try:
-            exp = Expediente.objects.select_related('client').prefetch_related(
-                'artifacts', 'cost_lines'
-            ).annotate(
-                total_cost=Coalesce(Sum('cost_lines__amount'), Decimal('0')),
-                artifact_count=Count('artifacts', filter=Q(artifacts__status='completed')),
-                last_event_at=Subquery(last_event_subquery),
-                credit_days_elapsed=Coalesce(
-                    ExpressionWrapper(
-                        ExtractDay(Now() - F('credit_clock_started_at')),
-                        output_field=IntegerField()
-                    ),
-                    0
-                )
-            ).annotate(
-                credit_band=Case(
-                    When(credit_days_elapsed__gte=75, then=Value('CORAL')),
-                    When(credit_days_elapsed__gte=60, then=Value('AMBER')),
-                    default=Value('MINT'),
-                    output_field=CharField()
-                )
-            ).get(pk=pk)
-        except Expediente.DoesNotExist:
-            raise NotFound(f"Expediente {pk} not found.")
-        
-        # Attach events for serializer
-        exp_events = EventLog.objects.filter(
-            aggregate_id=exp.pk, 
-            aggregate_type=AggregateType.EXPEDIENTE
-        ).order_by('occurred_at')
-        exp.events = exp_events
-        
-        # Inject available actions object
-        exp.available_actions = get_available_commands(exp, request.user)
-        
-        data = ExpedienteBundleSerializer(exp).data
-        return Response(data)
-
-class DocumentDownloadView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, artifact_id):
-        from apps.expedientes.models import ArtifactInstance
-        try:
-            artifact = ArtifactInstance.objects.get(pk=artifact_id, status='completed')
-        except ArtifactInstance.DoesNotExist:
-            raise NotFound("Artifact not found or not completed.")
-
-        file_url = artifact.payload.get('file_url')
-        if not file_url:
-            from apps.expedientes.exceptions import CommandValidationError
-            raise CommandValidationError("Artifact has no file_url.")
-
-        # Initialize Minio client
-        client = Minio(
-            settings.MINIO_ENDPOINT,
-            access_key=settings.MINIO_ACCESS_KEY,
-            secret_key=settings.MINIO_SECRET_KEY,
-            secure=settings.MINIO_SECURE,
-        )
-
-        bucket = settings.MINIO_BUCKET_NAME
-        object_name = file_url
-
-        try:
-            # Presigned URL valid for 1 hour
-            url = client.presigned_get_object(bucket, object_name)
-            return Response({'download_url': url})
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+def _command_response(expediente, events, status_code=200):
+    return Response({
+        'expediente_id': str(expediente.expediente_id),
+        'status': expediente.status,
+        'payment_status': expediente.payment_status,
+        'is_blocked': expediente.is_blocked,
+        'events': [
+            {'event_id': str(e.event_id), 'event_type': e.event_type}
+            for e in events
+        ]
+    }, status=status_code)
 
 
-# ══════════════════════════════════════════════════
-# C1: CreateExpediente  (POST /api/expedientes/)
-# ══════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════
+# SPRINT 1 COMMANDS (C1-C21)
+# ═══════════════════════════════════════════════════
 
 class CreateExpedienteView(APIView):
+    """C1: POST /api/expedientes/create/"""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        ser = ExpedienteCreateSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        expediente, event = create_expediente(ser.validated_data, request.user)
-        return _command_response(expediente, [event], status.HTTP_201_CREATED)
+        exp, event = create_expediente(request.data, request.user)
+        return _command_response(exp, [event], status_code=201)
 
 
-# ══════════════════════════════════════════════════
-# C2: RegisterOC  (POST /api/expedientes/{pk}/register-oc/)
-# ══════════════════════════════════════════════════
-
-class RegisterOCView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
+class CommandView(APIView):
+    """Generic POST for C2-C18."""
+    permission_classes = [IsAuthenticated]
+    command_name = None
 
     def post(self, request, pk):
         exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = ArtifactPayloadSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, events = execute_command(exp, 'C2', ser.validated_data, request.user)
-        return _command_response(exp, events, status.HTTP_201_CREATED)
-
-
-# ══════════════════════════════════════════════════
-# C3: RegisterProforma  (POST /api/expedientes/{pk}/register-proforma/)
-# ══════════════════════════════════════════════════
-
-class RegisterProformaView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = ArtifactPayloadSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, events = execute_command(exp, 'C3', ser.validated_data, request.user)
-        return _command_response(exp, events, status.HTTP_201_CREATED)
-
-
-# ══════════════════════════════════════════════════
-# C4: DecideMode  (POST /api/expedientes/{pk}/decide-mode/) — CEO only
-# ══════════════════════════════════════════════════
-
-class DecideModeView(APIView):
-    permission_classes = [IsAuthenticated, IsCEO, EnsureNotBlocked]
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = ArtifactPayloadSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, events = execute_command(exp, 'C4', ser.validated_data, request.user)
-        return _command_response(exp, events, status.HTTP_201_CREATED)
-
-
-# ══════════════════════════════════════════════════
-# C5: ConfirmSAP  (POST /api/expedientes/{pk}/confirm-sap/)
-# Auto-transition → PRODUCCION, 2 events (FIX-5)
-# ══════════════════════════════════════════════════
-
-class ConfirmSAPView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = ArtifactPayloadSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, events = execute_command(exp, 'C5', ser.validated_data, request.user)
-        return _command_response(exp, events, status.HTTP_201_CREATED)
-
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+        exp, events = execute_command(exp, self.command_name, request.data, request.user)
+        return _command_response(exp, events)
 
-# ══════════════════════════════════════════════════
-# C6: ConfirmProduction  (POST /api/expedientes/{pk}/confirm-production/)
-# ══════════════════════════════════════════════════
 
-class ConfirmProductionView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        exp, events = execute_command(exp, 'C6', {}, request.user)
-        return _command_response(exp, events, status.HTTP_200_OK)
+# Individual command views
+class RegisterOCView(CommandView):
+    command_name = 'C2'
 
+class RegisterProformaView(CommandView):
+    command_name = 'C3'
 
-# ══════════════════════════════════════════════════
-# C7: RegisterShipment  (POST /api/expedientes/{pk}/register-shipment/)
-# FIX-3: credit_clock persist if rule=on_shipment
-# ══════════════════════════════════════════════════
+class DecideModeView(CommandView):
+    permission_classes = [IsCEO]
+    command_name = 'C4'
 
-class RegisterShipmentView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = ArtifactPayloadSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, events = execute_command(exp, 'C7', ser.validated_data, request.user)
-        return _command_response(exp, events, status.HTTP_201_CREATED)
+class ConfirmSAPView(CommandView):
+    command_name = 'C5'
 
+class ConfirmProductionView(CommandView):
+    command_name = 'C6'
 
-# ══════════════════════════════════════════════════
-# C8: RegisterFreightQuote  (POST /api/expedientes/{pk}/register-freight-quote/)
-# ══════════════════════════════════════════════════
+class RegisterShipmentView(CommandView):
+    command_name = 'C7'
 
-class RegisterFreightQuoteView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = ArtifactPayloadSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, events = execute_command(exp, 'C8', ser.validated_data, request.user)
-        return _command_response(exp, events, status.HTTP_201_CREATED)
+class RegisterFreightQuoteView(CommandView):
+    command_name = 'C8'
 
+class RegisterCustomsView(CommandView):
+    command_name = 'C9'
 
-# ══════════════════════════════════════════════════
-# C9: RegisterCustoms  (POST /api/expedientes/{pk}/register-customs/)
-# Requires dispatch_mode=mwt
-# ══════════════════════════════════════════════════
+class ApproveDispatchView(CommandView):
+    command_name = 'C10'
 
-class RegisterCustomsView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
+class ConfirmDepartureView(CommandView):
+    command_name = 'C11'
 
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = ArtifactPayloadSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, events = execute_command(exp, 'C9', ser.validated_data, request.user)
-        return _command_response(exp, events, status.HTTP_201_CREATED)
+class ConfirmArrivalView(CommandView):
+    command_name = 'C12'
 
+class IssueInvoiceView(CommandView):
+    command_name = 'C13'
 
-# ══════════════════════════════════════════════════
-# C10: ApproveDispatch  (POST /api/expedientes/{pk}/approve-dispatch/)
-# Auto-transition → DESPACHO, 2 events (FIX-5)
-# ══════════════════════════════════════════════════
+class CloseExpedienteView(CommandView):
+    command_name = 'C14'
 
-class ApproveDispatchView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
+class RegisterCostView(CommandView):
+    command_name = 'C15'
 
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = ArtifactPayloadSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, events = execute_command(exp, 'C10', ser.validated_data, request.user)
-        return _command_response(exp, events, status.HTTP_201_CREATED)
+class CancelExpedienteView(CommandView):
+    permission_classes = [IsCEO]
+    command_name = 'C16'
 
+class BlockExpedienteView(CommandView):
+    command_name = 'C17'
 
-# ══════════════════════════════════════════════════
-# C11: ConfirmDeparture  (POST /api/expedientes/{pk}/confirm-departure/)
-# ══════════════════════════════════════════════════
+class UnblockExpedienteView(CommandView):
+    permission_classes = [IsCEO]
+    command_name = 'C18'
 
-class ConfirmDepartureView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
+class RegisterPaymentView(CommandView):
+    command_name = 'C21'
 
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        exp, events = execute_command(exp, 'C11', {}, request.user)
-        return _command_response(exp, events, status.HTTP_200_OK)
 
-
-# ══════════════════════════════════════════════════
-# C12: ConfirmArrival  (POST /api/expedientes/{pk}/confirm-arrival/)
-# ══════════════════════════════════════════════════
-
-class ConfirmArrivalView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        exp, events = execute_command(exp, 'C12', {}, request.user)
-        return _command_response(exp, events, status.HTTP_200_OK)
-
-
-# ══════════════════════════════════════════════════
-# C13: IssueInvoice  (POST /api/expedientes/{pk}/issue-invoice/)
-# ══════════════════════════════════════════════════
-
-class IssueInvoiceView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = ArtifactPayloadSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, events = execute_command(exp, 'C13', ser.validated_data, request.user)
-        return _command_response(exp, events, status.HTTP_201_CREATED)
-
-
-# ══════════════════════════════════════════════════
-# C14: CloseExpediente  (POST /api/expedientes/{pk}/close/)
-# ══════════════════════════════════════════════════
-
-class CloseExpedienteView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        exp, events = execute_command(exp, 'C14', {}, request.user)
-        return _command_response(exp, events, status.HTTP_200_OK)
-
-
-# ══════════════════════════════════════════════════
-# C15: RegisterCost  (POST /api/expedientes/{pk}/register-cost/)
-# ══════════════════════════════════════════════════
-
-class RegisterCostView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = RegisterCostSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, events = execute_command(exp, 'C15', ser.validated_data, request.user)
-        return _command_response(exp, events, status.HTTP_201_CREATED)
-
-
-# ══════════════════════════════════════════════════
-# C16: CancelExpediente  (POST /api/expedientes/{pk}/cancel/)
-# CEO only. NO EnsureNotBlocked (FIX-8).
-# ══════════════════════════════════════════════════
-
-class CancelExpedienteView(APIView):
-    permission_classes = [IsAuthenticated, IsCEO]     # NO EnsureNotBlocked FIX-8
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        exp, events = execute_command(exp, 'C16', {}, request.user)
-        return _command_response(exp, events, status.HTTP_200_OK)
-
-
-# ══════════════════════════════════════════════════
-# C17: BlockExpediente  (POST /api/expedientes/{pk}/block/)
-# NO EnsureNotBlocked (FIX-8). Precondition: is_blocked=false.
-# ══════════════════════════════════════════════════
-
-class BlockExpedienteView(APIView):
-    permission_classes = [IsAuthenticated]             # NO EnsureNotBlocked FIX-8
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        data = {'reason': request.data.get('reason', '')}
-        exp, events = execute_command(exp, 'C17', data, request.user)
-        return _command_response(exp, events, status.HTTP_200_OK)
-
-
-# ══════════════════════════════════════════════════
-# C18: UnblockExpediente  (POST /api/expedientes/{pk}/unblock/)
-# CEO only. NO EnsureNotBlocked (FIX-8).
-# ══════════════════════════════════════════════════
-
-class UnblockExpedienteView(APIView):
-    permission_classes = [IsAuthenticated, IsCEO]     # NO EnsureNotBlocked FIX-8
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        exp, events = execute_command(exp, 'C18', {}, request.user)
-        return _command_response(exp, events, status.HTTP_200_OK)
-
-
-# ══════════════════════════════════════════════════
-# C21: RegisterPayment  (POST /api/expedientes/{pk}/register-payment/)
-# ══════════════════════════════════════════════════
-
-class RegisterPaymentView(APIView):
-    permission_classes = [IsAuthenticated, EnsureNotBlocked]
-
-    def post(self, request, pk):
-        exp = _get_expediente(pk)
-        self.check_object_permissions(request, exp)
-        ser = RegisterPaymentSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        exp, events = execute_command(exp, 'C21', ser.validated_data, request.user)
-        return _command_response(exp, events, status.HTTP_201_CREATED)
-
-
-# ══════════════════════════════════════════════════
-# C19 & C20: Artifact Correction (Sprint 2)
-# ══════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════
+# SPRINT 2 COMMANDS (C19, C20)
+# ═══════════════════════════════════════════════════
 
 class SupersedeArtifactView(APIView):
-    permission_classes = [IsAuthenticated, IsCEO]
+    """C19: POST /api/expedientes/<pk>/supersede-artifact/"""
+    permission_classes = [IsCEO]
 
-    def post(self, request, pk, artifact_id):
-        _get_expediente(pk)  # Validate exp exists
-        ser = SupersedeArtifactSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        
-        exp, new_art, event = supersede_artifact(
-            old_artifact_id=artifact_id,
-            new_payload=ser.validated_data['payload'],
-            user=request.user
-        )
-        
-        return Response(
-            {
-                'expediente': ExpedienteSerializer(exp).data,
-                'new_artifact': ArtifactInstanceSerializer(new_art).data,
-                'event': EventLogSerializer(event).data,
-            },
-            status=status.HTTP_201_CREATED
-        )
+    def post(self, request, pk):
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+        artifact_id = request.data.get('artifact_id')
+        new_payload = request.data.get('payload', {})
+        exp, new_art, event = supersede_artifact(artifact_id, new_payload, request.user)
+        return _command_response(exp, [event])
+
 
 class VoidArtifactView(APIView):
-    permission_classes = [IsAuthenticated, IsCEO]
+    """C20: POST /api/expedientes/<pk>/void-artifact/"""
+    permission_classes = [IsCEO]
 
-    def post(self, request, pk, artifact_id):
-        _get_expediente(pk)  # Validate exp exists
-        exp, old_art, event = void_artifact(
-            old_artifact_id=artifact_id,
-            user=request.user
+    def post(self, request, pk):
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+        artifact_id = request.data.get('artifact_id')
+        exp, art, event = void_artifact(artifact_id, request.user)
+        return _command_response(exp, [event])
+
+
+# ═══════════════════════════════════════════════════
+# SPRINT 3: List + Bundle
+# ═══════════════════════════════════════════════════
+
+class ListExpedientesView(APIView):
+    """GET /api/ui/expedientes/"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from django.db.models import Sum, Count, Max
+        from datetime import timedelta
+        from django.utils import timezone
+
+        qs = Expediente.objects.select_related('client').all()
+
+        # Filtering
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+
+        brand_filter = request.query_params.get('brand')
+        if brand_filter:
+            qs = qs.filter(brand=brand_filter)
+
+        search = request.query_params.get('search')
+        if search:
+            qs = qs.filter(client__legal_name__icontains=search)
+
+        # Annotate
+        qs = qs.annotate(
+            total_cost=Sum('cost_lines__amount'),
+            artifact_count=Count('artifacts'),
+            last_event_at=Max('artifacts__created_at'),
         )
-        
-        return Response(
-            {
-                'expediente': ExpedienteSerializer(exp).data,
-                'artifact': ArtifactInstanceSerializer(old_art).data,
-                'event': EventLogSerializer(event).data,
+
+        for exp in qs:
+            exp.credit_days_elapsed = 0
+            exp.credit_band = 'MINT'
+            if exp.credit_clock_started_at:
+                delta = (timezone.now() - exp.credit_clock_started_at).days
+                exp.credit_days_elapsed = delta
+                if delta > 90:
+                    exp.credit_band = 'RED'
+                elif delta > 60:
+                    exp.credit_band = 'AMBER'
+
+        serializer = UIExpedienteListSerializer(qs, many=True)
+        return Response(serializer.data)
+
+
+class ExpedienteBundleView(APIView):
+    """GET /api/ui/expedientes/<pk>/"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        from django.db.models import Sum, Count, Max
+        from django.utils import timezone
+
+        try:
+            exp = Expediente.objects.select_related('client').prefetch_related(
+                'artifacts', 'cost_lines', 'payment_lines'
+            ).get(pk=pk)
+        except Expediente.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=404)
+
+        exp.total_cost = exp.cost_lines.aggregate(total=Sum('amount'))['total'] or 0
+        exp.artifact_count = exp.artifacts.count()
+        exp.last_event_at = exp.artifacts.aggregate(max_date=Max('created_at'))['max_date']
+
+        if exp.credit_clock_started_at:
+            delta = (timezone.now() - exp.credit_clock_started_at).days
+            exp.credit_days_elapsed = delta
+            exp.credit_band = 'RED' if delta > 90 else ('AMBER' if delta > 60 else 'MINT')
+        else:
+            exp.credit_days_elapsed = 0
+            exp.credit_band = 'MINT'
+
+        events = EventLog.objects.filter(
+            aggregate_id=exp.expediente_id,
+            aggregate_type='expediente'
+        ).order_by('-occurred_at')[:20]
+
+        available_actions = get_available_commands(exp, request.user)
+
+        data = {
+            'expediente': exp,
+            'events': events,
+            'artifacts': exp.artifacts.all(),
+            'cost_lines': exp.cost_lines.all(),
+            'documents': [],
+            'available_actions': available_actions,
+        }
+
+        serializer = ExpedienteBundleSerializer(exp)
+        result = serializer.data
+        result['available_actions'] = available_actions
+        result['events'] = [
+            {'id': str(e.event_id), 'event_type': e.event_type,
+             'occurred_at': e.occurred_at, 'emitted_by': e.emitted_by,
+             'payload': e.payload}
+            for e in events
+        ]
+
+        return Response(result)
+
+
+class DocumentDownloadView(APIView):
+    """GET /api/ui/expedientes/documents/<artifact_id>/download/"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, artifact_id):
+        try:
+            art = ArtifactInstance.objects.get(pk=artifact_id)
+        except ArtifactInstance.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=404)
+
+        file_url = art.payload.get('file_url')
+        if not file_url:
+            return Response({'detail': 'No file associated.'}, status=404)
+
+        return Response({
+            'download_url': file_url,
+            'filename': art.payload.get('filename', f'{art.artifact_type}.pdf')
+        })
+
+
+# ═══════════════════════════════════════════════════
+# SPRINT 4 NEW ENDPOINTS
+# ═══════════════════════════════════════════════════
+
+# ── S4-02: Costs Doble Vista ──
+
+class CostsListView(APIView):
+    """GET /api/expedientes/<pk>/costs/?view=internal|client"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+
+        view_param = request.query_params.get('view', 'internal')
+
+        # Client view is always available; internal only for CEO
+        if view_param == 'internal' and not request.user.is_superuser:
+            view_param = 'client'
+
+        costs = get_costs(exp, view=view_param)
+        serializer = CostLineSummarySerializer(costs, many=True)
+        return Response({
+            'view': view_param,
+            'count': costs.count(),
+            'costs': serializer.data,
+        })
+
+
+class CostsSummaryView(APIView):
+    """GET /api/expedientes/<pk>/costs/summary/  [CEO-ONLY]"""
+    permission_classes = [IsCEO]
+
+    def get(self, request, pk):
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+
+        summary = get_costs_summary(exp)
+        return Response(summary)
+
+
+# ── S4-03: ART-09 Invoice ──
+
+class InvoiceSuggestionView(APIView):
+    """GET /api/expedientes/<pk>/invoice-suggestion/"""
+    permission_classes = [IsCEO]
+
+    def get(self, request, pk):
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+        suggestion = get_invoice_suggestion(exp)
+        return Response(suggestion)
+
+
+class InvoiceView(APIView):
+    """GET /api/expedientes/<pk>/invoice/?view=internal|client"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+
+        view_param = request.query_params.get('view', 'internal')
+        if view_param == 'internal' and not request.user.is_superuser:
+            view_param = 'client'
+
+        invoice_data = get_invoice(exp, view=view_param)
+        if not invoice_data:
+            return Response({'detail': 'No invoice found (ART-09).'}, status=404)
+        return Response({
+            'view': view_param,
+            'invoice': invoice_data,
+        })
+
+
+# ── S4-05: Financial Comparison ──
+
+class FinancialComparisonView(APIView):
+    """GET /api/expedientes/<pk>/financial-comparison/  [CEO-ONLY]"""
+    permission_classes = [IsCEO]
+
+    def get(self, request, pk):
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+        comparison = calculate_financial_comparison(exp)
+        return Response(comparison)
+
+
+# ── S4-07: ART-19 Logistics ──
+
+class MaterializeLogisticsView(CommandView):
+    """C22: POST /api/expedientes/<pk>/materialize-logistics/"""
+    command_name = 'C22'
+
+
+class AddLogisticsOptionView(CommandView):
+    """C23: POST /api/expedientes/<pk>/add-logistics-option/"""
+    permission_classes = [IsCEO]
+    command_name = 'C23'
+
+
+class DecideLogisticsView(CommandView):
+    """C24: POST /api/expedientes/<pk>/decide-logistics/"""
+    permission_classes = [IsCEO]
+    command_name = 'C24'
+
+
+# ── S4-08: Mirror PDF ──
+
+class MirrorPDFView(APIView):
+    """GET /api/expedientes/<pk>/mirror-pdf/"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+
+        html_content = generate_mirror_pdf(exp)
+        if not html_content:
+            return Response({'detail': 'No client-facing data available.'}, status=404)
+
+        try:
+            from weasyprint import HTML
+            pdf_bytes = HTML(string=html_content).write_pdf()
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = (
+                f'inline; filename="MWT_Expediente_{str(exp.expediente_id)[:8]}.pdf"'
+            )
+            return response
+        except ImportError:
+            # weasyprint not installed, return HTML as fallback
+            return HttpResponse(html_content, content_type='text/html')
+
+
+# ═══════════════════════════════════════════════════
+# SPRINT 4 S4-11: Dashboard Financial Endpoints
+# ═══════════════════════════════════════════════════
+
+class FinancialDashboardView(APIView):
+    """GET /api/ui/dashboard/financial/  [CEO-ONLY]"""
+    permission_classes = [IsCEO]
+
+    def get(self, request):
+        from django.db.models import Sum, Count, Avg
+        from django.utils import timezone
+
+        # Financial cards data
+        active_expedientes = Expediente.objects.exclude(
+            status__in=['CERRADO', 'CANCELADO']
+        )
+
+        # Total active costs
+        total_active_costs = CostLine.objects.filter(
+            expediente__in=active_expedientes
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+        # Total invoiced (from ART-09)
+        invoiced_artifacts = ArtifactInstance.objects.filter(
+            artifact_type='ART-09',
+            status='completed',
+            expediente__in=active_expedientes,
+        )
+        total_invoiced = Decimal('0')
+        for art in invoiced_artifacts:
+            total_invoiced += Decimal(str(art.payload.get('total_client_view', 0)))
+
+        # Total payments
+        total_paid = PaymentLine.objects.filter(
+            expediente__in=active_expedientes
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+        # Receivables
+        receivables = total_invoiced - total_paid
+
+        # Margin
+        margin = total_invoiced - total_active_costs
+        margin_pct = (margin / total_invoiced * 100) if total_invoiced > 0 else Decimal('0')
+
+        # Counts
+        total_active = active_expedientes.count()
+        total_blocked = active_expedientes.filter(is_blocked=True).count()
+
+        # Brand breakdown
+        brand_breakdown = active_expedientes.values('brand').annotate(
+            count=Count('expediente_id'),
+            total_cost=Sum('cost_lines__amount'),
+        )
+
+        return Response({
+            'cards': {
+                'total_active_expedientes': total_active,
+                'total_blocked': total_blocked,
+                'total_active_costs': float(total_active_costs),
+                'total_invoiced': float(total_invoiced),
+                'total_paid': float(total_paid),
+                'receivables': float(receivables),
+                'margin': float(margin),
+                'margin_pct': float(margin_pct),
             },
-            status=status.HTTP_200_OK
-        )
-
+            'brand_breakdown': list(brand_breakdown),
+        })

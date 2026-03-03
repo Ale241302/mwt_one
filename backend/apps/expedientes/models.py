@@ -8,7 +8,7 @@ from .enums import (
     LegalEntityVisibility, PricingVisibility, LegalEntityStatus,
     ExpedienteStatus, BlockedByType, DispatchMode, PaymentStatus,
     CreditClockStartRule, Brand, ArtifactStatus, AggregateType,
-    RegisteredByType,
+    RegisteredByType, CostLineVisibility, LogisticsMode, LogisticsSource,
 )
 
 
@@ -131,7 +131,7 @@ class ArtifactInstance(TimestampMixin):
                                    on_delete=models.CASCADE,
                                    related_name='artifacts')
     artifact_type = models.CharField(max_length=20,
-                                     help_text="ART-01 to ART-12")
+                                     help_text="ART-01 to ART-19")
     status = models.CharField(max_length=20,
                               choices=ArtifactStatus.choices,
                               default=ArtifactStatus.DRAFT)
@@ -198,6 +198,7 @@ class CostLine(AppendOnlyModel):
     """
     Ref: ENT_OPS_STATE_MACHINE §F2 C15
     Append-only cost record for an Expediente.
+    Sprint 4: Added visibility field for doble vista.
     """
     cost_line_id = models.UUIDField(primary_key=True, default=uuid.uuid4,
                                     editable=False)
@@ -209,6 +210,13 @@ class CostLine(AppendOnlyModel):
     currency = models.CharField(max_length=3, help_text="ISO 4217")
     phase = models.CharField(max_length=50)
     description = models.TextField(blank=True)
+    # Sprint 4 S4-01: Doble vista
+    visibility = models.CharField(
+        max_length=10,
+        choices=CostLineVisibility.choices,
+        default=CostLineVisibility.INTERNAL,
+        help_text="internal=CEO-only, client=visible to client"
+    )
 
     class Meta:
         verbose_name = 'Cost Line'
@@ -247,3 +255,38 @@ class PaymentLine(AppendOnlyModel):
 
     def __str__(self):
         return f"Payment {self.method}: {self.amount} {self.currency}"
+
+
+# ──────────────────────────────────────────────────
+# Sprint 4 S4-07: LogisticsOption (for ART-19)
+# ──────────────────────────────────────────────────
+
+class LogisticsOption(TimestampMixin):
+    """
+    Ref: ENT_PLAT_ARTEFACTOS.F2
+    Logistics option for ART-19 Decisión Logística.
+    """
+    logistics_option_id = models.UUIDField(primary_key=True, default=uuid.uuid4,
+                                           editable=False)
+    artifact_instance = models.ForeignKey(ArtifactInstance,
+                                          on_delete=models.CASCADE,
+                                          related_name='logistics_options')
+    option_id = models.CharField(max_length=50)
+    mode = models.CharField(max_length=20, choices=LogisticsMode.choices)
+    carrier = models.CharField(max_length=100)
+    route = models.CharField(max_length=200)
+    estimated_days = models.IntegerField()
+    estimated_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=3, help_text="ISO 4217")
+    valid_until = models.DateField(null=True, blank=True)
+    source = models.CharField(max_length=20, choices=LogisticsSource.choices,
+                              default=LogisticsSource.MANUAL)
+    is_selected = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'Logistics Option'
+        verbose_name_plural = 'Logistics Options'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Option {self.option_id}: {self.mode} via {self.carrier}"

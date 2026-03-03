@@ -1,21 +1,26 @@
+"""
+Sprint 3-4 — UI Serializers
+"""
 import datetime
 from decimal import Decimal
 from rest_framework import serializers
+
 
 class UIExpedienteListSerializer(serializers.Serializer):
     id = serializers.UUIDField(source='expediente_id', read_only=True)
     custom_ref = serializers.SerializerMethodField()
     status = serializers.CharField(read_only=True)
     brand_name = serializers.CharField(source='get_brand_display', read_only=True, default='')
+    brand = serializers.CharField(read_only=True)
     client_name = serializers.CharField(source='client.legal_name', read_only=True, default='')
-    
+
     # Annotated fields
     credit_days_elapsed = serializers.IntegerField(read_only=True, default=0)
     credit_band = serializers.CharField(read_only=True, default='MINT')
     total_cost = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True, default=Decimal('0.00'))
     artifact_count = serializers.IntegerField(read_only=True, default=0)
     last_event_at = serializers.DateTimeField(read_only=True, default=None)
-    
+
     is_blocked = serializers.BooleanField(read_only=True)
     block_reason = serializers.CharField(source='blocked_reason', read_only=True, default='')
 
@@ -47,11 +52,26 @@ class CostLineSummarySerializer(serializers.Serializer):
     currency = serializers.CharField()
     phase = serializers.CharField()
     description = serializers.CharField()
+    visibility = serializers.CharField()   # Sprint 4 S4-02
     created_at = serializers.DateTimeField()
 
 
+class LogisticsOptionSerializer(serializers.Serializer):
+    """Sprint 4 S4-07"""
+    id = serializers.UUIDField(source='logistics_option_id')
+    option_id = serializers.CharField()
+    mode = serializers.CharField()
+    carrier = serializers.CharField()
+    route = serializers.CharField()
+    estimated_days = serializers.IntegerField()
+    estimated_cost = serializers.DecimalField(max_digits=12, decimal_places=2)
+    currency = serializers.CharField()
+    valid_until = serializers.DateField(allow_null=True)
+    source = serializers.CharField()
+    is_selected = serializers.BooleanField()
+
+
 class DocumentSummarySerializer(serializers.Serializer):
-    # Documents might be mapped from artifacts with file URLs. We define a placeholder for minimal shape
     name = serializers.CharField()
     type = serializers.CharField()
     date = serializers.DateTimeField()
@@ -67,7 +87,7 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     artifacts = ArtifactSummarySerializer(many=True)
     costs = CostLineSummarySerializer(source='cost_lines', many=True)
     documents = serializers.SerializerMethodField()
-    available_actions = serializers.JSONField() # Now a structured object from services.py
+    available_actions = serializers.JSONField()
     credit_clock = serializers.SerializerMethodField()
 
     def get_expediente(self, obj):
@@ -95,7 +115,6 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     def get_documents(self, obj):
         docs = []
         for art in obj.artifacts.all():
-            # BUG 7 FIX: Use lowercase 'completed'
             if art.status == 'completed' and 'file_url' in art.payload:
                 docs.append({
                     'id': str(art.artifact_id),

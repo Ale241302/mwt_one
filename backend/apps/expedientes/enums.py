@@ -84,12 +84,21 @@ class CreditClockStartRule(models.TextChoices):
 
 class Brand(models.TextChoices):
     MARLUVAS = 'MARLUVAS', 'Marluvas'
+    TECMATER = 'TECMATER', 'Tecmater'     # Sprint 4 S4-01
+
+
+# --- CostLine enums (Sprint 4) ---
+
+class CostLineVisibility(models.TextChoices):
+    INTERNAL = 'internal', 'Internal'
+    CLIENT = 'client', 'Client'
 
 
 # --- ArtifactInstance enums ---
 
 class ArtifactStatus(models.TextChoices):
     DRAFT = 'draft', 'Draft'
+    PENDING = 'pending', 'Pending'         # Sprint 4 S4-07 (ART-19)
     COMPLETED = 'completed', 'Completed'
     SUPERSEDED = 'superseded', 'Superseded'
     VOID = 'void', 'Void'
@@ -109,3 +118,16 @@ class AggregateType(models.TextChoices):
 class RegisteredByType(models.TextChoices):
     CEO = 'ceo', 'CEO'
     SYSTEM = 'system', 'System'
+
+
+# --- LogisticsOption enums (Sprint 4 S4-07) ---
+
+class LogisticsMode(models.TextChoices):
+    AEREO = 'aereo', 'Aéreo'
+    MARITIMO = 'maritimo', 'Marítimo'
+
+
+class LogisticsSource(models.TextChoices):
+    HISTORICAL = 'historical', 'Historical'
+    QUOTE = 'quote', 'Quote'
+    MANUAL = 'manual', 'Manual'
