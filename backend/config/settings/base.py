@@ -25,6 +25,9 @@ INSTALLED_APPS = [
     'corsheaders',
     'apps.core',
     'apps.expedientes',
+    # Sprint 5
+    'apps.transfers',
+    'apps.liquidations',
 ]
 
 MIDDLEWARE = [
