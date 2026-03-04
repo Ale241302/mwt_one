@@ -13,14 +13,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    # Depend on 0004 (last migration file that exists)
-    # replaces the two 0005 migrations that are in DB but lost their files
-    replaces = [
-        ('expedientes', '0005_costline_visibility_and_more'),
-        ('expedientes', '0005_logisticsoption'),
-        ('expedientes', '0006_costline_transfer_costline_visibility_and_more'),
-    ]
-
     dependencies = [
         ('expedientes', '0004_alter_eventlog_aggregate_type_and_more'),
         ('transfers', '0001_initial'),
