@@ -3,15 +3,17 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/api";
-import { Search, ShieldAlert, X, ArrowUp, ArrowDown, Folder, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ShieldAlert, X, ArrowUp, ArrowDown, Folder } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 interface Expediente {
-    id: string;
+    id: number;
+    expediente_id: number;
     custom_ref: string;
     status: string;
+    brand: string;
     brand_name: string;
     client_name: string;
     credit_days_elapsed: number;
@@ -21,66 +23,54 @@ interface Expediente {
     last_event_at: string | null;
 }
 
-interface PaginatedResponse {
-    count: number;
-    next: string | null;
-    previous: string | null;
-    results: Expediente[];
-}
-
 const statusOptions = [
     "REGISTRO", "EVALUACION_PREVIA", "FORMALIZACION", "PRODUCCION",
     "QC", "TRANSITO", "ENTREGA", "CERRADO"
 ];
 
 const brandOptions = [
-    "SKECHERS", "ON", "SPEEDO", "TOMS", "ASICS", "VIVAIA"
+    "SKECHERS", "ON", "SPEEDO", "TOMS", "ASICS", "VIVAIA", "TECMATER"
 ];
 
 function ExpedientesContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // State
-    const [data, setData] = useState<PaginatedResponse | null>(null);
+    // State — data is always an array
+    const [data, setData] = useState<Expediente[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Filters from URL or default
     const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "");
-    const [brandFilter, setBrandFilter] = useState(searchParams.get("brand_name") || "");
-    const [clientFilter, setClientFilter] = useState(searchParams.get("client_name") || "");
+    const [brandFilter, setBrandFilter] = useState(searchParams.get("brand") || "");
+    const [clientFilter, setClientFilter] = useState(searchParams.get("search") || "");
     const [isBlocked, setIsBlocked] = useState(searchParams.get("is_blocked") === "true");
 
     // Sorting
     const [ordering, setOrdering] = useState(searchParams.get("ordering") || "-created_at");
-
-    // Pagination
-    const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
-    const pageSize = 25;
 
     const fetchExpedientes = useCallback(async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
             if (statusFilter) params.append("status", statusFilter);
-            if (brandFilter) params.append("brand_name", brandFilter);
-            if (clientFilter) params.append("client_name__icontains", clientFilter); // assuming partial match
-            if (isBlocked) params.append("is_blocked", "true");
-            params.append("ordering", ordering);
-            params.append("page", page.toString());
-            params.append("page_size", pageSize.toString());
+            if (brandFilter) params.append("brand", brandFilter);
+            if (clientFilter) params.append("search", clientFilter);
 
             const res = await api.get(`ui/expedientes/?${params.toString()}`);
-            setData(res.data);
+            // API returns flat array
+            const items = Array.isArray(res.data) ? res.data : (res.data.results || []);
+            setData(items);
 
             // Update URL for shareability
             router.replace(`/expedientes?${params.toString()}`, { scroll: false });
         } catch (error) {
             console.error("Error fetching expedientes", error);
+            setData([]);
         } finally {
             setLoading(false);
         }
-    }, [statusFilter, brandFilter, clientFilter, isBlocked, ordering, page, router]);
+    }, [statusFilter, brandFilter, clientFilter, router]);
 
     useEffect(() => {
         fetchExpedientes();
@@ -93,7 +83,6 @@ function ExpedientesContent() {
         } else {
             setOrdering(field);
         }
-        setPage(1);
     };
 
     const getSortIcon = (field: string) => {
@@ -119,10 +108,28 @@ function ExpedientesContent() {
     };
 
     const getCreditColor = (band: string) => {
-        if (band === 'CORAL') return 'bg-coral';
+        if (band === 'CORAL' || band === 'RED') return 'bg-coral';
         if (band === 'AMBER') return 'bg-amber';
         return 'bg-mint';
     };
+
+    // Client-side filtering for blocked
+    const filteredData = isBlocked ? data.filter(e => e.is_blocked) : data;
+
+    // Client-side sorting
+    const sortedData = [...filteredData].sort((a, b) => {
+        const desc = ordering.startsWith('-');
+        const field = desc ? ordering.slice(1) : ordering;
+        let valA: string | number = 0;
+        let valB: string | number = 0;
+        if (field === 'status') { valA = a.status; valB = b.status; }
+        else if (field === 'credit_days_elapsed') { valA = a.credit_days_elapsed || 0; valB = b.credit_days_elapsed || 0; }
+        else if (field === 'total_cost') { valA = a.total_cost || 0; valB = b.total_cost || 0; }
+        else if (field === 'last_event_at') { valA = a.last_event_at || ''; valB = b.last_event_at || ''; }
+        if (valA < valB) return desc ? 1 : -1;
+        if (valA > valB) return desc ? -1 : 1;
+        return 0;
+    });
 
     return (
         <div className="space-y-6">
@@ -143,14 +150,14 @@ function ExpedientesContent() {
                         type="text"
                         placeholder="Buscar por cliente..."
                         value={clientFilter}
-                        onChange={(e) => { setClientFilter(e.target.value); setPage(1); }}
+                        onChange={(e) => { setClientFilter(e.target.value); }}
                         className="w-full bg-transparent pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mint-soft rounded-lg"
                     />
                 </div>
 
                 <select
                     value={statusFilter}
-                    onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                    onChange={(e) => { setStatusFilter(e.target.value); }}
                     className="bg-bg border border-border rounded-lg px-4 py-2 text-sm text-text-secondary focus:outline-none focus:ring-2 focus:ring-mint-soft"
                 >
                     <option value="">Estado: Todos</option>
@@ -159,7 +166,7 @@ function ExpedientesContent() {
 
                 <select
                     value={brandFilter}
-                    onChange={(e) => { setBrandFilter(e.target.value); setPage(1); }}
+                    onChange={(e) => { setBrandFilter(e.target.value); }}
                     className="bg-bg border border-border rounded-lg px-4 py-2 text-sm text-text-secondary focus:outline-none focus:ring-2 focus:ring-mint-soft"
                 >
                     <option value="">Marca: Todas</option>
@@ -170,7 +177,7 @@ function ExpedientesContent() {
                     <input
                         type="checkbox"
                         checked={isBlocked}
-                        onChange={(e) => { setIsBlocked(e.target.checked); setPage(1); }}
+                        onChange={(e) => { setIsBlocked(e.target.checked); }}
                         className="w-4 h-4 text-mint bg-bg border-border rounded focus:ring-mint focus:ring-2 accent-mint"
                     />
                     <span className="text-sm text-text-secondary flex items-center">
@@ -185,7 +192,6 @@ function ExpedientesContent() {
                             setBrandFilter("");
                             setClientFilter("");
                             setIsBlocked(false);
-                            setPage(1);
                         }}
                         className="text-xs text-coral hover:bg-coral-soft px-2 py-1 rounded flex items-center transition-colors"
                     >
@@ -231,7 +237,7 @@ function ExpedientesContent() {
                                         <td className="px-5 py-4"><div className="h-4 bg-border rounded w-28"></div></td>
                                     </tr>
                                 ))
-                            ) : data?.results.length === 0 ? (
+                            ) : sortedData.length === 0 ? (
                                 // Empty state
                                 <tr>
                                     <td colSpan={7} className="px-5 py-16 text-center text-text-tertiary">
@@ -243,19 +249,17 @@ function ExpedientesContent() {
                                     </td>
                                 </tr>
                             ) : (
-                                data?.results.map((exp, idx) => (
+                                sortedData.map((exp, idx) => (
                                     <tr
-                                        key={exp.id}
-                                        onClick={() => router.push(`/expedientes/${exp.id}`)}
+                                        key={exp.expediente_id || exp.id}
+                                        onClick={() => router.push(`/expedientes/${exp.expediente_id || exp.id}`)}
                                         className={cn(
                                             "group cursor-pointer transition-colors border-b border-divider",
                                             "hover:bg-surface-hover hover:border-l-[3px] hover:border-l-mint",
                                             exp.is_blocked ? "border-r-[3px] border-r-coral bg-coral-soft/5" : "border-r-[3px] border-r-transparent",
                                             idx % 2 === 0 ? "bg-surface" : "bg-bg-alt/30",
-                                            // Specific case for dual indicator: keep both borders visible
                                             exp.is_blocked && "hover:border-r-coral"
                                         )}
-                                        // The left border trick dynamically adjusts padding so layout doesn't shift
                                         style={{ borderLeftWidth: '3px', borderLeftColor: 'transparent' }}
                                     >
                                         <td className="px-5 py-4 font-mono text-sm text-text-primary relative group-hover:text-mint transition-colors">
@@ -273,12 +277,12 @@ function ExpedientesContent() {
                                             {exp.client_name}
                                         </td>
                                         <td className="px-5 py-4 text-sm text-text-secondary">
-                                            {exp.brand_name}
+                                            {exp.brand_name || exp.brand || '—'}
                                         </td>
                                         <td className="px-5 py-4">
                                             <div className="flex items-center">
                                                 <span className={cn("w-2 h-2 rounded-full mr-2", getCreditColor(exp.credit_band))}></span>
-                                                <span className="text-sm font-medium">{exp.credit_days_elapsed} d</span>
+                                                <span className="text-sm font-medium">{exp.credit_days_elapsed || 0} d</span>
                                             </div>
                                         </td>
                                         <td className="px-5 py-4 text-right tabular-nums text-sm font-medium text-text-primary">
@@ -296,36 +300,11 @@ function ExpedientesContent() {
                     </table>
                 </div>
 
-                {/* Pagination Footer */}
-                {data && data.count > 0 && (
+                {/* Count Footer */}
+                {!loading && sortedData.length > 0 && (
                     <div className="px-5 py-4 border-t border-border flex items-center justify-between text-sm">
                         <div className="text-text-tertiary">
-                            Mostrando <span className="font-medium text-text-primary">{(page - 1) * pageSize + 1}</span> a <span className="font-medium text-text-primary">{Math.min(page * pageSize, data.count)}</span> de <span className="font-medium text-text-primary">{data.count}</span>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                            <button
-                                onClick={() => setPage(page - 1)}
-                                disabled={!data.previous}
-                                className="p-1.5 rounded border border-border text-text-secondary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg transition-colors"
-                                title="Página Anterior"
-                            >
-                                <ChevronLeft size={16} />
-                            </button>
-
-                            {/* Basic page numbers for MVP, could use a proper ellipsis pagination later */}
-                            <span className="px-3 py-1 font-medium bg-mint-soft text-mint-dark rounded-md">
-                                {page}
-                            </span>
-
-                            <button
-                                onClick={() => setPage(page + 1)}
-                                disabled={!data.next}
-                                className="p-1.5 rounded border border-border text-text-secondary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg transition-colors"
-                                title="Página Siguiente"
-                            >
-                                <ChevronRight size={16} />
-                            </button>
+                            Total: <span className="font-medium text-text-primary">{sortedData.length}</span> expedientes
                         </div>
                     </div>
                 )}
