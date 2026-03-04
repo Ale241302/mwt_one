@@ -523,3 +523,50 @@ class FinancialDashboardView(APIView):
             },
             'brand_breakdown': brand_breakdown,
         })
+
+
+# ══════════════════════════════════════════════════
+# Sprint 5 Views
+# ══════════════════════════════════════════════════
+
+class RegisterCompensationView(APIView):
+    """S5-05 C29 — POST /api/expedientes/{pk}/register-compensation/
+    CEO-only. Creates ART-12 Nota Compensación."""
+    permission_classes = [IsCEO]
+
+    def post(self, request, pk):
+        from apps.expedientes.services_sprint5 import register_compensation
+        exp = Expediente.objects.get(pk=pk)
+        artifact = register_compensation(exp, request.data, request.user)
+        return Response({
+            'artifact_id': str(artifact.artifact_id),
+            'artifact_type': artifact.artifact_type,
+            'payload': artifact.payload,
+        }, status=status.HTTP_201_CREATED)
+
+
+class LogisticsSuggestionsView(APIView):
+    """S5-07 — GET /api/expedientes/{pk}/logistics-suggestions/
+    CEO-only. Returns ranked suggestions from historical data."""
+    permission_classes = [IsCEO]
+
+    def get(self, request, pk):
+        from apps.expedientes.services_sprint5 import get_logistics_suggestions
+        exp = Expediente.objects.get(pk=pk)
+        return Response(get_logistics_suggestions(exp))
+
+
+class AddShipmentUpdateView(APIView):
+    """S5-08 C36 — POST /api/expedientes/{pk}/add-shipment-update/
+    Manual tracking update appended to ART-05."""
+    permission_classes = [IsCEO]
+
+    def post(self, request, pk):
+        from apps.expedientes.services_sprint5 import add_shipment_update
+        exp = Expediente.objects.get(pk=pk)
+        artifact = add_shipment_update(exp, request.data, request.user)
+        return Response({
+            'artifact_id': str(artifact.artifact_id),
+            'payload': artifact.payload,
+        })
+

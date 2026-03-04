@@ -106,6 +106,12 @@ class Expediente(TimestampMixin):
         blank=True, null=True)
     payment_registered_by_id = models.CharField(max_length=255,
                                                 blank=True, null=True)
+    # Sprint 5 S5-01: nodo_destino — FK to Node for transfer handoff
+    nodo_destino = models.ForeignKey(
+        'transfers.Node', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='expedientes_destino',
+        help_text='Target node (triggers transfer suggestion on close)'
+    )
 
     class Meta:
         verbose_name = 'Expediente'
@@ -204,7 +210,14 @@ class CostLine(AppendOnlyModel):
                                     editable=False)
     expediente = models.ForeignKey(Expediente,
                                    on_delete=models.PROTECT,
-                                   related_name='cost_lines')
+                                   related_name='cost_lines',
+                                   null=True, blank=True)
+    # Sprint 5 S5-01: nullable FK for transfer cost lines (XOR with expediente)
+    transfer = models.ForeignKey(
+        'transfers.Transfer', on_delete=models.PROTECT,
+        null=True, blank=True, related_name='cost_lines',
+        help_text='XOR with expediente — use one or the other'
+    )
     cost_type = models.CharField(max_length=50)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=3, help_text="ISO 4217")

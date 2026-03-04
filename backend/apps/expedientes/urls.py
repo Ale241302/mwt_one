@@ -19,6 +19,8 @@ from apps.expedientes.views import (
     FinancialComparisonView,
     MaterializeLogisticsView, AddLogisticsOptionView, DecideLogisticsView,
     MirrorPDFView,
+    # Sprint 5
+    RegisterCompensationView, LogisticsSuggestionsView, AddShipmentUpdateView,
 )
 
 app_name = 'expedientes'
@@ -65,4 +67,9 @@ urlpatterns = [
     path('<uuid:pk>/invoice/', InvoiceView.as_view(), name='invoice'),
     path('<uuid:pk>/financial-comparison/', FinancialComparisonView.as_view(), name='financial-comparison'),
     path('<uuid:pk>/mirror-pdf/', MirrorPDFView.as_view(), name='mirror-pdf'),
+
+    # ── Sprint 5: C29, C36, Suggestions ──
+    path('<uuid:pk>/register-compensation/', RegisterCompensationView.as_view(), name='register-compensation'),
+    path('<uuid:pk>/logistics-suggestions/', LogisticsSuggestionsView.as_view(), name='logistics-suggestions'),
+    path('<uuid:pk>/add-shipment-update/', AddShipmentUpdateView.as_view(), name='add-shipment-update'),
 ]

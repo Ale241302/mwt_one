@@ -15,4 +15,7 @@ urlpatterns = [
     path('api/ui/', include('apps.core.urls_ui', namespace='core-ui')),
     path('api/ui/expedientes/', include('apps.expedientes.urls_ui', namespace='expedientes-ui')),
     path('api/core/', include('apps.core.urls', namespace='core')),
+    # Sprint 5
+    path('api/transfers/', include('apps.transfers.urls', namespace='transfers')),
+    path('api/liquidations/', include('apps.liquidations.urls', namespace='liquidations')),
 ]

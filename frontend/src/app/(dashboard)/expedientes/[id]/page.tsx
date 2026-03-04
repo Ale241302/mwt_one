@@ -27,7 +27,7 @@ interface Artifact {
     artifact_type: string;
     status: string;
     status_display: string;
-    payload: Record<string, unknown>;
+    payload: Record<string, string | number | boolean | null | undefined>;
     supersedes: number | null;
     superseded_by: number | null;
     created_at: string;
