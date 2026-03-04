@@ -1,6 +1,6 @@
 import pytest
 from apps.expedientes.models import EventLog
-from apps.expedientes.tasks import dispatch_events
+from apps.expedientes.tasks import process_pending_events
 from apps.expedientes.enums import AggregateType
 import uuid
 from django.utils import timezone
@@ -32,7 +32,7 @@ def test_process_pending_events():
     )
     
     # Run task
-    dispatch_events()
+    process_pending_events()
     
     assert EventLog.objects.filter(processed_at__isnull=False).count() == 2
 
@@ -56,7 +56,7 @@ def test_process_pending_events_limit():
     EventLog.objects.bulk_create(events)
     
     # Run task
-    dispatch_events()
+    process_pending_events()
     
     assert EventLog.objects.filter(processed_at__isnull=False).count() == 100
     assert EventLog.objects.filter(processed_at__isnull=True).count() == 50

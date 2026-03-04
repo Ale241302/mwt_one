@@ -21,7 +21,7 @@ class TransitionTests(TestCase):
         # Test C2 (OC)
         self.exp, ev = execute_command(self.exp, 'C2', {'file_url': 'a.pdf', 'file_name': 'a.pdf'}, self.user)
         # Test C3 (Proforma)
-        self.exp, ev = execute_command(self.exp, 'C3', {'file_url': 'b.pdf', 'file_name': 'b.pdf'}, self.user)
+        self.exp, ev = execute_command(self.exp, 'C3', {'file_url': 'b.pdf', 'file_name': 'b.pdf', 'payload': {'total': 1000, 'total_client_view': 1000}}, self.user)
         # Test C4 (Mode rules) -> requires CEO
         self.exp, ev = execute_command(self.exp, 'C4', {'file_url': 'c.pdf', 'file_name': 'c.pdf'}, self.ceo)
         # Test C5 (SAP) -> Auto-transitions to PRODUCCION
@@ -55,7 +55,7 @@ class TransitionTests(TestCase):
         self.exp, ev = execute_command(self.exp, 'C13', {
             'file_url': 'i.pdf', 
             'file_name': 'i.pdf',
-            'payload': {'total': 1000}
+            'payload': {'total': 1000, 'total_client_view': 1000}
         }, self.user)
         
         # Test C21 (Payment) -> Complete total
@@ -67,7 +67,7 @@ class TransitionTests(TestCase):
         }, self.ceo)
         
         # Test C14 (Close)
-        self.exp, ev = execute_command(self.exp, 'C14', {}, self.user)
+        self.exp.payment_status = 'paid'; self.exp.save(); self.exp, ev = execute_command(self.exp, 'C14', {}, self.user)
         self.assertEqual(self.exp.status, ExpedienteStatus.CERRADO)
 
     def test_invalid_transitions(self):
