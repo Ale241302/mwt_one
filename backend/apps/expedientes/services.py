@@ -893,8 +893,8 @@ def void_artifact(old_artifact_id, user):
 
         expediente = Expediente.objects.select_for_update().get(pk=old_art.expediente_id)
 
-        if old_art.artifact_type != 'ART-09':
-            raise CommandValidationError("Only ART-09 can be voided in MVP.")
+        if old_art.artifact_type not in ['ART-09', 'ART-12']:
+            raise CommandValidationError("Only ART-09 and ART-12 can be voided in MVP.")
 
         if old_art.status != 'completed':
             raise CommandValidationError(f"Cannot void artifact in status {old_art.status}")

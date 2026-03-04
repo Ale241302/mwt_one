@@ -32,7 +32,6 @@ def register_compensation(expediente: Expediente, payload: dict, user) -> Artifa
         artifact = ArtifactInstance.objects.create(
             expediente=expediente,
             artifact_type="ART-12",
-            version=1,
             payload={
                 "amount": str(payload.get("amount", 0)),
                 "currency": payload.get("currency", "USD"),
@@ -129,8 +128,7 @@ def add_shipment_update(expediente: Expediente, payload: dict, user) -> Artifact
         expediente=expediente,
         artifact_type="ART-05",
         status="completed",
-        is_voided=False,
-    ).order_by("-version").first()
+    ).order_by("-created_at").first()
 
     update_entry = {
         "timestamp": timezone.now().isoformat(),
@@ -159,7 +157,6 @@ def add_shipment_update(expediente: Expediente, payload: dict, user) -> Artifact
             art05 = ArtifactInstance.objects.create(
                 expediente=expediente,
                 artifact_type="ART-05",
-                version=1,
                 payload={
                     "tracking_url": payload.get("tracking_url", ""),
                     "updates": [update_entry],
