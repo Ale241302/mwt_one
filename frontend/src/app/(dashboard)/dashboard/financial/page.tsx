@@ -37,7 +37,7 @@ export default function FinancialDashboardPage() {
         const fetchDashboard = async () => {
             try {
                 setLoading(true);
-                const { data } = await api.get('/api/ui/expedientes/dashboard/financial/');
+                const { data } = await api.get('ui/expedientes/dashboard/financial/');
                 setData(data);
             } catch (err: unknown) {
                 const e = err as { response?: { status?: number; data?: { detail?: string } } };

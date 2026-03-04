@@ -99,7 +99,7 @@ export default function ExpedienteDetailPage() {
         try {
             setLoading(true);
             setError(null);
-            const { data } = await api.get(`/api/ui/expedientes/${id}/`);
+            const { data } = await api.get(`ui/expedientes/${id}/`);
             setBundle(data);
         } catch (err: unknown) {
             console.error('Error fetching expediente bundle:', err);
@@ -126,7 +126,7 @@ export default function ExpedienteDetailPage() {
             const payload = {};
 
             switch (cmd) {
-                case 'C6': endpoint = `/api/expedientes/${id}/confirm-production/`; break;
+                case 'C6': endpoint = `expedientes/${id}/confirm-production/`; break;
                 // other commands will need modals.
                 default:
                     toast('Acción requiere payload. No implementada en UI aún.', { icon: '🚧' });

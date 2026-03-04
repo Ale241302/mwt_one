@@ -52,10 +52,10 @@ export default function PagosPage() {
         try {
             setLoading(true);
             const [costsRes, bundleRes, invoiceRes, summaryRes] = await Promise.all([
-                api.get(`/api/expedientes/${id}/costs/?view=client`),
-                api.get(`/api/ui/expedientes/${id}/`),
-                api.get(`/api/expedientes/${id}/invoice/?view=client`).catch(() => ({ data: null })),
-                api.get(`/api/expedientes/${id}/costs/summary/`).catch(() => ({ data: null })),
+                api.get(`expedientes/${id}/costs/?view=client`),
+                api.get(`ui/expedientes/${id}/`),
+                api.get(`expedientes/${id}/invoice/?view=client`).catch(() => ({ data: null })),
+                api.get(`expedientes/${id}/costs/summary/`).catch(() => ({ data: null })),
             ]);
             setCosts(costsRes.data.costs || []);
             setPayments(bundleRes.data.payments || []);
@@ -74,7 +74,7 @@ export default function PagosPage() {
 
     const handleDownloadMirror = async () => {
         try {
-            const { data } = await api.get(`/api/expedientes/${id}/mirror-pdf/`);
+            const { data } = await api.get(`expedientes/${id}/mirror-pdf/`);
             if (data.html) {
                 const blob = new Blob([data.html], { type: 'text/html' });
                 const url = URL.createObjectURL(blob);

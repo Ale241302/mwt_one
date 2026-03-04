@@ -40,7 +40,7 @@ export default function DashboardPage() {
 
     const fetchDashboardData = async () => {
         try {
-            const res = await api.get('/api/ui/dashboard/');
+            const res = await api.get('ui/dashboard/');
             setData(res.data);
         } catch (error) {
             console.error("Error fetching dashboard data", error);

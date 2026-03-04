@@ -57,7 +57,7 @@ export default function PaymentsPanel({
         }
         setSubmitting(true);
         try {
-            await api.post(`/api/expedientes/${expedienteId}/register-payment/`, {
+            await api.post(`expedientes/${expedienteId}/register-payment/`, {
                 amount: form.amount,
                 currency,
                 method: form.method,
