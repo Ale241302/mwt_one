@@ -158,7 +158,7 @@ services:
       PAPERLESS_DBPASS: ${POSTGRES_PASSWORD:-mwt}
       PAPERLESS_ADMIN_USER: admin
       PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD:-paperless2024}
-      PAPERLESS_URL: http://localhost:8888
+      PAPERLESS_URL: http://consola.mwt.one/paperless
       PAPERLESS_TIME_ZONE: America/Costa_Rica
       PAPERLESS_OCR_LANGUAGE: spa
     depends_on:
