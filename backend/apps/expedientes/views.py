@@ -570,3 +570,25 @@ class AddShipmentUpdateView(APIView):
             'payload': artifact.payload,
         })
 
+
+class HandoffSuggestionView(APIView):
+    """S5-06 — GET /api/expedientes/{pk}/handoff-suggestion/
+    Returns transfer suggestion when expediente is closed with nodo_destino."""
+    permission_classes = [IsCEO]
+
+    def get(self, request, pk):
+        from apps.expedientes.services_sprint5 import get_handoff_suggestion
+        exp = Expediente.objects.get(pk=pk)
+        return Response(get_handoff_suggestion(exp))
+
+
+class LiquidationPaymentSuggestionView(APIView):
+    """S5-10 — GET /api/expedientes/{pk}/liquidation-payment-suggestion/
+    Suggests C21 payments from reconciled ART-10 lines for COMISION mode."""
+    permission_classes = [IsCEO]
+
+    def get(self, request, pk):
+        from apps.expedientes.services_sprint5 import get_liquidation_payment_suggestion
+        exp = Expediente.objects.get(pk=pk)
+        return Response(get_liquidation_payment_suggestion(exp))
+

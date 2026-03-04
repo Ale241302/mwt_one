@@ -21,6 +21,7 @@ from apps.expedientes.views import (
     MirrorPDFView,
     # Sprint 5
     RegisterCompensationView, LogisticsSuggestionsView, AddShipmentUpdateView,
+    HandoffSuggestionView, LiquidationPaymentSuggestionView,
 )
 
 app_name = 'expedientes'
@@ -72,4 +73,8 @@ urlpatterns = [
     path('<uuid:pk>/register-compensation/', RegisterCompensationView.as_view(), name='register-compensation'),
     path('<uuid:pk>/logistics-suggestions/', LogisticsSuggestionsView.as_view(), name='logistics-suggestions'),
     path('<uuid:pk>/add-shipment-update/', AddShipmentUpdateView.as_view(), name='add-shipment-update'),
+    # S5-06: Handoff suggestion
+    path('<uuid:pk>/handoff-suggestion/', HandoffSuggestionView.as_view(), name='handoff-suggestion'),
+    # S5-10: Liquidation payment suggestion
+    path('<uuid:pk>/liquidation-payment-suggestion/', LiquidationPaymentSuggestionView.as_view(), name='liquidation-payment-suggestion'),
 ]
