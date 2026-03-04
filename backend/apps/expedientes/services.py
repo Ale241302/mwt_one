@@ -773,7 +773,7 @@ def _handle_decide_logistics(expediente, data, emitted_by, events):
 def _update_payment_status(expediente):
     """
     §L3: SUM(payments) >= invoice_total → paid.
-    Sprint 4: COMISION uses ART-01 total_po as reference.
+    Sprint 5: COMISION uses expected commission (total_po * comision_pactada / 100) as reference.
     """
     total_paid = expediente.payment_lines.aggregate(
         total=models_Sum('amount')
@@ -783,12 +783,22 @@ def _update_payment_status(expediente):
     reference_total = Decimal('0')
 
     if expediente.mode == 'COMISION':
-        # COMISION: reference = ART-01 total_po
+        # COMISION: reference = expected commission (ART-01 total * ART-02 comision_pactada / 100)
         art01 = _get_artifact(expediente, 'ART-01')
-        if art01 and 'total_po' in art01.payload:
-            reference_total = Decimal(str(art01.payload['total_po']))
-        elif art01 and 'total' in art01.payload:
-            reference_total = Decimal(str(art01.payload['total']))
+        art02 = _get_artifact(expediente, 'ART-02')
+
+        total_po = Decimal('0')
+        if art01:
+            if 'total_po' in art01.payload:
+                total_po = Decimal(str(art01.payload['total_po']))
+            elif 'total' in art01.payload:
+                total_po = Decimal(str(art01.payload['total']))
+
+        comision_pactada = Decimal('0')
+        if art02 and 'comision_pactada' in art02.payload:
+            comision_pactada = Decimal(str(art02.payload['comision_pactada']))
+
+        reference_total = (total_po * comision_pactada) / Decimal('100')
     else:
         # FULL: reference = ART-09 total_client_view
         art09 = _get_artifact(expediente, 'ART-09')

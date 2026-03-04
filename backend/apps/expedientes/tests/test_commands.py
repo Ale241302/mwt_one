@@ -26,7 +26,7 @@ class CommandAPITests(APITestCase):
             'freight_mode': 'FCL',
             'dispatch_mode': DispatchMode.MWT,
         }
-        res = self.client.post(url, data)
+        res = self.client.post(url, data, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data['expediente']['brand'], 'NewBrand')
         self.assertEqual(len(res.data['events']), 1)
@@ -40,13 +40,13 @@ class CommandAPITests(APITestCase):
             'client': 'CL999',
             'credit_clock_start_rule': 'on_shipment',
         }
-        res = self.client.post(url, data)
+        res = self.client.post(url, data, format='json')
         self.assertIsNone(res.data['expediente']['credit_clock_started_at'])
         
     def test_c1_invalid_entity(self):
         url = reverse('expedientes:create')
         data = {'legal_entity_id': 'INVALID', 'client': 'CLIENT'}
-        res = self.client.post(url, data)
+        res = self.client.post(url, data, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     # ──────────────────────────────────────────────────
@@ -54,30 +54,30 @@ class CommandAPITests(APITestCase):
     # ──────────────────────────────────────────────────
     def test_c2_register_oc(self):
         url = reverse('expedientes:register-oc', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'payload': {}})
+        res = self.client.post(url, {'payload': {}}, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertTrue(ArtifactInstance.objects.filter(artifact_type='OC').exists())
 
     def test_c3_register_proforma(self):
         url = reverse('expedientes:register-proforma', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'payload': {}})
+        res = self.client.post(url, {'payload': {}}, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
     def test_c4_decide_mode_requires_ceo(self):
         url = reverse('expedientes:decide-mode', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'payload': {}})
+        res = self.client.post(url, {'payload': {}}, format='json')
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
         
         ceo = create_user(username='ceo', is_superuser=True)
         self.client.force_authenticate(user=ceo)
-        res = self.client.post(url, {'payload': {}})
+        res = self.client.post(url, {'payload': {}}, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
     def test_c5_confirm_sap_transitions_and_events(self):
         self.exp.status = ExpedienteStatus.REGISTRO
         self.exp.save()
         url = reverse('expedientes:confirm-sap', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'payload': {}})
+        res = self.client.post(url, {'payload': {}}, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         # Verify 2 events returned (Transition + Command)
         self.assertEqual(len(res.data['events']), 2)
@@ -91,7 +91,7 @@ class CommandAPITests(APITestCase):
         self.exp.status = ExpedienteStatus.PRODUCCION
         self.exp.save()
         url = reverse('expedientes:confirm-production', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {})
+        res = self.client.post(url, {}, format='json')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     def test_c7_register_shipment_starts_clock(self):
@@ -100,7 +100,7 @@ class CommandAPITests(APITestCase):
         self.exp.credit_clock_started_at = None
         self.exp.save()
         url = reverse('expedientes:register-shipment', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'payload': {}})
+        res = self.client.post(url, {'payload': {}}, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.exp.refresh_from_db()
         self.assertIsNotNone(self.exp.credit_clock_started_at)
@@ -109,7 +109,7 @@ class CommandAPITests(APITestCase):
         self.exp.status = ExpedienteStatus.PRODUCCION
         self.exp.save()
         url = reverse('expedientes:register-freight-quote', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'payload': {}})
+        res = self.client.post(url, {'payload': {}}, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
     def test_c9_register_customs_only_mwt(self):
@@ -117,12 +117,12 @@ class CommandAPITests(APITestCase):
         self.exp.dispatch_mode = DispatchMode.CLIENT
         self.exp.save()
         url = reverse('expedientes:register-customs', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'payload': {}})
+        res = self.client.post(url, {'payload': {}}, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         
         self.exp.dispatch_mode = DispatchMode.MWT
         self.exp.save()
-        res = self.client.post(url, {'payload': {}})
+        res = self.client.post(url, {'payload': {}}, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
     def test_c10_approve_dispatch_transitions(self):
@@ -130,7 +130,7 @@ class CommandAPITests(APITestCase):
         self.exp.dispatch_mode = DispatchMode.MWT
         self.exp.save()
         url = reverse('expedientes:approve-dispatch', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'payload': {}})
+        res = self.client.post(url, {'payload': {}}, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(res.data['events']), 2)
         self.exp.refresh_from_db()
@@ -143,21 +143,21 @@ class CommandAPITests(APITestCase):
         self.exp.status = ExpedienteStatus.DESPACHO
         self.exp.save()
         url = reverse('expedientes:confirm-departure', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {})
+        res = self.client.post(url, {}, format='json')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     def test_c12_confirm_arrival(self):
         self.exp.status = ExpedienteStatus.DESPACHO
         self.exp.save()
         url = reverse('expedientes:confirm-arrival', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {})
+        res = self.client.post(url, {}, format='json')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     def test_c13_issue_invoice(self):
         self.exp.status = ExpedienteStatus.DESPACHO
         self.exp.save()
         url = reverse('expedientes:issue-invoice', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'payload': {}})
+        res = self.client.post(url, {'payload': {}}, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
     def test_c14_close_fails_if_unpaid(self):
@@ -165,7 +165,7 @@ class CommandAPITests(APITestCase):
         self.exp.payment_status = PaymentStatus.PENDING
         self.exp.save()
         url = reverse('expedientes:close', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {})
+        res = self.client.post(url, {}, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_c14_close_success(self):
@@ -173,7 +173,7 @@ class CommandAPITests(APITestCase):
         self.exp.payment_status = PaymentStatus.PAID
         self.exp.save()
         url = reverse('expedientes:close', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {})
+        res = self.client.post(url, {}, format='json')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.exp.refresh_from_db()
         self.assertEqual(self.exp.status, ExpedienteStatus.CERRADO)
@@ -183,12 +183,12 @@ class CommandAPITests(APITestCase):
     # ──────────────────────────────────────────────────
     def test_c15_register_cost(self):
         url = reverse('expedientes:register-cost', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'cost_type': 'FREIGHT', 'amount': '1500.00', 'currency': 'USD', 'phase': 'PREP'})
+        res = self.client.post(url, {'cost_type': 'FREIGHT', 'amount': '1500.00', 'currency': 'USD', 'phase': 'PREP'}, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
     def test_c21_register_payment(self):
         url = reverse('expedientes:register-payment', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'amount': '1500.00', 'currency': 'USD', 'method': 'TRANSFER', 'reference': 'REF123'})
+        res = self.client.post(url, {'amount': '1500.00', 'currency': 'USD', 'method': 'TRANSFER', 'reference': 'REF123'}, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.exp.refresh_from_db()
         self.assertEqual(self.exp.payment_status, PaymentStatus.PARTIAL)
@@ -198,19 +198,19 @@ class CommandAPITests(APITestCase):
     # ──────────────────────────────────────────────────
     def test_c16_cancel_requires_ceo(self):
         url = reverse('expedientes:cancel', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {})
+        res = self.client.post(url, {}, format='json')
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
         
         ceo = create_user(username='ceo', is_superuser=True)
         self.client.force_authenticate(user=ceo)
-        res = self.client.post(url, {})
+        res = self.client.post(url, {}, format='json')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.exp.refresh_from_db()
         self.assertEqual(self.exp.status, ExpedienteStatus.CANCELADO)
 
     def test_c17_block(self):
         url = reverse('expedientes:block', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {'reason': 'test'})
+        res = self.client.post(url, {'reason': 'test'}, format='json')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.exp.refresh_from_db()
         self.assertTrue(self.exp.is_blocked)
@@ -219,12 +219,12 @@ class CommandAPITests(APITestCase):
         self.exp.is_blocked = True
         self.exp.save()
         url = reverse('expedientes:unblock', kwargs={'pk': self.exp.pk})
-        res = self.client.post(url, {})
+        res = self.client.post(url, {}, format='json')
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
         
         ceo = create_user(username='ceo', is_superuser=True)
         self.client.force_authenticate(user=ceo)
-        res = self.client.post(url, {})
+        res = self.client.post(url, {}, format='json')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     # ──────────────────────────────────────────────────
@@ -238,7 +238,7 @@ class CommandAPITests(APITestCase):
         
         initial_events = EventLog.objects.count()
         with self.assertRaises(Exception):
-            self.client.post(url, {'payload': {}})
+            self.client.post(url, {'payload': {}}, format='json')
             
         # Ensure no events were saved due to transaction rollback
         self.assertEqual(EventLog.objects.count(), initial_events)
@@ -252,7 +252,7 @@ class CommandAPITests(APITestCase):
         
         initial_events = EventLog.objects.count()
         with self.assertRaises(Exception):
-            self.client.post(url, {'payload': {}})
+            self.client.post(url, {'payload': {}}, format='json')
             
         self.assertEqual(EventLog.objects.count(), initial_events)
         
@@ -262,7 +262,7 @@ class CommandAPITests(APITestCase):
         url = reverse('expedientes:register-oc', kwargs={'pk': self.exp.pk})
         
         with self.assertRaises(Exception):
-            self.client.post(url, {'payload': {}})
+            self.client.post(url, {'payload': {}}, format='json')
             
         # The artifact should not have been created because the event creation failed
         self.assertEqual(ArtifactInstance.objects.count(), 0)

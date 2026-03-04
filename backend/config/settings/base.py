@@ -178,3 +178,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://mwt.one',
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+REST_FRAMEWORK = {
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+}
