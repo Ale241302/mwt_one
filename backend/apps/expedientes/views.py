@@ -271,7 +271,7 @@ class ExpedienteBundleView(APIView):
             'available_actions': available_actions,
         }
 
-        serializer = ExpedienteBundleSerializer(exp)
+        serializer = ExpedienteBundleSerializer(data)
         result = serializer.data
         result['available_actions'] = available_actions
         result['events'] = [
