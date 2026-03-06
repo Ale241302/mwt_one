@@ -26,9 +26,10 @@ def upload_liquidation_view(request):
     ser = UploadLiquidationSerializer(data=request.data)
     ser.is_valid(raise_exception=True)
     liquidation = upload_liquidation(
-        ser.validated_data["file"],
-        ser.validated_data["period"],
-        request.user,
+        data=request.data,
+        file=ser.validated_data.get("file"),
+        period=ser.validated_data["period"],
+        user=request.user,
     )
     return Response(
         LiquidationDetailSerializer(liquidation).data,

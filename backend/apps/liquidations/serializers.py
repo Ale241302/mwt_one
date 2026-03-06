@@ -25,12 +25,28 @@ class LiquidationDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class CommissionLineInputSerializer(serializers.Serializer):
+    client = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    fatura = serializers.CharField()
+    base   = serializers.DecimalField(max_digits=15, decimal_places=2)
+    rate   = serializers.DecimalField(max_digits=5, decimal_places=2)
+    amount = serializers.DecimalField(max_digits=15, decimal_places=2)
+
+class PremioInputSerializer(serializers.Serializer):
+    label    = serializers.CharField(default="Premio de Vendas", required=False)
+    amount   = serializers.DecimalField(max_digits=15, decimal_places=2)
+    ptax     = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    ptaxDate = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
 class UploadLiquidationSerializer(serializers.Serializer):
-    file = serializers.FileField()
+    file = serializers.FileField(required=False, allow_null=True)
     period = serializers.RegexField(
         r"^\d{4}-\d{2}$",
         error_messages={"invalid": "Format: YYYY-MM"}
     )
+    currency = serializers.CharField(default="USD", required=False)
+    commissions = CommissionLineInputSerializer(many=True, required=False)
+    premio = PremioInputSerializer(required=False, allow_null=True)
 
 
 class ManualMatchSerializer(serializers.Serializer):

@@ -12,7 +12,7 @@ from apps.liquidations.models import Liquidation, LiquidationLine
 from apps.liquidations.enums import (
     LiquidationStatus, MatchStatus, LiquidationLineConcept
 )
-from apps.liquidations.parsers import parse_marluvas_excel
+from apps.liquidations.parsers import parse_marluvas_liquidation
 from apps.expedientes.models import ArtifactInstance, EventLog
 
 # Tolerancias configurables (con defaults)
@@ -37,12 +37,12 @@ def _create_liquidation_event(liquidation, event_type, emitted_by, payload=None)
     )
 
 
-def upload_liquidation(file, period: str, user) -> Liquidation:
+def upload_liquidation(data: dict, file, period: str, user) -> Liquidation:
     """
     C25 UploadLiquidation.
     1. Valida formato período y que no haya liquidación reconciled para ese período.
     2. Crea Liquidation, guarda archivo SIEMPRE.
-    3. Intenta parsear Excel.
+    3. Intenta parsear JSON.
     4. Intenta auto-match por marluvas_reference contra ART-02 consecutivos.
     5. Emite evento liquidation.received.
     """
@@ -58,7 +58,13 @@ def upload_liquidation(file, period: str, user) -> Liquidation:
         liquidation.source_file = file
 
         # Intentar parsear
-        lines_data, error_msg = parse_marluvas_excel(file)
+        try:
+            lines_data = parse_marluvas_liquidation(data)
+            error_msg = ""
+        except Exception as e:
+            lines_data = []
+            error_msg = str(e)
+            
         liquidation.error_log = error_msg
         liquidation.save()
 
@@ -90,7 +96,7 @@ def _auto_match_line(line: LiquidationLine):
 
     matches = ArtifactInstance.objects.filter(
         artifact_type="ART-02",
-        payload__consecutive__icontains=line.marluvas_reference
+        payload__consecutive__iexact=line.marluvas_reference
     )
 
     if matches.count() == 1:

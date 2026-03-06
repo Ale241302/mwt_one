@@ -23,7 +23,7 @@ class Liquidation(models.Model):
     liquidation_id = models.CharField(max_length=30, unique=True, editable=False)
     period = models.CharField(max_length=7)  # formato YYYY-MM
     brand = models.CharField(max_length=50, default="marluvas")
-    source_file = models.FileField(upload_to="liquidations/uploads/")
+    source_file = models.FileField(upload_to="liquidations/uploads/", null=True, blank=True)
     status = models.CharField(
         max_length=20, choices=LiquidationStatus.choices,
         default=LiquidationStatus.PENDING
@@ -64,7 +64,7 @@ class LiquidationLine(models.Model):
     concept = models.CharField(
         max_length=20, choices=LiquidationLineConcept.choices
     )
-    client_payment_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    client_payment_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     commission_pct_reported = models.DecimalField(
         max_digits=5, decimal_places=2, null=True, blank=True
     )

@@ -47,54 +47,53 @@ class TestLiquidationCommands:
             }
         )
 
-    @patch('apps.liquidations.services.parse_marluvas_excel')
-    def test_c25_upload_liquidation(self, mock_parse):
-        # We need to mock the parser since Phase B isn't active
-        from decimal import Decimal
-        mock_parse.return_value = (
-            [
-                {
-                    "concept": LiquidationLineConcept.COMISION,
-                    "marluvas_reference": "PROF-12345",
-                    "client_payment_amount": Decimal("1000.00"),
-                    "commission_amount": Decimal("100.00"),
-                    "commission_pct_reported": Decimal("10.00")
-                },
-                {
-                    "concept": LiquidationLineConcept.PREMIO,
-                    "marluvas_reference": "PREMIO-01",
-                    "client_payment_amount": Decimal("0.00"),
-                    "commission_amount": Decimal("50.00"),
-                    "commission_pct_reported": Decimal("0.00")
-                }
-            ],
-            "" # No error
+    def test_c25_upload_liquidation_real_json(self):
+        # Create an ART-02 artifact representing a proforma matched
+        self.proforma2354 = ArtifactInstance.objects.create(
+            expediente=self.expediente,
+            artifact_type="ART-02",
+            status="completed",
+            payload={
+                "consecutive": "2354-2025",
+                "total_amount": 8425.90,
+                "comision_pactada": 9.37
+            }
         )
         
-        test_file = SimpleUploadedFile("test_liq.xlsx", b"file_content", content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        
         payload = {
-            "file": test_file,
-            "period": "2023-10"
+          "period": "2026-02",
+          "currency": "USD",
+          "commissions": [
+            { "client": "Importaciones Y Compras", "fatura": "2354-2025", "base": 8425.90,  "rate": 9.37,  "amount": 789.51  },
+            { "client": "Importaciones Y Compras", "fatura": "2355-2025", "base": 33762.50, "rate": 10.00, "amount": 3376.25 },
+            { "client": "Imporcomp",               "fatura": "2365-2025", "base": 5829.70,  "rate": 10.00, "amount": 582.97  }
+          ],
+          "premio": {
+            "label": "Premio de Vendas",
+            "amount": 1201.80,
+            "ptax": "5.2500",
+            "ptaxDate": "03/03/2026"
+          }
         }
         
-        res = self.client.post("/api/liquidations/upload/", payload, format='multipart')
+        res = self.client.post("/api/liquidations/upload/", payload, format='json')
         assert res.status_code == status.HTTP_201_CREATED
         
         data = res.json()
-        assert data["period"] == "2023-10"
+        assert data["period"] == "2026-02"
         assert data["status"] == LiquidationStatus.PENDING
         
         liq = Liquidation.objects.get(liquidation_id=data["liquidation_id"])
-        assert liq.total_lines == 2
+        # 3 commissions + 1 premio
+        assert liq.total_lines == 4
         
         # Check auto-match logic
-        lines = liq.lines.all().order_by('concept')
-        comision_line = lines.get(concept=LiquidationLineConcept.COMISION)
+        lines = liq.lines.all()
+        comision_2354 = lines.get(concept=LiquidationLineConcept.COMISION, marluvas_reference="2354-2025")
         premio_line = lines.get(concept=LiquidationLineConcept.PREMIO)
         
-        assert comision_line.match_status == MatchStatus.MATCHED
-        assert comision_line.matched_proforma == self.proforma
+        assert comision_2354.match_status == MatchStatus.MATCHED
+        assert comision_2354.matched_proforma == self.proforma2354
         
         assert premio_line.match_status == MatchStatus.NO_MATCH_NEEDED
 
