@@ -60,3 +60,20 @@ class ReconcileTransferSerializer(serializers.Serializer):
 
 class CancelTransferSerializer(serializers.Serializer):
     reason = serializers.CharField()
+
+
+class CreatePreparationArtifactSerializer(serializers.Serializer):
+    payload = serializers.DictField(required=False, default=dict)
+
+
+class CreateDispatchArtifactSerializer(serializers.Serializer):
+    payload = serializers.DictField(required=False, default=dict)
+
+
+class CreateReceptionArtifactSerializer(serializers.Serializer):
+    lines = serializers.ListField(child=serializers.DictField())
+    payload = serializers.DictField(required=False, default=dict)
+
+
+class CreatePricingApprovalArtifactSerializer(serializers.Serializer):
+    payload = serializers.DictField(required=False, default=dict)

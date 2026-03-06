@@ -1,0 +1,40 @@
+{
+    "Index": {
+        "title": "American Technology Inside",
+        "description": "Premium orthotic solutions engineered in the USA."
+    },
+    "Header": {
+        "language": "Language"
+    },
+    "Techs": {
+        "LeapCore": {
+            "name": "LeapCore™",
+            "description": "Bi-density PU chassis distributing massive pressures."
+        },
+        "ThinBoom": {
+            "name": "ThinBoom™",
+            "description": "High rebound elastomer matrix returning 70-80% of kinetic energy."
+        },
+        "PORON_XRD": {
+            "name": "PORON® XRD®",
+            "description": "Molecular reaction shield neutralizing up to 90% of impact energy."
+        },
+        "NanoSpread": {
+            "name": "NanoSpread™",
+            "description": "Active thermoregulation reducing internal temperature up to 5°C."
+        },
+        "ShockSphere": {
+            "name": "ShockSphere™",
+            "description": "Focused cushioning providing intelligent suspension in critical zones."
+        },
+        "ArchSystem": {
+            "name": "Arch System",
+            "description": "Support exoskeleton optimizing leverage and preventing medial arch collapse."
+        }
+    },
+    "Product": {
+        "inside": "Inside Your",
+        "seal": "Seal of Quality:",
+        "arch_profiles": "Arch Profiles:"
+    }
+}

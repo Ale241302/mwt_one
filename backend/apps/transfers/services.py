@@ -8,7 +8,8 @@ from django.db import transaction
 
 from apps.transfers.models import Transfer, TransferLine, Node
 from apps.transfers.enums import TransferStatus, LegalContext
-from apps.expedientes.models import EventLog
+from apps.expedientes.models import EventLog, ArtifactInstance
+from apps.expedientes.enums import ArtifactStatus
 
 
 def _create_transfer_event(transfer, event_type, emitted_by, payload=None):
@@ -64,6 +65,18 @@ def approve_transfer(transfer: Transfer, user) -> Transfer:
     """C31 — planned → approved. CEO only."""
     if transfer.status != TransferStatus.PLANNED:
         raise ValueError("Transfer must be in planned status to approve.")
+        
+    # ART-16 rule: if ownership changes, we need pricing approval before approval
+    if transfer.ownership_changes and transfer.source_expediente:
+        art_16s = ArtifactInstance.objects.filter(
+            expediente=transfer.source_expediente, 
+            artifact_type="ART-16", 
+            status=ArtifactStatus.COMPLETED
+        )
+        art_16_exists = any(a.payload.get("transfer_id") == transfer.transfer_id for a in art_16s)
+        if not art_16_exists:
+            raise ValueError("Transfer with ownership_changes=True requires ART-16 (Pricing Approval) before approval (C31).")
+            
     with transaction.atomic():
         transfer.status = TransferStatus.APPROVED
         transfer.approved_at = timezone.now()
@@ -167,3 +180,142 @@ def cancel_transfer(transfer: Transfer, user, reason: str) -> Transfer:
             payload={"reason": reason},
         )
     return transfer
+
+
+def create_preparation_artifact(transfer: Transfer, payload: dict, user) -> ArtifactInstance:
+    """
+    C36 — Create ART-14 (Preparation).
+    Pre-condition: status == APPROVED.
+    Generates ART-14.
+    """
+    if transfer.status != TransferStatus.APPROVED:
+        raise ValueError("Transfer must be approved to prepare (ART-14).")
+
+    with transaction.atomic():
+        artifact = ArtifactInstance.objects.create(
+            expediente=transfer.source_expediente,  # Allow NULL if model permits, though it's typically required
+            artifact_type="ART-14",
+            status=ArtifactStatus.COMPLETED,
+            payload={
+                "transfer_id": transfer.transfer_id,
+                **payload
+            }
+        )
+        _create_transfer_event(
+            transfer, "transfer.artifact_created", "C36:CreatePreparation",
+            payload={"artifact_type": "ART-14", "artifact_id": str(artifact.artifact_id)}
+        )
+    return artifact
+
+
+def create_dispatch_artifact(transfer: Transfer, payload: dict, user) -> ArtifactInstance:
+    """
+    C37 — Create ART-15 (Dispatch).
+    Pre-condition: ART-14 exists for this transfer.
+    Changes status to IN_TRANSIT.
+    """
+    if transfer.status != TransferStatus.APPROVED:
+        raise ValueError("Transfer must be approved to dispatch (ART-15).")
+        
+    # Validation: needs ART-14
+    if transfer.source_expediente:
+        # Check if ART-14 exists in source_expediente payloads linking to this transfer
+        art_14s = ArtifactInstance.objects.filter(
+            expediente=transfer.source_expediente, 
+            artifact_type="ART-14", 
+            status=ArtifactStatus.COMPLETED
+        )
+        # Verify it's actually for this transfer
+        art_14_exists = any(a.payload.get("transfer_id") == transfer.transfer_id for a in art_14s)
+        if not art_14_exists:
+            raise ValueError("Transfer requires ART-14 (Preparation) before ART-15 (Dispatch).")
+
+    with transaction.atomic():
+        artifact = ArtifactInstance.objects.create(
+            expediente=transfer.source_expediente,
+            artifact_type="ART-15",
+            status=ArtifactStatus.COMPLETED,
+            payload={
+                "transfer_id": transfer.transfer_id,
+                **payload
+            }
+        )
+        
+        transfer.status = TransferStatus.IN_TRANSIT
+        transfer.dispatched_at = timezone.now()
+        transfer.save(update_fields=["status", "dispatched_at", "updated_at"])
+        
+        _create_transfer_event(
+            transfer, "transfer.dispatched_art15", "C37:CreateDispatch",
+            payload={"artifact_type": "ART-15"}
+        )
+    return artifact
+
+
+def create_reception_artifact(transfer: Transfer, lines_data: list, payload: dict, user) -> ArtifactInstance:
+    """
+    C38 — Create ART-13 (Reception).
+    Pre-condition: status == IN_TRANSIT.
+    Changes status to RECEIVED. Updates TransferLines.
+    """
+    if transfer.status != TransferStatus.IN_TRANSIT:
+        raise ValueError("Transfer must be in transit to receive (ART-13).")
+
+    with transaction.atomic():
+        for line_data in lines_data:
+            line = transfer.lines.filter(sku=line_data["sku"]).first()
+            if line:
+                line.quantity_received = line_data.get("quantity_received", 0)
+                line.condition = line_data.get("condition")
+                line.save(update_fields=["quantity_received", "condition"])
+
+        artifact = ArtifactInstance.objects.create(
+            expediente=transfer.source_expediente,
+            artifact_type="ART-13",
+            status=ArtifactStatus.COMPLETED,
+            payload={
+                "transfer_id": transfer.transfer_id,
+                "lines_data": lines_data,
+                **payload
+            }
+        )
+
+        transfer.status = TransferStatus.RECEIVED
+        transfer.received_at = timezone.now()
+        transfer.save(update_fields=["status", "received_at", "updated_at"])
+        
+        _create_transfer_event(
+            transfer, "transfer.received_art13", "C38:CreateReception",
+            payload={"artifact_type": "ART-13"}
+        )
+    return artifact
+
+
+def create_pricing_approval_artifact(transfer: Transfer, payload: dict, user) -> ArtifactInstance:
+    """
+    C39 — Create ART-16 (Pricing Approval).
+    Pre-condition: ownership_changes == True AND status == PLANNED.
+    Generates ART-16. Required before C31.
+    """
+    if not transfer.ownership_changes:
+        raise ValueError("Transfer without ownership changes does not require pricing approval (ART-16).")
+    
+    if transfer.status != TransferStatus.PLANNED:
+        raise ValueError("Pricing approval (ART-16) must be given while transfer is in PLANNED status.")
+
+    with transaction.atomic():
+        artifact = ArtifactInstance.objects.create(
+            expediente=transfer.source_expediente,
+            artifact_type="ART-16",
+            status=ArtifactStatus.COMPLETED,
+            payload={
+                "transfer_id": transfer.transfer_id,
+                **payload
+            }
+        )
+        _create_transfer_event(
+            transfer, "transfer.artifact_created", "C39:CreatePricingApproval",
+            payload={"artifact_type": "ART-16", "artifact_id": str(artifact.artifact_id)}
+        )
+    return artifact
+

@@ -59,8 +59,8 @@ class Expediente(TimestampMixin):
                                      on_delete=models.PROTECT,
                                      related_name='expedientes_emitidos',
                                      help_text="Entidad emisora")
-    brand = models.CharField(max_length=20, choices=Brand.choices,
-                             default=Brand.MARLUVAS)
+    brand = models.ForeignKey('brands.Brand', on_delete=models.PROTECT, null=True, blank=True)
+    destination = models.CharField(max_length=10, choices=[('CR', 'Costa Rica'), ('USA', 'United States')], default='CR')
     client = models.ForeignKey(LegalEntity,
                                on_delete=models.PROTECT,
                                related_name='expedientes_como_cliente',

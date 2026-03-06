@@ -1,0 +1,71 @@
+[
+  {
+    "model": "brands.brand",
+    "pk": "rana_walk",
+    "fields": {
+      "name": "Rana Walk",
+      "brand_type": "own",
+      "is_active": true
+    }
+  },
+  {
+    "model": "brands.brandartifactrule",
+    "pk": 1,
+    "fields": {
+      "brand": "rana_walk",
+      "artifact_type": "ART-01",
+      "destination": "ALL",
+      "is_required": true
+    }
+  },
+  {
+    "model": "brands.brandartifactrule",
+    "pk": 2,
+    "fields": {
+      "brand": "rana_walk",
+      "artifact_type": "ART-02",
+      "destination": "ALL",
+      "is_required": true
+    }
+  },
+  {
+    "model": "brands.brandartifactrule",
+    "pk": 3,
+    "fields": {
+      "brand": "rana_walk",
+      "artifact_type": "ART-05",
+      "destination": "ALL",
+      "is_required": true
+    }
+  },
+  {
+    "model": "brands.brandartifactrule",
+    "pk": 4,
+    "fields": {
+      "brand": "rana_walk",
+      "artifact_type": "ART-06",
+      "destination": "ALL",
+      "is_required": true
+    }
+  },
+  {
+    "model": "brands.brandartifactrule",
+    "pk": 5,
+    "fields": {
+      "brand": "rana_walk",
+      "artifact_type": "ART-09",
+      "destination": "ALL",
+      "is_required": true
+    }
+  },
+  {
+    "model": "brands.brandartifactrule",
+    "pk": 6,
+    "fields": {
+      "brand": "rana_walk",
+      "artifact_type": "ART-11",
+      "destination": "ALL",
+      "is_required": true
+    }
+  }
+]

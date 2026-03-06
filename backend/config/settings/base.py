@@ -28,6 +28,9 @@ INSTALLED_APPS = [
     # Sprint 5
     'apps.transfers',
     'apps.liquidations',
+    # Sprint 6
+    'apps.brands',
+    'apps.qr',
 ]
 
 MIDDLEWARE = [
@@ -154,22 +157,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CSRF_TRUSTED_ORIGINS = [
     'http://187.77.218.102:8080',
     'http://187.77.218.102:8000',
-    'http://localhost:8080',
-    'http://localhost:3000',
-    'http://consola.mwt.one:8080',
-    'https://consola.mwt.one',
-    'https://mwt.one',
-]
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# --- Shared Cookies / Session ---
-SESSION_COOKIE_DOMAIN = env('SESSION_COOKIE_DOMAIN', default='.mwt.one')
-CSRF_COOKIE_HTTPONLY = False
-SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=False)
-CSRF_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=False)
-
-CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:8080',
     'http://187.77.218.102:8080',
@@ -178,6 +165,8 @@ CORS_ALLOWED_ORIGINS = [
     'https://mwt.one',
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+QR_SALT = env.str("QR_SALT", default="default-fallback-salt-do-not-use-in-prod-qwertyui")
 
 REST_FRAMEWORK = {
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',

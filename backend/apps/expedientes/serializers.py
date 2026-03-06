@@ -68,7 +68,7 @@ class ExpedienteSerializer(serializers.ModelSerializer):
         model = Expediente
         fields = [
             'expediente_id', 'legal_entity', 'legal_entity_name',
-            'brand', 'client', 'status', 'status_display',
+            'brand', 'destination', 'client', 'status', 'status_display',
             'is_blocked', 'blocked_reason', 'blocked_at',
             'blocked_by_type', 'blocked_by_id',
             'mode', 'freight_mode', 'transport_mode',
@@ -88,7 +88,8 @@ class ExpedienteSerializer(serializers.ModelSerializer):
 class ExpedienteCreateSerializer(serializers.Serializer):
     """C1: CreateExpediente — inputs."""
     legal_entity_id = serializers.CharField(max_length=50, required=True)
-    brand = serializers.CharField(max_length=200)
+    brand = serializers.CharField(max_length=50, required=False, default='marluvas')
+    destination = serializers.ChoiceField(choices=['CR', 'USA'], default='CR')
     client = serializers.CharField(max_length=50, required=True)
     mode = serializers.CharField(max_length=50, required=False, default='')
     freight_mode = serializers.CharField(max_length=50, required=False, default='')

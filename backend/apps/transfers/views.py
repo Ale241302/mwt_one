@@ -11,10 +11,14 @@ from apps.transfers.models import Transfer
 from apps.transfers.services import (
     create_transfer, approve_transfer, dispatch_transfer,
     receive_transfer, reconcile_transfer, cancel_transfer,
+    create_preparation_artifact, create_dispatch_artifact, create_reception_artifact,
+    create_pricing_approval_artifact
 )
 from apps.transfers.serializers import (
     CreateTransferSerializer, TransferListSerializer, TransferDetailSerializer,
     ReceiveTransferSerializer, ReconcileTransferSerializer, CancelTransferSerializer,
+    CreatePreparationArtifactSerializer, CreateDispatchArtifactSerializer, CreateReceptionArtifactSerializer,
+    CreatePricingApprovalArtifactSerializer
 )
 
 
@@ -80,6 +84,59 @@ def cancel_transfer_view(request, transfer_id):
     ser = CancelTransferSerializer(data=request.data)
     ser.is_valid(raise_exception=True)
     transfer = cancel_transfer(transfer, request.user, ser.validated_data["reason"])
+    return Response(TransferDetailSerializer(transfer).data)
+
+
+# C36 — POST /api/transfers/{id}/prepare/
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def create_preparation_artifact_view(request, transfer_id):
+    transfer = Transfer.objects.get(transfer_id=transfer_id)
+    ser = CreatePreparationArtifactSerializer(data=request.data)
+    ser.is_valid(raise_exception=True)
+    create_preparation_artifact(transfer, ser.validated_data.get("payload", {}), request.user)
+    transfer.refresh_from_db()
+    return Response(TransferDetailSerializer(transfer).data)
+
+
+# C37 — POST /api/transfers/{id}/dispatch_art/
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def create_dispatch_artifact_view(request, transfer_id):
+    transfer = Transfer.objects.get(transfer_id=transfer_id)
+    ser = CreateDispatchArtifactSerializer(data=request.data)
+    ser.is_valid(raise_exception=True)
+    create_dispatch_artifact(transfer, ser.validated_data.get("payload", {}), request.user)
+    transfer.refresh_from_db()
+    return Response(TransferDetailSerializer(transfer).data)
+
+
+# C38 — POST /api/transfers/{id}/receive_art/
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def create_reception_artifact_view(request, transfer_id):
+    transfer = Transfer.objects.get(transfer_id=transfer_id)
+    ser = CreateReceptionArtifactSerializer(data=request.data)
+    ser.is_valid(raise_exception=True)
+    create_reception_artifact(
+        transfer, 
+        ser.validated_data["lines"], 
+        ser.validated_data.get("payload", {}), 
+        request.user
+    )
+    transfer.refresh_from_db()
+    return Response(TransferDetailSerializer(transfer).data)
+
+
+# C39 — POST /api/transfers/{id}/pricing_art/
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def create_pricing_approval_artifact_view(request, transfer_id):
+    transfer = Transfer.objects.get(transfer_id=transfer_id)
+    ser = CreatePricingApprovalArtifactSerializer(data=request.data)
+    ser.is_valid(raise_exception=True)
+    create_pricing_approval_artifact(transfer, ser.validated_data.get("payload", {}), request.user)
+    transfer.refresh_from_db()
     return Response(TransferDetailSerializer(transfer).data)
 
 
