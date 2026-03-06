@@ -262,16 +262,11 @@ class ExpedienteBundleView(APIView):
 
         available_actions = get_available_commands(exp, request.user)
 
-        data = {
-            'expediente': exp,
-            'events': events,
-            'artifacts': exp.artifacts.all(),
-            'cost_lines': exp.cost_lines.all(),
-            'documents': [],
-            'available_actions': available_actions,
-        }
+        # Attach extra context as attributes so the serializer can access them
+        exp._events = events
+        exp._available_actions = available_actions
 
-        serializer = ExpedienteBundleSerializer(data)
+        serializer = ExpedienteBundleSerializer(exp)
         result = serializer.data
         result['available_actions'] = available_actions
         result['events'] = [

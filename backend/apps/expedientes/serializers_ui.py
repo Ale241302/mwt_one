@@ -81,13 +81,14 @@ class DocumentSummarySerializer(serializers.Serializer):
 class ExpedienteBundleSerializer(serializers.Serializer):
     """
     Complete bundle for Expediente Detail page <200ms
+    Now receives an Expediente model instance directly.
     """
     expediente = serializers.SerializerMethodField()
-    events = EventLogSummarySerializer(many=True)
-    artifacts = ArtifactSummarySerializer(many=True)
-    costs = CostLineSummarySerializer(source='cost_lines', many=True)
+    events = serializers.SerializerMethodField()
+    artifacts = serializers.SerializerMethodField()
+    costs = serializers.SerializerMethodField()
     documents = serializers.SerializerMethodField()
-    available_actions = serializers.JSONField()
+    available_actions = serializers.SerializerMethodField()
     credit_clock = serializers.SerializerMethodField()
 
     def get_expediente(self, obj):
@@ -103,6 +104,19 @@ class ExpedienteBundleSerializer(serializers.Serializer):
             'client_id': str(obj.client_id) if obj.client_id else None,
         })
         return data
+
+    def get_events(self, obj):
+        events = getattr(obj, '_events', [])
+        return EventLogSummarySerializer(events, many=True).data
+
+    def get_artifacts(self, obj):
+        return ArtifactSummarySerializer(obj.artifacts.all(), many=True).data
+
+    def get_costs(self, obj):
+        return CostLineSummarySerializer(obj.cost_lines.all(), many=True).data
+
+    def get_available_actions(self, obj):
+        return getattr(obj, '_available_actions', [])
 
     def get_credit_clock(self, obj):
         return {

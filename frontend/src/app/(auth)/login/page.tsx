@@ -26,7 +26,15 @@ export default function LoginPage() {
                 body: JSON.stringify({ username, password }),
             });
 
-            const data = await response.json();
+            let data;
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                console.error("Non-JSON API response:", text);
+                throw new Error('Error en el servidor. Por favor intente más tarde.');
+            }
 
             if (!response.ok) {
                 throw new Error(data.error || 'Autenticación fallida');

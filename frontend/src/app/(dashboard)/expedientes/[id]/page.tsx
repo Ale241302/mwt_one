@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { formatDistanceToNow, parseISO, format } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import api from '@/lib/api';
@@ -35,21 +35,28 @@ interface Artifact {
 }
 
 interface Expediente {
-    expediente_id: number;
+    id: string;
+    custom_ref: string;
     brand: string;
-    client: string;
+    brand_name: string;
+    client_name: string;
+    client_id: string | null;
+    legal_entity_id: string;
     status: string;
-    status_display: string;
     is_blocked: boolean;
-    blocked_reason: string;
-    blocked_at: string | null;
+    block_reason: string;
     mode: string;
     freight_mode: string;
     transport_mode: string;
     dispatch_mode: string;
+    payment_status: string;
+    price_basis: string;
     credit_clock_started_at: string | null;
-    created_at: string;
-    legal_entity_name: string;
+    credit_days_elapsed: number;
+    credit_band: string;
+    total_cost: number;
+    artifact_count: number;
+    last_event_at: string | null;
 }
 
 interface ExpedienteBundle {
@@ -369,7 +376,7 @@ export default function ExpedienteDetailPage() {
             {/* Header */}
             <div className="flex items-center gap-4 flex-wrap">
                 <h1 className="text-3xl font-display font-medium text-text-primary tracking-tight">
-                    EXP-2026-{expediente.expediente_id.toString().padStart(4, '0')}
+                    {expediente.custom_ref || `EXP-${expediente.id?.toString().slice(0, 8)}`}
                 </h1>
                 <div className="flex gap-2 items-center">
                     <span className={cn(
@@ -378,7 +385,7 @@ export default function ExpedienteDetailPage() {
                             expediente.status === 'CERRADO' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
                                 "bg-blue-50 text-navy border-blue-200"
                     )}>
-                        {expediente.status_display}
+                        {expediente.status}
                     </span>
 
                     {creditDays > 0 && (
@@ -524,7 +531,7 @@ export default function ExpedienteDetailPage() {
                     <div className="p-6 grid grid-cols-2 gap-y-6 gap-x-4">
                         <div>
                             <div className="text-xs text-text-tertiary uppercase tracking-wider font-semibold mb-1">Cliente</div>
-                            <div className="text-sm font-medium text-text-primary">{expediente.client}</div>
+                            <div className="text-sm font-medium text-text-primary">{expediente.client_name || '—'}</div>
                         </div>
                         <div>
                             <div className="text-xs text-text-tertiary uppercase tracking-wider font-semibold mb-1">Marca</div>
@@ -532,12 +539,12 @@ export default function ExpedienteDetailPage() {
                         </div>
                         <div>
                             <div className="text-xs text-text-tertiary uppercase tracking-wider font-semibold mb-1">Entidad</div>
-                            <div className="text-sm font-medium text-text-primary">{expediente.legal_entity_name || '—'}</div>
+                            <div className="text-sm font-medium text-text-primary">{expediente.legal_entity_id || '—'}</div>
                         </div>
                         <div>
-                            <div className="text-xs text-text-tertiary uppercase tracking-wider font-semibold mb-1">Creado</div>
+                            <div className="text-xs text-text-tertiary uppercase tracking-wider font-semibold mb-1">Modo</div>
                             <div className="text-sm font-medium text-text-primary">
-                                {format(parseISO(expediente.created_at), 'dd MMM yyyy', { locale: es })}
+                                {expediente.mode || '—'}
                             </div>
                         </div>
                     </div>
