@@ -179,7 +179,19 @@ def _create_event(expediente, event_type, emitted_by, payload=None):
 
 def _is_tecmater(expediente):
     """Check if expediente is Tecmater brand."""
+    if hasattr(expediente, 'brand') and hasattr(expediente.brand, 'slug'):
+        return expediente.brand.slug == 'tecmater'
     return expediente.brand == 'TECMATER'
+    
+def get_required_artifacts(expediente):
+    try:
+        from apps.brands.services import BrandService
+        brand_id = expediente.brand_id
+        if not brand_id:
+            return None
+        return BrandService.get_artifact_flow(brand_id, getattr(expediente, 'destination', 'CR'))
+    except Exception:
+        return None
 
 
 # ══════════════════════════════════════════════════
@@ -205,11 +217,12 @@ def create_expediente(data, user):
         raise CommandValidationError(f'Client LegalEntity {client_id} not found.')
 
     rule = data.get('credit_clock_start_rule', 'on_creation')
-    brand = data.get('brand', 'MARLUVAS')
+    brand_id = data.get('brand', 'marluvas')
+    destination = data.get('destination', 'CR')
     mode = data.get('mode', '')
 
     # Sprint 4 S4-09: Tecmater forces FULL mode
-    if brand == 'TECMATER':
+    if brand_id in ('TECMATER', 'tecmater'):
         if mode and mode.upper() == 'COMISION':
             raise CommandValidationError(
                 'Tecmater brand does not support COMISION mode. Mode forced to FULL.'
@@ -219,7 +232,8 @@ def create_expediente(data, user):
     with transaction.atomic():
         expediente = Expediente.objects.create(
             legal_entity=legal_entity,
-            brand=brand,
+            brand_id=brand_id,
+            destination=destination,
             client=client_entity,
             status='REGISTRO',
             is_blocked=False,
@@ -241,7 +255,7 @@ def create_expediente(data, user):
             expediente,
             event_type='expediente.created',
             emitted_by='C1:CreateExpediente',
-            payload={'status': 'REGISTRO', 'brand': brand, 'mode': mode},
+            payload={'status': 'REGISTRO', 'brand': brand_id, 'destination': destination, 'mode': mode},
         )
 
     return (expediente, event)
@@ -272,9 +286,12 @@ def can_transition_to(expediente, target_state):
         return False
 
     # Check artifact gates per state machine §E
+    flow = get_required_artifacts(expediente)
+    
     if target_state == 'PRODUCCION':
         # Marluvas needs ART-01, ART-02, ART-03, ART-04
         for art in ['ART-01', 'ART-02', 'ART-03', 'ART-04']:
+            if flow is not None and art not in flow: continue
             if not _has_artifact(expediente, art):
                 return False
 
@@ -282,6 +299,7 @@ def can_transition_to(expediente, target_state):
         if is_tec:
             # Tecmater: only needs ART-01, ART-02 to go REGISTRO→PREPARACION
             for art in ['ART-01', 'ART-02']:
+                if flow is not None and art not in flow: continue
                 if not _has_artifact(expediente, art):
                     return False
         else:
@@ -291,12 +309,14 @@ def can_transition_to(expediente, target_state):
     elif target_state == 'DESPACHO':
         # Needs ART-05, ART-06
         for art in ['ART-05', 'ART-06']:
+            if flow is not None and art not in flow: continue
             if not _has_artifact(expediente, art):
                 return False
         # If dispatch_mode=mwt, also needs ART-08
         if expediente.dispatch_mode == 'MWT':
-            if not _has_artifact(expediente, 'ART-08'):
-                return False
+            if flow is None or 'ART-08' in flow:
+                if not _has_artifact(expediente, 'ART-08'):
+                    return False
 
     elif target_state == 'CERRADO':
         if is_tec or expediente.mode == 'COMISION':
@@ -305,12 +325,14 @@ def can_transition_to(expediente, target_state):
                 return False
             # COMISION doesn't require ART-09
             if not is_tec and expediente.mode != 'COMISION':
-                if not _has_artifact(expediente, 'ART-09'):
-                    return False
+                if flow is None or 'ART-09' in flow:
+                    if not _has_artifact(expediente, 'ART-09'):
+                        return False
         else:
             # FULL Marluvas: needs ART-09 + payment_status=paid
-            if not _has_artifact(expediente, 'ART-09'):
-                return False
+            if flow is None or 'ART-09' in flow:
+                if not _has_artifact(expediente, 'ART-09'):
+                    return False
             if expediente.payment_status != 'paid':
                 return False
 
@@ -394,7 +416,10 @@ def can_execute_command(expediente, command_name, user):
 
     # --- Artifact preconditions ---
     if 'requires_art' in spec:
+        flow = get_required_artifacts(expediente)
         for art_type in spec['requires_art']:
+            if flow is not None and art_type not in flow:
+                continue
             # Sprint 4 S4-09: Skip Tecmater blocked artifacts
             if _is_tecmater(expediente) and art_type in TECMATER_SKIP_ARTIFACTS:
                 continue

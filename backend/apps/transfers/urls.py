@@ -11,5 +11,9 @@ urlpatterns = [
     path("<str:transfer_id>/receive/", views.receive_transfer_view, name="receive"),
     path("<str:transfer_id>/reconcile/", views.reconcile_transfer_view, name="reconcile"),
     path("<str:transfer_id>/cancel/", views.cancel_transfer_view, name="cancel"),
+    path("<str:transfer_id>/preparation-artifact/", views.create_preparation_artifact_view, name="create_preparation_artifact"),
+    path("<str:transfer_id>/dispatch-artifact/", views.create_dispatch_artifact_view, name="create_dispatch_artifact"),
+    path("<str:transfer_id>/reception-artifact/", views.create_reception_artifact_view, name="create_reception_artifact"),
+    path("<str:transfer_id>/pricing-artifact/", views.create_pricing_approval_artifact_view, name="create_pricing_approval_artifact"),
     path("<str:transfer_id>/", views.get_transfer_view, name="detail"),
 ]

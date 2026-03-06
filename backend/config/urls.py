@@ -18,4 +18,6 @@ urlpatterns = [
     # Sprint 5
     path('api/transfers/', include('apps.transfers.urls', namespace='transfers')),
     path('api/liquidations/', include('apps.liquidations.urls', namespace='liquidations')),
+    path('api/brands/', include('apps.brands.urls')),
+    path('api/qr/', include('apps.qr.urls')),
 ]

@@ -1,0 +1,596 @@
+[
+  {
+    "model": "brands.brandsku",
+    "pk": 1,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "gol",
+      "arch": "MED",
+      "size": "S1",
+      "sku_code": "RW-GOL-MED-S1"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 2,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "gol",
+      "arch": "MED",
+      "size": "S2",
+      "sku_code": "RW-GOL-MED-S2"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 3,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "gol",
+      "arch": "MED",
+      "size": "S3",
+      "sku_code": "RW-GOL-MED-S3"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 4,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "gol",
+      "arch": "MED",
+      "size": "S4",
+      "sku_code": "RW-GOL-MED-S4"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 5,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "gol",
+      "arch": "MED",
+      "size": "S5",
+      "sku_code": "RW-GOL-MED-S5"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 6,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "gol",
+      "arch": "MED",
+      "size": "S6",
+      "sku_code": "RW-GOL-MED-S6"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 7,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "vel",
+      "arch": "MED",
+      "size": "S1",
+      "sku_code": "RW-VEL-MED-S1"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 8,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "vel",
+      "arch": "MED",
+      "size": "S2",
+      "sku_code": "RW-VEL-MED-S2"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 9,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "vel",
+      "arch": "MED",
+      "size": "S3",
+      "sku_code": "RW-VEL-MED-S3"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 10,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "vel",
+      "arch": "MED",
+      "size": "S4",
+      "sku_code": "RW-VEL-MED-S4"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 11,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "vel",
+      "arch": "MED",
+      "size": "S5",
+      "sku_code": "RW-VEL-MED-S5"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 12,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "vel",
+      "arch": "MED",
+      "size": "S6",
+      "sku_code": "RW-VEL-MED-S6"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 13,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "orb",
+      "arch": "MED",
+      "size": "S1",
+      "sku_code": "RW-ORB-MED-S1"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 14,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "orb",
+      "arch": "MED",
+      "size": "S2",
+      "sku_code": "RW-ORB-MED-S2"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 15,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "orb",
+      "arch": "MED",
+      "size": "S3",
+      "sku_code": "RW-ORB-MED-S3"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 16,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "orb",
+      "arch": "MED",
+      "size": "S4",
+      "sku_code": "RW-ORB-MED-S4"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 17,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "orb",
+      "arch": "MED",
+      "size": "S5",
+      "sku_code": "RW-ORB-MED-S5"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 18,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "orb",
+      "arch": "MED",
+      "size": "S6",
+      "sku_code": "RW-ORB-MED-S6"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 19,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "LOW",
+      "size": "S1",
+      "sku_code": "RW-LEO-LOW-S1"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 20,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "LOW",
+      "size": "S2",
+      "sku_code": "RW-LEO-LOW-S2"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 21,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "LOW",
+      "size": "S3",
+      "sku_code": "RW-LEO-LOW-S3"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 22,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "LOW",
+      "size": "S4",
+      "sku_code": "RW-LEO-LOW-S4"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 23,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "LOW",
+      "size": "S5",
+      "sku_code": "RW-LEO-LOW-S5"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 24,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "LOW",
+      "size": "S6",
+      "sku_code": "RW-LEO-LOW-S6"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 25,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "MED",
+      "size": "S1",
+      "sku_code": "RW-LEO-MED-S1"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 26,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "MED",
+      "size": "S2",
+      "sku_code": "RW-LEO-MED-S2"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 27,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "MED",
+      "size": "S3",
+      "sku_code": "RW-LEO-MED-S3"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 28,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "MED",
+      "size": "S4",
+      "sku_code": "RW-LEO-MED-S4"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 29,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "MED",
+      "size": "S5",
+      "sku_code": "RW-LEO-MED-S5"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 30,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "MED",
+      "size": "S6",
+      "sku_code": "RW-LEO-MED-S6"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 31,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "HGH",
+      "size": "S1",
+      "sku_code": "RW-LEO-HGH-S1"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 32,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "HGH",
+      "size": "S2",
+      "sku_code": "RW-LEO-HGH-S2"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 33,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "HGH",
+      "size": "S3",
+      "sku_code": "RW-LEO-HGH-S3"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 34,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "HGH",
+      "size": "S4",
+      "sku_code": "RW-LEO-HGH-S4"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 35,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "HGH",
+      "size": "S5",
+      "sku_code": "RW-LEO-HGH-S5"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 36,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "leo",
+      "arch": "HGH",
+      "size": "S6",
+      "sku_code": "RW-LEO-HGH-S6"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 37,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "LOW",
+      "size": "S1",
+      "sku_code": "RW-BIS-LOW-S1"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 38,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "LOW",
+      "size": "S2",
+      "sku_code": "RW-BIS-LOW-S2"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 39,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "LOW",
+      "size": "S3",
+      "sku_code": "RW-BIS-LOW-S3"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 40,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "LOW",
+      "size": "S4",
+      "sku_code": "RW-BIS-LOW-S4"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 41,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "LOW",
+      "size": "S5",
+      "sku_code": "RW-BIS-LOW-S5"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 42,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "LOW",
+      "size": "S6",
+      "sku_code": "RW-BIS-LOW-S6"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 43,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "MED",
+      "size": "S1",
+      "sku_code": "RW-BIS-MED-S1"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 44,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "MED",
+      "size": "S2",
+      "sku_code": "RW-BIS-MED-S2"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 45,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "MED",
+      "size": "S3",
+      "sku_code": "RW-BIS-MED-S3"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 46,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "MED",
+      "size": "S4",
+      "sku_code": "RW-BIS-MED-S4"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 47,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "MED",
+      "size": "S5",
+      "sku_code": "RW-BIS-MED-S5"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 48,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "MED",
+      "size": "S6",
+      "sku_code": "RW-BIS-MED-S6"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 49,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "HGH",
+      "size": "S1",
+      "sku_code": "RW-BIS-HGH-S1"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 50,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "HGH",
+      "size": "S2",
+      "sku_code": "RW-BIS-HGH-S2"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 51,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "HGH",
+      "size": "S3",
+      "sku_code": "RW-BIS-HGH-S3"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 52,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "HGH",
+      "size": "S4",
+      "sku_code": "RW-BIS-HGH-S4"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 53,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "HGH",
+      "size": "S5",
+      "sku_code": "RW-BIS-HGH-S5"
+    }
+  },
+  {
+    "model": "brands.brandsku",
+    "pk": 54,
+    "fields": {
+      "brand": "rana_walk",
+      "product_key": "bis",
+      "arch": "HGH",
+      "size": "S6",
+      "sku_code": "RW-BIS-HGH-S6"
+    }
+  }
+]
