@@ -1,4 +1,4 @@
-# apps/expedientes/tests/test_sprint5.py
+﻿# apps/expedientes/tests/test_sprint5.py
 """
 S5-11: Comprehensive Sprint 5 tests
 Covers: S5-05 (C29 ART-12), S5-06 (Handoff), S5-07 (ART-19 suggestions),
@@ -57,7 +57,7 @@ class S5_05_CompensationTests(APITestCase):
 
 
 class S5_06_HandoffTests(APITestCase):
-    """S5-06: Handoff Expediente → Transfer suggestion"""
+    """S5-06: Handoff Expediente â†’ Transfer suggestion"""
 
     def setUp(self):
         self.ceo = create_user(username='ceo_handoff', is_superuser=True)
@@ -207,7 +207,7 @@ class S5_08_ShipmentUpdateTests(APITestCase):
 
 
 class S5_10_C21_ComisionModeTests(APITestCase):
-    """S5-10: Refine C21 modo B — COMISION mode payment calculation"""
+    """S5-10: Refine C21 modo B â€” COMISION mode payment calculation"""
 
     def setUp(self):
         self.ceo = create_user(username='ceo_c21', is_superuser=True)
@@ -222,7 +222,7 @@ class S5_10_C21_ComisionModeTests(APITestCase):
             expediente=self.exp, artifact_type='ART-01',
             status='completed', payload={'total_po': 1000}
         )
-        # ART-02: comision_pactada = 10%  → expected commission = 100
+        # ART-02: comision_pactada = 10%  â†’ expected commission = 100
         ArtifactInstance.objects.create(
             expediente=self.exp, artifact_type='ART-02',
             status='completed', payload={'comision_pactada': 10}
@@ -232,7 +232,7 @@ class S5_10_C21_ComisionModeTests(APITestCase):
         """Partial payment then full payment updates status correctly."""
         url = reverse('expedientes:register-payment', kwargs={'pk': self.exp.pk})
 
-        # Pay 50 → partial
+        # Pay 50 â†’ partial
         res = self.client.post(url, {
             'amount': '50.00', 'currency': 'USD',
             'method': 'TRANSFER', 'reference': 'REF1'
@@ -241,7 +241,7 @@ class S5_10_C21_ComisionModeTests(APITestCase):
         self.exp.refresh_from_db()
         self.assertEqual(self.exp.payment_status, 'partial')
 
-        # Pay 50 more → paid (total 100 = expected commission)
+        # Pay 50 more â†’ paid (total 100 = expected commission)
         res = self.client.post(url, {
             'amount': '50.00', 'currency': 'USD',
             'method': 'TRANSFER', 'reference': 'REF2'

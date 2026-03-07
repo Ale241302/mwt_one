@@ -1,4 +1,4 @@
-"""
+﻿"""
 Sprint 5 S5-03: ART-10 Liquidation models
 Ref: LOTE_SM_SPRINT5 Item 1
 """
@@ -17,8 +17,8 @@ def generate_liquidation_id(period: str):
 
 class Liquidation(models.Model):
     """
-    ART-10 — Artefacto CROSS (transversal). No tiene FK a expediente.
-    Relaciona con expedientes INDIRECTAMENTE a través de LiquidationLine.
+    ART-10 â€” Artefacto CROSS (transversal). No tiene FK a expediente.
+    Relaciona con expedientes INDIRECTAMENTE a travÃ©s de LiquidationLine.
     """
     liquidation_id = models.CharField(max_length=30, unique=True, editable=False)
     period = models.CharField(max_length=7)  # formato YYYY-MM
@@ -56,7 +56,7 @@ class Liquidation(models.Model):
 
 
 class LiquidationLine(models.Model):
-    """Línea individual del Excel de Marluvas."""
+    """LÃ­nea individual del Excel de Marluvas."""
     liquidation = models.ForeignKey(
         Liquidation, on_delete=models.CASCADE, related_name="lines"
     )

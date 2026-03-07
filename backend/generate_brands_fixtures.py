@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 
 fixtures_dir = r"c:\Users\ale13\OneDrive\Documents\mwt_one\backend\apps\brands\fixtures"

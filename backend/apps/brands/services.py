@@ -1,4 +1,4 @@
-from .models import Brand, BrandArtifactRule
+﻿from .models import Brand, BrandArtifactRule
 
 class BrandService:
     @staticmethod

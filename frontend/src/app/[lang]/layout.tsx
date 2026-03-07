@@ -29,7 +29,7 @@ export default async function LocaleLayout({
     params: Promise<{ lang: string }>;
 }) {
     const { lang } = await params;
-    if (!routing.locales.includes(lang as any)) {
+    if (!routing.locales.includes(lang as never)) {
         notFound();
     }
 

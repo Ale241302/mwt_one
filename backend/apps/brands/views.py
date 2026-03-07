@@ -1,4 +1,4 @@
-from rest_framework import generics
+﻿from rest_framework import generics
 from .models import Brand
 from .serializers import BrandSerializer
 

@@ -1,5 +1,5 @@
-"""
-Sprint 1-4 — URL Configuration for /api/expedientes/
+﻿"""
+Sprint 1-4 â€” URL Configuration for /api/expedientes/
 Ref: LOTE_SM_SPRINT1 Item 7
 Sprint 4: Added C22/C23/C24, costs, invoice, comparison, mirror-pdf
 """
@@ -27,10 +27,10 @@ from apps.expedientes.views import (
 app_name = 'expedientes'
 
 urlpatterns = [
-    # ── C1: Create ──
+    # â”€â”€ C1: Create â”€â”€
     path('create/', CreateExpedienteView.as_view(), name='create'),
 
-    # ── C2-C14: Command endpoints ──
+    # â”€â”€ C2-C14: Command endpoints â”€â”€
     path('<uuid:pk>/register-oc/', RegisterOCView.as_view(), name='register-oc'),
     path('<uuid:pk>/register-proforma/', RegisterProformaView.as_view(), name='register-proforma'),
     path('<uuid:pk>/decide-mode/', DecideModeView.as_view(), name='decide-mode'),
@@ -45,23 +45,23 @@ urlpatterns = [
     path('<uuid:pk>/issue-invoice/', IssueInvoiceView.as_view(), name='issue-invoice'),
     path('<uuid:pk>/close/', CloseExpedienteView.as_view(), name='close'),
 
-    # ── C15-C18: Ops ──
+    # â”€â”€ C15-C18: Ops â”€â”€
     path('<uuid:pk>/register-cost/', RegisterCostView.as_view(), name='register-cost'),
     path('<uuid:pk>/cancel/', CancelExpedienteView.as_view(), name='cancel'),
     path('<uuid:pk>/block/', BlockExpedienteView.as_view(), name='block'),
     path('<uuid:pk>/unblock/', UnblockExpedienteView.as_view(), name='unblock'),
 
-    # ── C19-C21: Sprint 2/3 ──
+    # â”€â”€ C19-C21: Sprint 2/3 â”€â”€
     path('<uuid:pk>/supersede-artifact/', SupersedeArtifactView.as_view(), name='supersede-artifact'),
     path('<uuid:pk>/void-artifact/', VoidArtifactView.as_view(), name='void-artifact'),
     path('<uuid:pk>/register-payment/', RegisterPaymentView.as_view(), name='register-payment'),
 
-    # ── Sprint 4: C22-C24 Logistics ──
+    # â”€â”€ Sprint 4: C22-C24 Logistics â”€â”€
     path('<uuid:pk>/materialize-logistics/', MaterializeLogisticsView.as_view(), name='materialize-logistics'),
     path('<uuid:pk>/add-logistics-option/', AddLogisticsOptionView.as_view(), name='add-logistics-option'),
     path('<uuid:pk>/decide-logistics/', DecideLogisticsView.as_view(), name='decide-logistics'),
 
-    # ── Sprint 4: Read endpoints ──
+    # â”€â”€ Sprint 4: Read endpoints â”€â”€
     path('<uuid:pk>/costs/', CostsListView.as_view(), name='costs'),
     path('<uuid:pk>/costs/summary/', CostsSummaryView.as_view(), name='costs-summary'),
     path('<uuid:pk>/invoice-suggestion/', InvoiceSuggestionView.as_view(), name='invoice-suggestion'),
@@ -69,7 +69,7 @@ urlpatterns = [
     path('<uuid:pk>/financial-comparison/', FinancialComparisonView.as_view(), name='financial-comparison'),
     path('<uuid:pk>/mirror-pdf/', MirrorPDFView.as_view(), name='mirror-pdf'),
 
-    # ── Sprint 5: C29, C36, Suggestions ──
+    # â”€â”€ Sprint 5: C29, C36, Suggestions â”€â”€
     path('<uuid:pk>/register-compensation/', RegisterCompensationView.as_view(), name='register-compensation'),
     path('<uuid:pk>/logistics-suggestions/', LogisticsSuggestionsView.as_view(), name='logistics-suggestions'),
     path('<uuid:pk>/add-shipment-update/', AddShipmentUpdateView.as_view(), name='add-shipment-update'),

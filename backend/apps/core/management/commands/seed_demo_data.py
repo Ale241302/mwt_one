@@ -1,5 +1,5 @@
-"""
-seed_demo_data.py — Management command para poblar mwt.one con datos de demo
+﻿"""
+seed_demo_data.py â€” Management command para poblar mwt.one con datos de demo
 
 Uso: python manage.py seed_demo_data
 Limpia: python manage.py seed_demo_data --flush
@@ -8,16 +8,16 @@ Crea datos realistas que ejercitan TODA la funcionalidad visible:
 - 10 expedientes en distintos estados (todos los 8 + variantes)
 - Artefactos por expediente (OC, proforma, AWB, factura, costos)
 - 2 transfers (planned, in_transit)
-- 1 liquidación con matching
-- Alertas de crédito (reloj activo)
+- 1 liquidaciÃ³n con matching
+- Alertas de crÃ©dito (reloj activo)
 - 1 expediente bloqueado
 - 1 cancelado
 
-Los datos están basados en operaciones reales (Sondel, UMMIE, Imporcomp)
+Los datos estÃ¡n basados en operaciones reales (Sondel, UMMIE, Imporcomp)
 pero con valores ficticios para demo.
 
 IMPORTANTE: este script llama a services.py directamente, no a la API HTTP.
-Así respeta la state machine sin tener que hacer 100 HTTP calls.
+AsÃ­ respeta la state machine sin tener que hacer 100 HTTP calls.
 """
 
 from django.core.management.base import BaseCommand
@@ -35,9 +35,9 @@ class Command(BaseCommand):
         parser.add_argument("--flush", action="store_true", help="Delete all demo data first")
 
     def handle(self, *args, **options):
-        # ══════════════════════════════════════════════════════════════
-        # IMPORTS — ajustar según estructura real del proyecto
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # IMPORTS â€” ajustar segÃºn estructura real del proyecto
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         # Si los imports fallan, Alejandro debe ajustar los paths.
         # La estructura asume apps/expedientes/, apps/transfers/, apps/liquidations/
         try:
@@ -58,11 +58,11 @@ class Command(BaseCommand):
             HAS_LIQUIDATIONS = True
         except ImportError:
             HAS_LIQUIDATIONS = False
-            self.stdout.write("WARN: Liquidations module not found — skipping")
+            self.stdout.write("WARN: Liquidations module not found â€” skipping")
 
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         # FLUSH
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         if options["flush"]:
             self.stdout.write("Flushing demo data...")
             demo_exps = Expediente.objects.filter(brand="marluvas_demo")
@@ -85,9 +85,9 @@ class Command(BaseCommand):
         now = timezone.now()
         self.stdout.write("Seeding demo data...")
 
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         # HELPERS
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         def make_exp(ref, client, mode, status, days_ago, **kwargs):
             """Create expediente with timestamps backdated"""
             from apps.expedientes.models import LegalEntity
@@ -141,7 +141,7 @@ class Command(BaseCommand):
                 created_at=now - timedelta(days=days_ago)
             )
             exp.refresh_from_db()
-            self.stdout.write(f"  EXP {exp.pk} [{status}] — {client_entity.legal_name} ({mode})")
+            self.stdout.write(f"  EXP {exp.pk} [{status}] â€” {client_entity.legal_name} ({mode})")
             return exp
 
         def make_artifact(exp, art_type, status="completed", payload=None, days_ago=0):
@@ -164,7 +164,7 @@ class Command(BaseCommand):
                 amount=Decimal(str(amount)),
                 currency="USD",
                 phase=phase,
-                description=f"{concept} — demo",
+                description=f"{concept} â€” demo",
                 visibility=visibility,
             )
             if days_ago:
@@ -202,16 +202,16 @@ class Command(BaseCommand):
             )
             return evt
 
-        # ══════════════════════════════════════════════════════════════
-        # 1. EXPEDIENTE CERRADO (happy path completo) — Sondel Modelo C
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # 1. EXPEDIENTE CERRADO (happy path completo) â€” Sondel Modelo C
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         exp1 = make_exp("EXP-DEMO-001", "SONDEL-CR", "FULL", "CERRADO", 90,
                         payment_status="paid",
                         credit_clock_started_at=now - timedelta(days=85))
 
         make_artifact(exp1, "ART-01", payload={"po_number": "PO-504652", "total": 33542.00, "items": 4}, days_ago=90)
         make_artifact(exp1, "ART-02", payload={"consecutive": "2395-2025", "total_usd": 33542.00, "comision_pactada": None}, days_ago=88)
-        make_artifact(exp1, "ART-05", payload={"carrier": "Copa Airlines Cargo", "awb": "230-12345678", "transport_mode": "aereo", "route": "CNF→PTY→SJO"}, days_ago=60)
+        make_artifact(exp1, "ART-05", payload={"carrier": "Copa Airlines Cargo", "awb": "230-12345678", "transport_mode": "aereo", "route": "CNFâ†’PTYâ†’SJO"}, days_ago=60)
         make_artifact(exp1, "ART-09", payload={"invoice_number": "FE-001-0001234", "total": 47693.00, "currency": "CRC"}, days_ago=10)
         make_cost(exp1, "merchandise", 33542.00, "PRODUCCION", 85)
         make_cost(exp1, "freight_air", 4850.00, "DESPACHO", 58)
@@ -227,15 +227,15 @@ class Command(BaseCommand):
         make_event(exp1, "expediente.state_changed", 25, {"from": "TRANSITO", "to": "EN_DESTINO"})
         make_event(exp1, "expediente.completed", 8)
 
-        # ══════════════════════════════════════════════════════════════
-        # 2. EN TRÁNSITO — Sondel Modelo C, reloj crédito activo (día 55)
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # 2. EN TRÃNSITO â€” Sondel Modelo C, reloj crÃ©dito activo (dÃ­a 55)
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         exp2 = make_exp("EXP-DEMO-002", "SONDEL-CR", "FULL", "TRANSITO", 60,
                         credit_clock_started_at=now - timedelta(days=55))
 
         make_artifact(exp2, "ART-01", payload={"po_number": "PO-504855", "total": 28750.00}, days_ago=60)
         make_artifact(exp2, "ART-02", payload={"consecutive": "2427-2026", "total_usd": 28750.00}, days_ago=58)
-        make_artifact(exp2, "ART-05", payload={"carrier": "Copa Airlines Cargo", "awb": "230-87654321", "transport_mode": "aereo", "route": "CNF→PTY→SJO"}, days_ago=55)
+        make_artifact(exp2, "ART-05", payload={"carrier": "Copa Airlines Cargo", "awb": "230-87654321", "transport_mode": "aereo", "route": "CNFâ†’PTYâ†’SJO"}, days_ago=55)
         make_cost(exp2, "merchandise", 28750.00, "PRODUCCION", 55)
         make_cost(exp2, "freight_air", 3200.00, "DESPACHO", 50)
         make_event(exp2, "expediente.created", 60)
@@ -244,9 +244,9 @@ class Command(BaseCommand):
         make_event(exp2, "expediente.state_changed", 50, {"from": "PREPARACION", "to": "DESPACHO"})
         make_event(exp2, "expediente.state_changed", 48, {"from": "DESPACHO", "to": "TRANSITO"})
 
-        # ══════════════════════════════════════════════════════════════
-        # 3. EN DESTINO — UMMIE Guatemala, reloj crédito día 78 (ALERTA ÁMBAR)
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # 3. EN DESTINO â€” UMMIE Guatemala, reloj crÃ©dito dÃ­a 78 (ALERTA ÃMBAR)
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         exp3 = make_exp("EXP-DEMO-003", "UMMIE-GT", "COMISION", "EN_DESTINO", 85,
                         credit_clock_started_at=now - timedelta(days=78),
                         payment_status="partial")
@@ -260,12 +260,12 @@ class Command(BaseCommand):
         make_event(exp3, "expediente.created", 85)
         make_event(exp3, "credit_clock.warning", 18)
 
-        # ══════════════════════════════════════════════════════════════
-        # 4. BLOQUEADO — Sondel, crédito día 82 (ALERTA CORAL)
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # 4. BLOQUEADO â€” Sondel, crÃ©dito dÃ­a 82 (ALERTA CORAL)
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         exp4 = make_exp("EXP-DEMO-004", "SONDEL-CR", "FULL", "TRANSITO", 88,
                         is_blocked=True,
-                        blocked_reason="Credit clock >75 days — auto block",
+                        blocked_reason="Credit clock >75 days â€” auto block",
                         blocked_at=now - timedelta(days=7),
                         blocked_by_type="SYSTEM",
                         credit_clock_started_at=now - timedelta(days=82))
@@ -278,16 +278,16 @@ class Command(BaseCommand):
         make_event(exp4, "credit_clock.warning", 22)
         make_event(exp4, "expediente.blocked", 7, {"reason": "Credit clock >75 days"})
 
-        # ══════════════════════════════════════════════════════════════
-        # 5. REGISTRO — nuevo, recién creado
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # 5. REGISTRO â€” nuevo, reciÃ©n creado
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         exp5 = make_exp("EXP-DEMO-005", "IMPORCOMP-CO", "COMISION", "REGISTRO", 3)
         make_artifact(exp5, "ART-01", payload={"po_number": "PO-CO-2026-015", "total": 8500.00}, days_ago=3)
         make_event(exp5, "expediente.created", 3)
 
-        # ══════════════════════════════════════════════════════════════
-        # 6. PRODUCCION — en fábrica, esperando
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # 6. PRODUCCION â€” en fÃ¡brica, esperando
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         exp6 = make_exp("EXP-DEMO-006", "SONDEL-CR", "FULL", "PRODUCCION", 30)
         make_artifact(exp6, "ART-01", payload={"po_number": "PO-505100", "total": 22300.00}, days_ago=30)
         make_artifact(exp6, "ART-02", payload={"consecutive": "2430-2026", "total_usd": 22300.00}, days_ago=28)
@@ -295,9 +295,9 @@ class Command(BaseCommand):
         make_event(exp6, "expediente.created", 30)
         make_event(exp6, "expediente.state_changed", 25, {"from": "REGISTRO", "to": "PRODUCCION"})
 
-        # ══════════════════════════════════════════════════════════════
-        # 7. PREPARACION — listo para despachar
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # 7. PREPARACION â€” listo para despachar
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         exp7 = make_exp("EXP-DEMO-007", "UMMIE-GT", "COMISION", "PREPARACION", 45)
         make_artifact(exp7, "ART-01", payload={"po_number": "PO-GT-2026-002", "total": 11800.00}, days_ago=45)
         make_artifact(exp7, "ART-02", payload={"consecutive": "2431-2026", "total_usd": 11800.00, "comision_pactada": 9.37}, days_ago=43)
@@ -306,9 +306,9 @@ class Command(BaseCommand):
         make_event(exp7, "expediente.state_changed", 40, {"from": "REGISTRO", "to": "PRODUCCION"})
         make_event(exp7, "expediente.state_changed", 20, {"from": "PRODUCCION", "to": "PREPARACION"})
 
-        # ══════════════════════════════════════════════════════════════
-        # 8. DESPACHO — docs listos, embarcando
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # 8. DESPACHO â€” docs listos, embarcando
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         exp8 = make_exp("EXP-DEMO-008", "SONDEL-CR", "FULL", "DESPACHO", 50,
                         credit_clock_started_at=now - timedelta(days=15))
         make_artifact(exp8, "ART-01", payload={"po_number": "PO-505200", "total": 19500.00}, days_ago=50)
@@ -322,17 +322,17 @@ class Command(BaseCommand):
         make_event(exp8, "expediente.state_changed", 22, {"from": "PRODUCCION", "to": "PREPARACION"})
         make_event(exp8, "expediente.state_changed", 15, {"from": "PREPARACION", "to": "DESPACHO"})
 
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         # 9. CANCELADO
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         exp9 = make_exp("EXP-DEMO-009", "IMPORCOMP-CO", "COMISION", "CANCELADO", 40)
         make_artifact(exp9, "ART-01", payload={"po_number": "PO-CO-2026-010", "total": 5200.00}, days_ago=40)
         make_event(exp9, "expediente.created", 40)
-        make_event(exp9, "expediente.cancelled", 35, {"reason": "Cliente canceló PO"})
+        make_event(exp9, "expediente.cancelled", 35, {"reason": "Cliente cancelÃ³ PO"})
 
-        # ══════════════════════════════════════════════════════════════
-        # 10. CERRADO Modelo B — con comisión pagada
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # 10. CERRADO Modelo B â€” con comisiÃ³n pagada
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         exp10 = make_exp("EXP-DEMO-010", "UMMIE-GT", "COMISION", "CERRADO", 120,
                          payment_status="paid",
                          credit_clock_started_at=now - timedelta(days=100))
@@ -346,16 +346,16 @@ class Command(BaseCommand):
         make_event(exp10, "expediente.created", 120)
         make_event(exp10, "expediente.completed", 15)
 
-        self.stdout.write(self.style.SUCCESS(f"\n✅ 10 expedientes creados"))
+        self.stdout.write(self.style.SUCCESS(f"\nâœ… 10 expedientes creados"))
 
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         # NODOS + TRANSFERS
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         self.stdout.write("\nCreando nodos y transfers...")
 
         try:
             node_fiscal, _ = Node.objects.get_or_create(
-                name="DEMO Almacén Fiscal CR",
+                name="DEMO AlmacÃ©n Fiscal CR",
                 defaults={"node_type": "fiscal", "status": "active", "legal_entity": mwt_entity}
             )
             node_mwt, _ = Node.objects.get_or_create(
@@ -366,7 +366,7 @@ class Command(BaseCommand):
                 name="DEMO Amazon FBA USA",
                 defaults={"node_type": "destination", "status": "active", "legal_entity": client1}
             )
-            # Transfer 1: fiscal → bodega propia (nationalization, in_transit)
+            # Transfer 1: fiscal â†’ bodega propia (nationalization, in_transit)
             trf1 = Transfer.objects.create(
                 transfer_id="TRF-DEMO-001",
                 from_node=node_fiscal,
@@ -384,7 +384,7 @@ class Command(BaseCommand):
             TransferLine.objects.create(
                 transfer=trf1, sku="RW-GOL-MED-S5", quantity_dispatched=250)
 
-            # Transfer 2: bodega → FBA (internal, planned)
+            # Transfer 2: bodega â†’ FBA (internal, planned)
             trf2 = Transfer.objects.create(
                 transfer_id="TRF-DEMO-002",
                 from_node=node_mwt, # Changed from node_own to node_mwt
@@ -403,11 +403,11 @@ class Command(BaseCommand):
         except Exception as e:
             self.stderr.write(f"  WARN transfers: {e}")
 
-        # ══════════════════════════════════════════════════════════════
-        # LIQUIDACIÓN (si Sprint 5 está activo)
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # LIQUIDACIÃ“N (si Sprint 5 estÃ¡ activo)
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         if HAS_LIQUIDATIONS:
-            self.stdout.write("\nCreando liquidación demo...")
+            self.stdout.write("\nCreando liquidaciÃ³n demo...")
             try:
                 liq = Liquidation.objects.create(
                     period="26-02DM",
@@ -449,44 +449,44 @@ class Command(BaseCommand):
                     currency="USD",
                     match_status="no_match_needed",
                 )
-                self.stdout.write(self.style.SUCCESS("  1 liquidación + 3 líneas creadas"))
+                self.stdout.write(self.style.SUCCESS("  1 liquidaciÃ³n + 3 lÃ­neas creadas"))
             except Exception as e:
                 self.stderr.write(f"  WARN liquidation: {e}")
 
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         # RESUMEN
-        # ══════════════════════════════════════════════════════════════
+        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         self.stdout.write(self.style.SUCCESS("""
-╔══════════════════════════════════════════════════════════════════╗
-║                    SEED DATA COMPLETADO                         ║
-╠══════════════════════════════════════════════════════════════════╣
-║                                                                  ║
-║  EXPEDIENTES (10):                                               ║
-║    EXP-001  CERRADO      Sondel CR    FULL     Happy path       ║
-║    EXP-002  TRANSITO     Sondel CR    FULL     Reloj día 55     ║
-║    EXP-003  EN_DESTINO   UMMIE GT     COMISION Reloj día 78 ⚠  ║
-║    EXP-004  BLOQUEADO    Sondel CR    FULL     Reloj día 82 🔴  ║
-║    EXP-005  REGISTRO     Imporcomp CO COMISION Recién creado    ║
-║    EXP-006  PRODUCCION   Sondel CR    FULL     En fábrica       ║
-║    EXP-007  PREPARACION  UMMIE GT     COMISION Listo despachar  ║
-║    EXP-008  DESPACHO     Sondel CR    FULL     Embarcando       ║
-║    EXP-009  CANCELADO    Imporcomp CO COMISION PO cancelada     ║
-║    EXP-010  CERRADO      UMMIE GT     COMISION Modelo B pagado  ║
-║                                                                  ║
-║  SEMÁFOROS CRÉDITO:                                              ║
-║    🟢 EXP-008 (15d)                                             ║
-║    🟢 EXP-002 (55d)                                             ║
-║    🟡 EXP-003 (78d) — alerta                                    ║
-║    🔴 EXP-004 (82d) — bloqueado auto                            ║
-║                                                                  ║
-║  TRANSFERS (2):                                                  ║
-║    TRF-001  in_transit   FISCAL-CR → OWN-WH-CR (nationalization)║
-║    TRF-002  planned      OWN-WH-CR → FBA-US (internal)         ║
-║                                                                  ║
-║  LIQUIDACIÓN (1):                                                ║
-║    LIQ DEMO-2026-02  in_review  3 líneas (2 comisión + 1 premio)║
-║                                                                  ║
-║  Para limpiar: python manage.py seed_demo_data --flush           ║
-║                                                                  ║
-╚══════════════════════════════════════════════════════════════════╝
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘                    SEED DATA COMPLETADO                         â•‘
+â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
+â•‘                                                                  â•‘
+â•‘  EXPEDIENTES (10):                                               â•‘
+â•‘    EXP-001  CERRADO      Sondel CR    FULL     Happy path       â•‘
+â•‘    EXP-002  TRANSITO     Sondel CR    FULL     Reloj dÃ­a 55     â•‘
+â•‘    EXP-003  EN_DESTINO   UMMIE GT     COMISION Reloj dÃ­a 78 âš   â•‘
+â•‘    EXP-004  BLOQUEADO    Sondel CR    FULL     Reloj dÃ­a 82 ðŸ”´  â•‘
+â•‘    EXP-005  REGISTRO     Imporcomp CO COMISION ReciÃ©n creado    â•‘
+â•‘    EXP-006  PRODUCCION   Sondel CR    FULL     En fÃ¡brica       â•‘
+â•‘    EXP-007  PREPARACION  UMMIE GT     COMISION Listo despachar  â•‘
+â•‘    EXP-008  DESPACHO     Sondel CR    FULL     Embarcando       â•‘
+â•‘    EXP-009  CANCELADO    Imporcomp CO COMISION PO cancelada     â•‘
+â•‘    EXP-010  CERRADO      UMMIE GT     COMISION Modelo B pagado  â•‘
+â•‘                                                                  â•‘
+â•‘  SEMÃFOROS CRÃ‰DITO:                                              â•‘
+â•‘    ðŸŸ¢ EXP-008 (15d)                                             â•‘
+â•‘    ðŸŸ¢ EXP-002 (55d)                                             â•‘
+â•‘    ðŸŸ¡ EXP-003 (78d) â€” alerta                                    â•‘
+â•‘    ðŸ”´ EXP-004 (82d) â€” bloqueado auto                            â•‘
+â•‘                                                                  â•‘
+â•‘  TRANSFERS (2):                                                  â•‘
+â•‘    TRF-001  in_transit   FISCAL-CR â†’ OWN-WH-CR (nationalization)â•‘
+â•‘    TRF-002  planned      OWN-WH-CR â†’ FBA-US (internal)         â•‘
+â•‘                                                                  â•‘
+â•‘  LIQUIDACIÃ“N (1):                                                â•‘
+â•‘    LIQ DEMO-2026-02  in_review  3 lÃ­neas (2 comisiÃ³n + 1 premio)â•‘
+â•‘                                                                  â•‘
+â•‘  Para limpiar: python manage.py seed_demo_data --flush           â•‘
+â•‘                                                                  â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 """))

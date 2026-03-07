@@ -1,5 +1,5 @@
-"""
-Sprint 3-4 — UI Serializers
+﻿"""
+Sprint 3-4 â€” UI Serializers
 """
 import datetime
 from decimal import Decimal

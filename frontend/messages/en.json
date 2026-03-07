@@ -9,27 +9,39 @@
     "Techs": {
         "LeapCore": {
             "name": "LeapCore™",
-            "description": "Bi-density PU chassis distributing massive pressures."
+            "headline": "Megafauna Physiology",
+            "body": "Bi-density Polyurethane (PU) chassis. Combines a low-density top layer for immediate comfort and a high-density base with geometric memory. Maintains arch integrity for +8 hours, preventing knee valgus and pelvic imbalance.",
+            "stat": "Valid for users up to 110 kg (220 lbs)"
         },
         "ThinBoom": {
             "name": "ThinBoom™",
-            "description": "High rebound elastomer matrix returning 70-80% of kinetic energy."
+            "headline": "The Reactive Tendon",
+            "body": "Supercritical E-TPU (Expanded Cell Elastomer) matrix of high rebound and minimal profile. Reduces hamstring and glute effort, delaying muscle fatigue and allowing a more agile and powerful gait.",
+            "stat": "Returns 70% to 80% of kinetic energy"
         },
         "PORON_XRD": {
             "name": "PORON® XRD®",
-            "description": "Molecular reaction shield neutralizing up to 90% of impact energy."
+            "headline": "Molecular Reaction Shield",
+            "body": "Open-cell viscoelastic polymer. Molecules \"freeze\" instantly on impact to dissipate energy and regain flexibility when walking. Acts as a shield for joints, preventing harmful vibrations.",
+            "stat": "Neutralizes up to 90% of impact energy"
         },
         "NanoSpread": {
             "name": "NanoSpread™",
-            "description": "Active thermoregulation reducing internal temperature up to 5°C."
+            "headline": "Reptilian Capillarity",
+            "body": "Dispersion technical textile with hydrophobic yarn nanotechnology. Keeps feet cool and dry, eliminating friction that causes blisters and reducing heat-related swelling.",
+            "stat": "Reduces internal temperature by up to 5°C (41°F)"
         },
         "ShockSphere": {
             "name": "ShockSphere™",
-            "description": "Focused cushioning providing intelligent suspension in critical zones."
+            "headline": "Focused Cushioning",
+            "body": "Technical low-density PU localized absorption points integrated into critical pressure zones. Provides intelligent suspension in the heel and metatarsals, adapting dynamically to the terrain.",
+            "stat": "Neutralizes specific micro-vibrations"
         },
         "ArchSystem": {
             "name": "Arch System",
-            "description": "Support exoskeleton optimizing leverage and preventing medial arch collapse."
+            "headline": "Support Exoskeleton",
+            "body": "High-tenacity rigid reinforcement designed to integrate structurally with the LeapCore™ chassis. Prevents medial arch collapse under extreme fatigue from intensive shifts or heavy loads.",
+            "stat": "Optimizes movement leverage and energy transfer"
         }
     },
     "Product": {

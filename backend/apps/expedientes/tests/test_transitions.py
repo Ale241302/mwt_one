@@ -1,4 +1,4 @@
-from django.test import TestCase
+﻿from django.test import TestCase
 from apps.expedientes.models import Expediente
 from apps.expedientes.enums import ExpedienteStatus, DispatchMode
 from apps.expedientes.services import can_transition_to, execute_command

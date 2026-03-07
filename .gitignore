@@ -35,7 +35,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Other
-nginx/
+# nginx/
 frontend_temp/
 frontend.tar.gz
 frontend.zip

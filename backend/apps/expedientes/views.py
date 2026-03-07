@@ -1,5 +1,5 @@
-"""
-Sprint 1-4 — Views (views.py)
+﻿"""
+Sprint 1-4 â€” Views (views.py)
 Ref: LOTE_SM_SPRINT1 Items 5-7, Sprint 3 UI, Sprint 4 S4-02/03/05/07/08
 """
 import io
@@ -27,7 +27,7 @@ from apps.expedientes.serializers_ui import (
 )
 
 
-# ─── Permissions ──────────────────────────────────
+# â”€â”€â”€ Permissions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class IsCEO(IsAuthenticated):
     """CEO = superuser."""
@@ -40,7 +40,7 @@ class EnsureNotBlocked(IsAuthenticated):
     pass
 
 
-# ─── Helpers ──────────────────────────────────────
+# â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def _get_expediente(pk):
     try:
@@ -62,9 +62,9 @@ def _command_response(expediente, events, status_code=200):
     }, status=status_code)
 
 
-# ═══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # SPRINT 1 COMMANDS (C1-C21)
-# ═══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 class CreateExpedienteView(APIView):
     """C1: POST /api/expedientes/create/"""
@@ -147,9 +147,9 @@ class RegisterPaymentView(CommandView):
     command_name = 'C21'
 
 
-# ═══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # SPRINT 2 COMMANDS (C19, C20)
-# ═══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 class SupersedeArtifactView(APIView):
     """C19: POST /api/expedientes/<pk>/supersede-artifact/"""
@@ -178,9 +178,9 @@ class VoidArtifactView(APIView):
         return _command_response(exp, [event])
 
 
-# ═══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # SPRINT 3: List + Bundle
-# ═══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 class ListExpedientesView(APIView):
     """GET /api/ui/expedientes/"""
@@ -299,11 +299,11 @@ class DocumentDownloadView(APIView):
         })
 
 
-# ═══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # SPRINT 4 NEW ENDPOINTS
-# ═══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-# ── S4-02: Costs Doble Vista ──
+# â”€â”€ S4-02: Costs Doble Vista â”€â”€
 
 class CostsListView(APIView):
     """GET /api/expedientes/<pk>/costs/?view=internal|client"""
@@ -342,7 +342,7 @@ class CostsSummaryView(APIView):
         return Response(summary)
 
 
-# ── S4-03: ART-09 Invoice ──
+# â”€â”€ S4-03: ART-09 Invoice â”€â”€
 
 class InvoiceSuggestionView(APIView):
     """GET /api/expedientes/<pk>/invoice-suggestion/"""
@@ -378,7 +378,7 @@ class InvoiceView(APIView):
         })
 
 
-# ── S4-05: Financial Comparison ──
+# â”€â”€ S4-05: Financial Comparison â”€â”€
 
 class FinancialComparisonView(APIView):
     """GET /api/expedientes/<pk>/financial-comparison/  [CEO-ONLY]"""
@@ -392,7 +392,7 @@ class FinancialComparisonView(APIView):
         return Response(comparison)
 
 
-# ── S4-07: ART-19 Logistics ──
+# â”€â”€ S4-07: ART-19 Logistics â”€â”€
 
 class MaterializeLogisticsView(CommandView):
     """C22: POST /api/expedientes/<pk>/materialize-logistics/"""
@@ -411,7 +411,7 @@ class DecideLogisticsView(CommandView):
     command_name = 'C24'
 
 
-# ── S4-08: Mirror PDF ──
+# â”€â”€ S4-08: Mirror PDF â”€â”€
 
 class MirrorPDFView(APIView):
     """GET /api/expedientes/<pk>/mirror-pdf/"""
@@ -439,9 +439,9 @@ class MirrorPDFView(APIView):
             return HttpResponse(html_content, content_type='text/html')
 
 
-# ═══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # SPRINT 4 S4-11: Dashboard Financial Endpoints
-# ═══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 class FinancialDashboardView(APIView):
     """GET /api/ui/dashboard/financial/"""
@@ -482,7 +482,7 @@ class FinancialDashboardView(APIView):
         # Count
         active_count = active_expedientes.count()
 
-        # Brand breakdown — include total_invoiced per brand
+        # Brand breakdown â€” include total_invoiced per brand
         brands_qs = active_expedientes.values('brand').annotate(
             count=Count('expediente_id'),
             total_cost=Sum('cost_lines__amount'),
@@ -520,13 +520,13 @@ class FinancialDashboardView(APIView):
         })
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Sprint 5 Views
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 class RegisterCompensationView(APIView):
-    """S5-05 C29 — POST /api/expedientes/{pk}/register-compensation/
-    CEO-only. Creates ART-12 Nota Compensación."""
+    """S5-05 C29 â€” POST /api/expedientes/{pk}/register-compensation/
+    CEO-only. Creates ART-12 Nota CompensaciÃ³n."""
     permission_classes = [IsCEO]
 
     def post(self, request, pk):
@@ -541,7 +541,7 @@ class RegisterCompensationView(APIView):
 
 
 class LogisticsSuggestionsView(APIView):
-    """S5-07 — GET /api/expedientes/{pk}/logistics-suggestions/
+    """S5-07 â€” GET /api/expedientes/{pk}/logistics-suggestions/
     CEO-only. Returns ranked suggestions from historical data."""
     permission_classes = [IsCEO]
 
@@ -552,7 +552,7 @@ class LogisticsSuggestionsView(APIView):
 
 
 class AddShipmentUpdateView(APIView):
-    """S5-08 C36 — POST /api/expedientes/{pk}/add-shipment-update/
+    """S5-08 C36 â€” POST /api/expedientes/{pk}/add-shipment-update/
     Manual tracking update appended to ART-05."""
     permission_classes = [IsCEO]
 
@@ -567,7 +567,7 @@ class AddShipmentUpdateView(APIView):
 
 
 class HandoffSuggestionView(APIView):
-    """S5-06 — GET /api/expedientes/{pk}/handoff-suggestion/
+    """S5-06 â€” GET /api/expedientes/{pk}/handoff-suggestion/
     Returns transfer suggestion when expediente is closed with nodo_destino."""
     permission_classes = [IsCEO]
 
@@ -578,7 +578,7 @@ class HandoffSuggestionView(APIView):
 
 
 class LiquidationPaymentSuggestionView(APIView):
-    """S5-10 — GET /api/expedientes/{pk}/liquidation-payment-suggestion/
+    """S5-10 â€” GET /api/expedientes/{pk}/liquidation-payment-suggestion/
     Suggests C21 payments from reconciled ART-10 lines for COMISION mode."""
     permission_classes = [IsCEO]
 

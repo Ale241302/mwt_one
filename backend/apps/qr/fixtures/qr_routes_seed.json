@@ -1,0 +1,67 @@
+[
+    {
+        "model": "qr.qrroute",
+        "pk": 1,
+        "fields": {
+            "slug": "gol",
+            "product_slug": "goliath",
+            "product_name": "Goliath",
+            "destination_template": "https://ranawalk.com/{lang}/goliath",
+            "override_url": "",
+            "created_at": "2026-03-01T00:00:00Z",
+            "updated_at": "2026-03-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "qr.qrroute",
+        "pk": 2,
+        "fields": {
+            "slug": "vel",
+            "product_slug": "velox",
+            "product_name": "Velox",
+            "destination_template": "https://ranawalk.com/{lang}/velox",
+            "override_url": "",
+            "created_at": "2026-03-01T00:00:00Z",
+            "updated_at": "2026-03-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "qr.qrroute",
+        "pk": 3,
+        "fields": {
+            "slug": "orb",
+            "product_slug": "orbis",
+            "product_name": "Orbis",
+            "destination_template": "https://ranawalk.com/{lang}/orbis",
+            "override_url": "",
+            "created_at": "2026-03-01T00:00:00Z",
+            "updated_at": "2026-03-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "qr.qrroute",
+        "pk": 4,
+        "fields": {
+            "slug": "leo",
+            "product_slug": "leopard",
+            "product_name": "Leopard",
+            "destination_template": "https://ranawalk.com/{lang}/leopard",
+            "override_url": "",
+            "created_at": "2026-03-01T00:00:00Z",
+            "updated_at": "2026-03-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "qr.qrroute",
+        "pk": 5,
+        "fields": {
+            "slug": "bis",
+            "product_slug": "bison",
+            "product_name": "Bison",
+            "destination_template": "https://ranawalk.com/{lang}/bison",
+            "override_url": "",
+            "created_at": "2026-03-01T00:00:00Z",
+            "updated_at": "2026-03-01T00:00:00Z"
+        }
+    }
+]

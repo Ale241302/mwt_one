@@ -1,4 +1,4 @@
-from rest_framework.test import APITestCase
+﻿from rest_framework.test import APITestCase
 from django.urls import reverse
 from rest_framework import status
 from unittest.mock import patch
@@ -13,9 +13,9 @@ class CommandAPITests(APITestCase):
         self.le = create_legal_entity(entity_id='CL999')
         self.exp = create_expediente(client=self.le)
 
-    # ──────────────────────────────────────────────────
-    # Tests Básicos & C1
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # Tests BÃ¡sicos & C1
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def test_c1_create_expediente(self):
         url = reverse('expedientes:create')
         data = {
@@ -49,9 +49,9 @@ class CommandAPITests(APITestCase):
         res = self.client.post(url, data, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # REGISTRO
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def test_c2_register_oc(self):
         url = reverse('expedientes:register-oc', kwargs={'pk': self.exp.pk})
         res = self.client.post(url, {'payload': {}}, format='json')
@@ -89,9 +89,9 @@ class CommandAPITests(APITestCase):
         self.exp.refresh_from_db()
         self.assertEqual(self.exp.status, ExpedienteStatus.PRODUCCION)
 
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # PRODUCCION + PREPARACION
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def test_c6_confirm_production(self):
         self.exp.status = ExpedienteStatus.PRODUCCION
         self.exp.save()
@@ -149,9 +149,9 @@ class CommandAPITests(APITestCase):
         self.exp.refresh_from_db()
         self.assertEqual(self.exp.status, ExpedienteStatus.DESPACHO)
 
-    # ──────────────────────────────────────────────────
-    # DESPACHO → CERRADO
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # DESPACHO â†’ CERRADO
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def test_c11_confirm_departure(self):
         self.exp.status = ExpedienteStatus.DESPACHO
         self.exp.save()
@@ -193,9 +193,9 @@ class CommandAPITests(APITestCase):
         self.exp.refresh_from_db()
         self.assertEqual(self.exp.status, ExpedienteStatus.CERRADO)
 
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # COSTOS Y PAGOS
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def test_c15_register_cost(self):
         url = reverse('expedientes:register-cost', kwargs={'pk': self.exp.pk})
         res = self.client.post(url, {'cost_type': 'FREIGHT', 'amount': '1500.00', 'currency': 'USD', 'phase': 'PREP'}, format='json')
@@ -208,9 +208,9 @@ class CommandAPITests(APITestCase):
         self.exp.refresh_from_db()
         self.assertEqual(self.exp.payment_status, PaymentStatus.PARTIAL)
 
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # BLOQUEOS Y CANCELACION
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def test_c16_cancel_requires_ceo(self):
         url = reverse('expedientes:cancel', kwargs={'pk': self.exp.pk})
         res = self.client.post(url, {}, format='json')
@@ -242,9 +242,9 @@ class CommandAPITests(APITestCase):
         res = self.client.post(url, {}, format='json')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # PRUEBAS DE ATOMICIDAD (Monkeypatch)
-    # ──────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     @patch('apps.expedientes.services.ArtifactInstance.objects.create')
     def test_atomicity_c2_exception_rolls_back(self, mock_create):
         # Simulate a DB failure halfway through the execution

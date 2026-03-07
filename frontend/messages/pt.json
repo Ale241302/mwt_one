@@ -9,27 +9,39 @@
     "Techs": {
         "LeapCore": {
             "name": "LeapCore™",
-            "description": "Chassi de PU de bi-densidade que distribui pressões massivas."
+            "headline": "Fisiologia de Megafauna",
+            "body": "Chassi de Poliuretano (PU) de bi-densidade. Combina uma camada superior de baixa densidade para conforto imediato e uma base de alta densidade com memória geométrica. Mantém a integridade do arco por mais de 8 horas, prevenindo o valgo do joelho e o desequilíbrio pélvico.",
+            "stat": "Válido para usuários de até 110 kg (220 lbs)"
         },
         "ThinBoom": {
             "name": "ThinBoom™",
-            "description": "Matriz de elastômero de alto rebote que retorna 70-80% da energia cinética."
+            "headline": "O Tendão Reativo",
+            "body": "Matriz supercrítica de E-TPU (Elastômero de Célula Expandida) de alto rebote e perfil mínimo. Reduz o esforço dos isquiotibiais e glúteos, retardando a fadiga muscular e permitindo um passo mais ágil e potente.",
+            "stat": "Retorna de 70% a 80% da energia cinética"
         },
         "PORON_XRD": {
             "name": "PORON® XRD®",
-            "description": "Escudo de reação molecular que neutraliza até 90% da energia de impacto."
+            "headline": "Escudo de Reação Molecular",
+            "body": "Polímero viscoelástico de célula aberta. As moléculas \"congelam\" instantaneamente no impacto para dissipar energia e recuperar a flexibilidade ao caminhar. Atua como um escudo para as articulações, prevenindo vibrações prejudiciais.",
+            "stat": "Neutraliza até 90% da energia de impacto"
         },
         "NanoSpread": {
             "name": "NanoSpread™",
-            "description": "Termorregulação ativa que reduz a temperatura interna em até 5°C."
+            "headline": "Capilaridade Reptiliana",
+            "body": "Têxtil técnico de dispersão com nanotecnologia de fio hidrofóbico. Mantém os pés frescos e secos, eliminando o atrito que causa bolhas e reduzindo o inchaço relacionado ao calor.",
+            "stat": "Reduz a temperatura interna em até 5°C (41°F)"
         },
         "ShockSphere": {
             "name": "ShockSphere™",
-            "description": "Amortecimento focado proporcionando suspensão inteligente em zonas críticas."
+            "headline": "Amortecimento Focado",
+            "body": "Pontos de absorção localizados de PU técnico de baixa densidade integrados a zonas críticas de pressão. Fornece suspensão inteligente no calcanhar e metatarsos, adaptando-se dinamicamente ao terreno.",
+            "stat": "Neutraliza microvibrações específicas"
         },
         "ArchSystem": {
             "name": "Arch System",
-            "description": "Exoesqueleto de suporte que otimiza a alavancagem e evita o colapso do arco."
+            "headline": "Exoesqueleto de Suporte",
+            "body": "Reforço rígido de alta tenacidade projetado para se integrar estruturalmente com o chassi LeapCore™. Previne o colapso do arco medial sob extrema fadiga por turnos intensivos ou cargas pesadas.",
+            "stat": "Otimiza a alavancagem de movimento e transferência de energia"
         }
     },
     "Product": {

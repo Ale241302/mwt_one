@@ -1,5 +1,5 @@
-"""
-Sprint 3-4 — UI URL Configuration for /api/ui/expedientes/
+﻿"""
+Sprint 3-4 â€” UI URL Configuration for /api/ui/expedientes/
 """
 from django.urls import path
 from apps.expedientes.views import (
