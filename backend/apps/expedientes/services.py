@@ -1,6 +1,6 @@
-"""
-Sprint 1-4 — Domain Logic (services.py)
-Ref: LOTE_SM_SPRINT1 Item 2, ENT_OPS_STATE_MACHINE §B/§C/§F/§J/§L/§M
+﻿"""
+Sprint 1-4 â€” Domain Logic (services.py)
+Ref: LOTE_SM_SPRINT1 Item 2, ENT_OPS_STATE_MACHINE Â§B/Â§C/Â§F/Â§J/Â§L/Â§M
 Sprint 4: Costs doble vista, ART-09 invoice, financial comparison,
           ART-19 logistics, Tecmater brand logic, mirror PDF
 """
@@ -21,11 +21,11 @@ from apps.expedientes.exceptions import (
 )
 
 
-# ══════════════════════════════════════════════════
-# STATE MACHINE CONSTANTS  (ENT_OPS_STATE_MACHINE §B)
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# STATE MACHINE CONSTANTS  (ENT_OPS_STATE_MACHINE Â§B)
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-# §B1  Normal transitions
+# Â§B1  Normal transitions
 TRANSITIONS = {
     'REGISTRO':     ['PRODUCCION'],
     'PRODUCCION':   ['PREPARACION'],
@@ -48,13 +48,13 @@ TRANSITIONS_TECMATER = {
     'CANCELADO':    [],
 }
 
-# §B2  Cancellation allowed from
+# Â§B2  Cancellation allowed from
 CANCEL_FROM = {'REGISTRO', 'PRODUCCION', 'PREPARACION'}
 
-# Terminal states — no operations allowed
+# Terminal states â€” no operations allowed
 TERMINAL_STATES = {'CERRADO', 'CANCELADO'}
 
-# §F1  Command ↔ required state, artifact mappings, auto-transitions
+# Â§F1  Command â†” required state, artifact mappings, auto-transitions
 COMMAND_SPEC = {
     'C1':  {'name': 'CreateExpediente',        'event': 'expediente.created'},
     'C2':  {'name': 'RegisterOC',              'event': 'oc.registered',
@@ -139,9 +139,9 @@ TECMATER_SKIP_ARTIFACTS = {'ART-03', 'ART-04', 'ART-10', 'ART-19'}
 TECMATER_BLOCKED_COMMANDS = {'C4', 'C5'}  # DecideMode, ConfirmSAP
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # HELPERS
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _has_artifact(expediente, art_type):
     """Check if expediente has a completed artifact of given type."""
@@ -194,9 +194,9 @@ def get_required_artifacts(expediente):
         return None
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # 1. create_expediente  (C1)
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def create_expediente(data, user):
     """
@@ -261,14 +261,14 @@ def create_expediente(data, user):
     return (expediente, event)
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # 2. can_transition_to  (pure)
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def can_transition_to(expediente, target_state):
     """
-    Pure function → bool.  No side effects, no raises (FIX-2).
-    §B: valid transitions. §E: artifact requirements.
+    Pure function â†’ bool.  No side effects, no raises (FIX-2).
+    Â§B: valid transitions. Â§E: artifact requirements.
     Sprint 4 S4-09: Tecmater uses TRANSITIONS_TECMATER
     """
     current = expediente.status
@@ -285,7 +285,7 @@ def can_transition_to(expediente, target_state):
     if expediente.is_blocked:
         return False
 
-    # Check artifact gates per state machine §E
+    # Check artifact gates per state machine Â§E
     flow = get_required_artifacts(expediente)
     
     if target_state == 'PRODUCCION':
@@ -297,7 +297,7 @@ def can_transition_to(expediente, target_state):
 
     elif target_state == 'PREPARACION':
         if is_tec:
-            # Tecmater: only needs ART-01, ART-02 to go REGISTRO→PREPARACION
+            # Tecmater: only needs ART-01, ART-02 to go REGISTROâ†’PREPARACION
             for art in ['ART-01', 'ART-02']:
                 if flow is not None and art not in flow: continue
                 if not _has_artifact(expediente, art):
@@ -339,9 +339,9 @@ def can_transition_to(expediente, target_state):
     return True
 
 
-# ══════════════════════════════════════════════════
-# 3. can_execute_command  (guard — raise or pass)
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# 3. can_execute_command  (guard â€” raise or pass)
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def can_execute_command(expediente, command_name, user):
     """
@@ -486,12 +486,12 @@ def can_execute_command(expediente, command_name, user):
                 'C24 requires at least 1 logistics option before deciding.'
             )
 
-    # All checks passed — silently return (FIX-2)
+    # All checks passed â€” silently return (FIX-2)
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # 4. execute_command  (orchestrator)
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def execute_command(expediente, command_name, data, user):
     """
@@ -515,10 +515,10 @@ def execute_command(expediente, command_name, data, user):
         events = []
         emitted_by = f'{command_name}:{spec["name"]}'
 
-        # ── C13: IssueInvoice (Sprint 4 enriched) ──
+        # â”€â”€ C13: IssueInvoice (Sprint 4 enriched) â”€â”€
         if command_name == 'C13':
             _handle_issue_invoice(expediente, data, emitted_by, events)
-        # ── Standard artifact creation (C2-C10, except C13) ──
+        # â”€â”€ Standard artifact creation (C2-C10, except C13) â”€â”€
         elif 'creates_art' in spec and command_name not in ('C22',):
             ArtifactInstance.objects.create(
                 expediente=expediente,
@@ -527,7 +527,7 @@ def execute_command(expediente, command_name, data, user):
                 payload=data.get('payload', {}),
             )
 
-        # ── Direct transition (C6, C11, C12, C14, C16) ──
+        # â”€â”€ Direct transition (C6, C11, C12, C14, C16) â”€â”€
         if 'transition_to' in spec:
             # Sprint 4: C14 for COMISION doesn't need ART-09
             if command_name == 'C14' and expediente.mode == 'COMISION':
@@ -536,7 +536,7 @@ def execute_command(expediente, command_name, data, user):
             expediente.status = spec['transition_to']
             expediente.save(update_fields=['status'])
 
-        # ── C15: RegisterCost (Sprint 4: with visibility) ──
+        # â”€â”€ C15: RegisterCost (Sprint 4: with visibility) â”€â”€
         if command_name == 'C15':
             CostLine.objects.create(
                 expediente=expediente,
@@ -548,7 +548,7 @@ def execute_command(expediente, command_name, data, user):
                 visibility=data.get('visibility', 'internal'),
             )
 
-        # ── C17: BlockExpediente ──
+        # â”€â”€ C17: BlockExpediente â”€â”€
         if command_name == 'C17':
             expediente.is_blocked = True
             expediente.blocked_reason = data.get('reason', '')
@@ -560,7 +560,7 @@ def execute_command(expediente, command_name, data, user):
                 'blocked_by_type', 'blocked_by_id',
             ])
 
-        # ── C18: UnblockExpediente ──
+        # â”€â”€ C18: UnblockExpediente â”€â”€
         if command_name == 'C18':
             expediente.is_blocked = False
             expediente.blocked_reason = None
@@ -572,7 +572,7 @@ def execute_command(expediente, command_name, data, user):
                 'blocked_by_type', 'blocked_by_id',
             ])
 
-        # ── C21: RegisterPayment + accumulation §L3 ──
+        # â”€â”€ C21: RegisterPayment + accumulation Â§L3 â”€â”€
         if command_name == 'C21':
             PaymentLine.objects.create(
                 expediente=expediente,
@@ -586,25 +586,25 @@ def execute_command(expediente, command_name, data, user):
             )
             _update_payment_status(expediente)
 
-        # ── C7: Credit clock FIX-3 ──
+        # â”€â”€ C7: Credit clock FIX-3 â”€â”€
         if command_name == 'C7':
             if expediente.credit_clock_start_rule == 'on_shipment':
                 expediente.credit_clock_started_at = timezone.now()
                 expediente.save(update_fields=['credit_clock_started_at'])
 
-        # ── C22: MaterializeLogistics (Sprint 4) ──
+        # â”€â”€ C22: MaterializeLogistics (Sprint 4) â”€â”€
         if command_name == 'C22':
             _handle_materialize_logistics(expediente, data, emitted_by, events)
 
-        # ── C23: AddLogisticsOption (Sprint 4) ──
+        # â”€â”€ C23: AddLogisticsOption (Sprint 4) â”€â”€
         if command_name == 'C23':
             _handle_add_logistics_option(expediente, data, emitted_by, events)
 
-        # ── C24: DecideLogistics (Sprint 4) ──
+        # â”€â”€ C24: DecideLogistics (Sprint 4) â”€â”€
         if command_name == 'C24':
             _handle_decide_logistics(expediente, data, emitted_by, events)
 
-        # ── Primary event ──
+        # â”€â”€ Primary event â”€â”€
         event1 = _create_event(
             expediente,
             event_type=spec['event'],
@@ -613,7 +613,7 @@ def execute_command(expediente, command_name, data, user):
         )
         events.append(event1)
 
-        # ── Auto-transition (FIX-5: C5→PRODUCCION, C10→DESPACHO) ──
+        # â”€â”€ Auto-transition (FIX-5: C5â†’PRODUCCION, C10â†’DESPACHO) â”€â”€
         if 'auto_transition' in spec:
             target = spec['auto_transition']
             if can_transition_to(expediente, target):
@@ -630,7 +630,7 @@ def execute_command(expediente, command_name, data, user):
                 )
                 events.append(event2)
 
-        # ── Sprint 4 S4-09: Tecmater auto-transition after ART-02 ──
+        # â”€â”€ Sprint 4 S4-09: Tecmater auto-transition after ART-02 â”€â”€
         # If Tecmater, after C3 (RegisterProforma), check if we can skip to PREPARACION
         if _is_tecmater(expediente) and command_name == 'C3':
             if can_transition_to(expediente, 'PREPARACION'):
@@ -651,9 +651,9 @@ def execute_command(expediente, command_name, data, user):
     return (expediente, events)
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Sprint 4 S4-03: C13 IssueInvoice enriched handler
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _handle_issue_invoice(expediente, data, emitted_by, events):
     """
@@ -712,9 +712,9 @@ def _handle_issue_invoice(expediente, data, emitted_by, events):
     )
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Sprint 4 S4-07: ART-19 Logistics Decision handlers
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _handle_materialize_logistics(expediente, data, emitted_by, events):
     """C22: Create ART-19 with snapshots of ART-01 and ART-04."""
@@ -790,14 +790,14 @@ def _handle_decide_logistics(expediente, data, emitted_by, events):
     art19.save(update_fields=['status', 'payload'])
 
 
-# ══════════════════════════════════════════════════
-# INTERNAL: Payment accumulation (§L3)
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# INTERNAL: Payment accumulation (Â§L3)
 # Sprint 4: Support COMISION mode (reference = ART-01.total_po)
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _update_payment_status(expediente):
     """
-    §L3: SUM(payments) >= invoice_total → paid.
+    Â§L3: SUM(payments) >= invoice_total â†’ paid.
     Sprint 5: COMISION uses expected commission (total_po * comision_pactada / 100) as reference.
     """
     total_paid = expediente.payment_lines.aggregate(
@@ -848,9 +848,9 @@ def _update_payment_status(expediente):
     expediente.save(update_fields=['payment_status'])
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # C19 & C20: Artifact Correction (Sprint 2)
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _is_post_transition(expediente, artifact_type):
     """BUG 8: Check if artifact is a precondition for an already executed transition."""
@@ -949,9 +949,9 @@ def void_artifact(old_artifact_id, user):
         return expediente, old_art, event
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # UI HELPERS (Sprint 3)
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def get_available_commands(expediente, user):
     """
@@ -1029,9 +1029,9 @@ def get_available_commands(expediente, user):
     return actions
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Sprint 4 S4-02: Costs Doble Vista functions
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def get_costs(expediente, view='internal'):
     """Get costs filtered by visibility view."""
@@ -1072,9 +1072,9 @@ def get_costs_summary(expediente):
     }
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Sprint 4 S4-03: Invoice helpers
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def get_invoice_suggestion(expediente):
     """Pre-calculate suggested invoice total from client-visible costs."""
@@ -1115,9 +1115,9 @@ def get_invoice(expediente, view='internal'):
     return payload
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Sprint 4 S4-05: Financial Comparison
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def calculate_financial_comparison(expediente):
     """
@@ -1153,7 +1153,7 @@ def calculate_financial_comparison(expediente):
         total_po = Decimal(str(art01.payload.get('total_po', art01.payload.get('total', 0)))) if art01 else Decimal('0')
 
         revenue_counter = comision_pactada * total_po / 100
-        cost_counter = Decimal('0')  # MWT no compra en comisión
+        cost_counter = Decimal('0')  # MWT no compra en comisiÃ³n
         margin_counter = revenue_counter
         margin_pct_counter = Decimal('100') if revenue_counter > 0 else Decimal('0')
 
@@ -1223,9 +1223,9 @@ def calculate_financial_comparison(expediente):
     }
 
 
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # Sprint 4 S4-08: Mirror PDF Generation
-# ══════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def generate_mirror_pdf(expediente):
     """
@@ -1283,7 +1283,7 @@ def generate_mirror_pdf(expediente):
     </head>
     <body>
         <div class="header">
-            <h1>MWT.ONE — Expediente</h1>
+            <h1>MWT.ONE â€” Expediente</h1>
             <div class="subtitle">
                 Ref: EXP-{str(expediente.expediente_id)[:8]} |
                 Marca: {expediente.brand} |
@@ -1346,7 +1346,7 @@ def generate_mirror_pdf(expediente):
         html += '<div class="section"><h2>Timeline</h2><ul class="timeline">'
         for ev in events:
             date = ev.occurred_at.strftime('%d/%m/%Y %H:%M')
-            html += f'<li><span class="badge badge-mint">{ev.event_type}</span> — {date}</li>'
+            html += f'<li><span class="badge badge-mint">{ev.event_type}</span> â€” {date}</li>'
         html += '</ul></div>'
 
     # Tracking section
@@ -1362,7 +1362,7 @@ def generate_mirror_pdf(expediente):
 
     html += """
         <div class="footer">
-            <p>Documento generado por MWT.ONE — Confidencial</p>
+            <p>Documento generado por MWT.ONE â€” Confidencial</p>
         </div>
     </body>
     </html>

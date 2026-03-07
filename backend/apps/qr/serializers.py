@@ -1,4 +1,4 @@
-from rest_framework import serializers
+﻿from rest_framework import serializers
 from apps.qr.models import QRRoute, QRScan
 
 class QRRouteSerializer(serializers.ModelSerializer):

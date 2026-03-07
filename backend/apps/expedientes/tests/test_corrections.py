@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 from apps.expedientes.models import ArtifactInstance, EventLog
 from apps.expedientes.enums import ExpedienteStatus, ArtifactStatus
 from apps.expedientes.services import supersede_artifact, void_artifact, execute_command

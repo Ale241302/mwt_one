@@ -1,4 +1,4 @@
-"""
+﻿"""
 Sprint 5 S5-01: Transfer model + state machine
 Node (stub), Transfer (6-state machine), TransferLine
 Ref: LOTE_SM_SPRINT5 Item 3
@@ -22,8 +22,8 @@ def generate_transfer_id():
 
 class Node(models.Model):
     """
-    STUB mínimo. Detalles completos en ENT_OPS_NODOS (Sprint 6+).
-    Nodo físico o fiscal donde reside inventario.
+    STUB mÃ­nimo. Detalles completos en ENT_OPS_NODOS (Sprint 6+).
+    Nodo fÃ­sico o fiscal donde reside inventario.
     """
     node_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
@@ -51,8 +51,8 @@ class Transfer(models.Model):
     NO es ArtifactInstance. Cimiento para Sprint 6 Rana Walk.
 
     State machine:
-      planned → approved → in_transit → received → reconciled
-      any → cancelled (CEO only, desde planned o approved)
+      planned â†’ approved â†’ in_transit â†’ received â†’ reconciled
+      any â†’ cancelled (CEO only, desde planned o approved)
     """
     transfer_id = models.CharField(
         max_length=30, unique=True, editable=False, default=generate_transfer_id
@@ -120,7 +120,7 @@ class Transfer(models.Model):
 
 class TransferLine(models.Model):
     """
-    Línea de producto dentro de un Transfer.
+    LÃ­nea de producto dentro de un Transfer.
     discrepancy = quantity_dispatched - quantity_received (computed).
     """
     transfer = models.ForeignKey(

@@ -1,4 +1,4 @@
-import hashlib
+﻿import hashlib
 from django.conf import settings
 from .models import QRRoute, QRScan
 

@@ -1,15 +1,15 @@
-import uuid
+﻿import uuid
 from django.utils import timezone
 from django.db import transaction
 from apps.transfers.models import Transfer
 from apps.transfers.enums import TransferStatus
 from apps.expedientes.models import ArtifactInstance
 from apps.expedientes.enums import ArtifactStatus
-from apps.transfers.services import _create_transfer_event
+
 
 def create_dispatch_artifact(transfer: Transfer, payload: dict, user) -> ArtifactInstance:
     """
-    C37 — Create ART-15 (Dispatch).
+    C37 â€” Create ART-15 (Dispatch).
     Pre-condition: ART-14 exists for this transfer.
     Changes status to IN_TRANSIT.
     """
@@ -44,6 +44,7 @@ def create_dispatch_artifact(transfer: Transfer, payload: dict, user) -> Artifac
         transfer.dispatched_at = timezone.now()
         transfer.save(update_fields=["status", "dispatched_at", "updated_at"])
         
+        from apps.transfers.services import _create_transfer_event
         _create_transfer_event(
             transfer, "transfer.dispatched_art15", "C37:CreateDispatch",
             payload={"artifact_type": "ART-15"}

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Sprint 5 S5-03/04: Liquidation domain services C25-C28
 Ref: LOTE_SM_SPRINT5 Item 1
 """
@@ -40,7 +40,7 @@ def _create_liquidation_event(liquidation, event_type, emitted_by, payload=None)
 def upload_liquidation(data: dict, file, period: str, user) -> Liquidation:
     """
     C25 UploadLiquidation.
-    1. Valida formato período y que no haya liquidación reconciled para ese período.
+    1. Valida formato perÃ­odo y que no haya liquidaciÃ³n reconciled para ese perÃ­odo.
     2. Crea Liquidation, guarda archivo SIEMPRE.
     3. Intenta parsear JSON.
     4. Intenta auto-match por marluvas_reference contra ART-02 consecutivos.
@@ -68,7 +68,7 @@ def upload_liquidation(data: dict, file, period: str, user) -> Liquidation:
         liquidation.error_log = error_msg
         liquidation.save()
 
-        # Insertar líneas y correr auto-match
+        # Insertar lÃ­neas y correr auto-match
         for line_data in lines_data:
             line = LiquidationLine(liquidation=liquidation, **line_data)
             _auto_match_line(line)
@@ -88,7 +88,7 @@ def upload_liquidation(data: dict, file, period: str, user) -> Liquidation:
 def _auto_match_line(line: LiquidationLine):
     """
     Auto-match por consecutivo de proforma vs marluvas_reference.
-    Premiaciones → no_match_needed automático.
+    Premiaciones â†’ no_match_needed automÃ¡tico.
     """
     if line.concept == LiquidationLineConcept.PREMIO:
         line.match_status = MatchStatus.NO_MATCH_NEEDED
@@ -112,7 +112,7 @@ def _auto_match_line(line: LiquidationLine):
 
 
 def _evaluate_tolerance(line: LiquidationLine) -> str:
-    """Evalúa tolerancias de monto y % comisión."""
+    """EvalÃºa tolerancias de monto y % comisiÃ³n."""
     if not line.matched_proforma:
         return MatchStatus.UNMATCHED
 
@@ -132,7 +132,7 @@ def _evaluate_tolerance(line: LiquidationLine) -> str:
 
 
 def manual_match_line(liquidation: Liquidation, line_id: int, proforma_id, user):
-    """C26 ManualMatchLine — CEO resuelve líneas unmatched."""
+    """C26 ManualMatchLine â€” CEO resuelve lÃ­neas unmatched."""
     if liquidation.status not in (
         LiquidationStatus.PENDING, LiquidationStatus.IN_REVIEW
     ):
@@ -156,8 +156,8 @@ def manual_match_line(liquidation: Liquidation, line_id: int, proforma_id, user)
 def reconcile_liquidation(liquidation: Liquidation, user) -> Liquidation:
     """
     C27 ReconcileLiquidation.
-    Precondición: todas las líneas concept=comision tienen
-    match_status ∈ {matched, no_match_needed}.
+    PrecondiciÃ³n: todas las lÃ­neas concept=comision tienen
+    match_status âˆˆ {matched, no_match_needed}.
     """
     if liquidation.status not in (
         LiquidationStatus.PENDING, LiquidationStatus.IN_REVIEW

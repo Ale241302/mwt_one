@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 from apps.expedientes.models import EventLog
 from apps.expedientes.tasks import process_pending_events
 from apps.expedientes.enums import AggregateType

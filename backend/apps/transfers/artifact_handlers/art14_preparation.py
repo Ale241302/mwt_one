@@ -1,15 +1,15 @@
-import uuid
+﻿import uuid
 from django.utils import timezone
 from django.db import transaction
 from apps.transfers.models import Transfer
 from apps.transfers.enums import TransferStatus
 from apps.expedientes.models import ArtifactInstance
 from apps.expedientes.enums import ArtifactStatus
-from apps.transfers.services import _create_transfer_event
+
 
 def create_preparation_artifact(transfer: Transfer, payload: dict, user) -> ArtifactInstance:
     """
-    C36 — Create ART-14 (Preparation).
+    C36 â€” Create ART-14 (Preparation).
     Pre-condition: status == APPROVED.
     Generates ART-14.
     """
@@ -26,6 +26,7 @@ def create_preparation_artifact(transfer: Transfer, payload: dict, user) -> Arti
                 **payload
             }
         )
+        from apps.transfers.services import _create_transfer_event
         _create_transfer_event(
             transfer, "transfer.artifact_created", "C36:CreatePreparation",
             payload={"artifact_type": "ART-14", "artifact_id": str(artifact.artifact_id)}

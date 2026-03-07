@@ -1,4 +1,4 @@
-from django.urls import path
+﻿from django.urls import path
 from .views import LoginView, LogoutView, MeView, DashboardView
 
 app_name = 'core'

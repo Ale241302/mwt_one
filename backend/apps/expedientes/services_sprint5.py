@@ -1,6 +1,6 @@
-"""
+﻿"""
 Sprint 5 S5-05/07/08: Additional expediente services
-- S5-05: ART-12 Nota Compensación (C29)
+- S5-05: ART-12 Nota CompensaciÃ³n (C29)
 - S5-07: ART-19 RouteHistoricalStats auto-suggest
 - S5-08: ART-19 Tracking Links + Updates Feed (C36)
 """
@@ -15,13 +15,13 @@ from apps.expedientes.models import (
 )
 
 
-# ──────────────────────────────────────────────
-# S5-05: C29 RegisterCompensation (ART-12 Nota Compensación)
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# S5-05: C29 RegisterCompensation (ART-12 Nota CompensaciÃ³n)
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def register_compensation(expediente: Expediente, payload: dict, user) -> ArtifactInstance:
     """
-    C29 RegisterCompensation — CEO-only.
+    C29 RegisterCompensation â€” CEO-only.
     Crea ArtifactInstance type ART-12.
     Voidable via C20 (VoidArtifact ya existente).
     """
@@ -59,15 +59,15 @@ def register_compensation(expediente: Expediente, payload: dict, user) -> Artifa
     return artifact
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # S5-07: Logistics Route Historical Stats
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def get_logistics_suggestions(expediente: Expediente) -> dict:
     """
     GET /api/expedientes/{id}/logistics-suggestions/
     Requiere >=5 expedientes cerrados con ART-19 completada.
-    Retorna sugerencias rankeadas por frecuencia, costo promedio, y días.
+    Retorna sugerencias rankeadas por frecuencia, costo promedio, y dÃ­as.
     """
     # Filtrar expedientes cerrados con al menos un LogisticsOption seleccionado
     closed_expedientes = Expediente.objects.filter(status="CERRADO")
@@ -114,13 +114,13 @@ def get_logistics_suggestions(expediente: Expediente) -> dict:
     }
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # S5-08: C36 AddShipmentUpdate (manual tracking updates)
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def add_shipment_update(expediente: Expediente, payload: dict, user) -> ArtifactInstance:
     """
-    C36 AddShipmentUpdate — manual tracking update.
+    C36 AddShipmentUpdate â€” manual tracking update.
     Appends update entry to ART-05 payload.updates array.
     If ART-05 doesn't exist, creates one with the update.
     """
@@ -180,9 +180,9 @@ def add_shipment_update(expediente: Expediente, payload: dict, user) -> Artifact
     return art05
 
 
-# ──────────────────────────────────────────────
-# S5-06: Handoff Expediente → Transfer suggestion
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# S5-06: Handoff Expediente â†’ Transfer suggestion
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def get_handoff_suggestion(expediente: Expediente) -> dict:
     """
@@ -217,7 +217,7 @@ def get_handoff_suggestion(expediente: Expediente) -> dict:
 
     return {
         "has_suggestion": True,
-        "message": f"Producto entregado a {nodo.name}. ¿Crear transfer?",
+        "message": f"Producto entregado a {nodo.name}. Â¿Crear transfer?",
         "transfer_data": {
             "from_node": str(nodo.node_id),
             "source_expediente": str(expediente.expediente_id),
@@ -232,9 +232,9 @@ def get_handoff_suggestion(expediente: Expediente) -> dict:
     }
 
 
-# ──────────────────────────────────────────────
-# S5-10: Liquidation → Payment suggestion for COMISION mode
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# S5-10: Liquidation â†’ Payment suggestion for COMISION mode
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def get_liquidation_payment_suggestion(expediente: Expediente) -> dict:
     """

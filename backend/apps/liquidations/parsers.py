@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +36,9 @@ def parse_marluvas_liquidation(data: dict) -> list[dict]:
             "commission_amount":      premio.get("amount"),
             "currency":               data.get("currency", "USD"),
             "is_partial_payment":     False,
-            "match_status":           "no_match_needed",   # automático per spec
+            "match_status":           "no_match_needed",   # automÃ¡tico per spec
             "observation":            ptax_info or premio.get("label", "Premio de Vendas"),
         })
 
-    logger.info(f"parse_marluvas_liquidation: {len(lines)} líneas extraídas.")
+    logger.info(f"parse_marluvas_liquidation: {len(lines)} lÃ­neas extraÃ­das.")
     return lines

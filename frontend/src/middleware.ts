@@ -3,7 +3,9 @@ import { routing } from './i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 
-export default function middleware(req: any) {
+import { NextRequest } from 'next/server';
+
+export default function middleware(req: NextRequest) {
     return intlMiddleware(req);
 }
 

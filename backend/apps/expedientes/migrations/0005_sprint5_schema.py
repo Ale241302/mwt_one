@@ -1,10 +1,10 @@
-"""
-Sprint 5 — Migration: adds Sprint 5 fields (transfer FK, nodo_destino).
+﻿"""
+Sprint 5 â€” Migration: adds Sprint 5 fields (transfer FK, nodo_destino).
 Also syncs Sprint 4 state-only changes not properly recorded in migration files.
 
 NOTE: Depends on 0004 (last migration with a file in this build).
 0005_costline_visibility_and_more and 0005_logisticsoption are in the DB
-but have no migration files — we include their model state changes here
+but have no migration files â€” we include their model state changes here
 wrapped in SeparateDatabaseAndState (no DB ops).
 """
 import uuid
@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # ── Synchronizing Sprint 4 schema and creating Sprint 5 fields ──
+        # â”€â”€ Synchronizing Sprint 4 schema and creating Sprint 5 fields â”€â”€
         # CostLine visibility
         migrations.AddField(
             model_name='costline',
@@ -91,13 +91,13 @@ class Migration(migrations.Migration):
             },
         ),
 
-        # ── Sprint 5: NEW fields that need actual DB changes ──
+        # â”€â”€ Sprint 5: NEW fields that need actual DB changes â”€â”€
         migrations.AddField(
             model_name='costline',
             name='transfer',
             field=models.ForeignKey(
                 blank=True,
-                help_text='XOR with expediente — use one or the other',
+                help_text='XOR with expediente â€” use one or the other',
                 null=True,
                 on_delete=django.db.models.deletion.PROTECT,
                 related_name='cost_lines',

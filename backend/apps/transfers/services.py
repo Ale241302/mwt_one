@@ -1,4 +1,4 @@
-"""
+﻿"""
 Sprint 5 S5-02: Transfer domain services C30-C35
 Ref: LOTE_SM_SPRINT5 Item 3B
 """
@@ -17,7 +17,7 @@ def _create_transfer_event(transfer, event_type, emitted_by, payload=None):
     return EventLog.objects.create(
         event_type=event_type,
         aggregate_type='transfer',
-        aggregate_id=uuid.UUID(int=0),  # placeholder — transfers use char id
+        aggregate_id=uuid.UUID(int=0),  # placeholder â€” transfers use char id
         payload={
             'transfer_id': transfer.transfer_id,
             **(payload or {}),
@@ -30,8 +30,8 @@ def _create_transfer_event(transfer, event_type, emitted_by, payload=None):
 
 def create_transfer(data: dict, user) -> Transfer:
     """
-    C30 CreateTransfer — estado inicial: planned.
-    Calcula ownership_before/after y customs_required automáticamente.
+    C30 CreateTransfer â€” estado inicial: planned.
+    Calcula ownership_before/after y customs_required automÃ¡ticamente.
     """
     from_node = Node.objects.get(pk=data["from_node"])
     to_node = Node.objects.get(pk=data["to_node"])
@@ -62,7 +62,7 @@ def create_transfer(data: dict, user) -> Transfer:
 
 
 def approve_transfer(transfer: Transfer, user) -> Transfer:
-    """C31 — planned → approved. CEO only."""
+    """C31 â€” planned â†’ approved. CEO only."""
     if transfer.status != TransferStatus.PLANNED:
         raise ValueError("Transfer must be in planned status to approve.")
         
@@ -89,8 +89,8 @@ def approve_transfer(transfer: Transfer, user) -> Transfer:
 
 def dispatch_transfer(transfer: Transfer, user) -> Transfer:
     """
-    C32 — approved → in_transit.
-    Regla puente Sprint 5: CEO confirma manualmente (ART-15 no existe aún).
+    C32 â€” approved â†’ in_transit.
+    Regla puente Sprint 5: CEO confirma manualmente (ART-15 no existe aÃºn).
     """
     if transfer.status != TransferStatus.APPROVED:
         raise ValueError("Transfer must be approved to dispatch.")
@@ -107,7 +107,7 @@ def dispatch_transfer(transfer: Transfer, user) -> Transfer:
 
 def receive_transfer(transfer: Transfer, lines_data: list, user) -> Transfer:
     """
-    C33 — in_transit → received.
+    C33 â€” in_transit â†’ received.
     lines_data = [{sku, quantity_received, condition}, ...]
     """
     if transfer.status != TransferStatus.IN_TRANSIT:
@@ -132,7 +132,7 @@ def receive_transfer(transfer: Transfer, lines_data: list, user) -> Transfer:
 
 def reconcile_transfer(transfer: Transfer, user, exception_reason: str = None) -> Transfer:
     """
-    C34 — received → reconciled.
+    C34 â€” received â†’ reconciled.
     Si hay discrepancias: SOLO CEO puede reconciliar + exception_reason obligatorio.
     """
     if transfer.status != TransferStatus.RECEIVED:
@@ -165,7 +165,7 @@ def reconcile_transfer(transfer: Transfer, user, exception_reason: str = None) -
 
 
 def cancel_transfer(transfer: Transfer, user, reason: str) -> Transfer:
-    """C35 — any → cancelled. CEO only. Solo desde planned o approved."""
+    """C35 â€” any â†’ cancelled. CEO only. Solo desde planned o approved."""
     if transfer.status not in (TransferStatus.PLANNED, TransferStatus.APPROVED):
         raise ValueError("Transfer can only be cancelled from planned or approved status.")
     with transaction.atomic():

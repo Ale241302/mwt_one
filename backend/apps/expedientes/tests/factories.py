@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+﻿from django.contrib.auth import get_user_model
 from apps.expedientes.models import Expediente, LegalEntity, ArtifactInstance
 from apps.expedientes.enums import DispatchMode, LegalEntityRole, ArtifactStatus
 

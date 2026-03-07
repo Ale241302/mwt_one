@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 from rest_framework.test import APIClient
 from django.urls import reverse
 from rest_framework import status
@@ -18,7 +18,7 @@ class TestPermissions:
         url = reverse('expedientes:register-oc', kwargs={'pk': exp.pk})
         res = client.post(url, {'payload': {}})
         assert res.status_code == status.HTTP_403_FORBIDDEN
-        assert 'El expediente está bloqueado' in res.data['detail']
+        assert 'El expediente estÃ¡ bloqueado' in res.data['detail']
 
     def test_is_ceo_bypasses_blocked_for_certain_commands(self):
         client = APIClient()

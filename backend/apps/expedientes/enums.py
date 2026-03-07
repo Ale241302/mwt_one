@@ -1,4 +1,4 @@
-from django.db import models
+﻿from django.db import models
 
 
 # --- LegalEntity enums ---
@@ -46,10 +46,10 @@ class LegalEntityStatus(models.TextChoices):
 
 class ExpedienteStatus(models.TextChoices):
     REGISTRO = 'REGISTRO', 'Registro'
-    PRODUCCION = 'PRODUCCION', 'Producción'
-    PREPARACION = 'PREPARACION', 'Preparación'
+    PRODUCCION = 'PRODUCCION', 'ProducciÃ³n'
+    PREPARACION = 'PREPARACION', 'PreparaciÃ³n'
     DESPACHO = 'DESPACHO', 'Despacho'
-    TRANSITO = 'TRANSITO', 'Tránsito'
+    TRANSITO = 'TRANSITO', 'TrÃ¡nsito'
     EN_DESTINO = 'EN_DESTINO', 'En Destino'
     CERRADO = 'CERRADO', 'Cerrado'
     CANCELADO = 'CANCELADO', 'Cancelado'
@@ -123,8 +123,8 @@ class RegisteredByType(models.TextChoices):
 # --- LogisticsOption enums (Sprint 4 S4-07) ---
 
 class LogisticsMode(models.TextChoices):
-    AEREO = 'aereo', 'Aéreo'
-    MARITIMO = 'maritimo', 'Marítimo'
+    AEREO = 'aereo', 'AÃ©reo'
+    MARITIMO = 'maritimo', 'MarÃ­timo'
 
 
 class LogisticsSource(models.TextChoices):

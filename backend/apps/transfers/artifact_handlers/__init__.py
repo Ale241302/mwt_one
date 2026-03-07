@@ -1,4 +1,4 @@
-# apps/transfers/artifact_handlers/__init__.py
+﻿# apps/transfers/artifact_handlers/__init__.py
 from .art13_reception import create_reception_artifact
 from .art14_preparation import create_preparation_artifact
 from .art15_dispatch import create_dispatch_artifact

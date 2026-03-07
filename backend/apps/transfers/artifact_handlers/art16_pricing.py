@@ -1,15 +1,15 @@
-import uuid
+﻿import uuid
 from django.utils import timezone
 from django.db import transaction
 from apps.transfers.models import Transfer
 from apps.transfers.enums import TransferStatus
 from apps.expedientes.models import ArtifactInstance
 from apps.expedientes.enums import ArtifactStatus
-from apps.transfers.services import _create_transfer_event
+
 
 def create_pricing_approval_artifact(transfer: Transfer, payload: dict, user) -> ArtifactInstance:
     """
-    C39 — Create ART-16 (Pricing Approval).
+    C39 â€” Create ART-16 (Pricing Approval).
     Pre-condition: ownership_changes == True AND status == PLANNED.
     Generates ART-16. Required before C31.
     """
@@ -29,6 +29,7 @@ def create_pricing_approval_artifact(transfer: Transfer, payload: dict, user) ->
                 **payload
             }
         )
+        from apps.transfers.services import _create_transfer_event
         _create_transfer_event(
             transfer, "transfer.artifact_created", "C39:CreatePricingApproval",
             payload={"artifact_type": "ART-16", "artifact_id": str(artifact.artifact_id)}

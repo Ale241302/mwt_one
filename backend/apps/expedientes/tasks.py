@@ -1,4 +1,4 @@
-from celery import shared_task
+﻿from celery import shared_task
 from django.utils import timezone
 from django.db import transaction
 import logging
@@ -59,7 +59,7 @@ def evaluar_relojes_credito():
                         user=None
                     )
                 
-                # STEP 2: Emisión de eventos (Una vez por vida por umbral) - FIX-13
+                # STEP 2: EmisiÃ³n de eventos (Una vez por vida por umbral) - FIX-13
                 # Spec: credit_clock.warning (60d), credit_clock.critical (75d), credit_clock.expired (90d)
                 
                 event_thresholds = [
@@ -101,7 +101,7 @@ def evaluar_relojes_credito():
 def process_pending_events():
     """ 
     Processes pending EventLogs and marks them as processed.
-    Ref: LOTE_SM_SPRINT2 Item 5 — Audit Fix: Added batch limit of 100 and renamed to process_pending_events.
+    Ref: LOTE_SM_SPRINT2 Item 5 â€” Audit Fix: Added batch limit of 100 and renamed to process_pending_events.
     """
     logger.info("Starting process_pending_events task to process outbox queue")
     

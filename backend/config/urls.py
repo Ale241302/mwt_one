@@ -1,5 +1,5 @@
-"""
-Sprint 1 — Root URL Configuration (Item 7)
+﻿"""
+Sprint 1 â€” Root URL Configuration (Item 7)
 18 command endpoints under /api/expedientes/
 Ref: LOTE_SM_SPRINT1 Item 7, PLB_SPRINT1_PROMPTS FIX-4
 

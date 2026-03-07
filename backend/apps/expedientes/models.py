@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 from django.db import models
 from django.core.exceptions import ValidationError
 
@@ -12,9 +12,9 @@ from .enums import (
 )
 
 
-# ──────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Item 3: LegalEntity + Expediente
-# ──────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class LegalEntity(TimestampMixin):
     """
@@ -45,12 +45,12 @@ class LegalEntity(TimestampMixin):
         ordering = ['legal_name']
 
     def __str__(self):
-        return f"{self.entity_id} — {self.legal_name}"
+        return f"{self.entity_id} â€” {self.legal_name}"
 
 
 class Expediente(TimestampMixin):
     """
-    Ref: ENT_OPS_STATE_MACHINE §A, §C, §D, §L
+    Ref: ENT_OPS_STATE_MACHINE Â§A, Â§C, Â§D, Â§L
     Core business object: a trade/logistics dossier.
     """
     expediente_id = models.UUIDField(primary_key=True, default=uuid.uuid4,
@@ -106,7 +106,7 @@ class Expediente(TimestampMixin):
         blank=True, null=True)
     payment_registered_by_id = models.CharField(max_length=255,
                                                 blank=True, null=True)
-    # Sprint 5 S5-01: nodo_destino — FK to Node for transfer handoff
+    # Sprint 5 S5-01: nodo_destino â€” FK to Node for transfer handoff
     nodo_destino = models.ForeignKey(
         'transfers.Node', on_delete=models.SET_NULL,
         null=True, blank=True, related_name='expedientes_destino',
@@ -122,13 +122,13 @@ class Expediente(TimestampMixin):
         return f"EXP-{str(self.expediente_id)[:8]}"
 
 
-# ──────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Item 4A: ArtifactInstance + EventLog
-# ──────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class ArtifactInstance(TimestampMixin):
     """
-    Ref: ENT_OPS_STATE_MACHINE §G, §I
+    Ref: ENT_OPS_STATE_MACHINE Â§G, Â§I
     Generic business artifact linked to an Expediente.
     """
     artifact_id = models.UUIDField(primary_key=True, default=uuid.uuid4,
@@ -155,12 +155,12 @@ class ArtifactInstance(TimestampMixin):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.artifact_type} — {self.get_status_display()}"
+        return f"{self.artifact_type} â€” {self.get_status_display()}"
 
 
 class EventLog(models.Model):
     """
-    Ref: ENT_OPS_STATE_MACHINE §K — Outbox pattern.
+    Ref: ENT_OPS_STATE_MACHINE Â§K â€” Outbox pattern.
     Exactly 10 fields as per spec.
     """
     event_id = models.UUIDField(primary_key=True, default=uuid.uuid4,
@@ -196,13 +196,13 @@ class EventLog(models.Model):
         return f"{self.event_type} @ {self.occurred_at}"
 
 
-# ──────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Item 4B: CostLine + PaymentLine (AppendOnly)
-# ──────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class CostLine(AppendOnlyModel):
     """
-    Ref: ENT_OPS_STATE_MACHINE §F2 C15
+    Ref: ENT_OPS_STATE_MACHINE Â§F2 C15
     Append-only cost record for an Expediente.
     Sprint 4: Added visibility field for doble vista.
     """
@@ -216,7 +216,7 @@ class CostLine(AppendOnlyModel):
     transfer = models.ForeignKey(
         'transfers.Transfer', on_delete=models.PROTECT,
         null=True, blank=True, related_name='cost_lines',
-        help_text='XOR with expediente — use one or the other'
+        help_text='XOR with expediente â€” use one or the other'
     )
     cost_type = models.CharField(max_length=50)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -242,7 +242,7 @@ class CostLine(AppendOnlyModel):
 
 class PaymentLine(AppendOnlyModel):
     """
-    Ref: ENT_OPS_STATE_MACHINE §L1
+    Ref: ENT_OPS_STATE_MACHINE Â§L1
     Append-only payment record for an Expediente.
     """
     payment_line_id = models.UUIDField(primary_key=True, default=uuid.uuid4,
@@ -255,7 +255,7 @@ class PaymentLine(AppendOnlyModel):
     method = models.CharField(max_length=50,
                               help_text="transferencia, cheque, otro")
     reference = models.CharField(max_length=100,
-                                 help_text="Número de comprobante")
+                                 help_text="NÃºmero de comprobante")
     registered_at = models.DateTimeField()
     registered_by_type = models.CharField(max_length=10,
                                           choices=RegisteredByType.choices)
@@ -270,14 +270,14 @@ class PaymentLine(AppendOnlyModel):
         return f"Payment {self.method}: {self.amount} {self.currency}"
 
 
-# ──────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Sprint 4 S4-07: LogisticsOption (for ART-19)
-# ──────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class LogisticsOption(TimestampMixin):
     """
     Ref: ENT_PLAT_ARTEFACTOS.F2
-    Logistics option for ART-19 Decisión Logística.
+    Logistics option for ART-19 DecisiÃ³n LogÃ­stica.
     """
     logistics_option_id = models.UUIDField(primary_key=True, default=uuid.uuid4,
                                            editable=False)
