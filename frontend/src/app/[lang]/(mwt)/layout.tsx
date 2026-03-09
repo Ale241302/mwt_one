@@ -22,13 +22,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<{ lang: string }>;
 }>) {
+  const { lang } = await params;
   return (
-    <html lang="es" data-theme="light">
+    <html lang={lang} data-theme="light">
       <body className={`${jakarta.variable} ${jetbrains.variable} font-body antialiased bg-bg text-text-primary`}>
         <AuthProvider>
           {children}
