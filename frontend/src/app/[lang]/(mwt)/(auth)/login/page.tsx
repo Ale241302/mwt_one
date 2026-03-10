@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
@@ -96,15 +98,29 @@ export default function LoginPage() {
                         <label className="block text-sm font-medium text-text-secondary mb-1">
                             Contraseña
                         </label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            disabled={loading}
-                            className="w-full px-4 py-2 bg-bg border border-border rounded-lg text-text-primary focus:outline-none focus:border-mint focus:ring-2 focus:ring-mint-soft transition-all-custom"
-                            placeholder="••••••••"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                disabled={loading}
+                                className="w-full px-4 py-2 bg-bg border border-border rounded-lg text-text-primary focus:outline-none focus:border-mint focus:ring-2 focus:ring-mint-soft transition-all-custom pr-10"
+                                placeholder="••••••••"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-mint transition-colors"
+                                tabIndex={-1}
+                            >
+                                {showPassword ? (
+                                    <EyeOff size={20} />
+                                ) : (
+                                    <Eye size={20} />
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     <button

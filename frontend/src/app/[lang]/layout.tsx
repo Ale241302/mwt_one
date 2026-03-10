@@ -4,7 +4,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
-import '../(mwt)/globals.css';
+import './(mwt)/globals.css';
 
 const jakarta = Plus_Jakarta_Sans({
     subsets: ['latin'],

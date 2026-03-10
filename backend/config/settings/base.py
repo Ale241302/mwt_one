@@ -10,7 +10,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='change-me-in-production')
 DEBUG = env.bool('DJANGO_DEBUG', default=False)
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['*'])
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', 'consola.mwt.one', 'mwt.one', 'go.ranawalk.com'])
 
 # --- INSTALLED_APPS (AG-01 adds apps here in Item 2+) ---
 INSTALLED_APPS = [
@@ -163,6 +163,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://consola.mwt.one:8080',
     'https://consola.mwt.one',
     'https://mwt.one',
+    'https://go.ranawalk.com',
+    'http://go.ranawalk.com',
 ]
 CORS_ALLOW_CREDENTIALS = True
 
