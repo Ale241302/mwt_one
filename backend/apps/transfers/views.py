@@ -1,5 +1,6 @@
-﻿"""
+"""
 Sprint 5 S5-02: Transfer views C30-C35 + reads
+Sprint 6: C36-C39 artifact views
 """
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -22,7 +23,7 @@ from apps.transfers.serializers import (
 )
 
 
-# C30 â€” POST /api/transfers/create/
+# C30 — POST /api/transfers/create/
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
 def create_transfer_view(request):
@@ -34,7 +35,7 @@ def create_transfer_view(request):
     )
 
 
-# C31 â€” POST /api/transfers/{id}/approve/
+# C31 — POST /api/transfers/{id}/approve/
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
 def approve_transfer_view(request, transfer_id):
@@ -43,7 +44,7 @@ def approve_transfer_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-# C32 â€” POST /api/transfers/{id}/dispatch/
+# C32 — POST /api/transfers/{id}/dispatch/
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
 def dispatch_transfer_view(request, transfer_id):
@@ -52,7 +53,7 @@ def dispatch_transfer_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-# C33 â€” POST /api/transfers/{id}/receive/
+# C33 — POST /api/transfers/{id}/receive/
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
 def receive_transfer_view(request, transfer_id):
@@ -63,7 +64,7 @@ def receive_transfer_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-# C34 â€” POST /api/transfers/{id}/reconcile/
+# C34 — POST /api/transfers/{id}/reconcile/
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def reconcile_transfer_view(request, transfer_id):
@@ -76,7 +77,7 @@ def reconcile_transfer_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-# C35 â€” POST /api/transfers/{id}/cancel/
+# C35 — POST /api/transfers/{id}/cancel/
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
 def cancel_transfer_view(request, transfer_id):
@@ -87,7 +88,24 @@ def cancel_transfer_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-# C37 â€” POST /api/transfers/{id}/complete-preparation/
+# C36 — POST /api/transfers/{id}/complete-reception/
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def create_reception_artifact_view(request, transfer_id):
+    transfer = Transfer.objects.get(transfer_id=transfer_id)
+    ser = CreateReceptionArtifactSerializer(data=request.data)
+    ser.is_valid(raise_exception=True)
+    create_reception_artifact(
+        transfer,
+        ser.validated_data["lines"],
+        ser.validated_data.get("payload", {}),
+        request.user
+    )
+    transfer.refresh_from_db()
+    return Response(TransferDetailSerializer(transfer).data)
+
+
+# C37 — POST /api/transfers/{id}/complete-preparation/
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
 def create_preparation_artifact_view(request, transfer_id):
@@ -99,7 +117,7 @@ def create_preparation_artifact_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-# C38 â€” POST /api/transfers/{id}/complete-dispatch/
+# C38 — POST /api/transfers/{id}/complete-dispatch/
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
 def create_dispatch_artifact_view(request, transfer_id):
@@ -111,24 +129,7 @@ def create_dispatch_artifact_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-# C36 â€” POST /api/transfers/{id}/complete-reception/
-@api_view(["POST"])
-@permission_classes([IsAdminUser])
-def create_reception_artifact_view(request, transfer_id):
-    transfer = Transfer.objects.get(transfer_id=transfer_id)
-    ser = CreateReceptionArtifactSerializer(data=request.data)
-    ser.is_valid(raise_exception=True)
-    create_reception_artifact(
-        transfer, 
-        ser.validated_data["lines"], 
-        ser.validated_data.get("payload", {}), 
-        request.user
-    )
-    transfer.refresh_from_db()
-    return Response(TransferDetailSerializer(transfer).data)
-
-
-# C39 â€” POST /api/transfers/{id}/approve-pricing/
+# C39 — POST /api/transfers/{id}/approve-pricing/
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
 def create_pricing_approval_artifact_view(request, transfer_id):
