@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/api";
-import { Search, ShieldAlert, X, ArrowUp, ArrowDown, Folder } from "lucide-react";
+import { Search, ShieldAlert, X, ArrowUp, ArrowDown, Folder, Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -36,17 +36,14 @@ function ExpedientesContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // State — data is always an array
     const [data, setData] = useState<Expediente[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Filters from URL or default
     const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "");
     const [brandFilter, setBrandFilter] = useState(searchParams.get("brand") || "");
     const [clientFilter, setClientFilter] = useState(searchParams.get("search") || "");
     const [isBlocked, setIsBlocked] = useState(searchParams.get("is_blocked") === "true");
 
-    // Sorting
     const [ordering, setOrdering] = useState(searchParams.get("ordering") || "-created_at");
 
     const fetchExpedientes = useCallback(async () => {
@@ -58,11 +55,9 @@ function ExpedientesContent() {
             if (clientFilter) params.append("search", clientFilter);
 
             const res = await api.get(`ui/expedientes/?${params.toString()}`);
-            // API returns flat array
             const items = Array.isArray(res.data) ? res.data : (res.data.results || []);
             setData(items);
 
-            // Update URL for shareability
             router.replace(`/expedientes?${params.toString()}`, { scroll: false });
         } catch (error) {
             console.error("Error fetching expedientes", error);
@@ -76,7 +71,6 @@ function ExpedientesContent() {
         fetchExpedientes();
     }, [fetchExpedientes]);
 
-    // Handlers
     const handleSort = (field: string) => {
         if (ordering === field) {
             setOrdering(`-${field}`);
@@ -113,10 +107,8 @@ function ExpedientesContent() {
         return 'bg-mint';
     };
 
-    // Client-side filtering for blocked
     const filteredData = isBlocked ? data.filter(e => e.is_blocked) : data;
 
-    // Client-side sorting
     const sortedData = [...filteredData].sort((a, b) => {
         const desc = ordering.startsWith('-');
         const field = desc ? ordering.slice(1) : ordering;
@@ -140,6 +132,12 @@ function ExpedientesContent() {
                         Gestiona el ciclo de vida, aduanas y bodegaje.
                     </p>
                 </div>
+                <button
+                    onClick={() => router.push('/expedientes/nuevo')}
+                    className="bg-navy hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95 flex items-center gap-2"
+                >
+                    <Plus size={16} /> Nuevo Expediente
+                </button>
             </div>
 
             {/* Filters Bar */}
@@ -225,7 +223,6 @@ function ExpedientesContent() {
                         </thead>
                         <tbody>
                             {loading ? (
-                                // Skeleton loading
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <tr key={i} className="border-b border-divider animate-pulse">
                                         <td className="px-5 py-4"><div className="h-4 bg-border rounded w-20"></div></td>
@@ -238,13 +235,12 @@ function ExpedientesContent() {
                                     </tr>
                                 ))
                             ) : sortedData.length === 0 ? (
-                                // Empty state
                                 <tr>
                                     <td colSpan={7} className="px-5 py-16 text-center text-text-tertiary">
                                         <div className="flex flex-col items-center justify-center">
                                             <Folder size={48} className="text-border-strong mb-4 opacity-50" />
                                             <p className="text-lg font-medium text-text-secondary">No se encontraron expedientes</p>
-                                            <p className="text-sm mt-1">Ajusta los filtros de búsqueda o crea un nuevo expediente desde la API.</p>
+                                            <p className="text-sm mt-1">Ajusta los filtros o crea un nuevo expediente.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -300,7 +296,6 @@ function ExpedientesContent() {
                     </table>
                 </div>
 
-                {/* Count Footer */}
                 {!loading && sortedData.length > 0 && (
                     <div className="px-5 py-4 border-t border-border flex items-center justify-between text-sm">
                         <div className="text-text-tertiary">
