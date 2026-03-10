@@ -7,8 +7,12 @@ import toast from "react-hot-toast";
 import { ArrowLeft, Plus } from "lucide-react";
 
 interface Client {
-  id: number;
+  id: string;
   name: string;
+}
+
+interface ExpedienteListItem {
+  client_name: string;
 }
 
 const BRAND_OPTIONS = ["SKECHERS", "ON", "SPEEDO", "TOMS", "ASICS", "VIVAIA", "TECMATER"];
@@ -40,9 +44,17 @@ export default function NuevoExpedientePage() {
       try {
         setClientsLoading(true);
         setClientsError(false);
-        const res = await api.get("clients/");
-        const items = Array.isArray(res.data) ? res.data : (res.data.results || []);
-        setClients(items);
+        const res = await api.get("ui/expedientes/");
+        const expedientes: ExpedienteListItem[] = Array.isArray(res.data) ? res.data : [];
+        const uniqueClients = Array.from(
+          new Map(
+            expedientes.map((e) => [
+              e.client_name,
+              { id: e.client_name, name: e.client_name },
+            ])
+          ).values()
+        );
+        setClients(uniqueClients);
       } catch {
         setClientsError(true);
         toast.error("Error al cargar clientes");
@@ -66,7 +78,7 @@ export default function NuevoExpedientePage() {
     setSubmitting(true);
     try {
       const res = await api.post("expedientes/", {
-        client_id: Number(form.client_id),
+        client: form.client_id,
         brand: form.brand,
         mode: form.mode,
         freight_mode: form.freight_mode,
