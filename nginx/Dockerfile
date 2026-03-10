@@ -9,6 +9,6 @@ COPY Infra/nginx/go-ranawalk.conf /etc/nginx/conf.d/go-ranawalk.conf
 
 # Copy entrypoint for cert generation
 COPY nginx/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
