@@ -1,4 +1,4 @@
-﻿"""
+"""
 Sprint 3-4 â€” UI Serializers
 """
 import datetime
@@ -71,6 +71,15 @@ class LogisticsOptionSerializer(serializers.Serializer):
     is_selected = serializers.BooleanField()
 
 
+class PaymentLineSummarySerializer(serializers.Serializer):
+    payment_line_id = serializers.UUIDField()
+    amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    currency = serializers.CharField()
+    method = serializers.CharField()
+    reference = serializers.CharField()
+    created_at = serializers.DateTimeField()
+
+
 class DocumentSummarySerializer(serializers.Serializer):
     name = serializers.CharField()
     type = serializers.CharField()
@@ -87,6 +96,7 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     events = serializers.SerializerMethodField()
     artifacts = serializers.SerializerMethodField()
     costs = serializers.SerializerMethodField()
+    payments = serializers.SerializerMethodField()
     documents = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
     credit_clock = serializers.SerializerMethodField()
@@ -114,6 +124,9 @@ class ExpedienteBundleSerializer(serializers.Serializer):
 
     def get_costs(self, obj):
         return CostLineSummarySerializer(obj.cost_lines.all(), many=True).data
+
+    def get_payments(self, obj):
+        return PaymentLineSummarySerializer(obj.payment_lines.all(), many=True).data
 
     def get_available_actions(self, obj):
         return getattr(obj, '_available_actions', [])
