@@ -55,7 +55,8 @@ export default function NuevoExpedientePage() {
         setClientsLoading(true);
         setClientsError(false);
         // Endpoint que devuelve LegalEntities con role=CLIENT
-        const res = await api.get("ui/legal-entities/?role=CLIENT");
+        // nuevo/page.tsx — cambia el fetch a:
+        const res = await api.get("ui/expedientes/legal-entities/");  // sin filtro, trae todos
         const entities: LegalEntityOption[] = Array.isArray(res.data)
           ? res.data
           : res.data?.results ?? [];
