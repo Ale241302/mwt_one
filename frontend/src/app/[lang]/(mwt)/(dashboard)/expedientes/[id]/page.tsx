@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -8,7 +8,26 @@ import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import { ArrowLeft, ShieldAlert, CheckCircle2, XCircle, FileText, Ban } from 'lucide-react';
+import {
+    ArrowLeft, ShieldAlert, CheckCircle2, XCircle, FileText, Ban,
+    DollarSign, CreditCard,
+} from 'lucide-react';
+
+// ── Modal / Drawer imports ────────────────────────────────
+import ArtifactFormDrawer from '@/components/modals/ArtifactFormDrawer';
+import BlockUnblockModal from '@/components/modals/BlockUnblockModal';
+import CancelExpedienteModal from '@/components/modals/CancelExpedienteModal';
+import InvoiceModal from '@/components/modals/InvoiceModal';
+import RegisterCostDrawer from '@/components/modals/RegisterCostDrawer';
+import RegisterPaymentDrawer from '@/components/modals/RegisterPaymentDrawer';
+import SupersederModal from '@/components/modals/SupersederModal';
+import VoidArtifactModal from '@/components/modals/VoidArtifactModal';
+
+// ── Section components ────────────────────────────────────
+import CostsSection from '@/components/expediente/CostsSection';
+import DocumentMirrorPanel from '@/components/expediente/DocumentMirrorPanel';
+
+// ───────────────────────── interfaces ─────────────────────
 
 interface EventLog {
     event_id: string;
@@ -66,6 +85,10 @@ interface ExpedienteBundle {
     available_actions: string[];
 }
 
+// ───────────────────────── constants ──────────────────────
+
+type ArtifactType = 'ART-01' | 'ART-02' | 'ART-05' | 'ART-06' | 'ART-07' | 'ART-08';
+
 const ARTIFACT_LABELS: Record<string, string> = {
     'ART-01': 'Orden de Compra',
     'ART-02': 'Proforma',
@@ -90,6 +113,7 @@ const TIMELINE_STATES = [
     { id: 'CERRADO', label: 'Cerrado' }
 ];
 
+/** Maps command codes → labels */
 const COMMAND_LABELS: Record<string, string> = {
     'C2': 'Registrar OC',
     'C3': 'Registrar Proforma',
@@ -105,6 +129,18 @@ const COMMAND_LABELS: Record<string, string> = {
     'C13': 'Emitir Factura',
     'C14': 'Cerrar Expediente',
 };
+
+/** Maps pipeline commands to the artifact drawer they should open */
+const CMD_TO_ARTIFACT: Partial<Record<string, ArtifactType>> = {
+    'C2': 'ART-01',
+    'C3': 'ART-02',
+    'C7': 'ART-05',
+    'C8': 'ART-06',
+    'C9': 'ART-08',
+    'C10': 'ART-07',
+};
+
+// ─────────────── ArtifactPayloadCard (ART-06 / ART-08) ───
 
 function ArtifactPayloadCard({ artifact }: { artifact: Artifact }) {
     const p = artifact.payload || {};
@@ -257,17 +293,35 @@ function ArtifactPayloadCard({ artifact }: { artifact: Artifact }) {
     return null;
 }
 
+// ═══════════════════════════ MAIN PAGE ════════════════════
+
 export default function ExpedienteDetailPage() {
     const params = useParams();
     const id = params.id as string;
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
 
+    // ── Core data ─────────────────────────────────────────
     const [bundle, setBundle] = useState<ExpedienteBundle | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchBundle = async () => {
+    // ── Modal / Drawer states ─────────────────────────────
+    const [artifactDrawerOpen, setArtifactDrawerOpen] = useState(false);
+    const [artifactDrawerType, setArtifactDrawerType] = useState<ArtifactType>('ART-01');
+
+    const [blockModalOpen, setBlockModalOpen] = useState(false);
+    const [cancelModalOpen, setCancelModalOpen] = useState(false);
+    const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+    const [costDrawerOpen, setCostDrawerOpen] = useState(false);
+    const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
+    const [voidModalOpen, setVoidModalOpen] = useState(false);
+
+    const [supersederOpen, setSupersederOpen] = useState(false);
+    const [supersederArtifact, setSupersederArtifact] = useState<{ id: string; type: string }>({ id: '', type: '' });
+
+    // ── Fetch ─────────────────────────────────────────────
+    const fetchBundle = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -280,28 +334,53 @@ export default function ExpedienteDetailPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
 
     useEffect(() => {
         if (!authLoading && user) {
             fetchBundle();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, authLoading, id]);
+    }, [user, authLoading, fetchBundle]);
 
+    // ── Handlers ──────────────────────────────────────────
+
+    /** Open the artifact form drawer for a specific type */
+    const openArtifactDrawer = (type: ArtifactType) => {
+        setArtifactDrawerType(type);
+        setArtifactDrawerOpen(true);
+    };
+
+    /** Pipeline action handler — opens the correct drawer/modal or posts simple commands */
     const handleAction = async (cmd: string) => {
-        toast.success(`Ejecutando acción ${COMMAND_LABELS[cmd] || cmd}...`);
+        // Commands that map to an artifact form drawer
+        const drawerType = CMD_TO_ARTIFACT[cmd];
+        if (drawerType) {
+            openArtifactDrawer(drawerType);
+            return;
+        }
+
+        // C13 → Invoice Modal
+        if (cmd === 'C13') {
+            setInvoiceModalOpen(true);
+            return;
+        }
+
+        // Simple POST commands (no payload needed)
         try {
             let endpoint = '';
             const payload = {};
 
             switch (cmd) {
                 case 'C6': endpoint = `expedientes/${id}/confirm-production/`; break;
+                case 'C11': endpoint = `expedientes/${id}/confirm-departure/`; break;
+                case 'C12': endpoint = `expedientes/${id}/confirm-arrival/`; break;
+                case 'C14': endpoint = `expedientes/${id}/close/`; break;
                 default:
                     toast('Acción requiere payload. No implementada en UI aún.', { icon: '🚧' });
                     return;
             }
 
+            toast.success(`Ejecutando ${COMMAND_LABELS[cmd] || cmd}...`);
             await api.post(endpoint, payload);
             toast.success('Comando ejecutado con éxito');
             fetchBundle();
@@ -310,6 +389,8 @@ export default function ExpedienteDetailPage() {
             toast.error('Error al ejecutar: ' + (e.response?.data?.detail || e.message));
         }
     };
+
+    // ── Loading / Error states ────────────────────────────
 
     if (loading) {
         return (
@@ -362,6 +443,9 @@ export default function ExpedienteDetailPage() {
     const enrichedArtTypes = new Set(['ART-06', 'ART-08']);
     const enrichedArtifacts = artifacts.filter(a => enrichedArtTypes.has(a.artifact_type) && a.status !== 'SUPERSEDED');
 
+    // Does a completed invoice exist?
+    const hasInvoice = artifacts.some(a => a.artifact_type === 'ART-09' && a.status === 'COMPLETED');
+
     return (
         <div className="max-w-6xl mx-auto space-y-6">
 
@@ -373,7 +457,7 @@ export default function ExpedienteDetailPage() {
                 Volver a expedientes
             </button>
 
-            {/* Header */}
+            {/* ───────── Header ───────── */}
             <div className="flex items-center gap-4 flex-wrap">
                 <h1 className="text-3xl font-display font-medium text-text-primary tracking-tight">
                     {expediente.custom_ref || `EXP-${expediente.id?.toString().slice(0, 8)}`}
@@ -413,7 +497,7 @@ export default function ExpedienteDetailPage() {
                 </div>
             </div>
 
-            {/* Timeline */}
+            {/* ───────── Timeline ───────── */}
             <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 overflow-x-auto">
                 <h4 className="text-sm font-semibold text-text-secondary mb-6 uppercase tracking-wider">Timeline</h4>
                 <div className="flex items-center justify-between min-w-[700px]">
@@ -454,10 +538,11 @@ export default function ExpedienteDetailPage() {
                 </div>
             </div>
 
-            {/* Actions Panel */}
+            {/* ───────── Actions Panel ───────── */}
             <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
                 <div className="flex flex-col md:flex-row md:items-start gap-8">
 
+                    {/* Pipeline actions */}
                     <div className="flex-1">
                         <h4 className="text-sm font-semibold text-text-secondary mb-4 flex items-center gap-2">
                             <span className="text-lg">⚡</span> Acciones Pipeline
@@ -486,41 +571,78 @@ export default function ExpedienteDetailPage() {
 
                     <div className="hidden md:block w-px bg-border self-stretch" />
 
+                    {/* Ops / Admin actions */}
                     <div className="flex-1">
                         <h4 className="text-sm font-semibold text-text-secondary mb-4 flex items-center gap-2">
                             <span className="text-lg">🔧</span> Acciones Ops / Admin
                         </h4>
                         <div className="flex flex-wrap gap-3">
-                            {expediente.is_blocked ? (
+                            {/* Block / Unblock */}
+                            <button
+                                onClick={() => setBlockModalOpen(true)}
+                                className={cn(
+                                    "px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5",
+                                    expediente.is_blocked
+                                        ? "bg-red-50 hover:bg-red-100 text-red-700 border border-red-200"
+                                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200"
+                                )}
+                            >
+                                <Ban className="w-4 h-4" />
+                                {expediente.is_blocked ? 'Desbloquear Manual' : 'Bloquear Manual'}
+                            </button>
+
+                            {/* Register Cost */}
+                            <button
+                                onClick={() => setCostDrawerOpen(true)}
+                                className="bg-white hover:bg-slate-50 text-navy border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+                            >
+                                <DollarSign className="w-4 h-4" />
+                                Registrar Costo
+                            </button>
+
+                            {/* Register Payment */}
+                            <button
+                                onClick={() => setPaymentDrawerOpen(true)}
+                                className="bg-white hover:bg-slate-50 text-navy border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+                            >
+                                <CreditCard className="w-4 h-4" />
+                                Registrar Pago
+                            </button>
+
+                            {/* Cancel expediente */}
+                            <button
+                                onClick={() => setCancelModalOpen(true)}
+                                className="bg-white hover:bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+                            >
+                                <XCircle className="w-4 h-4" />
+                                Cancelar Expediente
+                            </button>
+
+                            {/* Invoice-related */}
+                            {!hasInvoice ? (
                                 <button
-                                    onClick={() => toast('Función de desbloqueo pendiente')}
-                                    className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                    onClick={() => setInvoiceModalOpen(true)}
+                                    className="bg-white hover:bg-slate-50 text-navy border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
                                 >
-                                    <Ban className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
-                                    Desbloquear Manual
+                                    <FileText className="w-4 h-4" />
+                                    Emitir Factura
                                 </button>
                             ) : (
                                 <button
-                                    onClick={() => toast('Función de bloqueo manual pendiente')}
-                                    className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                    onClick={() => setVoidModalOpen(true)}
+                                    className="bg-white hover:bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
                                 >
-                                    <Ban className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
-                                    Bloquear Manual
+                                    <FileText className="w-4 h-4" />
+                                    Anular Factura
                                 </button>
                             )}
-                            <button
-                                onClick={() => toast('Registro de costo pendiente')}
-                                className="bg-white hover:bg-slate-50 text-navy border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                                💰 Registrar Costo
-                            </button>
                         </div>
                     </div>
 
                 </div>
             </div>
 
-            {/* Details Grid */}
+            {/* ───────── Details Grid ───────── */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {/* Info */}
@@ -602,7 +724,7 @@ export default function ExpedienteDetailPage() {
 
             </div>
 
-            {/* Enriched Artifact Cards (ART-06, ART-08) */}
+            {/* ───────── Enriched Artifact Cards (ART-06, ART-08) ───────── */}
             {enrichedArtifacts.length > 0 && (
                 <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-2">
@@ -616,7 +738,89 @@ export default function ExpedienteDetailPage() {
                 </div>
             )}
 
+            {/* ───────── Costs Section ───────── */}
+            <CostsSection
+                expedienteId={id}
+                onRegisterCost={() => setCostDrawerOpen(true)}
+            />
+
+            {/* ───────── Documents Mirror Panel ───────── */}
+            <DocumentMirrorPanel expedienteId={id} />
+
+            {/* ═══════════ Modals / Drawers ═══════════ */}
+
+            <ArtifactFormDrawer
+                open={artifactDrawerOpen}
+                onClose={() => setArtifactDrawerOpen(false)}
+                expedienteId={id}
+                artifactType={artifactDrawerType}
+                expedienteMode={expediente.mode}
+                freightMode={expediente.freight_mode}
+                dispatchMode={expediente.dispatch_mode}
+                artifacts={artifacts}
+                onSuccess={fetchBundle}
+            />
+
+            <BlockUnblockModal
+                open={blockModalOpen}
+                onClose={() => setBlockModalOpen(false)}
+                expedienteId={id}
+                isBlocked={expediente.is_blocked}
+                blockReason={expediente.block_reason}
+                onSuccess={fetchBundle}
+            />
+
+            <CancelExpedienteModal
+                open={cancelModalOpen}
+                onClose={() => setCancelModalOpen(false)}
+                expedienteId={id}
+                onSuccess={() => {
+                    fetchBundle();
+                    router.push('/expedientes');
+                }}
+            />
+
+            <InvoiceModal
+                open={invoiceModalOpen}
+                onClose={() => setInvoiceModalOpen(false)}
+                expedienteId={id}
+                clientName={expediente.client_name}
+                expedienteMode={expediente.mode}
+                dispatchMode={expediente.dispatch_mode}
+                artifacts={artifacts}
+                onSuccess={fetchBundle}
+            />
+
+            <RegisterCostDrawer
+                open={costDrawerOpen}
+                onClose={() => setCostDrawerOpen(false)}
+                expedienteId={id}
+                onSuccess={fetchBundle}
+            />
+
+            <RegisterPaymentDrawer
+                open={paymentDrawerOpen}
+                onClose={() => setPaymentDrawerOpen(false)}
+                expedienteId={id}
+                onSuccess={fetchBundle}
+            />
+
+            <SupersederModal
+                open={supersederOpen}
+                onClose={() => setSupersederOpen(false)}
+                expedienteId={id}
+                artifactId={supersederArtifact.id}
+                artifactType={supersederArtifact.type}
+                onSuccess={fetchBundle}
+            />
+
+            <VoidArtifactModal
+                open={voidModalOpen}
+                onClose={() => setVoidModalOpen(false)}
+                expedienteId={id}
+                onSuccess={fetchBundle}
+            />
+
         </div>
     );
 }
-

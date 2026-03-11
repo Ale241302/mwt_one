@@ -77,7 +77,7 @@ export default function NuevoExpedientePage() {
     }
     setSubmitting(true);
     try {
-      const res = await api.post("expedientes/", {
+      const res = await api.post("expedientes/create/", {
         client: form.client_id,
         brand: form.brand,
         mode: form.mode,
