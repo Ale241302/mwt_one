@@ -318,7 +318,8 @@ export default function ExpedienteDetailPage() {
     const [voidModalOpen, setVoidModalOpen] = useState(false);
 
     const [supersederOpen, setSupersederOpen] = useState(false);
-    const [supersederArtifact, setSupersederArtifact] = useState<{ id: string; type: string }>({ id: '', type: '' });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [supersederArtifact, _setSupersederArtifact] = useState<{ id: string; type: string }>({ id: '', type: '' });
 
     // ── Fetch ─────────────────────────────────────────────
     const fetchBundle = useCallback(async () => {
