@@ -1,5 +1,5 @@
-﻿"""
-Sprint 3-4 â€” UI URL Configuration for /api/ui/expedientes/
+"""
+Sprint 3-4 – UI URL Configuration for /api/ui/expedientes/
 """
 from django.urls import path
 from apps.expedientes.views import (
@@ -7,6 +7,7 @@ from apps.expedientes.views import (
     ExpedienteBundleView,
     DocumentDownloadView,
     FinancialDashboardView,
+    LegalEntitiesListView,
 )
 
 app_name = 'expedientes-ui'
@@ -21,4 +22,7 @@ urlpatterns = [
 
     # Sprint 4 S4-11: Financial Dashboard
     path('dashboard/financial/', FinancialDashboardView.as_view(), name='financial-dashboard'),
+
+    # Legal Entities para formularios UI (e.g. Nuevo Expediente)
+    path('legal-entities/', LegalEntitiesListView.as_view(), name='legal-entities'),
 ]
