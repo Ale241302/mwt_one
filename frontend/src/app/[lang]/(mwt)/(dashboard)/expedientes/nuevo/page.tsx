@@ -6,25 +6,34 @@ import api from "@/lib/api";
 import toast from "react-hot-toast";
 import { ArrowLeft, Plus } from "lucide-react";
 
-interface Client {
-  id: string;
-  name: string;
-}
-
-interface ExpedienteListItem {
-  client_name: string;
+interface LegalEntityOption {
+  entity_id: string;
+  legal_name: string;
 }
 
 const BRAND_OPTIONS = ["SKECHERS", "ON", "SPEEDO", "TOMS", "ASICS", "VIVAIA", "TECMATER"];
-const MODE_OPTIONS = ["IMPORTACION", "EXPORTACION", "COMISION"];
+const MODE_OPTIONS = [
+  { value: "FULL", label: "IMPORTACION / FULL" },
+  { value: "COMISION", label: "COMISION" },
+];
 const FREIGHT_MODE_OPTIONS = ["MARITIMO", "AEREO", "TERRESTRE"];
-const DISPATCH_MODE_OPTIONS = ["mwt", "directo"];
+const DISPATCH_MODE_OPTIONS = [
+  { value: "MWT", label: "MWT" },
+  { value: "directo", label: "Directo" },
+];
 const PRICE_BASIS_OPTIONS = ["CIF", "FOB", "EXW"];
+const DESTINATION_OPTIONS = [
+  { value: "CR", label: "Costa Rica" },
+  { value: "USA", label: "United States" },
+];
+
+// entity_id de la entidad MWT emisora — ajusta si es diferente en tu DB
+const MWT_LEGAL_ENTITY_ID = "MWT-CR";
 
 export default function NuevoExpedientePage() {
   const router = useRouter();
 
-  const [clients, setClients] = useState<Client[]>([]);
+  const [clients, setClients] = useState<LegalEntityOption[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientsError, setClientsError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -36,6 +45,7 @@ export default function NuevoExpedientePage() {
     freight_mode: "",
     dispatch_mode: "",
     price_basis: "",
+    destination: "CR",
     notes: "",
   });
 
@@ -44,20 +54,38 @@ export default function NuevoExpedientePage() {
       try {
         setClientsLoading(true);
         setClientsError(false);
-        const res = await api.get("ui/expedientes/");
-        const expedientes: ExpedienteListItem[] = Array.isArray(res.data) ? res.data : [];
-        const uniqueClients = Array.from(
-          new Map(
-            expedientes.map((e) => [
-              e.client_name,
-              { id: e.client_name, name: e.client_name },
-            ])
-          ).values()
-        );
-        setClients(uniqueClients);
+        // Endpoint que devuelve LegalEntities con role=CLIENT
+        const res = await api.get("ui/legal-entities/?role=CLIENT");
+        const entities: LegalEntityOption[] = Array.isArray(res.data)
+          ? res.data
+          : res.data?.results ?? [];
+        setClients(entities);
       } catch {
-        setClientsError(true);
-        toast.error("Error al cargar clientes");
+        // Fallback: extraer clientes únicos desde expedientes existentes
+        try {
+          const res2 = await api.get("ui/expedientes/");
+          const expedientes: Array<{ client_name: string; client_entity_id?: string }> =
+            Array.isArray(res2.data) ? res2.data : [];
+          const unique = Array.from(
+            new Map(
+              expedientes
+                .filter((e) => e.client_entity_id) // solo si viene el entity_id
+                .map((e) => [
+                  e.client_entity_id!,
+                  { entity_id: e.client_entity_id!, legal_name: e.client_name },
+                ])
+            ).values()
+          );
+          if (unique.length > 0) {
+            setClients(unique);
+          } else {
+            setClientsError(true);
+            toast.error("No se pudieron cargar los clientes");
+          }
+        } catch {
+          setClientsError(true);
+          toast.error("Error al cargar clientes");
+        }
       } finally {
         setClientsLoading(false);
       }
@@ -65,35 +93,56 @@ export default function NuevoExpedientePage() {
     fetchClients();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.client_id || !form.brand || !form.mode || !form.freight_mode || !form.dispatch_mode || !form.price_basis) {
+    if (
+      !form.client_id ||
+      !form.brand ||
+      !form.mode ||
+      !form.freight_mode ||
+      !form.dispatch_mode ||
+      !form.price_basis
+    ) {
       toast.error("Completa todos los campos obligatorios");
       return;
     }
+
     setSubmitting(true);
     try {
       const res = await api.post("expedientes/create/", {
-        client: form.client_id,
+        legal_entity_id: MWT_LEGAL_ENTITY_ID, // entidad MWT emisora
+        client: form.client_id,               // entity_id del cliente (ej: "SKECHERS-CR")
         brand: form.brand,
         mode: form.mode,
         freight_mode: form.freight_mode,
-        dispatch_mode: form.dispatch_mode,
+        dispatch_mode: form.dispatch_mode.toUpperCase(), // backend espera "MWT" en mayús
         price_basis: form.price_basis,
-        notes: form.notes || undefined,
+        destination: form.destination,
+        ...(form.notes ? { notes: form.notes } : {}),
       });
+
       if (res.status === 201) {
-        toast.success("Expediente creado");
-        const newId = res.data?.id || res.data?.expediente_id;
-        router.push(`/expedientes/${newId}`);
+        toast.success("Expediente creado exitosamente");
+        const newId = res.data?.expediente_id || res.data?.id;
+        if (newId) {
+          router.push(`/expedientes/${newId}`);
+        } else {
+          router.push("/expedientes");
+        }
       }
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { detail?: string } } };
-      toast.error(e.response?.data?.detail || "Error al crear");
+      const e = err as { response?: { data?: { detail?: string; message?: string } } };
+      const msg =
+        e.response?.data?.detail ||
+        e.response?.data?.message ||
+        "Error al crear el expediente";
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -109,8 +158,12 @@ export default function NuevoExpedientePage() {
       </button>
 
       <div className="bg-surface rounded-2xl border border-border shadow-sm p-8">
-        <h1 className="text-2xl font-display font-bold text-text-primary mb-1">Nuevo Expediente</h1>
-        <p className="text-sm text-text-tertiary mb-8">Completa los datos para registrar el expediente.</p>
+        <h1 className="text-2xl font-display font-bold text-text-primary mb-1">
+          Nuevo Expediente
+        </h1>
+        <p className="text-sm text-text-tertiary mb-8">
+          Completa los datos para registrar el expediente.
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Cliente */}
@@ -125,7 +178,14 @@ export default function NuevoExpedientePage() {
               </div>
             ) : clientsError ? (
               <div className="text-sm text-coral px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
-                Error al cargar clientes. Recarga la página.
+                Error al cargar clientes.{" "}
+                <button
+                  type="button"
+                  className="underline"
+                  onClick={() => window.location.reload()}
+                >
+                  Recargar
+                </button>
               </div>
             ) : (
               <select
@@ -137,8 +197,8 @@ export default function NuevoExpedientePage() {
               >
                 <option value="">Seleccionar cliente...</option>
                 {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
+                  <option key={c.entity_id} value={c.entity_id}>
+                    {c.legal_name}
                   </option>
                 ))}
               </select>
@@ -159,7 +219,9 @@ export default function NuevoExpedientePage() {
             >
               <option value="">Seleccionar marca...</option>
               {BRAND_OPTIONS.map((b) => (
-                <option key={b} value={b}>{b}</option>
+                <option key={b} value={b}>
+                  {b}
+                </option>
               ))}
             </select>
           </div>
@@ -178,7 +240,34 @@ export default function NuevoExpedientePage() {
             >
               <option value="">Seleccionar modo...</option>
               {MODE_OPTIONS.map((m) => (
-                <option key={m} value={m}>{m}</option>
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+            {form.brand === "TECMATER" && form.mode === "COMISION" && (
+              <p className="text-xs text-coral mt-1">
+                ⚠ TECMATER no soporta modo COMISION.
+              </p>
+            )}
+          </div>
+
+          {/* Destino */}
+          <div>
+            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
+              Destino <span className="text-coral">*</span>
+            </label>
+            <select
+              name="destination"
+              value={form.destination}
+              onChange={handleChange}
+              required
+              className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-navy/30"
+            >
+              {DESTINATION_OPTIONS.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label}
+                </option>
               ))}
             </select>
           </div>
@@ -197,7 +286,9 @@ export default function NuevoExpedientePage() {
             >
               <option value="">Seleccionar modo de flete...</option>
               {FREIGHT_MODE_OPTIONS.map((f) => (
-                <option key={f} value={f}>{f}</option>
+                <option key={f} value={f}>
+                  {f}
+                </option>
               ))}
             </select>
           </div>
@@ -216,7 +307,9 @@ export default function NuevoExpedientePage() {
             >
               <option value="">Seleccionar modo de despacho...</option>
               {DISPATCH_MODE_OPTIONS.map((d) => (
-                <option key={d} value={d}>{d}</option>
+                <option key={d.value} value={d.value}>
+                  {d.label}
+                </option>
               ))}
             </select>
           </div>
@@ -235,7 +328,9 @@ export default function NuevoExpedientePage() {
             >
               <option value="">Seleccionar base de precio...</option>
               {PRICE_BASIS_OPTIONS.map((p) => (
-                <option key={p} value={p}>{p}</option>
+                <option key={p} value={p}>
+                  {p}
+                </option>
               ))}
             </select>
           </div>
@@ -243,7 +338,8 @@ export default function NuevoExpedientePage() {
           {/* Notas */}
           <div>
             <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
-              Notas <span className="text-text-tertiary font-normal">(opcional)</span>
+              Notas{" "}
+              <span className="text-text-tertiary font-normal">(opcional)</span>
             </label>
             <textarea
               name="notes"
@@ -270,9 +366,14 @@ export default function NuevoExpedientePage() {
               className="bg-navy hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting ? (
-                <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Creando...</>
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Creando...
+                </>
               ) : (
-                <><Plus size={16} /> Crear Expediente</>
+                <>
+                  <Plus size={16} /> Crear Expediente
+                </>
               )}
             </button>
           </div>

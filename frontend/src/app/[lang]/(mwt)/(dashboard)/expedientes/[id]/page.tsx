@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Component, ReactNode } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -26,6 +26,28 @@ import VoidArtifactModal from '@/components/modals/VoidArtifactModal';
 // ── Section components ────────────────────────────────────
 import CostsSection from '@/components/expediente/CostsSection';
 import DocumentMirrorPanel from '@/components/expediente/DocumentMirrorPanel';
+
+// ✅ FIX: Error Boundary para capturar crashes de componentes hijo (404 → .reduce crash)
+interface EBState { hasError: boolean }
+class SectionErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, EBState> {
+    constructor(props: { children: ReactNode; fallback?: ReactNode }) {
+        super(props);
+        this.state = { hasError: false };
+    }
+    static getDerivedStateFromError() { return { hasError: true }; }
+    componentDidCatch(error: Error) { console.warn('[SectionErrorBoundary] capturado:', error.message); }
+    render() {
+        if (this.state.hasError) {
+            return this.props.fallback ?? (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm text-text-tertiary flex items-center gap-2">
+                    <FileText className="w-4 h-4 opacity-40" />
+                    Sección no disponible (endpoint pendiente en backend)
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
 
 // ───────────────────────── interfaces ─────────────────────
 
@@ -113,7 +135,6 @@ const TIMELINE_STATES = [
     { id: 'CERRADO', label: 'Cerrado' }
 ];
 
-/** Maps command codes → labels */
 const COMMAND_LABELS: Record<string, string> = {
     'C2': 'Registrar OC',
     'C3': 'Registrar Proforma',
@@ -130,7 +151,6 @@ const COMMAND_LABELS: Record<string, string> = {
     'C14': 'Cerrar Expediente',
 };
 
-/** Maps pipeline commands to the artifact drawer they should open */
 const CMD_TO_ARTIFACT: Partial<Record<string, ArtifactType>> = {
     'C2': 'ART-01',
     'C3': 'ART-02',
@@ -345,28 +365,23 @@ export default function ExpedienteDetailPage() {
 
     // ── Handlers ──────────────────────────────────────────
 
-    /** Open the artifact form drawer for a specific type */
     const openArtifactDrawer = (type: ArtifactType) => {
         setArtifactDrawerType(type);
         setArtifactDrawerOpen(true);
     };
 
-    /** Pipeline action handler — opens the correct drawer/modal or posts simple commands */
     const handleAction = async (cmd: string) => {
-        // Commands that map to an artifact form drawer
         const drawerType = CMD_TO_ARTIFACT[cmd];
         if (drawerType) {
             openArtifactDrawer(drawerType);
             return;
         }
 
-        // C13 → Invoice Modal
         if (cmd === 'C13') {
             setInvoiceModalOpen(true);
             return;
         }
 
-        // Simple POST commands (no payload needed)
         try {
             let endpoint = '';
             const payload = {};
@@ -437,14 +452,11 @@ export default function ExpedienteDetailPage() {
         else if (creditDays >= 60) creditType = 'amber';
     }
 
-    // Timeline computation
     const currentStateIndex = TIMELINE_STATES.findIndex(s => s.id === expediente.status);
 
-    // Enriched artifact cards for ART-06 and ART-08
     const enrichedArtTypes = new Set(['ART-06', 'ART-08']);
     const enrichedArtifacts = artifacts.filter(a => enrichedArtTypes.has(a.artifact_type) && a.status !== 'SUPERSEDED');
 
-    // Does a completed invoice exist?
     const hasInvoice = artifacts.some(a => a.artifact_type === 'ART-09' && a.status === 'COMPLETED');
 
     return (
@@ -578,7 +590,6 @@ export default function ExpedienteDetailPage() {
                             <span className="text-lg">🔧</span> Acciones Ops / Admin
                         </h4>
                         <div className="flex flex-wrap gap-3">
-                            {/* Block / Unblock */}
                             <button
                                 onClick={() => setBlockModalOpen(true)}
                                 className={cn(
@@ -592,7 +603,6 @@ export default function ExpedienteDetailPage() {
                                 {expediente.is_blocked ? 'Desbloquear Manual' : 'Bloquear Manual'}
                             </button>
 
-                            {/* Register Cost */}
                             <button
                                 onClick={() => setCostDrawerOpen(true)}
                                 className="bg-white hover:bg-slate-50 text-navy border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
@@ -601,7 +611,6 @@ export default function ExpedienteDetailPage() {
                                 Registrar Costo
                             </button>
 
-                            {/* Register Payment */}
                             <button
                                 onClick={() => setPaymentDrawerOpen(true)}
                                 className="bg-white hover:bg-slate-50 text-navy border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
@@ -610,7 +619,6 @@ export default function ExpedienteDetailPage() {
                                 Registrar Pago
                             </button>
 
-                            {/* Cancel expediente */}
                             <button
                                 onClick={() => setCancelModalOpen(true)}
                                 className="bg-white hover:bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
@@ -619,7 +627,6 @@ export default function ExpedienteDetailPage() {
                                 Cancelar Expediente
                             </button>
 
-                            {/* Invoice-related */}
                             {!hasInvoice ? (
                                 <button
                                     onClick={() => setInvoiceModalOpen(true)}
@@ -740,13 +747,19 @@ export default function ExpedienteDetailPage() {
             )}
 
             {/* ───────── Costs Section ───────── */}
-            <CostsSection
-                expedienteId={id}
-                onRegisterCost={() => setCostDrawerOpen(true)}
-            />
+            {/* ✅ FIX: SectionErrorBoundary evita que un 404 + .reduce crash tumbe toda la página */}
+            <SectionErrorBoundary>
+                <CostsSection
+                    expedienteId={id}
+                    onRegisterCost={() => setCostDrawerOpen(true)}
+                />
+            </SectionErrorBoundary>
 
             {/* ───────── Documents Mirror Panel ───────── */}
-            <DocumentMirrorPanel expedienteId={id} />
+            {/* ✅ FIX: igual para DocumentMirrorPanel */}
+            <SectionErrorBoundary>
+                <DocumentMirrorPanel expedienteId={id} />
+            </SectionErrorBoundary>
 
             {/* ═══════════ Modals / Drawers ═══════════ */}
 
