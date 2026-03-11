@@ -262,7 +262,6 @@ class ExpedienteBundleView(APIView):
 
         available_actions = get_available_commands(exp, request.user)
 
-        # Attach extra context as attributes so the serializer can access them
         exp._events = events
         exp._available_actions = available_actions
 
@@ -316,7 +315,6 @@ class CostsListView(APIView):
 
         view_param = request.query_params.get('view', 'internal')
 
-        # Client view is always available; internal only for CEO
         if view_param == 'internal' and not request.user.is_superuser:
             view_param = 'client'
 
@@ -435,7 +433,6 @@ class MirrorPDFView(APIView):
             )
             return response
         except ImportError:
-            # weasyprint not installed, return HTML as fallback
             return HttpResponse(html_content, content_type='text/html')
 
 
@@ -450,17 +447,14 @@ class FinancialDashboardView(APIView):
     def get(self, request):
         from django.db.models import Sum, Count
 
-        # Financial cards data
         active_expedientes = Expediente.objects.exclude(
             status__in=['CERRADO', 'CANCELADO']
         )
 
-        # Total active costs
         total_cost = CostLine.objects.filter(
             expediente__in=active_expedientes
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
-        # Total invoiced (from ART-09)
         invoiced_artifacts = ArtifactInstance.objects.filter(
             artifact_type='ART-09',
             status='completed',
@@ -470,26 +464,20 @@ class FinancialDashboardView(APIView):
         for art in invoiced_artifacts:
             total_invoiced += Decimal(str(art.payload.get('total_client_view', 0)))
 
-        # Total payments
         total_paid = PaymentLine.objects.filter(
             expediente__in=active_expedientes
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
-        # Receivables & Margin
         total_receivables = total_invoiced - total_paid
         margin = total_invoiced - total_cost
-
-        # Count
         active_count = active_expedientes.count()
 
-        # Brand breakdown – include total_invoiced per brand
         brands_qs = active_expedientes.values('brand').annotate(
             count=Count('expediente_id'),
             total_cost=Sum('cost_lines__amount'),
         )
         brand_breakdown = []
         for b in brands_qs:
-            # Calculate invoiced per brand
             brand_invoiced = Decimal('0')
             brand_arts = ArtifactInstance.objects.filter(
                 artifact_type='ART-09',
@@ -553,6 +541,153 @@ class LegalEntitiesListView(APIView):
 
 
 # ═══════════════════════════════════════════════════════════════════
+# FINANCIAL SUMMARY — GET /api/expedientes/<pk>/financial-summary/
+# Usado por CostsSection en el frontend del detalle de expediente
+# ═══════════════════════════════════════════════════════════════════
+
+class FinancialSummaryView(APIView):
+    """GET /api/expedientes/<pk>/financial-summary/
+    Retorna costos + pagos + resumen financiero del expediente.
+    Accesible para usuarios autenticados (CEO ve todo, otros solo vista cliente).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        from django.db.models import Sum
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+
+        is_ceo = request.user.is_superuser
+
+        # Costos
+        costs_qs = exp.cost_lines.all() if is_ceo else exp.cost_lines.filter(visibility='client')
+        costs_data = [
+            {
+                'cost_id': str(c.pk),
+                'cost_type': c.cost_type,
+                'amount': float(c.amount),
+                'currency': c.currency,
+                'phase': c.phase,
+                'description': c.description,
+                'visibility': c.visibility,
+            }
+            for c in costs_qs
+        ]
+
+        total_costs = costs_qs.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+        # Pagos
+        payments_qs = exp.payment_lines.all()
+        payments_data = [
+            {
+                'payment_id': str(p.pk),
+                'amount': float(p.amount),
+                'currency': p.currency,
+                'method': p.method,
+                'reference': p.reference,
+                'registered_at': p.registered_at,
+            }
+            for p in payments_qs
+        ]
+        total_paid = payments_qs.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+        # Factura ART-09
+        invoice = None
+        art09 = exp.artifacts.filter(artifact_type='ART-09', status='completed').order_by('-created_at').first()
+        if art09:
+            payload = dict(art09.payload)
+            if not is_ceo:
+                for field in ('total_internal_view', 'margin', 'margin_pct'):
+                    payload.pop(field, None)
+            invoice = payload
+
+        total_invoiced = Decimal('0')
+        if art09:
+            total_invoiced = Decimal(str(art09.payload.get('total_client_view', 0)))
+
+        balance = total_invoiced - total_paid
+
+        return Response({
+            'costs': costs_data,
+            'payments': payments_data,
+            'invoice': invoice,
+            'summary': {
+                'total_costs': float(total_costs),
+                'total_invoiced': float(total_invoiced),
+                'total_paid': float(total_paid),
+                'balance_pending': float(balance),
+                'payment_status': exp.payment_status,
+                'currency': 'USD',
+            },
+        })
+
+
+# ═══════════════════════════════════════════════════════════════════
+# DOCUMENTS LIST — GET /api/expedientes/<pk>/documents/
+# Usado por DocumentMirrorPanel en el frontend del detalle de expediente
+# ═══════════════════════════════════════════════════════════════════
+
+class DocumentsListView(APIView):
+    """GET /api/expedientes/<pk>/documents/
+    Lista todos los artefactos con file_url en el payload.
+    Sirve como panel de documentos descargables en el frontend.
+    """
+    permission_classes = [IsAuthenticated]
+
+    # Tipos de artefacto que pueden tener documento adjunto
+    DOCUMENT_ARTIFACT_TYPES = [
+        'ART-01', 'ART-02', 'ART-03', 'ART-04',
+        'ART-05', 'ART-06', 'ART-07', 'ART-08',
+        'ART-09', 'ART-10', 'ART-12', 'ART-19',
+    ]
+
+    ARTIFACT_LABELS = {
+        'ART-01': 'Orden de Compra',
+        'ART-02': 'Proforma',
+        'ART-03': 'Decisión Modal',
+        'ART-04': 'SAP Confirmado',
+        'ART-05': 'Embarque',
+        'ART-06': 'Cotización Flete',
+        'ART-07': 'Despacho Aprobado',
+        'ART-08': 'Despacho Aduanal',
+        'ART-09': 'Factura MWT',
+        'ART-10': 'BL Registrado',
+        'ART-12': 'Nota Compensación',
+        'ART-19': 'Decisión Logística',
+    }
+
+    def get(self, request, pk):
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+
+        artifacts = exp.artifacts.filter(
+            artifact_type__in=self.DOCUMENT_ARTIFACT_TYPES,
+            status__in=['completed', 'pending'],
+        ).order_by('artifact_type', '-created_at')
+
+        documents = []
+        for art in artifacts:
+            file_url = art.payload.get('file_url')
+            documents.append({
+                'artifact_id': str(art.artifact_id),
+                'artifact_type': art.artifact_type,
+                'label': self.ARTIFACT_LABELS.get(art.artifact_type, art.artifact_type),
+                'status': art.status,
+                'has_file': bool(file_url),
+                'file_url': file_url or None,
+                'filename': art.payload.get('filename', f'{art.artifact_type}.pdf'),
+                'created_at': art.created_at,
+            })
+
+        return Response({
+            'count': len(documents),
+            'documents': documents,
+        })
+
+
+# ═══════════════════════════════════════════════════════════════════
 # Sprint 5 Views
 # ═══════════════════════════════════════════════════════════════════
 
@@ -599,8 +734,7 @@ class AddShipmentUpdateView(APIView):
 
 
 class HandoffSuggestionView(APIView):
-    """S5-06 – GET /api/expedientes/{pk}/handoff-suggestion/
-    Returns transfer suggestion when expediente is closed with nodo_destino."""
+    """S5-06 – GET /api/expedientes/{pk}/handoff-suggestion/"""
     permission_classes = [IsCEO]
 
     def get(self, request, pk):
@@ -610,8 +744,7 @@ class HandoffSuggestionView(APIView):
 
 
 class LiquidationPaymentSuggestionView(APIView):
-    """S5-10 – GET /api/expedientes/{pk}/liquidation-payment-suggestion/
-    Suggests C21 payments from reconciled ART-10 lines for COMISION mode."""
+    """S5-10 – GET /api/expedientes/{pk}/liquidation-payment-suggestion/"""
     permission_classes = [IsCEO]
 
     def get(self, request, pk):
