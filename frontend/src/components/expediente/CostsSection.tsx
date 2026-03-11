@@ -27,6 +27,22 @@ interface CostsSectionProps {
   onRegisterCost: () => void;
 }
 
+/** Extrae un array seguro desde cualquier forma que devuelva el backend:
+ *  - Array plano                → lo devuelve tal cual
+ *  - { costs: [...] }          → envelope del endpoint /costs/
+ *  - { results: [...] }        → DRF pagination
+ *  - cualquier otra cosa       → [] (evita el .reduce crash)
+ */
+function extractArray<T>(data: unknown): T[] {
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === 'object') {
+    const d = data as Record<string, unknown>;
+    if (Array.isArray(d.costs)) return d.costs as T[];
+    if (Array.isArray(d.results)) return d.results as T[];
+  }
+  return [];
+}
+
 export default function CostsSection({ expedienteId, onRegisterCost }: CostsSectionProps) {
   const [view, setView] = useState<'internal' | 'client'>('internal');
   const [costs, setCosts] = useState<Cost[]>([]);
@@ -40,10 +56,12 @@ export default function CostsSection({ expedienteId, onRegisterCost }: CostsSect
         api.get(`expedientes/${expedienteId}/costs/`),
         api.get(`expedientes/${expedienteId}/financial-summary/`).catch(() => ({ data: null })),
       ]);
-      setCosts(costsRes.data?.results ?? costsRes.data ?? []);
-      setSummary(summaryRes.data);
+      // ✅ Siempre un array, sin importar la forma del envelope
+      setCosts(extractArray<Cost>(costsRes.data));
+      setSummary(summaryRes.data?.summary ?? summaryRes.data ?? null);
     } catch {
-      /* costs endpoint failed */
+      setCosts([]);
+      setSummary(null);
     } finally {
       setLoading(false);
     }
@@ -55,7 +73,9 @@ export default function CostsSection({ expedienteId, onRegisterCost }: CostsSect
     ? costs.filter(c => c.visibility === 'client')
     : costs;
 
-  const totalCosts = displayedCosts.reduce((sum, c) => sum + c.amount, 0);
+  // ✅ .reduce() solo se ejecuta cuando displayedCosts ya es array garantizado
+  const totalCosts = displayedCosts.reduce((sum, c) => sum + (c.amount ?? 0), 0);
+
   const hasInvoice = summary?.has_invoice ?? false;
   const margin = hasInvoice && summary
     ? summary.total_billed_client - (summary.total_costs ?? totalCosts)
