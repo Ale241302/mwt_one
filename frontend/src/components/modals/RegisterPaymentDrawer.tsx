@@ -20,6 +20,7 @@ interface RegisterPaymentDrawerProps {
   onClose: () => void;
   expedienteId: string;
   expedienteCurrency?: string;
+  financialSummary?: FinancialSummary | null;
   onSuccess: () => void;
 }
 
@@ -33,12 +34,11 @@ const PAYMENT_STATUS_STYLES: Record<string, string> = {
 };
 
 export default function RegisterPaymentDrawer({
-  open, onClose, expedienteId, expedienteCurrency = 'USD', onSuccess
+  open, onClose, expedienteId, expedienteCurrency = 'USD',
+  financialSummary = null,
+  onSuccess,
 }: RegisterPaymentDrawerProps) {
-  const [summary, setSummary] = useState<FinancialSummary | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
   const today = new Date().toISOString().split('T')[0];
 
   const [form, setForm] = useState({
@@ -49,17 +49,16 @@ export default function RegisterPaymentDrawer({
     payment_date: today,
   });
 
+  // Resetea moneda y fecha cada vez que se abre
   useEffect(() => {
     if (open) {
-      setSummaryLoading(true);
-      api.get(`expedientes/${expedienteId}/financial-summary/`)
-        .then(res => setSummary(res.data))
-        .catch(() => toast.error('No se pudo cargar resumen financiero'))
-        .finally(() => setSummaryLoading(false));
-      setForm(prev => ({ ...prev, currency: expedienteCurrency, payment_date: today }));
+      setForm(prev => ({
+        ...prev,
+        currency: expedienteCurrency,
+        payment_date: new Date().toISOString().split('T')[0],
+      }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, expedienteCurrency]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -73,7 +72,7 @@ export default function RegisterPaymentDrawer({
     }
     setSubmitting(true);
     try {
-      await api.post(`expedientes/${expedienteId}/payments/`, {
+      await api.post(`expedientes/${expedienteId}/register-payment/`, {
         amount: parseFloat(form.amount),
         currency: form.currency,
         method: form.method,
@@ -83,6 +82,7 @@ export default function RegisterPaymentDrawer({
       toast.success('Pago registrado');
       onSuccess();
       onClose();
+      setForm({ amount: '', currency: expedienteCurrency, method: '', reference: '', payment_date: today });
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } } };
       toast.error(e.response?.data?.detail || 'Error al registrar pago');
@@ -95,8 +95,6 @@ export default function RegisterPaymentDrawer({
 
   const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
-  // ✅ createPortal monta el modal directamente en <body>,
-  //    saltando el stacking context del Header sticky z-40
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 px-4"
@@ -114,40 +112,39 @@ export default function RegisterPaymentDrawer({
           </button>
         </div>
 
-        {/* Resumen financiero */}
+        {/* Resumen financiero — viene del prop, sin fetch */}
         <div className="px-6 py-3 bg-bg-alt border-b border-border">
-          {summaryLoading ? (
-            <div className="flex gap-4 animate-pulse">
-              <div className="h-4 bg-border rounded w-32" />
-              <div className="h-4 bg-border rounded w-32" />
-            </div>
-          ) : summary ? (
+          {financialSummary ? (
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div>
                 <span className="text-text-tertiary">Total Facturado: </span>
                 <span className="font-semibold text-text-primary">
-                  {summary.total_billed_client > 0
-                    ? formatter.format(summary.total_billed_client)
+                  {financialSummary.total_billed_client > 0
+                    ? formatter.format(financialSummary.total_billed_client)
                     : 'Pendiente de factura'}
                 </span>
               </div>
               <div>
                 <span className="text-text-tertiary">Total Pagado: </span>
-                <span className="font-semibold text-text-primary">{formatter.format(summary.total_paid)}</span>
+                <span className="font-semibold text-text-primary">
+                  {formatter.format(financialSummary.total_paid)}
+                </span>
               </div>
               <div>
                 <span className="text-text-tertiary">Saldo Pendiente: </span>
-                <span className="font-semibold text-text-primary">{formatter.format(summary.balance_pending ?? 0)}</span>
+                <span className="font-semibold text-text-primary">
+                  {formatter.format(financialSummary.balance_pending ?? 0)}
+                </span>
               </div>
               <span className={cn(
                 'px-2.5 py-1 text-xs font-semibold rounded-full border',
-                PAYMENT_STATUS_STYLES[summary.payment_status] || 'bg-slate-100 text-slate-600 border-slate-200'
+                PAYMENT_STATUS_STYLES[financialSummary.payment_status] ?? 'bg-slate-100 text-slate-600 border-slate-200'
               )}>
-                {summary.payment_status}
+                {financialSummary.payment_status}
               </span>
             </div>
           ) : (
-            <p className="text-sm text-text-tertiary">No se pudo cargar resumen financiero</p>
+            <p className="text-sm text-text-tertiary italic">Resumen financiero no disponible</p>
           )}
         </div>
 
@@ -264,6 +261,6 @@ export default function RegisterPaymentDrawer({
         </form>
       </div>
     </div>,
-    document.body  // ← monta fuera del árbol del layout
+    document.body
   );
 }

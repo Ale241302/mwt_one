@@ -15,8 +15,7 @@ interface RegisterCostDrawerProps {
 
 const COST_TYPES = ['FLETE', 'ADUANA', 'ALMACENAJE', 'SEGURO', 'HONORARIOS', 'OTRO'];
 const CURRENCIES = ['USD', 'COP', 'EUR'];
-const PHASES = ['PRODUCCION', 'TRANSITO', 'DESTINO', 'GENERAL'];
-
+const PHASES = ['REGISTRO', 'PRODUCCION', 'PREPARACION', 'DESPACHO', 'TRANSITO', 'EN_DESTINO'];
 export default function RegisterCostDrawer({ open, onClose, expedienteId, onSuccess }: RegisterCostDrawerProps) {
   const [form, setForm] = useState({
     cost_type: '',
@@ -40,7 +39,7 @@ export default function RegisterCostDrawer({ open, onClose, expedienteId, onSucc
     }
     setSubmitting(true);
     try {
-      await api.post(`expedientes/${expedienteId}/costs/`, {
+      await api.post(`expedientes/${expedienteId}/register-cost/`, {
         cost_type: form.cost_type,
         amount: parseFloat(form.amount),
         currency: form.currency,

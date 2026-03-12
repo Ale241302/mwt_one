@@ -816,11 +816,17 @@ export default function ExpedienteDetailPage() {
                 expedienteId={id}
                 onSuccess={fetchBundle}
             />
-
             <RegisterPaymentDrawer
                 open={paymentDrawerOpen}
                 onClose={() => setPaymentDrawerOpen(false)}
                 expedienteId={id}
+                expedienteCurrency={expediente.currency ?? 'USD'}
+                financialSummary={{
+                    total_billed_client: expediente.total_billed_client ?? 0,
+                    total_paid: expediente.total_paid ?? 0,
+                    balance_pending: expediente.balance_pending ?? 0,
+                    payment_status: expediente.payment_status ?? 'PENDING',
+                }}
                 onSuccess={fetchBundle}
             />
 
