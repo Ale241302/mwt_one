@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -61,15 +62,16 @@ export default function RegisterCostDrawer({ open, onClose, expedienteId, onSucc
 
   if (!open) return null;
 
-  return (
-    // ✅ top-0 left-0 w-screen h-screen garantiza cobertura total incluyendo navbar
+  // ✅ createPortal monta el modal directamente en <body>,
+  //    saltando el stacking context del Header sticky z-40
+  return createPortal(
     <div
-      className="fixed top-0 left-0 w-screen h-screen z-[999] flex items-center justify-center bg-black/50 px-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 px-4"
       onClick={onClose}
     >
       <div
         className="bg-surface w-full max-w-lg rounded-xl shadow-2xl flex flex-col overflow-hidden"
-        onClick={e => e.stopPropagation()} // evita cerrar al clickear dentro del modal
+        onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
@@ -218,6 +220,7 @@ export default function RegisterCostDrawer({ open, onClose, expedienteId, onSucc
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body  // ← monta fuera del árbol del layout
   );
 }
