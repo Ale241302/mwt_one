@@ -12,9 +12,21 @@ interface RegisterCostDrawerProps {
   onSuccess: () => void;
 }
 
-const COST_TYPES = ['FLETE', 'ADUANA', 'ALMACENAJE', 'SEGURO', 'HONORARIOS', 'OTRO'];
-const CURRENCIES = ['USD', 'COP', 'EUR'];
-const PHASES = ['PRODUCCION', 'TRANSITO', 'DESTINO', 'GENERAL'];
+const COST_TYPES = [
+  { value: 'merchandise', label: 'Mercancía' },
+  { value: 'freight_air', label: 'Flete Aéreo' },
+  { value: 'freight_sea', label: 'Flete Marítimo' },
+  { value: 'insurance', label: 'Seguro' },
+  { value: 'customs_dai', label: 'Aduana DAI' },
+  { value: 'customs_iva', label: 'Aduana IVA' },
+  { value: 'storage', label: 'Almacenaje' },
+  { value: 'handling', label: 'Handling' },
+  { value: 'other', label: 'Otro' },
+];
+
+const CURRENCIES = ['USD', 'CRC', 'COP'];
+
+const PHASES = ['REGISTRO', 'PRODUCCION', 'PREPARACION', 'DESPACHO', 'TRANSITO', 'EN_DESTINO'];
 
 export default function RegisterCostDrawer({ open, onClose, expedienteId, onSuccess }: RegisterCostDrawerProps) {
   const [form, setForm] = useState({
@@ -39,7 +51,8 @@ export default function RegisterCostDrawer({ open, onClose, expedienteId, onSucc
     }
     setSubmitting(true);
     try {
-      await api.post(`expedientes/${expedienteId}/costs/`, {
+      // ✅ BUG 1 FIX: URL corregida a register-cost/
+      await api.post(`expedientes/${expedienteId}/register-cost/`, {
         cost_type: form.cost_type,
         amount: parseFloat(form.amount),
         currency: form.currency,
@@ -88,7 +101,10 @@ export default function RegisterCostDrawer({ open, onClose, expedienteId, onSucc
               className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
             >
               <option value="">Seleccionar...</option>
-              {COST_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
+              {/* ✅ BUG 2 FIX: value y label separados */}
+              {COST_TYPES.map(c => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
             </select>
           </div>
 
@@ -121,6 +137,7 @@ export default function RegisterCostDrawer({ open, onClose, expedienteId, onSucc
               onChange={handleChange}
               className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
             >
+              {/* ✅ BUG 3 FIX: CRC en lugar de EUR */}
               {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
@@ -138,6 +155,7 @@ export default function RegisterCostDrawer({ open, onClose, expedienteId, onSucc
               className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
             >
               <option value="">Seleccionar...</option>
+              {/* ✅ BUG 3 FIX: fases canónicas del backend */}
               {PHASES.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
@@ -172,7 +190,7 @@ export default function RegisterCostDrawer({ open, onClose, expedienteId, onSucc
                   onChange={handleChange}
                   className="accent-navy"
                 />
-                <span className="text-sm text-text-secondary">Interno</span>
+                <span className="text-sm text-text-secondary">Interno (CEO)</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
