@@ -20,6 +20,7 @@ import CancelExpedienteModal from '@/components/modals/CancelExpedienteModal';
 import InvoiceModal from '@/components/modals/InvoiceModal';
 import RegisterCostDrawer from '@/components/modals/RegisterCostDrawer';
 import RegisterPaymentDrawer from '@/components/modals/RegisterPaymentDrawer';
+
 import SupersederModal from '@/components/modals/SupersederModal';
 import VoidArtifactModal from '@/components/modals/VoidArtifactModal';
 
@@ -75,6 +76,7 @@ interface Artifact {
     updated_at: string;
 }
 
+// En [id]/page.tsx, reemplaza la interfaz Expediente actual por:
 interface Expediente {
     id: string;
     custom_ref: string;
@@ -98,6 +100,11 @@ interface Expediente {
     total_cost: number;
     artifact_count: number;
     last_event_at: string | null;
+    // Campos financieros opcionales del bundle
+    currency?: string;
+    total_billed_client?: number;
+    total_paid?: number;
+    balance_pending?: number;
 }
 
 interface ExpedienteBundle {
