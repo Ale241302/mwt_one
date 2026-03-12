@@ -12,21 +12,9 @@ interface RegisterCostDrawerProps {
   onSuccess: () => void;
 }
 
-const COST_TYPES = [
-  { value: 'merchandise', label: 'Mercancía' },
-  { value: 'freight_air', label: 'Flete Aéreo' },
-  { value: 'freight_sea', label: 'Flete Marítimo' },
-  { value: 'insurance', label: 'Seguro' },
-  { value: 'customs_dai', label: 'Aduana DAI' },
-  { value: 'customs_iva', label: 'Aduana IVA' },
-  { value: 'storage', label: 'Almacenaje' },
-  { value: 'handling', label: 'Handling' },
-  { value: 'other', label: 'Otro' },
-];
-
-const CURRENCIES = ['USD', 'CRC', 'COP'];
-
-const PHASES = ['REGISTRO', 'PRODUCCION', 'PREPARACION', 'DESPACHO', 'TRANSITO', 'EN_DESTINO'];
+const COST_TYPES = ['FLETE', 'ADUANA', 'ALMACENAJE', 'SEGURO', 'HONORARIOS', 'OTRO'];
+const CURRENCIES = ['USD', 'COP', 'EUR'];
+const PHASES = ['PRODUCCION', 'TRANSITO', 'DESTINO', 'GENERAL'];
 
 export default function RegisterCostDrawer({ open, onClose, expedienteId, onSuccess }: RegisterCostDrawerProps) {
   const [form, setForm] = useState({
@@ -51,8 +39,7 @@ export default function RegisterCostDrawer({ open, onClose, expedienteId, onSucc
     }
     setSubmitting(true);
     try {
-      // ✅ BUG 1 FIX: URL corregida a register-cost/
-      await api.post(`expedientes/${expedienteId}/register-cost/`, {
+      await api.post(`expedientes/${expedienteId}/costs/`, {
         cost_type: form.cost_type,
         amount: parseFloat(form.amount),
         currency: form.currency,
@@ -75,158 +62,162 @@ export default function RegisterCostDrawer({ open, onClose, expedienteId, onSucc
   if (!open) return null;
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 w-full max-w-md bg-surface shadow-xl z-50 flex flex-col">
+    // ✅ top-0 left-0 w-screen h-screen garantiza cobertura total incluyendo navbar
+    <div
+      className="fixed top-0 left-0 w-screen h-screen z-[999] flex items-center justify-center bg-black/50 px-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-surface w-full max-w-lg rounded-xl shadow-2xl flex flex-col overflow-hidden"
+        onClick={e => e.stopPropagation()} // evita cerrar al clickear dentro del modal
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-          <h2 className="text-base font-bold text-text-primary">💰 Registrar Costo</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 className="text-base font-bold text-text-primary">🔥 Registrar Costo</h2>
           <button onClick={onClose} className="text-text-tertiary hover:text-text-primary transition-colors">
             <X size={20} />
           </button>
         </div>
 
-        {/* Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
-          {/* Tipo de Costo */}
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
-              Tipo de Costo <span className="text-coral">*</span>
-            </label>
-            <select
-              name="cost_type"
-              value={form.cost_type}
-              onChange={handleChange}
-              required
-              className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
-            >
-              <option value="">Seleccionar...</option>
-              {/* ✅ BUG 2 FIX: value y label separados */}
-              {COST_TYPES.map(c => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-          </div>
+        {/* Body — 2 columnas */}
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-4">
 
-          {/* Monto */}
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
-              Monto <span className="text-coral">*</span>
-            </label>
-            <input
-              type="number"
-              name="amount"
-              value={form.amount}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              required
-              placeholder="0.00"
-              className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
-            />
-          </div>
-
-          {/* Moneda */}
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
-              Moneda <span className="text-coral">*</span>
-            </label>
-            <select
-              name="currency"
-              value={form.currency}
-              onChange={handleChange}
-              className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
-            >
-              {/* ✅ BUG 3 FIX: CRC en lugar de EUR */}
-              {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-
-          {/* Fase */}
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
-              Fase <span className="text-coral">*</span>
-            </label>
-            <select
-              name="phase"
-              value={form.phase}
-              onChange={handleChange}
-              required
-              className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
-            >
-              <option value="">Seleccionar...</option>
-              {/* ✅ BUG 3 FIX: fases canónicas del backend */}
-              {PHASES.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </div>
-
-          {/* Descripción */}
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
-              Descripción <span className="text-text-tertiary font-normal">(opcional)</span>
-            </label>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              rows={3}
-              placeholder="Descripción del costo..."
-              className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30 resize-none"
-            />
-          </div>
-
-          {/* Visibilidad */}
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
-              Visibilidad
-            </label>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="visibility"
-                  value="internal"
-                  checked={form.visibility === 'internal'}
-                  onChange={handleChange}
-                  className="accent-navy"
-                />
-                <span className="text-sm text-text-secondary">Interno (CEO)</span>
+            {/* Tipo de Costo */}
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
+                Tipo de Costo <span className="text-coral">*</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="visibility"
-                  value="client"
-                  checked={form.visibility === 'client'}
-                  onChange={handleChange}
-                  className="accent-navy"
-                />
-                <span className="text-sm text-text-secondary">Cliente</span>
+              <select
+                name="cost_type"
+                value={form.cost_type}
+                onChange={handleChange}
+                required
+                className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
+              >
+                <option value="">Seleccionar...</option>
+                {COST_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+
+            {/* Fase */}
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
+                Fase <span className="text-coral">*</span>
               </label>
+              <select
+                name="phase"
+                value={form.phase}
+                onChange={handleChange}
+                required
+                className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
+              >
+                <option value="">Seleccionar...</option>
+                {PHASES.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+
+            {/* Monto */}
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
+                Monto <span className="text-coral">*</span>
+              </label>
+              <input
+                type="number"
+                name="amount"
+                value={form.amount}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                required
+                placeholder="0.00"
+                className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
+              />
+            </div>
+
+            {/* Moneda */}
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
+                Moneda <span className="text-coral">*</span>
+              </label>
+              <select
+                name="currency"
+                value={form.currency}
+                onChange={handleChange}
+                className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
+              >
+                {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+
+            {/* Descripción — 2 columnas */}
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
+                Descripción <span className="text-text-tertiary font-normal">(opcional)</span>
+              </label>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                rows={2}
+                placeholder="Descripción del costo..."
+                className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30 resize-none"
+              />
+            </div>
+
+            {/* Visibilidad — 2 columnas */}
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                Visibilidad
+              </label>
+              <div className="flex items-center gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="internal"
+                    checked={form.visibility === 'internal'}
+                    onChange={handleChange}
+                    className="accent-navy"
+                  />
+                  <span className="text-sm text-text-secondary">Interno (CEO)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="client"
+                    checked={form.visibility === 'client'}
+                    onChange={handleChange}
+                    className="accent-navy"
+                  />
+                  <span className="text-sm text-text-secondary">Cliente</span>
+                </label>
+              </div>
             </div>
           </div>
-        </form>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="bg-surface border border-border text-text-secondary hover:bg-bg-alt px-4 py-2 rounded-lg text-sm font-medium transition-all"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSubmit as unknown as React.MouseEventHandler}
-            disabled={submitting}
-            className="bg-navy hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95 flex items-center gap-2 disabled:opacity-60"
-          >
-            {submitting ? (
-              <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Registrando...</>
-            ) : 'Registrar Costo'}
-          </button>
-        </div>
+          {/* Footer */}
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-surface border border-border text-text-secondary hover:bg-bg-alt px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="bg-navy hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95 flex items-center gap-2 disabled:opacity-60"
+            >
+              {submitting ? (
+                <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Registrando...</>
+              ) : 'Registrar Costo'}
+            </button>
+          </div>
+        </form>
       </div>
-    </>
+    </div>
   );
 }
