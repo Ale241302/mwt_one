@@ -1,49 +1,94 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { vi } from 'vitest';
-import RegisterPaymentDrawer from '@/components/modals/RegisterPaymentDrawer';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import RegisterPaymentDrawer from '@/components/RegisterPaymentDrawer';
 import api from '@/lib/api';
 
-vi.mock('@/lib/api');
-vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
+jest.mock('@/lib/api');
+jest.mock('react-hot-toast', () => ({ error: jest.fn(), success: jest.fn() }));
 
-const mockSummary = {
-  total_billed_client: 5000,
-  total_paid: 1000,
-  payment_status: 'PARTIAL',
+const defaultProps = {
+  open: true,
+  onClose: jest.fn(),
+  expedienteId: 'exp-001',
+  expedienteCurrency: 'USD',
+  financialSummary: {
+    total_billed_client: 5000,
+    total_paid: 2000,
+    balance_pending: 3000,
+    payment_status: 'PARTIAL',
+  },
+  onSuccess: jest.fn(),
 };
-
-const base = {
-  open: true, onClose: vi.fn(), expedienteId: 'exp1',
-  expedienteCurrency: 'USD', onSuccess: vi.fn(),
-};
-
-beforeEach(() => {
-  (api.get as ReturnType<typeof vi.fn>).mockResolvedValue({ data: mockSummary });
-});
 
 describe('RegisterPaymentDrawer', () => {
-  it('fetches financial summary on open', async () => {
-    render(<RegisterPaymentDrawer {...base} />);
-    await waitFor(() => expect(api.get).toHaveBeenCalledWith(
-      'expedientes/exp1/financial-summary/'
-    ));
+  beforeEach(() => jest.clearAllMocks());
+
+  it('renderiza el resumen financiero correctamente', () => {
+    render(<RegisterPaymentDrawer {...defaultProps} />);
+    expect(screen.getByText(/Total Facturado/i)).toBeInTheDocument();
+    expect(screen.getByText(/\$5,000\.00/i)).toBeInTheDocument();
+    expect(screen.getByText(/PARTIAL/i)).toBeInTheDocument();
   });
 
-  it('displays total billed and paid', async () => {
-    render(<RegisterPaymentDrawer {...base} />);
-    await waitFor(() => expect(screen.getByText(/5.000|5,000/)).toBeTruthy());
+  it('no renderiza nada cuando open=false', () => {
+    render(<RegisterPaymentDrawer {...defaultProps} open={false} />);
+    expect(screen.queryByText(/Registrar Pago/i)).not.toBeInTheDocument();
   });
 
-  it('has all required payment fields', async () => {
-    render(<RegisterPaymentDrawer {...base} />);
-    await waitFor(() => screen.getByText(/Monto/i));
-    expect(screen.getByText(/Método/i)).toBeTruthy();
-    expect(screen.getByText(/Referencia/i)).toBeTruthy();
-    expect(screen.getByText(/Fecha de pago/i)).toBeTruthy();
+  it('muestra advertencia si moneda difiere del expediente', () => {
+    render(<RegisterPaymentDrawer {...defaultProps} />);
+    const currencySelect = screen.getByDisplayValue('USD');
+    fireEvent.change(currencySelect, { target: { name: 'currency', value: 'COP' } });
+    expect(screen.getByText(/Difiere del expediente/i)).toBeInTheDocument();
   });
 
-  it('does not render when closed', () => {
-    render(<RegisterPaymentDrawer {...base} open={false} />);
-    expect(screen.queryByText(/Registrar Pago/i)).toBeNull();
+  it('valida campos requeridos antes de submit', async () => {
+    const toast = require('react-hot-toast');
+    render(<RegisterPaymentDrawer {...defaultProps} />);
+    fireEvent.click(screen.getByText('Registrar Pago'));
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Completa todos los campos obligatorios');
+    });
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  it('envía el pago correctamente con datos válidos', async () => {
+    (api.post as jest.Mock).mockResolvedValueOnce({});
+    render(<RegisterPaymentDrawer {...defaultProps} />);
+
+    fireEvent.change(screen.getByPlaceholderText('0.00'), {
+      target: { name: 'amount', value: '1000' },
+    });
+    fireEvent.change(screen.getByDisplayValue('Seleccionar...'), {
+      target: { name: 'method', value: 'TRANSFERENCIA' },
+    });
+
+    fireEvent.click(screen.getByText('Registrar Pago'));
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith(
+        'expedientes/exp-001/register-payment/',
+        expect.objectContaining({ amount: 1000, method: 'TRANSFERENCIA' })
+      );
+      expect(defaultProps.onSuccess).toHaveBeenCalled();
+      expect(defaultProps.onClose).toHaveBeenCalled();
+    });
+  });
+
+  it('muestra error de API si el registro falla', async () => {
+    const toast = require('react-hot-toast');
+    (api.post as jest.Mock).mockRejectedValueOnce({
+      response: { data: { detail: 'Saldo insuficiente' } },
+    });
+    render(<RegisterPaymentDrawer {...defaultProps} />);
+
+    fireEvent.change(screen.getByPlaceholderText('0.00'), {
+      target: { name: 'amount', value: '9999' },
+    });
+    fireEvent.change(screen.getByDisplayValue('Seleccionar...'), {
+      target: { name: 'method', value: 'EFECTIVO' },
+    });
+    fireEvent.click(screen.getByText('Registrar Pago'));
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Saldo insuficiente');
+    });
   });
 });
