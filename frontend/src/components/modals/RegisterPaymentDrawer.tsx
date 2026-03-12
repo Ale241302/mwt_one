@@ -7,10 +7,13 @@ import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
 interface FinancialSummary {
-  total_billed_client: number;
-  total_paid: number;
-  payment_status: string;
-  currency?: string;
+  summary: {
+    total_invoiced: number;
+    total_paid: number;
+    balance_pending: number;
+    payment_status: string;
+    currency: string;
+  };
 }
 
 interface RegisterPaymentDrawerProps {
@@ -22,10 +25,10 @@ interface RegisterPaymentDrawerProps {
 }
 
 const PAYMENT_METHODS = ['TRANSFERENCIA', 'EFECTIVO', 'CHEQUE', 'CRYPTO'];
-const CURRENCIES = ['USD', 'COP', 'EUR'];
+const CURRENCIES = ['USD', 'CRC', 'COP']; // ✅ BUG 2 FIX: CRC en lugar de EUR
 
 const PAYMENT_STATUS_STYLES: Record<string, string> = {
-  'PAID':    'bg-emerald-50 text-mint border-emerald-200',
+  'PAID': 'bg-emerald-50 text-mint border-emerald-200',
   'PARTIAL': 'bg-amber-50 text-amber-700 border-amber-200',
   'PENDING': 'bg-slate-100 text-slate-600 border-slate-200',
 };
@@ -65,13 +68,14 @@ export default function RegisterPaymentDrawer({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.amount || !form.method || !form.payment_date) {
+    if (!form.amount || !form.method) {
       toast.error('Completa todos los campos obligatorios');
       return;
     }
     setSubmitting(true);
     try {
-      await api.post(`expedientes/${expedienteId}/payments/`, {
+      // ✅ BUG 1 FIX: URL corregida a register-payment/
+      await api.post(`expedientes/${expedienteId}/register-payment/`, {
         amount: parseFloat(form.amount),
         currency: form.currency,
         method: form.method,
@@ -93,6 +97,9 @@ export default function RegisterPaymentDrawer({
 
   const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
+  // ✅ BUG 3 FIX: acceso a la estructura correcta del backend
+  const fin = summary?.summary;
+
   return (
     <>
       <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
@@ -112,25 +119,33 @@ export default function RegisterPaymentDrawer({
               <div className="h-4 bg-border rounded w-32"></div>
               <div className="h-4 bg-border rounded w-32"></div>
             </div>
-          ) : summary ? (
+          ) : fin ? (
             <div className="flex flex-wrap gap-4 text-sm">
               <div>
                 <span className="text-text-tertiary">Total Facturado: </span>
                 <span className="font-semibold text-text-primary">
-                  {summary.total_billed_client > 0
-                    ? formatter.format(summary.total_billed_client)
+                  {fin.total_invoiced > 0
+                    ? formatter.format(fin.total_invoiced)
                     : 'Pendiente de factura'}
                 </span>
               </div>
               <div>
                 <span className="text-text-tertiary">Total Pagado: </span>
-                <span className="font-semibold text-text-primary">{formatter.format(summary.total_paid)}</span>
+                <span className="font-semibold text-text-primary">
+                  {formatter.format(fin.total_paid)}
+                </span>
+              </div>
+              <div>
+                <span className="text-text-tertiary">Saldo Pendiente: </span>
+                <span className="font-semibold text-text-primary">
+                  {formatter.format(fin.balance_pending)}
+                </span>
               </div>
               <span className={cn(
                 'px-2.5 py-1 text-xs font-semibold rounded-full border shadow-sm',
-                PAYMENT_STATUS_STYLES[summary.payment_status] || 'bg-slate-100 text-slate-600 border-slate-200'
+                PAYMENT_STATUS_STYLES[fin.payment_status] || 'bg-slate-100 text-slate-600 border-slate-200'
               )}>
-                {summary.payment_status}
+                {fin.payment_status}
               </span>
             </div>
           ) : (
