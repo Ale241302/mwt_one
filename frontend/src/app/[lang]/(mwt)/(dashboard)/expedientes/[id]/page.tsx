@@ -787,12 +787,11 @@ export default function ExpedienteDetailPage() {
             <CancelExpedienteModal
                 open={cancelModalOpen}
                 onClose={() => setCancelModalOpen(false)}
-                expedienteId={id}
-                onSuccess={() => {
-                    fetchBundle();
-                    router.push('/expedientes');
-                }}
+                expedienteId={id}              {/* ✅ FIX: id viene de useParams, no expediente.expediente_id */}
+                currentStatus={expediente.status}
+                onSuccess={fetchBundle}        {/* ✅ FIX: fetchBundle, handleRefresh no existe */}
             />
+
 
             <InvoiceModal
                 open={invoiceModalOpen}

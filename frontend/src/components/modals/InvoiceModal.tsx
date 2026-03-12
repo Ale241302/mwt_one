@@ -39,7 +39,8 @@ export default function InvoiceModal({
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const art02 = artifacts.find(a => a.artifact_type === 'ART-02' && a.status === 'COMPLETED');
+  // ✅ BUG 2 FIX: status en minúsculas 'completed'
+  const art02 = artifacts.find(a => a.artifact_type === 'ART-02' && a.status === 'completed');
   const totalAmount = art02?.payload?.total_amount ?? art02?.payload?.total_usd ?? 0;
   const currency = art02?.payload?.currency ?? 'USD';
   const incoterm = art02?.payload?.incoterm ?? '—';
@@ -53,7 +54,8 @@ export default function InvoiceModal({
     }
     setSubmitting(true);
     try {
-      await api.post(`expedientes/${expedienteId}/artifacts/invoice/`, {
+      // ✅ BUG 1 FIX: URL corregida a issue-invoice/
+      await api.post(`expedientes/${expedienteId}/issue-invoice/`, {
         invoice_number: invoiceNumber,
         issued_date: issuedDate,
         notes,
@@ -143,8 +145,11 @@ export default function InvoiceModal({
         </div>
 
         <div className="flex justify-end gap-3">
-          <button onClick={onClose} disabled={submitting}
-            className="bg-surface border border-border text-text-secondary hover:bg-bg-alt px-4 py-2 rounded-lg text-sm font-medium">
+          <button
+            onClick={onClose}
+            disabled={submitting}
+            className="bg-surface border border-border text-text-secondary hover:bg-bg-alt px-4 py-2 rounded-lg text-sm font-medium"
+          >
             Cancelar
           </button>
           <button
