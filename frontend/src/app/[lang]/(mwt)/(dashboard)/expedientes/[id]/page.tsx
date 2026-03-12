@@ -160,6 +160,9 @@ const CMD_TO_ARTIFACT: Partial<Record<string, ArtifactType>> = {
     'C10': 'ART-07',
 };
 
+// Estados en los que se permite emitir factura
+const INVOICE_ALLOWED_STATUSES = ['DESTINO', 'FACTURADO'];
+
 // ─────────────── ArtifactPayloadCard (ART-06 / ART-08) ───
 
 function ArtifactPayloadCard({ artifact }: { artifact: Artifact }) {
@@ -458,6 +461,8 @@ export default function ExpedienteDetailPage() {
     const enrichedArtifacts = artifacts.filter(a => enrichedArtTypes.has(a.artifact_type) && a.status !== 'SUPERSEDED');
 
     const hasInvoice = artifacts.some(a => a.artifact_type === 'ART-09' && a.status === 'COMPLETED');
+    // ✅ FIX: Solo mostrar "Emitir Factura" si el estado lo permite
+    const canIssueInvoice = INVOICE_ALLOWED_STATUSES.includes(expediente.status);
 
     return (
         <div className="max-w-6xl mx-auto space-y-6">
@@ -627,7 +632,8 @@ export default function ExpedienteDetailPage() {
                                 Cancelar Expediente
                             </button>
 
-                            {!hasInvoice ? (
+                            {/* ✅ FIX: Emitir Factura solo visible si status lo permite y no hay factura activa */}
+                            {!hasInvoice && canIssueInvoice && (
                                 <button
                                     onClick={() => setInvoiceModalOpen(true)}
                                     className="bg-white hover:bg-slate-50 text-navy border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
@@ -635,7 +641,10 @@ export default function ExpedienteDetailPage() {
                                     <FileText className="w-4 h-4" />
                                     Emitir Factura
                                 </button>
-                            ) : (
+                            )}
+
+                            {/* Anular Factura solo si ya existe una factura activa */}
+                            {hasInvoice && (
                                 <button
                                     onClick={() => setVoidModalOpen(true)}
                                     className="bg-white hover:bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
@@ -747,7 +756,6 @@ export default function ExpedienteDetailPage() {
             )}
 
             {/* ───────── Costs Section ───────── */}
-            {/* ✅ FIX: SectionErrorBoundary evita que un 404 + .reduce crash tumbe toda la página */}
             <SectionErrorBoundary>
                 <CostsSection
                     expedienteId={id}
@@ -756,7 +764,6 @@ export default function ExpedienteDetailPage() {
             </SectionErrorBoundary>
 
             {/* ───────── Documents Mirror Panel ───────── */}
-            {/* ✅ FIX: igual para DocumentMirrorPanel */}
             <SectionErrorBoundary>
                 <DocumentMirrorPanel expedienteId={id} />
             </SectionErrorBoundary>
@@ -787,11 +794,10 @@ export default function ExpedienteDetailPage() {
             <CancelExpedienteModal
                 open={cancelModalOpen}
                 onClose={() => setCancelModalOpen(false)}
-                expedienteId={id}              {/* ✅ FIX: id viene de useParams, no expediente.expediente_id */}
+                expedienteId={id}
                 currentStatus={expediente.status}
-                onSuccess={fetchBundle}        {/* ✅ FIX: fetchBundle, handleRefresh no existe */}
+                onSuccess={fetchBundle}
             />
-
 
             <InvoiceModal
                 open={invoiceModalOpen}
