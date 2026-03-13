@@ -1,6 +1,7 @@
 # Sprint 8 fix: LegalEntity moved to core app.
-# This migration handles the DB-level rename via SeparateDatabaseAndState
-# so existing data in expedientes_legalentity is preserved.
+# Uses SeparateDatabaseAndState with IF EXISTS so it works on both:
+#   - Fresh installs: expedientes_legalentity may not exist, core_legalentity already created by core.0002
+#   - Existing installs: expedientes_legalentity exists and needs to be renamed
 from django.db import migrations
 import django.db.models.deletion
 
@@ -15,10 +16,32 @@ class Migration(migrations.Migration):
     operations = [
         migrations.SeparateDatabaseAndState(
             database_operations=[
-                # Rename the physical table from expedientes_legalentity to core_legalentity
                 migrations.RunSQL(
-                    'ALTER TABLE expedientes_legalentity RENAME TO core_legalentity;',
-                    reverse_sql='ALTER TABLE core_legalentity RENAME TO expedientes_legalentity;',
+                    # On fresh DB: core_legalentity already exists, just drop the empty expedientes one.
+                    # On existing DB: rename expedientes_legalentity -> core_legalentity if it still exists
+                    # and core_legalentity doesn't (shouldn't happen in normal flow but safe guard).
+                    sql="""
+                        DO $$
+                        BEGIN
+                            IF EXISTS (
+                                SELECT 1 FROM information_schema.tables
+                                WHERE table_schema = 'public'
+                                AND table_name = 'expedientes_legalentity'
+                            ) THEN
+                                IF NOT EXISTS (
+                                    SELECT 1 FROM information_schema.tables
+                                    WHERE table_schema = 'public'
+                                    AND table_name = 'core_legalentity'
+                                ) THEN
+                                    ALTER TABLE expedientes_legalentity RENAME TO core_legalentity;
+                                ELSE
+                                    DROP TABLE expedientes_legalentity;
+                                END IF;
+                            END IF;
+                        END
+                        $$;
+                    """,
+                    reverse_sql=migrations.RunSQL.noop,
                 ),
             ],
             state_operations=[
