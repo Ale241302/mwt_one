@@ -6,13 +6,21 @@ class ConversationLog(models.Model):
     """Sprint 8 S8-06: Historial de conversaciones con el Knowledge Container."""
     session_id     = models.CharField(max_length=100, db_index=True)
     user           = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, related_name='conversation_logs'
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        related_name='conversation_logs',
     )
     user_role      = models.CharField(max_length=20)
     expediente_ref = models.ForeignKey(
-        'expedientes.Expediente', on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='conversation_logs'
+        'expedientes.Expediente',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        related_name='conversation_logs',
     )
     question    = models.TextField()
     answer      = models.TextField()
