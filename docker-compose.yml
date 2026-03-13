@@ -181,6 +181,8 @@ services:
     env_file: .env
     ports:
       - "8001:8001"
+    volumes:
+      - kb_data:/kb            # ← S8-11: KB files persist here; populated by scripts/load_kb.py
     depends_on:
       postgres:
         condition: service_healthy
@@ -202,3 +204,4 @@ volumes:
   paperless_media:
   paperless_consume:
   paperless_export:
+  kb_data:                     # ← S8-11: Knowledge Base files
