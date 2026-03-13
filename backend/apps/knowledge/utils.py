@@ -1,0 +1,34 @@
+"""Sprint 8 S8-06: Única fuente de verdad para retención de ConversationLog."""
+from datetime import date, timedelta
+
+# Reglas de retención (en días):
+# 1. Expediente CERRADO: retain 365 días desde closed_at
+# 2. Expediente ABIERTO/otro estado: retain 90 días desde created_at
+# 3. Sin expediente: retain 30 días desde created_at
+
+RETENTION_CLOSED_DAYS   = 365
+RETENTION_OPEN_DAYS     = 90
+RETENTION_NO_EXP_DAYS   = 30
+
+
+def calculate_retention(expediente=None, reference_date=None) -> date:
+    """Calcula la fecha `retain_until` para un ConversationLog.
+
+    Args:
+        expediente: instancia de Expediente o None
+        reference_date: fecha base (default: hoy)
+    Returns:
+        date: fecha hasta la cual retener el log
+    """
+    if reference_date is None:
+        reference_date = date.today()
+
+    if expediente is None:
+        return reference_date + timedelta(days=RETENTION_NO_EXP_DAYS)
+
+    # Invariante S8-06: status=CERRADO requiere closed_at NOT NULL
+    if expediente.status == 'CERRADO' and expediente.closed_at:
+        base = expediente.closed_at.date() if hasattr(expediente.closed_at, 'date') else expediente.closed_at
+        return base + timedelta(days=RETENTION_CLOSED_DAYS)
+
+    return reference_date + timedelta(days=RETENTION_OPEN_DAYS)
