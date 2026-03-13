@@ -1,9 +1,9 @@
 # Sprint 8 fix: LegalEntity moved to core app.
-# Uses SeparateDatabaseAndState with IF EXISTS so it works on both:
-#   - Fresh installs: expedientes_legalentity may not exist, core_legalentity already created by core.0002
-#   - Existing installs: expedientes_legalentity exists and needs to be renamed
+# Fresh-DB path:
+#   - core.0002 already created core_legalentity
+#   - expedientes_legalentity exists with FK constraints pointing to it
+#   - We must retarget those FKs to core_legalentity, then drop expedientes_legalentity
 from django.db import migrations
-import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -17,9 +17,6 @@ class Migration(migrations.Migration):
         migrations.SeparateDatabaseAndState(
             database_operations=[
                 migrations.RunSQL(
-                    # On fresh DB: core_legalentity already exists, just drop the empty expedientes one.
-                    # On existing DB: rename expedientes_legalentity -> core_legalentity if it still exists
-                    # and core_legalentity doesn't (shouldn't happen in normal flow but safe guard).
                     sql="""
                         DO $$
                         BEGIN
@@ -28,14 +25,51 @@ class Migration(migrations.Migration):
                                 WHERE table_schema = 'public'
                                 AND table_name = 'expedientes_legalentity'
                             ) THEN
-                                IF NOT EXISTS (
+                                IF EXISTS (
                                     SELECT 1 FROM information_schema.tables
                                     WHERE table_schema = 'public'
                                     AND table_name = 'core_legalentity'
                                 ) THEN
-                                    ALTER TABLE expedientes_legalentity RENAME TO core_legalentity;
-                                ELSE
+                                    -- Retarget FK: expedientes_expediente.client_id
+                                    ALTER TABLE expedientes_expediente
+                                        DROP CONSTRAINT IF EXISTS expedientes_expedien_client_id_c95ce8ea_fk_expedient,
+                                        ADD CONSTRAINT expedientes_expedien_client_id_c95ce8ea_fk_core
+                                            FOREIGN KEY (client_id) REFERENCES core_legalentity(id)
+                                            DEFERRABLE INITIALLY DEFERRED;
+
+                                    -- Retarget FK: expedientes_expediente.legal_entity_id
+                                    ALTER TABLE expedientes_expediente
+                                        DROP CONSTRAINT IF EXISTS expedientes_expedien_legal_entity_id_1e48adca_fk_expedient,
+                                        ADD CONSTRAINT expedientes_expedien_legal_entity_id_1e48adca_fk_core
+                                            FOREIGN KEY (legal_entity_id) REFERENCES core_legalentity(id)
+                                            DEFERRABLE INITIALLY DEFERRED;
+
+                                    -- Retarget FK: transfers_node.legal_entity_id
+                                    ALTER TABLE transfers_node
+                                        DROP CONSTRAINT IF EXISTS transfers_node_legal_entity_id_5591960f_fk_expedient,
+                                        ADD CONSTRAINT transfers_node_legal_entity_id_5591960f_fk_core
+                                            FOREIGN KEY (legal_entity_id) REFERENCES core_legalentity(id)
+                                            DEFERRABLE INITIALLY DEFERRED;
+
+                                    -- Retarget FK: transfers_transfer.ownership_after_id
+                                    ALTER TABLE transfers_transfer
+                                        DROP CONSTRAINT IF EXISTS transfers_transfer_ownership_after_id_9270eb8e_fk_expedient,
+                                        ADD CONSTRAINT transfers_transfer_ownership_after_id_9270eb8e_fk_core
+                                            FOREIGN KEY (ownership_after_id) REFERENCES core_legalentity(id)
+                                            DEFERRABLE INITIALLY DEFERRED;
+
+                                    -- Retarget FK: transfers_transfer.ownership_before_id
+                                    ALTER TABLE transfers_transfer
+                                        DROP CONSTRAINT IF EXISTS transfers_transfer_ownership_before_id_2c187f63_fk_expedient,
+                                        ADD CONSTRAINT transfers_transfer_ownership_before_id_2c187f63_fk_core
+                                            FOREIGN KEY (ownership_before_id) REFERENCES core_legalentity(id)
+                                            DEFERRABLE INITIALLY DEFERRED;
+
+                                    -- Now safe to drop
                                     DROP TABLE expedientes_legalentity;
+                                ELSE
+                                    -- No core_legalentity yet: simple rename (legacy path)
+                                    ALTER TABLE expedientes_legalentity RENAME TO core_legalentity;
                                 END IF;
                             END IF;
                         END
