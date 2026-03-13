@@ -1,4 +1,5 @@
-﻿import os
+import os
+from datetime import timedelta
 import environ
 
 env = environ.Env()
@@ -12,7 +13,10 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', default='change-me-in-production')
 DEBUG = env.bool('DJANGO_DEBUG', default=False)
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', 'consola.mwt.one', 'mwt.one', 'go.ranawalk.com'])
 
-# --- INSTALLED_APPS (AG-01 adds apps here in Item 2+) ---
+# --- Sprint 8: Custom user model ---
+AUTH_USER_MODEL = 'users.MWTUser'
+
+# --- INSTALLED_APPS ---
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -21,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
     'django_celery_beat',
     'corsheaders',
     'apps.core',
@@ -31,6 +36,9 @@ INSTALLED_APPS = [
     # Sprint 6
     'apps.brands',
     'apps.qr',
+    # Sprint 8
+    'apps.users',
+    'apps.knowledge',
 ]
 
 MIDDLEWARE = [
@@ -94,7 +102,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'America/Costa_Rica'
-# CELERY_BEAT_SCHEDULER removed as redundant (schedule is hardcoded in celery.py)
+# CELERY_BEAT_SCHEDULER removed - schedule is hardcoded in celery.py (D-04)
 
 # --- MINIO ---
 MINIO_ENDPOINT = env('MINIO_ENDPOINT', default='minio:9000')
@@ -170,11 +178,28 @@ CORS_ALLOW_CREDENTIALS = True
 
 QR_SALT = env.str("QR_SALT", default="default-fallback-salt-do-not-use-in-prod-qwertyui")
 
+# --- REST FRAMEWORK + JWT (Sprint 0 extendido en Sprint 8) ---
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
 
-# --- SPRINT 5 Tolerances ---
-LIQUIDATION_AMOUNT_TOLERANCE_PCT = 0.01   # Â±1%
-LIQUIDATION_AMOUNT_TOLERANCE_ABS = 5.00   # Â±$5 USD
-LIQUIDATION_COMMISSION_TOLERANCE_PP = 0.5 # Â±0.5pp
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'ALGORITHM': 'HS256',
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'TOKEN_OBTAIN_SERIALIZER': 'apps.users.serializers.MWTTokenObtainPairSerializer',
+}
+
+# --- Sprint 5 Tolerances ---
+LIQUIDATION_AMOUNT_TOLERANCE_PCT = 0.01   # +-1%
+LIQUIDATION_AMOUNT_TOLERANCE_ABS = 5.00   # +-$5 USD
+LIQUIDATION_COMMISSION_TOLERANCE_PP = 0.5 # +-0.5pp
+
+# --- Sprint 8 Knowledge ---
+KNOWLEDGE_SERVICE_URL = env('KNOWLEDGE_SERVICE_URL', default='http://mwt-knowledge:8001')
+KNOWLEDGE_INTERNAL_TOKEN = env('KNOWLEDGE_INTERNAL_TOKEN', default='')
