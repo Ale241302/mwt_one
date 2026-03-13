@@ -36,11 +36,11 @@ class Liquidation(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    reconciled_at = models.DateTimeField(null=True, blank=True, default=None)
+    reconciled_at = models.DateTimeField(null=True, blank=True)
     reconciled_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
-        null=True, blank=True, default=None,
+        null=True, blank=True,
         related_name="reconciled_liquidations",
     )
     observations = models.TextField(blank=True)
@@ -67,9 +67,9 @@ class LiquidationLine(models.Model):
     concept = models.CharField(
         max_length=20, choices=LiquidationLineConcept.choices
     )
-    client_payment_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, default=None)
+    client_payment_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     commission_pct_reported = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True, blank=True, default=None
+        max_digits=5, decimal_places=2, null=True, blank=True
     )
     commission_amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.CharField(max_length=3, default="USD")
@@ -77,18 +77,18 @@ class LiquidationLine(models.Model):
     matched_proforma = models.ForeignKey(
         ArtifactInstance,
         on_delete=models.SET_NULL,
-        null=True, blank=True, default=None,
+        null=True, blank=True,
         related_name="liquidation_matches",
         limit_choices_to={"artifact_type": "ART-02"},
     )
     matched_expediente = models.ForeignKey(
         Expediente,
         on_delete=models.SET_NULL,
-        null=True, blank=True, default=None,
+        null=True, blank=True,
         related_name="liquidation_matches",
     )
     commission_pct_expected = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True, blank=True, default=None
+        max_digits=5, decimal_places=2, null=True, blank=True
     )
     match_status = models.CharField(
         max_length=20, choices=MatchStatus.choices, default=MatchStatus.UNMATCHED
