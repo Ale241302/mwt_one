@@ -49,7 +49,7 @@ ROLE_PERMISSION_CEILING = {
 class MWTUser(AbstractUser):
     role            = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.CEO)
     legal_entity    = models.ForeignKey(
-        'core.LegalEntity',
+        'expedientes.LegalEntity',
         null=True, blank=True,
         on_delete=models.SET_NULL,
     )
