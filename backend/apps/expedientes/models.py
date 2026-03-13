@@ -2,50 +2,27 @@ import uuid
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from apps.core.models import TimestampMixin, AppendOnlyModel
+from apps.core.models import TimestampMixin, AppendOnlyModel, LegalEntity
 from .enums import (
-    LegalEntityRole, LegalEntityRelationship, LegalEntityFrontend,
-    LegalEntityVisibility, PricingVisibility, LegalEntityStatus,
     ExpedienteStatus, BlockedByType, DispatchMode, PaymentStatus,
-    CreditClockStartRule, Brand, ArtifactStatus, AggregateType,
+    CreditClockStartRule, ArtifactStatus, AggregateType,
     RegisteredByType, CostLineVisibility, LogisticsMode, LogisticsSource,
 )
 
 
-class LegalEntity(TimestampMixin):
-    entity_id = models.CharField(max_length=50, unique=True, help_text="e.g. MWT-CR, SONDEL-CR")
-    legal_name = models.CharField(max_length=255)
-    country = models.CharField(max_length=3, help_text="ISO 3166-1 alpha-2/3")
-    tax_id = models.CharField(max_length=50, blank=True, null=True)
-    role = models.CharField(max_length=20, choices=LegalEntityRole.choices)
-    relationship_to_mwt = models.CharField(max_length=20, choices=LegalEntityRelationship.choices)
-    frontend = models.CharField(max_length=20, choices=LegalEntityFrontend.choices)
-    visibility_level = models.CharField(max_length=20, choices=LegalEntityVisibility.choices)
-    pricing_visibility = models.CharField(max_length=20, choices=PricingVisibility.choices)
-    status = models.CharField(max_length=20, choices=LegalEntityStatus.choices, default=LegalEntityStatus.ONBOARDING)
-
-    class Meta:
-        verbose_name = 'Legal Entity'
-        verbose_name_plural = 'Legal Entities'
-        ordering = ['legal_name']
-
-    def __str__(self):
-        return f"{self.entity_id} – {self.legal_name}"
-
-
 class Expediente(TimestampMixin):
     expediente_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    legal_entity = models.ForeignKey(LegalEntity, on_delete=models.PROTECT, related_name='expedientes_emitidos', help_text="Entidad emisora")
+    legal_entity = models.ForeignKey(LegalEntity, on_delete=models.PROTECT, related_name='expedientes_emitidos', help_text='Entidad emisora')
     brand = models.ForeignKey('brands.Brand', on_delete=models.PROTECT, null=True, blank=True)
     destination = models.CharField(max_length=10, choices=[('CR', 'Costa Rica'), ('USA', 'United States')], default='CR')
-    client = models.ForeignKey(LegalEntity, on_delete=models.PROTECT, related_name='expedientes_como_cliente', help_text="Cliente")
+    client = models.ForeignKey(LegalEntity, on_delete=models.PROTECT, related_name='expedientes_como_cliente', help_text='Cliente')
     status = models.CharField(max_length=20, choices=ExpedienteStatus.choices, default=ExpedienteStatus.REGISTRO)
     is_blocked = models.BooleanField(default=False)
     blocked_reason = models.TextField(blank=True, null=True)
     blocked_at = models.DateTimeField(blank=True, null=True)
     blocked_by_type = models.CharField(max_length=10, choices=BlockedByType.choices, blank=True, null=True)
-    blocked_by_id = models.CharField(max_length=255, blank=True, null=True, help_text="user_id if CEO, rule_name if SYSTEM")
-    mode = models.CharField(max_length=50, blank=True, help_text="Modalidad operativa")
+    blocked_by_id = models.CharField(max_length=255, blank=True, null=True, help_text='user_id if CEO, rule_name if SYSTEM')
+    mode = models.CharField(max_length=50, blank=True, help_text='Modalidad operativa')
     freight_mode = models.CharField(max_length=50, blank=True)
     transport_mode = models.CharField(max_length=50, blank=True)
     dispatch_mode = models.CharField(max_length=10, choices=DispatchMode.choices, default=DispatchMode.MWT)
@@ -70,13 +47,13 @@ class Expediente(TimestampMixin):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"EXP-{str(self.expediente_id)[:8]}"
+        return f'EXP-{str(self.expediente_id)[:8]}'
 
 
 class ArtifactInstance(TimestampMixin):
     artifact_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     expediente = models.ForeignKey(Expediente, on_delete=models.CASCADE, related_name='artifacts')
-    artifact_type = models.CharField(max_length=20, help_text="ART-01 to ART-19")
+    artifact_type = models.CharField(max_length=20, help_text='ART-01 to ART-19')
     status = models.CharField(max_length=20, choices=ArtifactStatus.choices, default=ArtifactStatus.DRAFT)
     payload = models.JSONField(default=dict)
     supersedes = models.ForeignKey(
@@ -98,7 +75,7 @@ class ArtifactInstance(TimestampMixin):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.artifact_type} – {self.get_status_display()}"
+        return f'{self.artifact_type} \u2013 {self.get_status_display()}'
 
 
 class EventLog(models.Model):
@@ -109,7 +86,7 @@ class EventLog(models.Model):
     payload = models.JSONField(default=dict)
     occurred_at = models.DateTimeField()
     emitted_by = models.CharField(max_length=100, help_text='e.g. "C5:RegisterSAPConfirmation"')
-    processed_at = models.DateTimeField(blank=True, null=True, help_text="null until dispatcher consumes")
+    processed_at = models.DateTimeField(blank=True, null=True, help_text='null until dispatcher consumes')
     retry_count = models.IntegerField(default=0)
     correlation_id = models.UUIDField()
 
@@ -124,7 +101,7 @@ class EventLog(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.event_type} @ {self.occurred_at}"
+        return f'{self.event_type} @ {self.occurred_at}'
 
 
 class CostLine(AppendOnlyModel):
@@ -140,18 +117,18 @@ class CostLine(AppendOnlyModel):
         on_delete=models.PROTECT,
         null=True, blank=True,
         related_name='cost_lines',
-        help_text='XOR with expediente – use one or the other'
+        help_text='XOR with expediente \u2013 use one or the other'
     )
     cost_type = models.CharField(max_length=50)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    currency = models.CharField(max_length=3, help_text="ISO 4217")
+    currency = models.CharField(max_length=3, help_text='ISO 4217')
     phase = models.CharField(max_length=50)
     description = models.TextField(blank=True)
     visibility = models.CharField(
         max_length=10,
         choices=CostLineVisibility.choices,
         default=CostLineVisibility.INTERNAL,
-        help_text="internal=CEO-only, client=visible to client"
+        help_text='internal=CEO-only, client=visible to client'
     )
 
     class Meta:
@@ -160,16 +137,16 @@ class CostLine(AppendOnlyModel):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Cost {self.cost_type}: {self.amount} {self.currency}"
+        return f'Cost {self.cost_type}: {self.amount} {self.currency}'
 
 
 class PaymentLine(AppendOnlyModel):
     payment_line_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     expediente = models.ForeignKey(Expediente, on_delete=models.PROTECT, related_name='payment_lines')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    currency = models.CharField(max_length=3, help_text="ISO 4217")
-    method = models.CharField(max_length=50, help_text="transferencia, cheque, otro")
-    reference = models.CharField(max_length=100, help_text="Número de comprobante")
+    currency = models.CharField(max_length=3, help_text='ISO 4217')
+    method = models.CharField(max_length=50, help_text='transferencia, cheque, otro')
+    reference = models.CharField(max_length=100, help_text='N\u00famero de comprobante')
     registered_at = models.DateTimeField()
     registered_by_type = models.CharField(max_length=10, choices=RegisteredByType.choices)
     registered_by_id = models.CharField(max_length=255)
@@ -180,7 +157,7 @@ class PaymentLine(AppendOnlyModel):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Payment {self.method}: {self.amount} {self.currency}"
+        return f'Payment {self.method}: {self.amount} {self.currency}'
 
 
 class LogisticsOption(TimestampMixin):
@@ -192,7 +169,7 @@ class LogisticsOption(TimestampMixin):
     route = models.CharField(max_length=200)
     estimated_days = models.IntegerField()
     estimated_cost = models.DecimalField(max_digits=12, decimal_places=2)
-    currency = models.CharField(max_length=3, help_text="ISO 4217")
+    currency = models.CharField(max_length=3, help_text='ISO 4217')
     valid_until = models.DateField(null=True, blank=True)
     source = models.CharField(max_length=20, choices=LogisticsSource.choices, default=LogisticsSource.MANUAL)
     is_selected = models.BooleanField(default=False)
@@ -203,4 +180,4 @@ class LogisticsOption(TimestampMixin):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Option {self.option_id}: {self.mode} via {self.carrier}"
+        return f'Option {self.option_id}: {self.mode} via {self.carrier}'

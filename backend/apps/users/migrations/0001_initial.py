@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('auth', '0012_alter_user_first_name_max_length'),
-        ('expedientes', '0001_initial'),
+        ('core', '0002_legalentity'),
     ]
 
     operations = [
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
                 ('role', models.CharField(choices=[('CEO', 'CEO'), ('INTERNAL', 'Interno'), ('CLIENT_MARLUVAS', 'Cliente Marluvas'), ('CLIENT_TECMATER', 'Cliente Tecmater'), ('ANONYMOUS', 'An\u00f3nimo')], default='CEO', max_length=20)),
                 ('whatsapp_number', models.CharField(blank=True, max_length=20, null=True)),
                 ('is_api_user', models.BooleanField(default=False)),
-                ('legal_entity', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='expedientes.legalentity')),
+                ('legal_entity', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='core.legalentity')),
                 ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_users', to='users.mwtuser')),
                 ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
                 ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions')),

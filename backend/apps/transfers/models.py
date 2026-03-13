@@ -10,21 +10,21 @@ from django.core.exceptions import ValidationError
 from apps.transfers.enums import (
     NodeType, NodeStatus, LegalContext, TransferStatus, TransferLineCondition
 )
-from apps.expedientes.models import LegalEntity, Expediente
+from apps.core.models import LegalEntity
+from apps.expedientes.models import Expediente
 
 
 def generate_transfer_id():
-    """Auto-genera TRF-YYYYMMDD-XXX"""
-    today = date.today().strftime("%Y%m%d")
-    count = Transfer.objects.filter(transfer_id__startswith=f"TRF-{today}").count()
-    return f"TRF-{today}-{str(count + 1).zfill(3)}"
+    today = date.today().strftime('%Y%m%d')
+    count = Transfer.objects.filter(transfer_id__startswith=f'TRF-{today}').count()
+    return f'TRF-{today}-{str(count + 1).zfill(3)}'
 
 
 class Node(models.Model):
     node_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
     legal_entity = models.ForeignKey(
-        LegalEntity, on_delete=models.PROTECT, related_name="nodes"
+        LegalEntity, on_delete=models.PROTECT, related_name='nodes'
     )
     node_type = models.CharField(max_length=30, choices=NodeType.choices)
     location = models.CharField(max_length=500, blank=True)
@@ -34,11 +34,11 @@ class Node(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = "transfers_node"
-        verbose_name = "Node"
+        db_table = 'transfers_node'
+        verbose_name = 'Node'
 
     def __str__(self):
-        return f"{self.name} ({self.node_type})"
+        return f'{self.name} ({self.node_type})'
 
 
 class Transfer(models.Model):
@@ -46,21 +46,21 @@ class Transfer(models.Model):
         max_length=30, unique=True, editable=False, default=generate_transfer_id
     )
     from_node = models.ForeignKey(
-        Node, on_delete=models.PROTECT, related_name="transfers_from"
+        Node, on_delete=models.PROTECT, related_name='transfers_from'
     )
     to_node = models.ForeignKey(
-        Node, on_delete=models.PROTECT, related_name="transfers_to"
+        Node, on_delete=models.PROTECT, related_name='transfers_to'
     )
     ownership_before = models.ForeignKey(
         LegalEntity,
         on_delete=models.PROTECT,
-        related_name="transfers_ownership_before",
+        related_name='transfers_ownership_before',
         null=True, blank=True,
     )
     ownership_after = models.ForeignKey(
         LegalEntity,
         on_delete=models.PROTECT,
-        related_name="transfers_ownership_after",
+        related_name='transfers_ownership_after',
         null=True, blank=True,
     )
     ownership_changes = models.BooleanField(default=False)
@@ -71,7 +71,7 @@ class Transfer(models.Model):
         Expediente,
         on_delete=models.SET_NULL,
         null=True, blank=True,
-        related_name="transfers",
+        related_name='transfers',
     )
     status = models.CharField(
         max_length=20, choices=TransferStatus.choices, default=TransferStatus.PLANNED
@@ -88,14 +88,14 @@ class Transfer(models.Model):
 
     def clean(self):
         if self.from_node_id == self.to_node_id:
-            raise ValidationError("from_node and to_node must be different.")
+            raise ValidationError('from_node and to_node must be different.')
 
     class Meta:
-        db_table = "transfers_transfer"
-        ordering = ["-created_at"]
+        db_table = 'transfers_transfer'
+        ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.transfer_id} [{self.status}]"
+        return f'{self.transfer_id} [{self.status}]'
 
     def compute_ownership_fields(self):
         self.ownership_before = self.from_node.legal_entity
@@ -108,7 +108,7 @@ class Transfer(models.Model):
 
 class TransferLine(models.Model):
     transfer = models.ForeignKey(
-        Transfer, on_delete=models.CASCADE, related_name="lines"
+        Transfer, on_delete=models.CASCADE, related_name='lines'
     )
     sku = models.CharField(max_length=200)
     quantity_dispatched = models.PositiveIntegerField()
@@ -130,4 +130,4 @@ class TransferLine(models.Model):
         return d is not None and d != 0
 
     class Meta:
-        db_table = "transfers_transferline"
+        db_table = 'transfers_transferline'

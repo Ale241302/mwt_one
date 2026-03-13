@@ -8,7 +8,7 @@ class UserRole(models.TextChoices):
     INTERNAL        = 'INTERNAL',        'Interno'
     CLIENT_MARLUVAS = 'CLIENT_MARLUVAS', 'Cliente Marluvas'
     CLIENT_TECMATER = 'CLIENT_TECMATER', 'Cliente Tecmater'
-    ANONYMOUS       = 'ANONYMOUS',       'Anónimo'
+    ANONYMOUS       = 'ANONYMOUS',       'An\u00f3nimo'
 
 
 class Permission(models.TextChoices):
@@ -49,7 +49,7 @@ ROLE_PERMISSION_CEILING = {
 class MWTUser(AbstractUser):
     role            = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.CEO)
     legal_entity    = models.ForeignKey(
-        'expedientes.LegalEntity',
+        'core.LegalEntity',
         null=True, blank=True,
         on_delete=models.SET_NULL,
     )
@@ -67,7 +67,6 @@ class MWTUser(AbstractUser):
         verbose_name_plural = 'Usuarios MWT'
 
     def has_permission(self, perm) -> bool:
-        """Verifica si el usuario tiene el permiso (evalúa techo del rol + asignación)."""
         ceiling = ROLE_PERMISSION_CEILING.get(self.role, [])
         if perm not in ceiling:
             return False
@@ -97,7 +96,7 @@ class UserPermission(models.Model):
         ceiling = ROLE_PERMISSION_CEILING.get(self.user.role, [])
         if self.permission not in ceiling:
             raise ValidationError(
-                f"El permiso '{self.permission}' está fuera del techo del rol '{self.user.role}'."
+                f"El permiso '{self.permission}' est\u00e1 fuera del techo del rol '{self.user.role}'."
             )
         super().save(*args, **kwargs)
 

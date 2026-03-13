@@ -1,80 +1,71 @@
-﻿from django.db import models
+from django.db import models
 
-
-# --- LegalEntity enums ---
 
 class LegalEntityRole(models.TextChoices):
-    OWNER = 'OWNER', 'Owner'
-    DISTRIBUTOR = 'DISTRIBUTOR', 'Distributor'
+    OWNER          = 'OWNER',          'Owner'
+    DISTRIBUTOR    = 'DISTRIBUTOR',    'Distributor'
     SUBDISTRIBUTOR = 'SUBDISTRIBUTOR', 'Sub-distributor'
-    THREEPL = 'THREEPL', '3PL'
-    FACTORY = 'FACTORY', 'Factory'
+    THREEPL        = 'THREEPL',        '3PL'
+    FACTORY        = 'FACTORY',        'Factory'
 
 
 class LegalEntityRelationship(models.TextChoices):
-    SELF = 'SELF', 'Self'
-    FRANCHISE = 'FRANCHISE', 'Franchise'
+    SELF         = 'SELF',         'Self'
+    FRANCHISE    = 'FRANCHISE',    'Franchise'
     DISTRIBUTION = 'DISTRIBUTION', 'Distribution'
-    SERVICE = 'SERVICE', 'Service'
+    SERVICE      = 'SERVICE',      'Service'
 
 
 class LegalEntityFrontend(models.TextChoices):
-    MWT_ONE = 'MWT_ONE', 'MWT.ONE'
+    MWT_ONE        = 'MWT_ONE',        'MWT.ONE'
     PORTAL_MWT_ONE = 'PORTAL_MWT_ONE', 'Portal MWT.ONE'
-    EXTERNAL = 'EXTERNAL', 'External'
+    EXTERNAL       = 'EXTERNAL',       'External'
 
 
 class LegalEntityVisibility(models.TextChoices):
-    FULL = 'FULL', 'Full'
+    FULL    = 'FULL',    'Full'
     PARTNER = 'PARTNER', 'Partner'
     LIMITED = 'LIMITED', 'Limited'
 
 
 class PricingVisibility(models.TextChoices):
     INTERNAL = 'INTERNAL', 'Internal'
-    CLIENT = 'CLIENT', 'Client'
-    NONE = 'NONE', 'None'
+    CLIENT   = 'CLIENT',   'Client'
+    NONE     = 'NONE',     'None'
 
 
 class LegalEntityStatus(models.TextChoices):
-    ACTIVE = 'ACTIVE', 'Active'
+    ACTIVE     = 'ACTIVE',     'Active'
     ONBOARDING = 'ONBOARDING', 'Onboarding'
-    INACTIVE = 'INACTIVE', 'Inactive'
+    INACTIVE   = 'INACTIVE',   'Inactive'
 
-
-# --- Expediente enums ---
 
 class ExpedienteStatus(models.TextChoices):
-    REGISTRO = 'REGISTRO', 'Registro'
-    PRODUCCION = 'PRODUCCION', 'ProducciÃ³n'
-    PREPARACION = 'PREPARACION', 'PreparaciÃ³n'
-    DESPACHO = 'DESPACHO', 'Despacho'
-    TRANSITO = 'TRANSITO', 'TrÃ¡nsito'
-    EN_DESTINO = 'EN_DESTINO', 'En Destino'
-    CERRADO = 'CERRADO', 'Cerrado'
-    CANCELADO = 'CANCELADO', 'Cancelado'
-
-    @property
-    def is_terminal(self):
-        return self in [self.CERRADO, self.CANCELADO]
-
-CREDIT_CLOCK_IGNORED_STATUSES = [ExpedienteStatus.CERRADO, ExpedienteStatus.CANCELADO]
+    REGISTRO    = 'REGISTRO',    'Registro'
+    PRODUCCION  = 'PRODUCCION',  'Producci\u00f3n'
+    PREPARACION = 'PREPARACION', 'Preparaci\u00f3n'
+    DESPACHO    = 'DESPACHO',    'Despacho'
+    TRANSITO    = 'TRANSITO',    'Tr\u00e1nsito'
+    EN_DESTINO  = 'EN_DESTINO',  'En Destino'
+    CERRADO     = 'CERRADO',     'Cerrado'
+    ARCHIVADO   = 'ARCHIVADO',   'Archivado'
+    CANCELADO   = 'CANCELADO',   'Cancelado'
 
 
 class BlockedByType(models.TextChoices):
-    CEO = 'ceo', 'CEO'
-    SYSTEM = 'system', 'System'
+    CEO    = 'CEO',    'CEO'
+    SYSTEM = 'SYSTEM', 'System'
 
 
 class DispatchMode(models.TextChoices):
-    MWT = 'MWT', 'MWT'
+    MWT    = 'MWT',    'MWT'
     CLIENT = 'CLIENT', 'Client'
 
 
 class PaymentStatus(models.TextChoices):
-    PENDING = 'pending', 'Pending'
-    PARTIAL = 'partial', 'Partial'
-    PAID = 'paid', 'Paid'
+    PENDING = 'PENDING', 'Pending'
+    PARTIAL = 'PARTIAL', 'Partial'
+    PAID    = 'PAID',    'Paid'
 
 
 class CreditClockStartRule(models.TextChoices):
@@ -84,50 +75,39 @@ class CreditClockStartRule(models.TextChoices):
 
 class Brand(models.TextChoices):
     MARLUVAS = 'MARLUVAS', 'Marluvas'
-    TECMATER = 'TECMATER', 'Tecmater'     # Sprint 4 S4-01
 
-
-# --- CostLine enums (Sprint 4) ---
-
-class CostLineVisibility(models.TextChoices):
-    INTERNAL = 'internal', 'Internal'
-    CLIENT = 'client', 'Client'
-
-
-# --- ArtifactInstance enums ---
 
 class ArtifactStatus(models.TextChoices):
-    DRAFT = 'draft', 'Draft'
-    PENDING = 'pending', 'Pending'         # Sprint 4 S4-07 (ART-19)
-    COMPLETED = 'completed', 'Completed'
-    SUPERSEDED = 'superseded', 'Superseded'
-    VOID = 'void', 'Void'
+    DRAFT      = 'DRAFT',      'Draft'
+    COMPLETED  = 'COMPLETED',  'Completed'
+    SUPERSEDED = 'SUPERSEDED', 'Superseded'
+    VOID       = 'VOID',       'Void'
 
-
-# --- EventLog enums ---
 
 class AggregateType(models.TextChoices):
-    EXPEDIENTE = 'expediente', 'Expediente'
-    TRANSFER = 'transfer', 'Transfer'
-    NODE = 'node', 'Node'
-    ARTIFACT = 'artifact', 'Artifact'
+    EXPEDIENTE = 'EXPEDIENTE', 'Expediente'
+    TRANSFER   = 'TRANSFER',   'Transfer'
+    NODE       = 'NODE',       'Node'
+    ARTIFACT   = 'ARTIFACT',   'Artifact'
 
-
-# --- PaymentLine enums ---
 
 class RegisteredByType(models.TextChoices):
-    CEO = 'ceo', 'CEO'
-    SYSTEM = 'system', 'System'
+    CEO    = 'CEO',    'CEO'
+    SYSTEM = 'SYSTEM', 'System'
 
 
-# --- LogisticsOption enums (Sprint 4 S4-07) ---
+class CostLineVisibility(models.TextChoices):
+    INTERNAL = 'INTERNAL', 'Internal'
+    CLIENT   = 'CLIENT',   'Client'
+
 
 class LogisticsMode(models.TextChoices):
-    AEREO = 'aereo', 'AÃ©reo'
-    MARITIMO = 'maritimo', 'MarÃ­timo'
+    AIR    = 'AIR',    'Air'
+    SEA    = 'SEA',    'Sea'
+    LAND   = 'LAND',   'Land'
+    MULTIMODAL = 'MULTIMODAL', 'Multimodal'
 
 
 class LogisticsSource(models.TextChoices):
-    HISTORICAL = 'historical', 'Historical'
-    QUOTE = 'quote', 'Quote'
-    MANUAL = 'manual', 'Manual'
+    MANUAL = 'MANUAL', 'Manual'
+    AUTO   = 'AUTO',   'Auto'
