@@ -1,4 +1,4 @@
-﻿"""
+"""
 Sprint 5 S5-01: Transfer model + state machine
 Node (stub), Transfer (6-state machine), TransferLine
 Ref: LOTE_SM_SPRINT5 Item 3
@@ -21,10 +21,6 @@ def generate_transfer_id():
 
 
 class Node(models.Model):
-    """
-    STUB mÃ­nimo. Detalles completos en ENT_OPS_NODOS (Sprint 6+).
-    Nodo fÃ­sico o fiscal donde reside inventario.
-    """
     node_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
     legal_entity = models.ForeignKey(
@@ -46,14 +42,6 @@ class Node(models.Model):
 
 
 class Transfer(models.Model):
-    """
-    Entidad estructural con state machine propia (6 estados).
-    NO es ArtifactInstance. Cimiento para Sprint 6 Rana Walk.
-
-    State machine:
-      planned â†’ approved â†’ in_transit â†’ received â†’ reconciled
-      any â†’ cancelled (CEO only, desde planned o approved)
-    """
     transfer_id = models.CharField(
         max_length=30, unique=True, editable=False, default=generate_transfer_id
     )
@@ -64,22 +52,26 @@ class Transfer(models.Model):
         Node, on_delete=models.PROTECT, related_name="transfers_to"
     )
     ownership_before = models.ForeignKey(
-        LegalEntity, on_delete=models.PROTECT,
+        LegalEntity,
+        on_delete=models.PROTECT,
         related_name="transfers_ownership_before",
-        null=True, blank=True,
+        null=True, blank=True, default=None,
     )
     ownership_after = models.ForeignKey(
-        LegalEntity, on_delete=models.PROTECT,
+        LegalEntity,
+        on_delete=models.PROTECT,
         related_name="transfers_ownership_after",
-        null=True, blank=True,
+        null=True, blank=True, default=None,
     )
     ownership_changes = models.BooleanField(default=False)
     legal_context = models.CharField(max_length=30, choices=LegalContext.choices)
     customs_required = models.BooleanField(default=False)
-    pricing_context = models.JSONField(null=True, blank=True)
+    pricing_context = models.JSONField(null=True, blank=True, default=None)
     source_expediente = models.ForeignKey(
-        Expediente, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name="transfers"
+        Expediente,
+        on_delete=models.SET_NULL,
+        null=True, blank=True, default=None,
+        related_name="transfers",
     )
     status = models.CharField(
         max_length=20, choices=TransferStatus.choices, default=TransferStatus.PLANNED
@@ -88,11 +80,11 @@ class Transfer(models.Model):
     exception_reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    approved_at = models.DateTimeField(null=True, blank=True)
-    dispatched_at = models.DateTimeField(null=True, blank=True)
-    received_at = models.DateTimeField(null=True, blank=True)
-    reconciled_at = models.DateTimeField(null=True, blank=True)
-    cancelled_at = models.DateTimeField(null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True, default=None)
+    dispatched_at = models.DateTimeField(null=True, blank=True, default=None)
+    received_at = models.DateTimeField(null=True, blank=True, default=None)
+    reconciled_at = models.DateTimeField(null=True, blank=True, default=None)
+    cancelled_at = models.DateTimeField(null=True, blank=True, default=None)
 
     def clean(self):
         if self.from_node_id == self.to_node_id:
@@ -106,10 +98,6 @@ class Transfer(models.Model):
         return f"{self.transfer_id} [{self.status}]"
 
     def compute_ownership_fields(self):
-        """
-        Calcula ownership_before/after desde Node.legal_entity.
-        customs_required = True si legal_context in {nationalization, reexport}.
-        """
         self.ownership_before = self.from_node.legal_entity
         self.ownership_after = self.to_node.legal_entity
         self.ownership_changes = (self.ownership_before_id != self.ownership_after_id)
@@ -119,18 +107,15 @@ class Transfer(models.Model):
 
 
 class TransferLine(models.Model):
-    """
-    LÃ­nea de producto dentro de un Transfer.
-    discrepancy = quantity_dispatched - quantity_received (computed).
-    """
     transfer = models.ForeignKey(
         Transfer, on_delete=models.CASCADE, related_name="lines"
     )
     sku = models.CharField(max_length=200)
     quantity_dispatched = models.PositiveIntegerField()
-    quantity_received = models.PositiveIntegerField(null=True, blank=True)
+    quantity_received = models.PositiveIntegerField(null=True, blank=True, default=None)
     condition = models.CharField(
-        max_length=20, choices=TransferLineCondition.choices, null=True, blank=True
+        max_length=20, choices=TransferLineCondition.choices,
+        null=True, blank=True, default=None,
     )
 
     @property
