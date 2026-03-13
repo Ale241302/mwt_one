@@ -49,12 +49,19 @@ ROLE_PERMISSION_CEILING = {
 class MWTUser(AbstractUser):
     role            = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.CEO)
     legal_entity    = models.ForeignKey(
-        'core.LegalEntity', null=True, blank=True, on_delete=models.SET_NULL
+        'core.LegalEntity',
+        null=True, blank=True,
+        default=None,
+        on_delete=models.SET_NULL,
     )
     whatsapp_number = models.CharField(max_length=20, null=True, blank=True)
     is_api_user     = models.BooleanField(default=False)
     created_by      = models.ForeignKey(
-        'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='created_users'
+        'self',
+        null=True, blank=True,
+        default=None,
+        on_delete=models.SET_NULL,
+        related_name='created_users',
     )
 
     class Meta:
@@ -76,7 +83,11 @@ class UserPermission(models.Model):
     user       = models.ForeignKey(MWTUser, on_delete=models.CASCADE, related_name='permissions_set')
     permission = models.CharField(max_length=50, choices=Permission.choices)
     granted_by = models.ForeignKey(
-        MWTUser, on_delete=models.SET_NULL, null=True, related_name='granted_permissions'
+        MWTUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        default=None,
+        related_name='granted_permissions',
     )
     granted_at = models.DateTimeField(auto_now_add=True)
 
@@ -94,4 +105,4 @@ class UserPermission(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.user.username} → {self.permission}'
+        return f'{self.user.username} \u2192 {self.permission}'
