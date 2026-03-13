@@ -4,7 +4,6 @@ Camino B: JWT      → /api/knowledge/
 """
 from functools import wraps
 from django.http import JsonResponse
-from rest_framework_simplejwt.authentication import JWTStatelessUserAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
 
@@ -27,6 +26,8 @@ def require_permission_jwt(permission):
     def decorator(view_func):
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
+            # Import diferido para evitar resolución temprana del modelo swappable
+            from rest_framework_simplejwt.authentication import JWTStatelessUserAuthentication
             auth = JWTStatelessUserAuthentication()
             try:
                 result = auth.authenticate(request)
