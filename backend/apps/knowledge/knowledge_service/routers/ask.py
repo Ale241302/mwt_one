@@ -5,20 +5,18 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 import redis as redis_lib
-import anthropic
 from openai import OpenAI
 from ..database import get_db
 from ..auth import decode_token
 
 router = APIRouter()
-oai    = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-claude = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-redis  = redis_lib.from_url(os.environ.get("REDIS_URL", "redis://redis:6379"))
+oai   = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+redis = redis_lib.from_url(os.environ.get("REDIS_URL", "redis://redis:6379"))
 
 ALLOWED_PERMISSIONS = {"ASK_KNOWLEDGE_OPS", "ASK_KNOWLEDGE_PRODUCTS", "ASK_KNOWLEDGE_PRICING"}
-EMBED_MODEL         = "text-embedding-3-small"
-CLAUDE_MODEL        = "claude-3-5-haiku-20241022"
-SESSION_TTL         = 30 * 60  # 30 min
+EMBED_MODEL  = "text-embedding-3-small"
+CHAT_MODEL   = "gpt-4o-mini"
+SESSION_TTL  = 30 * 60  # 30 min
 
 
 class AskRequest(BaseModel):
@@ -57,14 +55,12 @@ async def ask(req: AskRequest, payload: dict = Depends(decode_token), db: Sessio
     context = "\n\n".join(r[0] for r in rows)
     chunks_used = [r[0][:80] for r in rows]
 
-    messages = history + [{"role": "user", "content": req.question}]
-    system   = f"Eres el asistente MWT ONE. Usa este contexto:\n\n{context}"
+    messages = [
+        {"role": "system", "content": f"Eres el asistente MWT ONE. Usa este contexto:\n\n{context}"}
+    ] + history + [{"role": "user", "content": req.question}]
 
-    resp = claude.messages.create(
-        model=CLAUDE_MODEL, max_tokens=1024,
-        system=system, messages=messages
-    )
-    answer = resp.content[0].text
+    resp   = oai.chat.completions.create(model=CHAT_MODEL, messages=messages, max_tokens=1024)
+    answer = resp.choices[0].message.content
 
     # Guardar ConversationLog en Django DB
     db.execute(text("""
@@ -81,7 +77,7 @@ async def ask(req: AskRequest, payload: dict = Depends(decode_token), db: Sessio
     })
     db.commit()
 
-    # Actualizar Redis TTL 30 min
+    # Actualizar historial en Redis
     history.append({"role": "user",      "content": req.question})
     history.append({"role": "assistant", "content": answer})
     redis.setex(redis_key, SESSION_TTL, json.dumps(history))
