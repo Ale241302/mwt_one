@@ -96,7 +96,8 @@ services:
     env_file: .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.base
-    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    # S8-11: schedule hardcoded in celery.py (D-04) — no DatabaseScheduler
+    command: celery -A config beat -l info
     # volumes:
     #   - ./backend:/app
     depends_on:
@@ -167,6 +168,30 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  # ────────────────────────────────────────────────
+  # Sprint 8 S8-11: Knowledge microservice (FastAPI)
+  # ────────────────────────────────────────────────
+  mwt-knowledge:
+    build:
+      context: ./backend/apps/knowledge
+      dockerfile: Dockerfile
+    container_name: mwt-knowledge
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 
 volumes:
   postgres_data:
