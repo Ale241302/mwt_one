@@ -1,4 +1,4 @@
-﻿from django.db import models
+from django.db import models
 
 class QRRoute(models.Model):
     slug = models.CharField(max_length=10, unique=True)
@@ -7,7 +7,7 @@ class QRRoute(models.Model):
     destination_template = models.CharField(max_length=500)
     is_active = models.BooleanField(default=True)
     fallback_url = models.URLField(default="https://ranawalk.com")
-    override_url = models.URLField(blank=True, null=True)
+    override_url = models.URLField(blank=True, null=True, default=None)
     override_reason = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -16,7 +16,12 @@ class QRRoute(models.Model):
         return f"{self.slug} -> {self.product_name}"
 
 class QRScan(models.Model):
-    route = models.ForeignKey(QRRoute, on_delete=models.SET_NULL, null=True)
+    route = models.ForeignKey(
+        QRRoute,
+        on_delete=models.SET_NULL,
+        null=True,
+        default=None,
+    )
     detected_lang = models.CharField(max_length=2)
     country_code = models.CharField(max_length=2, blank=True)
     user_agent = models.TextField(blank=True)
