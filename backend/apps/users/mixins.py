@@ -1,6 +1,5 @@
 """Sprint 8 S8-04: Mixins class-based equivalentes a los decoradores."""
 from django.http import JsonResponse
-from rest_framework_simplejwt.authentication import JWTStatelessUserAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
 
@@ -24,6 +23,8 @@ class JWTPermissionRequiredMixin:
     required_permission = None  # subclase debe definir
 
     def dispatch(self, request, *args, **kwargs):
+        # Import diferido para evitar resolución temprana del modelo swappable
+        from rest_framework_simplejwt.authentication import JWTStatelessUserAuthentication
         auth = JWTStatelessUserAuthentication()
         try:
             result = auth.authenticate(request)
