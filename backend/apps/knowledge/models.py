@@ -10,7 +10,6 @@ class ConversationLog(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        default=None,
         related_name='conversation_logs',
     )
     user_role      = models.CharField(max_length=20)
@@ -19,7 +18,6 @@ class ConversationLog(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        default=None,
         related_name='conversation_logs',
     )
     question    = models.TextField()
