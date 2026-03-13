@@ -51,7 +51,6 @@ class MWTUser(AbstractUser):
     legal_entity    = models.ForeignKey(
         'core.LegalEntity',
         null=True, blank=True,
-        default=None,
         on_delete=models.SET_NULL,
     )
     whatsapp_number = models.CharField(max_length=20, null=True, blank=True)
@@ -59,7 +58,6 @@ class MWTUser(AbstractUser):
     created_by      = models.ForeignKey(
         'self',
         null=True, blank=True,
-        default=None,
         on_delete=models.SET_NULL,
         related_name='created_users',
     )
@@ -86,7 +84,6 @@ class UserPermission(models.Model):
         MWTUser,
         on_delete=models.SET_NULL,
         null=True,
-        default=None,
         related_name='granted_permissions',
     )
     granted_at = models.DateTimeField(auto_now_add=True)
