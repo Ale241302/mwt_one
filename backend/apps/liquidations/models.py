@@ -1,7 +1,8 @@
-﻿"""
+"""
 Sprint 5 S5-03: ART-10 Liquidation models
 Ref: LOTE_SM_SPRINT5 Item 1
 """
+from django.conf import settings
 from django.db import models
 from apps.liquidations.enums import (
     LiquidationStatus, LiquidationLineConcept, MatchStatus
@@ -17,8 +18,8 @@ def generate_liquidation_id(period: str):
 
 class Liquidation(models.Model):
     """
-    ART-10 â€” Artefacto CROSS (transversal). No tiene FK a expediente.
-    Relaciona con expedientes INDIRECTAMENTE a travÃ©s de LiquidationLine.
+    ART-10 – Artefacto CROSS (transversal). No tiene FK a expediente.
+    Relaciona con expedientes INDIRECTAMENTE a través de LiquidationLine.
     """
     liquidation_id = models.CharField(max_length=30, unique=True, editable=False)
     period = models.CharField(max_length=7)  # formato YYYY-MM
@@ -35,10 +36,12 @@ class Liquidation(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    reconciled_at = models.DateTimeField(null=True, blank=True)
+    reconciled_at = models.DateTimeField(null=True, blank=True, default=None)
     reconciled_by = models.ForeignKey(
-        "auth.User", on_delete=models.SET_NULL, null=True, blank=True,
-        related_name="reconciled_liquidations"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True, default=None,
+        related_name="reconciled_liquidations",
     )
     observations = models.TextField(blank=True)
 
@@ -56,7 +59,7 @@ class Liquidation(models.Model):
 
 
 class LiquidationLine(models.Model):
-    """LÃ­nea individual del Excel de Marluvas."""
+    """Línea individual del Excel de Marluvas."""
     liquidation = models.ForeignKey(
         Liquidation, on_delete=models.CASCADE, related_name="lines"
     )
@@ -64,26 +67,28 @@ class LiquidationLine(models.Model):
     concept = models.CharField(
         max_length=20, choices=LiquidationLineConcept.choices
     )
-    client_payment_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    client_payment_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, default=None)
     commission_pct_reported = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True, blank=True
+        max_digits=5, decimal_places=2, null=True, blank=True, default=None
     )
     commission_amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.CharField(max_length=3, default="USD")
     is_partial_payment = models.BooleanField(default=False)
-
-    # Match contra proformas (ART-02 ArtifactInstances)
     matched_proforma = models.ForeignKey(
-        ArtifactInstance, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name="liquidation_matches",
-        limit_choices_to={"artifact_type": "ART-02"}
+        ArtifactInstance,
+        on_delete=models.SET_NULL,
+        null=True, blank=True, default=None,
+        related_name="liquidation_matches",
+        limit_choices_to={"artifact_type": "ART-02"},
     )
     matched_expediente = models.ForeignKey(
-        Expediente, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name="liquidation_matches"
+        Expediente,
+        on_delete=models.SET_NULL,
+        null=True, blank=True, default=None,
+        related_name="liquidation_matches",
     )
     commission_pct_expected = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True, blank=True
+        max_digits=5, decimal_places=2, null=True, blank=True, default=None
     )
     match_status = models.CharField(
         max_length=20, choices=MatchStatus.choices, default=MatchStatus.UNMATCHED
