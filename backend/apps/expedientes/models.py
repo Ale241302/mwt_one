@@ -36,7 +36,7 @@ class LegalEntity(TimestampMixin):
 class Expediente(TimestampMixin):
     expediente_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     legal_entity = models.ForeignKey(LegalEntity, on_delete=models.PROTECT, related_name='expedientes_emitidos', help_text="Entidad emisora")
-    brand = models.ForeignKey('brands.Brand', on_delete=models.PROTECT, null=True, blank=True, default=None)
+    brand = models.ForeignKey('brands.Brand', on_delete=models.PROTECT, null=True, blank=True)
     destination = models.CharField(max_length=10, choices=[('CR', 'Costa Rica'), ('USA', 'United States')], default='CR')
     client = models.ForeignKey(LegalEntity, on_delete=models.PROTECT, related_name='expedientes_como_cliente', help_text="Cliente")
     status = models.CharField(max_length=20, choices=ExpedienteStatus.choices, default=ExpedienteStatus.REGISTRO)
@@ -51,7 +51,7 @@ class Expediente(TimestampMixin):
     dispatch_mode = models.CharField(max_length=10, choices=DispatchMode.choices, default=DispatchMode.MWT)
     price_basis = models.CharField(max_length=50, blank=True)
     credit_clock_start_rule = models.CharField(max_length=20, choices=CreditClockStartRule.choices, default=CreditClockStartRule.ON_CREATION)
-    credit_clock_started_at = models.DateTimeField(blank=True, null=True, default=None, help_text='Timestamp when credit clock started (FIX-7)')
+    credit_clock_started_at = models.DateTimeField(blank=True, null=True, help_text='Timestamp when credit clock started (FIX-7)')
     payment_status = models.CharField(max_length=10, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
     payment_registered_at = models.DateTimeField(blank=True, null=True)
     payment_registered_by_type = models.CharField(max_length=10, choices=BlockedByType.choices, blank=True, null=True)
@@ -59,7 +59,7 @@ class Expediente(TimestampMixin):
     nodo_destino = models.ForeignKey(
         'transfers.Node',
         on_delete=models.SET_NULL,
-        null=True, blank=True, default=None,
+        null=True, blank=True,
         related_name='expedientes_destino',
         help_text='Target node (triggers transfer suggestion on close)'
     )
@@ -82,13 +82,13 @@ class ArtifactInstance(TimestampMixin):
     supersedes = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
-        blank=True, null=True, default=None,
+        blank=True, null=True,
         related_name='superseded_by_set',
     )
     superseded_by = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
-        blank=True, null=True, default=None,
+        blank=True, null=True,
         related_name='supersedes_set',
     )
 
@@ -133,12 +133,12 @@ class CostLine(AppendOnlyModel):
         Expediente,
         on_delete=models.PROTECT,
         related_name='cost_lines',
-        null=True, blank=True, default=None,
+        null=True, blank=True,
     )
     transfer = models.ForeignKey(
         'transfers.Transfer',
         on_delete=models.PROTECT,
-        null=True, blank=True, default=None,
+        null=True, blank=True,
         related_name='cost_lines',
         help_text='XOR with expediente – use one or the other'
     )

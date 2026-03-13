@@ -55,22 +55,22 @@ class Transfer(models.Model):
         LegalEntity,
         on_delete=models.PROTECT,
         related_name="transfers_ownership_before",
-        null=True, blank=True, default=None,
+        null=True, blank=True,
     )
     ownership_after = models.ForeignKey(
         LegalEntity,
         on_delete=models.PROTECT,
         related_name="transfers_ownership_after",
-        null=True, blank=True, default=None,
+        null=True, blank=True,
     )
     ownership_changes = models.BooleanField(default=False)
     legal_context = models.CharField(max_length=30, choices=LegalContext.choices)
     customs_required = models.BooleanField(default=False)
-    pricing_context = models.JSONField(null=True, blank=True, default=None)
+    pricing_context = models.JSONField(null=True, blank=True)
     source_expediente = models.ForeignKey(
         Expediente,
         on_delete=models.SET_NULL,
-        null=True, blank=True, default=None,
+        null=True, blank=True,
         related_name="transfers",
     )
     status = models.CharField(
@@ -80,11 +80,11 @@ class Transfer(models.Model):
     exception_reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    approved_at = models.DateTimeField(null=True, blank=True, default=None)
-    dispatched_at = models.DateTimeField(null=True, blank=True, default=None)
-    received_at = models.DateTimeField(null=True, blank=True, default=None)
-    reconciled_at = models.DateTimeField(null=True, blank=True, default=None)
-    cancelled_at = models.DateTimeField(null=True, blank=True, default=None)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    dispatched_at = models.DateTimeField(null=True, blank=True)
+    received_at = models.DateTimeField(null=True, blank=True)
+    reconciled_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
 
     def clean(self):
         if self.from_node_id == self.to_node_id:
@@ -112,10 +112,10 @@ class TransferLine(models.Model):
     )
     sku = models.CharField(max_length=200)
     quantity_dispatched = models.PositiveIntegerField()
-    quantity_received = models.PositiveIntegerField(null=True, blank=True, default=None)
+    quantity_received = models.PositiveIntegerField(null=True, blank=True)
     condition = models.CharField(
         max_length=20, choices=TransferLineCondition.choices,
-        null=True, blank=True, default=None,
+        null=True, blank=True,
     )
 
     @property
