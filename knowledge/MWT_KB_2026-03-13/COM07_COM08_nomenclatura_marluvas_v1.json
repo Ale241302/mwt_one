@@ -1,0 +1,592 @@
+{
+  "_meta": {
+    "doc_id": "COM-07-COM-08",
+    "titulo": "Motor de Nomenclatura Marluvas — Tokens de Referencia Técnica",
+    "version": "1.1",
+    "fecha": "2026-03-11",
+    "origen": "Extracción y validación exhaustiva Tabela COMEX v6 (514 SKUs) + marluvas.com.br",
+    "resuelve": [
+      "COM-07",
+      "COM-08"
+    ],
+    "regla_global": "Los tokens entre paréntesis (CX), (SC), (PRETO) y la palabra MARLUVAS son ruido editorial — ignorar siempre. No usar como referencia técnica.",
+    "regla_token_A": "El token 'A' = Puntera Acero SOLO cuando aparece como token independiente DESPUÉS del código de modelo base (ej: 70B19-A, 100AWORKF-CA-BR-A). El 'A' dentro del nombre del modelo (100AWORK) no es un token de puntera.",
+    "regla_CPAP": "CPAP = Puntera Composite + Antiperforante Textil simultáneamente. No separar. CPAPPAD (sin guion) = typo de CPAP-PAD — tratar igual.",
+    "regla_familia_CN": "En familia 75, el prefijo CN- antes del color indica Nubuck: CNG=Nubuck Gris, CNP=Nubuck Putty/Beige, CNV=Nubuck Verde Musgo, CNPT=Nubuck Putty+Textil, CNTR=Nubuck Narrow Toe.",
+    "regla_100A_forro": "El forro en línea PVC 100A se lee en el modelo base, NO como token: 100AWORKF=Con forro | 100AWORK=Sin forro.",
+    "last_updated": "2026-03-11",
+    "changelog_v1_1": "CNFL: movido de COLOR_NUBUCK a CLIENT_SPECIFIC. Modelo para CNFL Costa Rica con etiqueta cosida secuencial numérica por talla."
+  },
+  "PUNTERA": {
+    "_descripcion": "Tipo de protección frontal del calzado (bico)",
+    "A": {
+      "es": "Puntera Acero",
+      "pt": "Bico Aço",
+      "regla": "token independiente post-modelo"
+    },
+    "CPAP": {
+      "es": "Puntera Composite",
+      "pt": "Bico Composite",
+      "nota": "incluye también antiperforante textil"
+    },
+    "BP": {
+      "es": "Puntera Plástica",
+      "pt": "Bico Plástico"
+    },
+    "SEM_BICO": {
+      "es": "Sin puntera",
+      "pt": "Sem Bico",
+      "aplica": "líneas 20S29, 100AWORK sin A, 101FCLEAN, accesorios"
+    }
+  },
+  "ANTIPERFORANTE": {
+    "_descripcion": "Plantilla anti-perforación (palmilha de aço / resistente a perfuração)",
+    "PA": {
+      "es": "Antiperforante Acero",
+      "pt": "Palmilha Aço"
+    },
+    "PAD": {
+      "es": "Antiperforante Textil — padrão/estándar",
+      "pt": "Palmilha Textil Padrão"
+    },
+    "PAZ": {
+      "es": "Antiperforante Textil especial",
+      "pt": "Palmilha Textil PAZ"
+    },
+    "CPAP": {
+      "es": "Antiperforante Textil (incluido en CPAP)",
+      "pt": "Bico Composite + Palmilha Textil",
+      "nota": "CPAP cubre puntera Y antiperforante"
+    },
+    "SIN": {
+      "es": "Sin antiperforante",
+      "aplica": "modelos sin sufijo PA/PAD/PAZ"
+    }
+  },
+  "COLOR_PVC_100A": {
+    "_descripcion": "Colores exclusivos de la línea de botas PVC 100AWORK / 100AWORKF",
+    "BR": {
+      "es": "Blanco",
+      "pt": "Branco"
+    },
+    "PR": {
+      "es": "Negro",
+      "pt": "Preto"
+    },
+    "PRA": {
+      "es": "Negro suela amarilla",
+      "pt": "Preto Sola Amarela",
+      "nota": "variante de PR con suela amarilla"
+    }
+  },
+  "COLOR_CLEAN_ROOM": {
+    "_descripcion": "Colores de la línea Clean Room (101FCLEAN, 102FCLEAN, 103FCLEAN)",
+    "AZ": {
+      "es": "Azul",
+      "pt": "Azul"
+    },
+    "VD": {
+      "es": "Verde",
+      "pt": "Verde"
+    },
+    "AM": {
+      "es": "Amarillo",
+      "pt": "Amarelo"
+    },
+    "BR": {
+      "es": "Café/Castaño",
+      "pt": "Marrom"
+    },
+    "PR": {
+      "es": "Negro",
+      "pt": "Preto"
+    }
+  },
+  "CAÑA_PVC": {
+    "_descripcion": "Altura de caña exclusiva de línea PVC 100AWORK",
+    "CA": {
+      "es": "Caña Alta",
+      "pt": "Cano Alto"
+    },
+    "CM": {
+      "es": "Caña Media",
+      "pt": "Cano Médio"
+    }
+  },
+  "MATERIAL_ESPECIAL": {
+    "_descripcion": "Materiales o construcciones específicas que aparecen como token",
+    "PET": {
+      "es": "Cuero tipo Pólvora/Hidrofugado Parafinado — bota petrolero",
+      "pt": "Couro Pólvora / Hidrof. Parafinado",
+      "nota": "Línea C32 para uso petroquímico"
+    },
+    "SELVA": {
+      "es": "Bota militar — lona en laterales, uso selva/campo",
+      "pt": "Bota Militar Lona"
+    },
+    "CRD": {
+      "es": "Cuero especial contra llamas (flame-resistant)",
+      "pt": "Couro Retardante Chamas"
+    },
+    "TXT": {
+      "es": "Material textil exterior",
+      "pt": "Têxtil Hidrofugado"
+    },
+    "MARRON": {
+      "es": "Color Marrón (escrito completo, sin abreviar)",
+      "pt": "Marrom",
+      "nota": "solo en 50C32-PET-A-MARRON"
+    }
+  },
+  "COLOR_NUBUCK_FAMILIA_75": {
+    "_descripcion": "Sistema de color Nubuck exclusivo de familia 75BPR / 75TPR. Prefijo CN + color.",
+    "CNG": {
+      "es": "Nubuck Gris",
+      "pt": "Nobuck Cinza"
+    },
+    "CNP": {
+      "es": "Nubuck Putty/Beige",
+      "pt": "Nobuck Bege"
+    },
+    "CNV": {
+      "es": "Nubuck Verde Musgo",
+      "pt": "Nobuck Verde Musgo"
+    },
+    "CNPT": {
+      "es": "Nubuck Putty + Textil",
+      "pt": "Nobuck Bege + Têxtil"
+    },
+    "CNTR": {
+      "es": "Nubuck Narrow Toe",
+      "pt": "Nobuck Narrow Toe"
+    }
+  },
+  "PROPIEDADES_TECNICAS": {
+    "_descripcion": "Características técnicas de protección o construcción",
+    "HIDRO": {
+      "es": "Resistente al agua (hidrorepelente)",
+      "pt": "Hidrorrepelente"
+    },
+    "ANT": {
+      "es": "Antiestático",
+      "pt": "Antiestático"
+    },
+    "CFR": {
+      "es": "Resistente al calor por contacto",
+      "pt": "Resistente ao Calor por Contato"
+    },
+    "TNC": {
+      "es": "Puntera no conductora",
+      "pt": "Biqueira Não Condutora"
+    },
+    "TNC3": {
+      "es": "Puntera no conductora clase 3",
+      "pt": "Biqueira Não Condutora Classe 3"
+    },
+    "IPX": {
+      "es": "Impermeable (rating IPX)",
+      "pt": "Impermeável IPX"
+    },
+    "WP": {
+      "es": "Waterproof",
+      "pt": "Waterproof"
+    },
+    "SRV": {
+      "es": "Resistente a ácidos/químicos",
+      "pt": "Resistente a Ácidos/Químicos"
+    },
+    "FRI": {
+      "es": "Resistente al frío",
+      "pt": "Resistente ao Frio"
+    },
+    "EXP": {
+      "es": "Acabado exportación",
+      "pt": "Acabamento Exportação"
+    },
+    "RDN": {
+      "es": "Reflectante nocturno",
+      "pt": "Refletivo Noturno"
+    },
+    "NT": {
+      "es": "Non-Toxic",
+      "pt": "Não Tóxico"
+    },
+    "CO": {
+      "es": "Conductivo (ESD)",
+      "pt": "Condutivo ESD"
+    },
+    "DRB": {
+      "es": "Drenaje / bota de agua",
+      "pt": "Drenagem"
+    },
+    "AOM": {
+      "es": "Accesorio/ortesis AOM",
+      "pt": "Acessório Ortese AOM"
+    }
+  },
+  "PROTECCIONES_ADICIONALES": {
+    "_descripcion": "Protecciones físicas adicionales al calzado estándar",
+    "MEX": {
+      "es": "Protector de metatarso externo",
+      "pt": "Protetor Metatarso Externo"
+    },
+    "M": {
+      "es": "Protector de metatarso (guard independiente)",
+      "pt": "Protetor Metatarso"
+    },
+    "CP": {
+      "es": "Protección de caña",
+      "pt": "Proteção Cano"
+    },
+    "PDG": {
+      "es": "Protección adicional empeine",
+      "pt": "Proteção Dorso Pé"
+    },
+    "ZP": {
+      "es": "Protección contra aplastamiento",
+      "pt": "Zona de Proteção"
+    },
+    "GI": {
+      "es": "Suela antiderrapante GI",
+      "pt": "Sola Antiderrapante GI"
+    },
+    "OSE": {
+      "es": "Outsole especial",
+      "pt": "Sola Especial OSE"
+    }
+  },
+  "CONSTRUCCION_CIERRE": {
+    "_descripcion": "Tipo de cierre o construcción del calzado",
+    "E": {
+      "es": "Elástico (cierre elástico lateral)",
+      "pt": "Elástico"
+    },
+    "C": {
+      "es": "Cuero liso / Costura lisa",
+      "pt": "Couro Liso"
+    },
+    "CB": {
+      "es": "Caña Baja",
+      "pt": "Cano Baixo"
+    },
+    "VEL": {
+      "es": "Cierre velcro",
+      "pt": "Velcro"
+    },
+    "VELCRO": {
+      "es": "Cierre velcro (nombre completo)",
+      "pt": "Velcro",
+      "nota": "mismo que VEL"
+    },
+    "SC": {
+      "es": "Sin caña (zapato bajo)",
+      "pt": "Sem Cano / Sapato"
+    },
+    "CX": {
+      "es": "Empaque especial",
+      "pt": "Caixa Especial"
+    },
+    "ILHP": {
+      "es": "Ojales plásticos",
+      "pt": "Ilhós Plástico"
+    },
+    "ILH": {
+      "es": "Ojales (metálicos)",
+      "pt": "Ilhós"
+    },
+    "TPU": {
+      "es": "Entresuela TPU",
+      "pt": "Entressola TPU"
+    },
+    "PL": {
+      "es": "Palmilla larga",
+      "pt": "Palmilha Longa"
+    }
+  },
+  "FORRO": {
+    "_descripcion": "Tipos de forro interior",
+    "CLI": {
+      "es": "Forro Climate (climate liner)",
+      "pt": "Forro Climate",
+      "aplica": "familia 75"
+    },
+    "BS": {
+      "es": "Bota Social (forro Outlast Climatech NASA)",
+      "pt": "Bota Social Outlast",
+      "aplica": "20S29-BS-T"
+    }
+  },
+  "LINEA_20S29_LONDON_SAFE": {
+    "_descripcion": "Tokens exclusivos del zapato social London Safe (20S29) — color + cierre",
+    "T": {
+      "es": "Negro, cierre cordón",
+      "pt": "Preto, Cadarço",
+      "CA": "33698"
+    },
+    "P": {
+      "es": "Negro, cierre cordón (variante CA)",
+      "pt": "Preto, Cadarço",
+      "CA": "41864"
+    },
+    "S": {
+      "es": "Marrón, cierre elástico",
+      "pt": "Marrom, Elástico",
+      "CA": "41864"
+    },
+    "BS": {
+      "es": "Bota Social Negro cordón, forro Outlast Climatech",
+      "pt": "Bota Social Preta Outlast"
+    }
+  },
+  "SUELA_MODELO": {
+    "_descripcion": "Tipo de suela o variante de modelo",
+    "ESC": {
+      "es": "Suela Escorial (calor extremo)",
+      "pt": "Sola Escorial"
+    },
+    "MAT": {
+      "es": "Modelo maternidad",
+      "pt": "Modelo Maternidade"
+    },
+    "MOT": {
+      "es": "Uso motocicleta",
+      "pt": "Motociclista"
+    },
+    "BOMB": {
+      "es": "Uso bombero",
+      "pt": "Bombeiro"
+    },
+    "PRSA": {
+      "es": "Suela PRSA antiestática",
+      "pt": "Sola PRSA"
+    },
+    "SNA": {
+      "es": "Suela SNA especial",
+      "pt": "Sola SNA"
+    },
+    "GR": {
+      "es": "Color Gris",
+      "pt": "Cinza"
+    }
+  },
+  "FAMILIA_75_VARIANTES": {
+    "_descripcion": "Variantes de midsole y configuración exclusivas de familia 75BPR / 75TPR",
+    "MSMC": {
+      "es": "Midsole Molded Composite",
+      "pt": "Midsole Moldado Composite"
+    },
+    "MM": {
+      "es": "Midsole Montada",
+      "pt": "Midsole Montada"
+    },
+    "MSC": {
+      "es": "Variante MSC",
+      "pt": "Variante MSC"
+    },
+    "MSNP": {
+      "es": "Variante MSNP",
+      "pt": "Variante MSNP"
+    },
+    "MSRO": {
+      "es": "Variante MSRO",
+      "pt": "Variante MSRO"
+    },
+    "MSP": {
+      "es": "Variante MSP",
+      "pt": "Variante MSP"
+    },
+    "MSPN": {
+      "es": "Variante MSPN",
+      "pt": "Variante MSPN"
+    },
+    "MP": {
+      "es": "Mid Profile",
+      "pt": "Perfil Médio"
+    },
+    "CLP": {
+      "es": "Cierre lateral/plaqueta",
+      "pt": "Fecho Lateral"
+    },
+    "NPF": {
+      "es": "Non-Perforated Full",
+      "pt": "Não Perfurado Full"
+    },
+    "NPM": {
+      "es": "Non-Perforated Medium",
+      "pt": "Não Perfurado Médio"
+    },
+    "NPP": {
+      "es": "Non-Perforated Partial",
+      "pt": "Não Perfurado Parcial"
+    },
+    "NPMF": {
+      "es": "Non-Perforated Medium Full",
+      "pt": "Não Perfurado Médio Full"
+    }
+  },
+  "LINEA_CLEAN_ROOM": {
+    "_descripcion": "Tokens específicos de líneas 101/102/103FCLEAN",
+    "FG": {
+      "es": "Faja/grampeado reforzado",
+      "pt": "Faixa Grampeada"
+    },
+    "FV": {
+      "es": "Proyecto cliente específico (FV)",
+      "pt": "Projeto Específico FV",
+      "tipo": "CLIENT_SPECIFIC"
+    },
+    "SC": {
+      "es": "Sin caña (versión sapato)",
+      "pt": "Sem Cano"
+    }
+  },
+  "OTROS_TECNICOS": {
+    "_descripcion": "Tokens técnicos de uso puntual",
+    "MIN": {
+      "es": "Versión mínima/compacta",
+      "pt": "Versão Mínima"
+    },
+    "EC": {
+      "es": "Electroconductive",
+      "pt": "Eletrocondutivo"
+    },
+    "LC": {
+      "es": "Clean Room (cuarto limpio)",
+      "pt": "Sala Limpa"
+    },
+    "MT": {
+      "es": "Monotax / importación simplificada",
+      "pt": "Monotax"
+    },
+    "BRIP": {
+      "es": "Brasil Import Product",
+      "pt": "BRIP"
+    },
+    "JGDP": {
+      "es": "Modelo JGDP",
+      "pt": "Modelo JGDP"
+    },
+    "LF": {
+      "es": "Línea femenina",
+      "pt": "Linha Feminina"
+    },
+    "GD": {
+      "es": "Suela gruesa/densa",
+      "pt": "Sola Grossa"
+    },
+    "LK": {
+      "es": "Cierre especial Lock",
+      "pt": "Fecho Lock"
+    },
+    "SN": {
+      "es": "Variante SN",
+      "pt": "Variante SN"
+    },
+    "V": {
+      "es": "Variante V (token suelto)",
+      "pt": "Variante V",
+      "nota": "distinto al sufijo V en nombre de modelo (50B22V)"
+    },
+    "UTE": {
+      "es": "Versión utilitaria",
+      "pt": "Utilitário"
+    },
+    "SM": {
+      "es": "Variante SM",
+      "pt": "Variante SM"
+    },
+    "ECT": {
+      "es": "Variante ECT",
+      "pt": "Variante ECT"
+    },
+    "CAV": {
+      "es": "Caña alta variante V",
+      "pt": "Cano Alto Variante V"
+    },
+    "PAZ": {
+      "es": "Antiperforante textil especial PAZ",
+      "pt": "Palmilha PAZ"
+    }
+  },
+  "CLIENT_SPECIFIC": {
+    "_descripcion": "Tokens que identifican productos hechos a medida para un cliente o proyecto específico. NO describir técnicamente — marcar como pedido especial.",
+    "ST": {
+      "cliente": "Sondel",
+      "es": "Modelo especial Sondel",
+      "nota": "75BPR29-MSMC-CPAP-ST"
+    },
+    "FV": {
+      "cliente": "N/I",
+      "es": "Proyecto específico FV",
+      "nota": "103FCLEAN EVA negro sin puntera"
+    },
+    "ERAM": {
+      "cliente": "ERAM",
+      "es": "Proyecto específico ERAM",
+      "nota": "cuero Relax Negro, puntera acero"
+    },
+    "NATCO": {
+      "cliente": "NATCO",
+      "es": "Proyecto específico NATCO",
+      "nota": "20S29 London Safe"
+    },
+    "LIBUS": {
+      "cliente": "LIBUS",
+      "es": "Proyecto específico LIBUS",
+      "nota": "95B22"
+    },
+    "RENEE": {
+      "cliente": "N/I",
+      "es": "Colección/proyecto RENEE",
+      "nota": "70B22-C-PAD microfibra negra"
+    },
+    "SUZ": {
+      "cliente": "N/I",
+      "es": "Colección/proyecto SUZ",
+      "nota": "70C32-MAT microfibra negra"
+    },
+    "LA": {
+      "cliente": "N/I",
+      "es": "Colección/proyecto LA",
+      "nota": "70B22-CPAP-PAD microfibra negra"
+    },
+    "LB": {
+      "cliente": "N/I",
+      "es": "Colección/proyecto LB",
+      "nota": "70B22-A microfibra marrón"
+    },
+    "LR": {
+      "cliente": "N/I",
+      "es": "Colección/proyecto LR",
+      "nota": "72B29-TXT textil hidrofugado"
+    },
+    "CNFL": {
+      "cliente": "CNFL (Compañía Nacional de Fuerza y Luz — Costa Rica)",
+      "es": "Modelo desarrollado específicamente para CNFL — etiqueta cosida secuencial numérica por talla",
+      "nota": "60B22V-CPAP-PAD-CNFL | etiqueta de trazabilidad cosida, numeración secuencial única por talla",
+      "pais": "Costa Rica"
+    }
+  },
+  "ACCESORIOS": {
+    "_descripcion": "SKUs que no son calzado — palmillas y cordones. Descripción libre, no aplican reglas de tokens.",
+    "PALMILHA_SOFTBED_PU": {
+      "es": "Palmilla Marluvas Softbed PU",
+      "sku": "801048"
+    },
+    "PALMILHA_HIGIENICA": {
+      "es": "Palmilla Higiénica",
+      "sku": "200190"
+    },
+    "CADARCO": {
+      "es": "Cordones (varios colores/materiales/longitudes)",
+      "skus": "grupo"
+    }
+  },
+  "IGNORAR": {
+    "_descripcion": "Tokens que deben ignorarse siempre. No son datos técnicos.",
+    "(CX)": "nota editorial entre paréntesis — variante empaque",
+    "(SC)": "nota editorial entre paréntesis — variante sin caña",
+    "(PRETO)": "nota editorial entre paréntesis — nota de color",
+    "MARLUVAS": "marca en nombre de accesorio — no es token de referencia"
+  }
+}
