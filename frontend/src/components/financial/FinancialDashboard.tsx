@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { DollarSign, TrendingUp, AlertTriangle, Clock, RefreshCw } from 'lucide-react';
 import { KPICard } from './KPICard';
 import { AgingTable } from './AgingTable';
-import api from '@/lib/api';
 
 interface FinancialKPIs {
   total_por_cobrar: number;
@@ -32,25 +31,15 @@ export function FinancialDashboard() {
     }
   }, []);
 
-  useEffect(() => { fetchKpis(); }, [fetchKpis]);
+  if (loading) return (
+    <div className="p-6 text-center text-[var(--text-disabled)] text-sm">Cargando KPIs financieros...</div>
+  );
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-[var(--navy)]">Dashboard financiero</h1>
-          <p className="text-sm text-[var(--text-tertiary)]">Visión consolidada de cobro y riesgo crediticio</p>
-        </div>
-        <button
-          onClick={fetchKpis}
-          disabled={loading}
-          aria-label="Actualizar KPIs"
-          className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)] hover:text-[var(--navy)] border border-[var(--border)] rounded-lg px-3 py-1.5 transition-colors disabled:opacity-40"
-        >
-          <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-          Actualizar
-        </button>
+      <div>
+        <h1 className="text-xl font-semibold text-[var(--navy)]">Dashboard financiero</h1>
+        <p className="text-sm text-[var(--text-tertiary)]">Visión consolidada de cobro y riesgo crediticio</p>
       </div>
 
       {/* Error banner */}
@@ -66,48 +55,30 @@ export function FinancialDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {loading ? (
-          // Skeleton KPI cards
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="card-mwt p-4 flex flex-col gap-3 animate-pulse">
-              <div className="flex items-center justify-between">
-                <div className="w-8 h-8 rounded-lg bg-[var(--border)]" />
-                <div className="w-4 h-4 rounded bg-[var(--border)]" />
-              </div>
-              <div className="space-y-2">
-                <div className="h-7 w-20 bg-[var(--border)] rounded" />
-                <div className="h-3 w-24 bg-[var(--border)] rounded" />
-              </div>
-            </div>
-          ))
-        ) : (
-          <>
-            <KPICard
-              label="Por cobrar"
-              value={`$${((kpis?.total_por_cobrar ?? 0) / 1000).toFixed(0)}K`}
-              icon={DollarSign}
-              trend="neutral"
-            />
-            <KPICard
-              label="Cobrado este mes"
-              value={`$${((kpis?.cobrado_mes ?? 0) / 1000).toFixed(0)}K`}
-              icon={TrendingUp}
-              trend="up"
-            />
-            <KPICard
-              label="Crítico (+90d)"
-              value={`$${((kpis?.vencido_critico ?? 0) / 1000).toFixed(0)}K`}
-              icon={AlertTriangle}
-              trend="down"
-            />
-            <KPICard
-              label="Días promedio cobro"
-              value={`${kpis?.promedio_dias_cobro ?? 0}d`}
-              icon={Clock}
-              trend="neutral"
-            />
-          </>
-        )}
+        <KPICard
+          label="Por cobrar"
+          value={`$${((kpis?.total_por_cobrar ?? 0) / 1000).toFixed(0)}K`}
+          icon={DollarSign}
+          trend="neutral"
+        />
+        <KPICard
+          label="Cobrado este mes"
+          value={`$${((kpis?.cobrado_mes ?? 0) / 1000).toFixed(0)}K`}
+          icon={TrendingUp}
+          trend="up"
+        />
+        <KPICard
+          label="Crítico (+90d)"
+          value={`$${((kpis?.vencido_critico ?? 0) / 1000).toFixed(0)}K`}
+          icon={AlertTriangle}
+          trend="down"
+        />
+        <KPICard
+          label="Días promedio cobro"
+          value={`${kpis?.promedio_dias_cobro ?? 0}d`}
+          icon={Clock}
+          trend="neutral"
+        />
       </div>
 
       {/* Aging Table */}

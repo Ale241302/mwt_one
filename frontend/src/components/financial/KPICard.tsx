@@ -10,21 +10,31 @@ interface KPICardProps {
 }
 
 export function KPICard({ label, value, icon: Icon, trend, sub }: KPICardProps) {
-  const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
-  const trendColor = trend === 'up' ? 'text-[#0E8A6D]' : trend === 'down' ? 'text-[#DC2626]' : 'text-slate-400';
+  const TrendIcon =
+    trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
+
+  const trendStyle: React.CSSProperties =
+    trend === 'up'
+      ? { color: 'var(--success)' }
+      : trend === 'down'
+      ? { color: 'var(--coral)' }
+      : { color: 'var(--text-disabled)' };
 
   return (
     <div className="card-mwt p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <div className="w-8 h-8 rounded-lg bg-[#013A57]/8 flex items-center justify-center">
-          <Icon size={16} className="text-[#013A57]" />
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--navy) 8%, transparent)' }}
+        >
+          <Icon size={16} style={{ color: 'var(--navy)' }} />
         </div>
-        <TrendIcon size={14} className={trendColor} />
+        <TrendIcon size={14} style={trendStyle} aria-hidden />
       </div>
       <div>
-        <p className="text-2xl font-bold text-[#013A57] font-mono">{value}</p>
-        <p className="text-xs text-slate-500 mt-0.5">{label}</p>
-        {sub && <p className="text-[11px] text-slate-400">{sub}</p>}
+        <p className="text-2xl font-bold font-mono" style={{ color: 'var(--navy)' }}>{value}</p>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
+        {sub && <p className="text-[11px]" style={{ color: 'var(--text-disabled)' }}>{sub}</p>}
       </div>
     </div>
   );

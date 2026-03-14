@@ -41,35 +41,9 @@ export function ClientFinancialPanel({ clientId }: ClientFinancialPanelProps) {
     }
   }, [clientId]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  // Skeleton
-  if (loading) {
-    return (
-      <div className="card-mwt p-5 flex flex-col gap-4 animate-pulse">
-        <div className="flex items-center justify-between">
-          <div className="h-4 w-32 bg-[var(--border)] rounded" />
-          <div className="h-5 w-16 bg-[var(--border)] rounded-full" />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 bg-[var(--border)] rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // Error
-  if (error || !data) {
-    return (
-      <div className="card-mwt p-4 flex items-center gap-2 text-sm text-red-600 bg-red-50">
-        <AlertTriangle size={15} className="flex-shrink-0" />
-        {error ?? 'Error al cargar datos financieros'}
-        <button onClick={fetchData} className="ml-auto text-xs font-semibold underline">Reintentar</button>
-      </div>
-    );
-  }
+  if (!data) return (
+    <div className="p-4 text-sm text-[var(--text-disabled)]">Cargando...</div>
+  );
 
   return (
     <div className="card-mwt p-5 flex flex-col gap-4">
