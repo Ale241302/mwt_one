@@ -24,13 +24,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
-    // useParams puede devolver string | string[] dependiendo del contexto;
-    // usamos cast seguro.
     const params = useParams() as { lang?: string };
     const lang = params?.lang ?? 'es';
 
     const checkAuth = useCallback(async () => {
         try {
+            // Ruta relativa: /api/core/auth/me/ → proxy → mwt-django:8000/api/core/auth/me/
             const response = await api.get('core/auth/me/');
             setUser(response.data.user);
         } catch {
@@ -40,7 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    // Solo corre UNA VEZ al montar
     useEffect(() => {
         checkAuth();
     }, [checkAuth]);

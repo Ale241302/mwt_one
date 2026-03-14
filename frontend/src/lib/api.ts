@@ -1,12 +1,11 @@
 import axios from 'axios';
 
-// NEXT_PUBLIC_API_URL debe apuntar al backend, e.g. https://consola.mwt.one
-// Si no está definida en tiempo de build/runtime, recae en origen relativo.
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
-
+// Todas las peticiones van a /api/... relativo al origen.
+// Next.js hace el proxy hacia mwt-django:8000 via rewrites en next.config.mjs.
+// Así evitamos CORS y problemas de cookies en producción.
 const api = axios.create({
-    baseURL: BASE_URL,
-    withCredentials: true, // Important for session cookies and CSRF
+    baseURL: '/api/',
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -41,7 +40,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response && error.response.status === 401) {
             const isLoginPage = typeof window !== 'undefined' && window.location.pathname.includes('/login');
-            const isAuthMe   = error.config?.url?.includes('/auth/me');
+            const isAuthMe   = error.config?.url?.includes('auth/me');
             if (!isLoginPage && !isAuthMe && typeof window !== 'undefined') {
                 window.location.href = `${getLangPrefix()}/login`;
             }

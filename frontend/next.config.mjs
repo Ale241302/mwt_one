@@ -11,13 +11,13 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ["minio", "localhost"],
+    domains: ["minio", "localhost", "187.77.218.102"],
   },
   async rewrites() {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:8000/api/:path*",
+        destination: `${process.env.INTERNAL_API_URL ?? 'http://mwt-django:8000'}/api/:path*`,
       },
     ];
   },
