@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { Users, Search, ShieldCheck, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-// S9-P04: MWTUser estructura post Sprint 8
+// Types
 interface MWTUser {
   id: string;
   username: string;
@@ -45,7 +44,6 @@ export default function UsuariosPage() {
     async function fetchUsuarios() {
       try {
         const token = localStorage.getItem("access_token");
-        // S9-P04: Verificar URL con CEO post Sprint 8 — provisional /api/users/
         const url = query
           ? `${process.env.NEXT_PUBLIC_API_URL}/api/users/?search=${encodeURIComponent(query)}`
           : `${process.env.NEXT_PUBLIC_API_URL}/api/users/`;
@@ -77,7 +75,7 @@ export default function UsuariosPage() {
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
         <input
           type="text"
-          placeholder="Buscar por nombre, email o username…"
+          placeholder="Buscar por nombre, email o username..."
           value={query}
           onChange={(e) => { setQuery(e.target.value); setLoading(true); }}
           className="w-full pl-9 pr-4 py-2 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-mint"
@@ -86,20 +84,20 @@ export default function UsuariosPage() {
 
       <div className="bg-white rounded-xl shadow-sm border border-border">
         {loading ? (
-          <div className="p-12 text-center text-text-secondary text-sm">Cargando usuarios…</div>
+          <div className="p-12 text-center text-text-secondary text-sm">Cargando usuarios...</div>
         ) : error ? (
           <div className="p-12 text-center text-[#DC2626] text-sm">{error}</div>
         ) : usuarios.length === 0 ? (
           <div className="p-12 text-center">
             <Users size={40} className="mx-auto text-text-secondary opacity-40 mb-3" />
-            <p className="text-text-secondary text-sm">{query ? `Sin resultados para «${query}»` : "Sin usuarios registrados."}</p>
+            <p className="text-text-secondary text-sm">{query ? `Sin resultados para ${query}` : "Sin usuarios registrados."}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  {["Usuario", "Email", "Rol", "Permisos", Último acceso", "Estado"].map((h) => (
+                  {["Usuario", "Email", "Rol", "Permisos", "Ultimo acceso", "Estado"].map((h) => (
                     <th key={h} className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-[0.5px] text-text-secondary">{h}</th>
                   ))}
                 </tr>
