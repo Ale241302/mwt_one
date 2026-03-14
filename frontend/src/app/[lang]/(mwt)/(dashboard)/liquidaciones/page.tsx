@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Receipt, Plus, ChevronRight, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Liquidacion {
@@ -46,12 +47,8 @@ export default function LiquidacionesPage() {
   useEffect(() => {
     async function fetchLiquidaciones() {
       try {
-        const token = localStorage.getItem("access_token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/liquidaciones/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        const data = await res.json();
+        const res = await api.get("liquidations/");
+        const data = res.data;
         setLiquidaciones(data.results ?? data);
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "Error desconocido";

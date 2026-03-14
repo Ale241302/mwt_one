@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Users, Search, ShieldCheck, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
 
 // Types
 interface MWTUser {
@@ -43,13 +44,11 @@ export default function UsuariosPage() {
   useEffect(() => {
     async function fetchUsuarios() {
       try {
-        const token = localStorage.getItem("access_token");
         const url = query
-          ? `${process.env.NEXT_PUBLIC_API_URL}/api/users/?search=${encodeURIComponent(query)}`
-          : `${process.env.NEXT_PUBLIC_API_URL}/api/users/`;
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        const data = await res.json();
+          ? `admin/users/?search=${encodeURIComponent(query)}`
+          : `admin/users/`;
+        const res = await api.get(url);
+        const data = res.data;
         setUsuarios(data.results ?? data);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Error");

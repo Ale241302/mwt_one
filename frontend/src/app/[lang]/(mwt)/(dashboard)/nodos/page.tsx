@@ -5,6 +5,7 @@ import { Network, Plus, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Nodo {
@@ -32,12 +33,8 @@ export default function NodosPage() {
   useEffect(() => {
     async function fetchNodos() {
       try {
-        const token = localStorage.getItem("access_token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/nodes/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        const data = await res.json();
+        const res = await api.get("core/nodes/");
+        const data = res.data;
         setNodos(data.results ?? data);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Error");

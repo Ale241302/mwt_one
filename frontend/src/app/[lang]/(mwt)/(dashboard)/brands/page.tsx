@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Building2, Plus, Globe, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Brand {
@@ -79,13 +80,11 @@ export default function BrandsPage() {
   useEffect(() => {
     async function fetchBrands() {
       try {
-        const token = localStorage.getItem("access_token");
         const url = filtro !== "TODAS"
-          ? `${process.env.NEXT_PUBLIC_API_URL}/api/brands/?estado=${filtro}`
-          : `${process.env.NEXT_PUBLIC_API_URL}/api/brands/`;
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        const data = await res.json();
+          ? `brands/?estado=${filtro}`
+          : `brands/`;
+        const res = await api.get(url);
+        const data = res.data;
         setBrands(data.results ?? data);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Error");

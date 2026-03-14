@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeftRight, Plus, ChevronRight, Clock, CheckCircle, Truck, Package, AlertTriangle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Transfer {
@@ -49,13 +50,11 @@ export default function TransfersPage() {
   useEffect(() => {
     async function fetchTransfers() {
       try {
-        const token = localStorage.getItem("access_token");
         const url = filtro !== "TODOS"
-          ? `${process.env.NEXT_PUBLIC_API_URL}/api/transfers/?estado=${filtro}`
-          : `${process.env.NEXT_PUBLIC_API_URL}/api/transfers/`;
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        const data = await res.json();
+          ? `transfers/?estado=${filtro}`
+          : `transfers/`;
+        const res = await api.get(url);
+        const data = res.data;
         setTransfers(data.results ?? data);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Error");
