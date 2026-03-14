@@ -2,89 +2,200 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===================================================
+   S9-16 — ENT_PLAT_DESIGN_TOKENS v2.1
+   MWT ONE — Design System
+   =================================================== */
+
 :root {
-  --navy: #013A57;
-  --navy-light: #014A73;
-  --navy-dark: #012B42;
-  --mint: #75CBB3;
-  --mint-soft: #E8F5F0;
-  --mint-dark: #5BB89E;
-  --ice: #A8D8EA;
-  --ice-soft: #EDF6FB;
-  --amber: #E8A23E;
-  --amber-soft: #FFF3DC;
-  --coral: #E85D5D;
-  --coral-soft: #FDECEC;
-  --success: #22A06B;
-  --success-soft: #DCFFF0;
-  --bg: #F8F9FB;
-  --bg-alt: #F0F2F5;
-  --surface: #FFFFFF;
-  --surface-hover: #F5F6F8;
-  --border: #E2E5EA;
-  --border-strong: #C8CDD5;
-  --divider: #ECEEF1;
-  --text-primary: #013A57;
+  /* ── Brand palette ────────────────────────────────── */
+  --navy:           #013A57;
+  --navy-light:     #014A73;
+  --navy-dark:      #012B42;
+  --mint:           #75CBB3;
+  --mint-soft:      #E8F5F0;
+  --mint-dark:      #5BB89E;
+  --ice:            #A8D8EA;
+  --ice-soft:       #EDF6FB;
+  --amber:          #E8A23E;
+  --amber-soft:     #FFF3DC;
+  --coral:          #E85D5D;
+  --coral-soft:     #FDECEC;
+  --success:        #22A06B;
+  --success-soft:   #DCFFF0;
+
+  /* ── Semantic surfaces ────────────────────────────── */
+  --bg:             #F8F9FB;
+  --bg-alt:         #F0F2F5;
+  --surface:        #FFFFFF;
+  --surface-hover:  #F5F6F8;
+  --border:         #E2E5EA;
+  --border-strong:  #C8CDD5;
+  --divider:        #ECEEF1;
+
+  /* ── Typography ───────────────────────────────────── */
+  --text-primary:   #013A57;
   --text-secondary: #3D4F5C;
-  --text-tertiary: #7A8A96;
-  --text-disabled: #B0BAC4;
-  --text-inverse: #FFFFFF;
+  --text-tertiary:  #7A8A96;
+  --text-disabled:  #B0BAC4;
+  --text-inverse:   #FFFFFF;
 
-  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
-  --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px;
+  /* ── Spacing ──────────────────────────────────────── */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px;  --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px;  --space-10: 40px;
 
-  --radius-sm:4px; --radius-md:6px; --radius-lg:8px;
-  --radius-xl:12px; --radius-2xl:16px; --radius-full:9999px;
+  /* ── Radius ───────────────────────────────────────── */
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   8px;
+  --radius-xl:   12px;
+  --radius-2xl:  16px;
+  --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 3px rgba(1,58,87,.06), 0 1px 2px rgba(1,58,87,.04);
-  --shadow-md: 0 4px 12px rgba(1,58,87,.08), 0 2px 4px rgba(1,58,87,.04);
-  --shadow-lg: 0 12px 32px rgba(1,58,87,.12), 0 4px 8px rgba(1,58,87,.06);
+  /* ── Shadows (multicapa) ──────────────────────────── */
+  --shadow-sm:  0 1px 3px rgba(1,58,87,.06), 0 1px 2px rgba(1,58,87,.04);
+  --shadow-md:  0 4px 12px rgba(1,58,87,.08), 0 2px 4px rgba(1,58,87,.04);
+  --shadow-lg:  0 12px 32px rgba(1,58,87,.12), 0 4px 8px rgba(1,58,87,.06);
 
-  --transition-fast: 150ms ease-out;
+  /* ── Transitions ──────────────────────────────────── */
+  --transition-fast:   150ms ease-out;
   --transition-normal: 200ms ease-out;
+  --transition-slow:   300ms cubic-bezier(0.2, 0, 0, 1);
 
-  --sidebar-w: 240px;
+  /* ── Layout ───────────────────────────────────────── */
+  --sidebar-w:         240px;
   --sidebar-collapsed: 64px;
-  --header-h: 56px;
+  --header-h:          56px;
+
+  /* ── Badge tokens (S9-16 Fix 3) ───────────────────── */
+  --badge-success-bg:  #F0FAF6;
+  --badge-success-fg:  #0E8A6D;
+  --badge-warning-bg:  #FFF7ED;
+  --badge-warning-fg:  #B45309;
+  --badge-danger-bg:   #FEF2F2;
+  --badge-danger-fg:   #DC2626;
+  --badge-info-bg:     #EFF6FF;
+  --badge-info-fg:     #1D4ED8;
+  --badge-neutral-bg:  #F1F5F9;
+  --badge-neutral-fg:  #475569;
 }
 
+/* ── Dark mode ────────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg: #0B1929;
-  --bg-alt: #0E1E30;
-  --surface: #0F2337;
-  --surface-hover: #132D47;
-  --border: #1E3A54;
-  --border-strong: #2A4D6B;
-  --divider: #172E45;
-  --text-primary: #F1F5F9;
+  --bg:             #0B1929;
+  --bg-alt:         #0E1E30;
+  --surface:        #0F2337;
+  --surface-hover:  #132D47;
+  --border:         #1E3A54;
+  --border-strong:  #2A4D6B;
+  --divider:        #172E45;
+  --text-primary:   #F1F5F9;
   --text-secondary: #94A3B8;
-  --text-tertiary: #5A6E82;
-  --text-disabled: #3A4F63;
-  --text-inverse: #0B1929;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.2);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.4), 0 2px 4px rgba(0,0,0,.2);
-  --shadow-lg: 0 12px 32px rgba(0,0,0,.5), 0 4px 8px rgba(0,0,0,.3);
-  --navy: #013A57;
+  --text-tertiary:  #5A6E82;
+  --text-disabled:  #3A4F63;
+  --text-inverse:   #0B1929;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.30), 0 1px 2px rgba(0,0,0,.20);
+  --shadow-md:  0 4px 12px rgba(0,0,0,.40), 0 2px 4px rgba(0,0,0,.20);
+  --shadow-lg:  0 12px 32px rgba(0,0,0,.50), 0 4px 8px rgba(0,0,0,.30);
+  --navy:       #013A57;
   --navy-light: #1A5A7A;
-  --navy-dark: #060F1A;
-  --mint: #75CBB3;
-  --mint-soft: rgba(117,203,179,.12);
-  --mint-dark: #5BB89E;
-  --ice-soft: rgba(168,216,234,.08);
-  --amber: #FFB347;
+  --navy-dark:  #060F1A;
+  --mint:       #75CBB3;
+  --mint-soft:  rgba(117,203,179,.12);
+  --mint-dark:  #5BB89E;
+  --ice-soft:   rgba(168,216,234,.08);
+  --amber:      #FFB347;
   --amber-soft: rgba(255,179,71,.12);
-  --coral: #FF6B72;
+  --coral:      #FF6B72;
   --coral-soft: rgba(255,107,114,.12);
-  --success: #75CBB3;
+  --success:    #75CBB3;
   --success-soft: rgba(117,203,179,.12);
+  /* Dark badge tokens */
+  --badge-success-bg:  rgba(14,138,109,.15);
+  --badge-success-fg:  #4ADE80;
+  --badge-warning-bg:  rgba(180,83,9,.15);
+  --badge-warning-fg:  #FCD34D;
+  --badge-danger-bg:   rgba(220,38,38,.15);
+  --badge-danger-fg:   #FCA5A5;
+  --badge-info-bg:     rgba(29,78,216,.15);
+  --badge-info-fg:     #93C5FD;
+  --badge-neutral-bg:  rgba(71,85,105,.15);
+  --badge-neutral-fg:  #CBD5E1;
 }
 
+/* ── Base styles ──────────────────────────────────────────────────────────── */
 body {
   color: var(--text-primary);
   background: var(--bg);
   @apply font-body antialiased;
 }
 
+/* ── Transitions ──────────────────────────────────────────────────────────── */
 .transition-all-custom {
   transition: all var(--transition-normal);
+}
+
+.transition-sidebar {
+  transition-property: width, border-color, background-color;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* ── S9-02 Timeline pulse animation ──────────────────────────────────────── */
+@keyframes timeline-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(1,58,87,.25); }
+  70%  { box-shadow: 0 0 0 6px rgba(1,58,87,.00); }
+  100% { box-shadow: 0 0 0 0   rgba(1,58,87,.00); }
+}
+
+.animate-timeline-pulse {
+  animation: timeline-pulse 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-timeline-pulse { animation: none; }
+}
+
+/* ── S9-16 Fix 3 — Badge global (.badge-mwt) ─────────────────────────────── */
+.badge-mwt {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+}
+
+.badge-success { background: var(--badge-success-bg); color: var(--badge-success-fg); }
+.badge-warning { background: var(--badge-warning-bg); color: var(--badge-warning-fg); }
+.badge-danger  { background: var(--badge-danger-bg);  color: var(--badge-danger-fg);  }
+.badge-info    { background: var(--badge-info-bg);    color: var(--badge-info-fg);    }
+.badge-neutral { background: var(--badge-neutral-bg); color: var(--badge-neutral-fg); }
+
+/* ── Card radius-xl global (.card-mwt) ───────────────────────────────────── */
+.card-mwt {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+.card-mwt:hover {
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-fast);
+}
+
+/* ── Focus ring ──────────────────────────────────────────────────────────── */
+.focus-ring {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
