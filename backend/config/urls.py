@@ -1,5 +1,5 @@
-﻿"""
-Sprint 1 â€” Root URL Configuration (Item 7)
+"""
+Sprint 1 — Root URL Configuration (Item 7)
 18 command endpoints under /api/expedientes/
 Ref: LOTE_SM_SPRINT1 Item 7, PLB_SPRINT1_PROMPTS FIX-4
 
@@ -20,4 +20,6 @@ urlpatterns = [
     path('api/liquidations/', include('apps.liquidations.urls', namespace='liquidations')),
     path('api/brands/', include('apps.brands.urls')),
     path('api/qr/', include('apps.qr.urls')),
+    # Sprint 8 — MWTUser Admin API (S9-P04)
+    path('api/admin/users/', include('apps.users.urls', namespace='users')),
 ]
