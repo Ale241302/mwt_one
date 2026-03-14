@@ -1,5 +1,7 @@
 # Sprint 8 - Data migration: migrar CEO a MWTUser
 # IMPORTANTE: lista congelada — NO importar constantes del app
+# FIX: auth.User está swapped por users.MWTUser — usar directamente MWTUser.
+# En fresh-DB no hay superuser previo, la migración es no-op.
 from django.db import migrations
 
 CEO_PERMISSIONS = [
@@ -10,34 +12,16 @@ CEO_PERMISSIONS = [
 
 
 def migrate_ceo(apps, schema_editor):
-    OldUser = apps.get_model('auth', 'User')
+    # auth.User está swapped — acceder directo a MWTUser
     MWTUser = apps.get_model('users', 'MWTUser')
     UserPermission = apps.get_model('users', 'UserPermission')
 
-    try:
-        old = OldUser.objects.get(is_superuser=True)
-    except OldUser.DoesNotExist:
-        # No hay superuser previo, nada que migrar
-        return
-    except OldUser.MultipleObjectsReturned:
-        old = OldUser.objects.filter(is_superuser=True).order_by('id').first()
-
-    # Si ya existe el MWTUser con ese PK, no duplicar
-    if MWTUser.objects.filter(id=old.id).exists():
+    # En fresh-DB no hay superusers previos: no-op
+    superusers = MWTUser.objects.filter(is_superuser=True)
+    if not superusers.exists():
         return
 
-    MWTUser.objects.create(
-        id=old.id,
-        username=old.username,
-        email=old.email,
-        password=old.password,
-        is_superuser=old.is_superuser,
-        is_staff=old.is_staff,
-        is_active=old.is_active,
-        date_joined=old.date_joined,
-        role='CEO',
-        is_api_user=True,
-    )
+    old = superusers.order_by('id').first()
 
     for perm in CEO_PERMISSIONS:
         UserPermission.objects.get_or_create(
