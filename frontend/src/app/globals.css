@@ -3,77 +3,115 @@
 @tailwind utilities;
 
 /* ===================================================
-   S9-16 — ENT_PLAT_DESIGN_TOKENS v2.0
+   S9-16 — ENT_PLAT_DESIGN_TOKENS v2.1
    Design tokens MWT ONE
    =================================================== */
 
 :root {
-  /* Brand palette */
-  --navy: #013A57;
-  --mint: #75CBB3;
-  --sand: #F5F0E8;
-  --slate-bg: #F8FAFC;
+  /* ─── Brand palette (raw) ─────────────────────── */
+  --navy:          #013A57;
+  --mint:          #75CBB3;
+  --mint-dark:     #4DAF96;   /* hover / active mint */
+  --coral:         #E05252;   /* error / danger */
+  --coral-dark:    #C03A3A;   /* hover coral */
+  --coral-soft:    #FEF2F2;   /* error tint bg */
+  --amber:         #B45309;   /* warning text */
+  --amber-soft:    #FFF7ED;   /* warning tint bg */
+  --sand:          #F5F0E8;
+  --slate-bg:      #F8FAFC;
 
-  /* Semantic */
-  --bg: var(--slate-bg);
-  --surface: #FFFFFF;
-  --text-primary: #0F172A;
+  /* ─── Sidebar (navy scale) ────────────────────── */
+  --navy-border:   rgba(255,255,255,0.10);  /* divider en sidebar */
+  --navy-hover:    rgba(255,255,255,0.06);  /* hover item */
+  --navy-active:   rgba(255,255,255,0.08);  /* item activo */
+
+  /* ─── Semantic bg / surface ───────────────────── */
+  --bg:            var(--slate-bg);
+  --bg-alt:        #F1F5F9;   /* fondo alternativo (slate-100 equiv.) */
+  --surface:       #FFFFFF;
+  --surface-hover: #F8FAFC;   /* hover sobre surface */
+
+  /* ─── Text ────────────────────────────────────── */
+  --text-primary:   #0F172A;
   --text-secondary: #475569;
-  --text-muted: #94A3B8;
-  --interactive: var(--mint);
-  --border: #E2E8F0;
+  --text-tertiary:  #64748B;
+  --text-muted:     #94A3B8;  /* alias de tertiary, más suave */
+  --text-disabled:  #94A3B8;
+  --text-inverse:   #FFFFFF;  /* texto sobre fondos oscuros (navy, coral, mint) */
 
-  /* Radius */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  /* ─── Borders ─────────────────────────────────── */
+  --border:        #E2E8F0;
+  --border-strong: #CBD5E1;   /* separadores más visibles */
+
+  /* ─── Interactive ─────────────────────────────── */
+  --interactive: var(--mint);
+
+  /* ─── Radius ──────────────────────────────────── */
+  --radius-sm:  4px;
+  --radius-md:  6px;
+  --radius-lg:  8px;
+  --radius-xl:  12px;
   --radius-2xl: 16px;
 
-  /* Shadows PROP-01 */
-  --shadow-sm: 0 1px 2px rgba(1,58,87,0.04), 0 2px 8px -2px rgba(1,58,87,0.08);
-  --shadow-md: 0 2px 4px rgba(1,58,87,0.06), 0 4px 16px -4px rgba(1,58,87,0.12);
-  --shadow-lg: 0 4px 8px rgba(1,58,87,0.08), 0 8px 32px -8px rgba(1,58,87,0.16);
+  /* ─── Shadows PROP-01 ─────────────────────────── */
+  --shadow-sm: 0 1px 2px rgba(1,58,87,0.04),  0 2px  8px -2px rgba(1,58,87,0.08);
+  --shadow-md: 0 2px 4px rgba(1,58,87,0.06),  0 4px 16px -4px rgba(1,58,87,0.12);
+  --shadow-lg: 0 4px 8px rgba(1,58,87,0.08),  0 8px 32px -8px rgba(1,58,87,0.16);
+  --shadow-xl: 0 8px 16px rgba(1,58,87,0.10), 0 20px 48px -8px rgba(1,58,87,0.20);
 }
 
-/* Dark mode */
+/* ===================================================
+   Dark mode overrides
+   =================================================== */
 @media (prefers-color-scheme: dark) {
-  :root, .dark {
-    --bg: #0B1929;
-    --surface: #0F2337;
-    --text-primary: #F1F5F9;
-    --text-secondary: #CBD5E1;
-    --text-muted: #64748B;
-    --border: #1E3A52;
+  :root {
+    --bg:            #0B1929;
+    --bg-alt:        #0F2337;
+    --surface:       #0F2337;
+    --surface-hover: #162E45;
+    --text-primary:  #F1F5F9;
+    --text-secondary:#CBD5E1;
+    --text-tertiary: #94A3B8;
+    --text-muted:    #64748B;
+    --text-disabled: #64748B;
+    --border:        #1E3A52;
+    --border-strong: #2A4D68;
+    --coral-soft:    rgba(224,82,82,0.15);
+    --amber-soft:    rgba(180,83,9,0.15);
   }
 }
 
 .dark {
-  --bg: #0B1929;
-  --surface: #0F2337;
-  --text-primary: #F1F5F9;
-  --text-secondary: #CBD5E1;
-  --text-muted: #64748B;
-  --border: #1E3A52;
+  --bg:            #0B1929;
+  --bg-alt:        #0F2337;
+  --surface:       #0F2337;
+  --surface-hover: #162E45;
+  --text-primary:  #F1F5F9;
+  --text-secondary:#CBD5E1;
+  --text-tertiary: #94A3B8;
+  --text-muted:    #64748B;
+  --text-disabled: #64748B;
+  --border:        #1E3A52;
+  --border-strong: #2A4D68;
+  --coral-soft:    rgba(224,82,82,0.15);
+  --amber-soft:    rgba(180,83,9,0.15);
 }
 
 /* ===================================================
    S9-02 — Timeline pulse animation
    =================================================== */
 @keyframes timeline-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(1,58,87,0.25); }
+  0%   { box-shadow: 0 0 0 0   rgba(1,58,87,0.25); }
   70%  { box-shadow: 0 0 0 6px rgba(1,58,87,0); }
-  100% { box-shadow: 0 0 0 0 rgba(1,58,87,0); }
+  100% { box-shadow: 0 0 0 0   rgba(1,58,87,0); }
 }
 
 .animate-timeline-pulse {
-  animation: timeline-pulse 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  animation: timeline-pulse 2s infinite cubic-bezier(0.4,0,0.2,1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-timeline-pulse {
-    animation: none;
-  }
+  .animate-timeline-pulse { animation: none; }
 }
 
 /* ===================================================
@@ -82,11 +120,12 @@
 .transition-sidebar {
   transition-property: width, border-color, background-color;
   transition-duration: 300ms;
-  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  transition-timing-function: cubic-bezier(0.2,0,0,1);
 }
 
 /* ===================================================
-   S9-16 — Badge global (aplica a .badge-mwt)
+   S9-16 — Badges globales (.badge-mwt)
+   Usan tokens en lugar de hex directos
    =================================================== */
 .badge-mwt {
   display: inline-flex;
@@ -99,11 +138,26 @@
   letter-spacing: 0.5px;
 }
 
-.badge-success { background: #F0FAF6; color: #0E8A6D; }
-.badge-warning { background: #FFF7ED; color: #B45309; }
-.badge-danger  { background: #FEF2F2; color: #DC2626; }
-.badge-info    { background: #EFF6FF; color: #1D4ED8; }
-.badge-neutral { background: #F1F5F9; color: #475569; }
+.badge-success {
+  background: color-mix(in srgb, var(--mint) 15%, white);
+  color: var(--mint-dark);
+}
+.badge-warning {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+.badge-danger {
+  background: var(--coral-soft);
+  color: var(--coral);
+}
+.badge-info {
+  background: #EFF6FF;
+  color: #1D4ED8;
+}
+.badge-neutral {
+  background: var(--bg-alt);
+  color: var(--text-secondary);
+}
 
 /* ===================================================
    Card radius-xl global
