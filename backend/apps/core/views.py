@@ -124,10 +124,11 @@ class DashboardView(APIView):
         total_cost = CostLine.objects.aggregate(total=Sum('amount'))['total'] or 0
 
         # S9-P05 — by_status: conteo de expedientes por status (para MiniPipeline)
+        # FIX: Expediente usa expediente_id como PK, no 'id'
         by_status_qs = (
             Expediente.objects
             .values("status")
-            .annotate(count=Count("id"))
+            .annotate(count=Count("expediente_id"))
             .order_by("status")
         )
         by_status = [
