@@ -1,94 +1,60 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  darkMode: 'class',
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       colors: {
-        navy: {
-          DEFAULT: "var(--navy)",
-          light: "var(--navy-light)",
-          dark: "var(--navy-dark)",
+        // S9-16 MWT Brand tokens
+        navy:  { DEFAULT: '#013A57', light: '#0A4F75', dark: '#012840' },
+        mint:  { DEFAULT: '#75CBB3', light: '#A0DACE', dark: '#5AB89E' },
+        sand:  { DEFAULT: '#F5F0E8', dark: '#EAE3D2' },
+        // Semantic (mapean a CSS vars para dark mode)
+        surface: 'var(--surface)',
+        mwt: {
+          bg:           'var(--bg)',
+          surface:      'var(--surface)',
+          'text-primary':   'var(--text-primary)',
+          'text-secondary': 'var(--text-secondary)',
+          'text-muted':     'var(--text-muted)',
+          interactive:  'var(--interactive)',
+          border:       'var(--border)',
         },
-        mint: {
-          DEFAULT: "var(--mint)",
-          soft: "var(--mint-soft)",
-          dark: "var(--mint-dark)",
-        },
-        ice: {
-          DEFAULT: "var(--ice)",
-          soft: "var(--ice-soft)",
-        },
-        amber: {
-          DEFAULT: "var(--amber)",
-          soft: "var(--amber-soft)",
-        },
-        coral: {
-          DEFAULT: "var(--coral)",
-          soft: "var(--coral-soft)",
-        },
-        success: {
-          DEFAULT: "var(--success)",
-          soft: "var(--success-soft)",
-        },
-        bg: {
-          DEFAULT: "var(--bg)",
-          alt: "var(--bg-alt)",
-        },
-        surface: {
-          DEFAULT: "var(--surface)",
-          hover: "var(--surface-hover)",
-        },
-        border: {
-          DEFAULT: "var(--border)",
-          strong: "var(--border-strong)",
-        },
-        divider: "var(--divider)",
-        text: {
-          primary: "var(--text-primary)",
-          secondary: "var(--text-secondary)",
-          tertiary: "var(--text-tertiary)",
-          disabled: "var(--text-disabled)",
-          inverse: "var(--text-inverse)",
+        // Credit band colors
+        credit: {
+          'green-bg':   '#F0FAF6',
+          'green-text': '#0E8A6D',
+          'amber-bg':   '#FFF7ED',
+          'amber-text': '#B45309',
+          'red-bg':     '#FEF2F2',
+          'red-text':   '#DC2626',
         },
       },
       fontFamily: {
-        display: ["var(--font-display)", "sans-serif"],
-        body: ["var(--font-body)", "sans-serif"],
-        mono: ["var(--font-mono)", "monospace"],
-      },
-      spacing: {
-        "1": "var(--space-1)",
-        "2": "var(--space-2)",
-        "3": "var(--space-3)",
-        "4": "var(--space-4)",
-        "5": "var(--space-5)",
-        "6": "var(--space-6)",
-        "8": "var(--space-8)",
-        "10": "var(--space-10)",
-        "sidebar": "var(--sidebar-w)",
-        "sidebar-collapsed": "var(--sidebar-collapsed)",
-        "header": "var(--header-h)",
+        sans:    ['var(--font-general-sans)', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['var(--font-general-sans)', 'Inter', 'system-ui', 'sans-serif'],
+        mono:    ['var(--font-geist-mono)', 'JetBrains Mono', 'monospace'],
       },
       borderRadius: {
-        sm: "var(--radius-sm)",
-        md: "var(--radius-md)",
-        lg: "var(--radius-lg)",
-        xl: "var(--radius-xl)",
-        "2xl": "var(--radius-2xl)",
-        full: "var(--radius-full)",
+        sm:  '4px',
+        md:  '6px',
+        lg:  '8px',
+        xl:  '12px',
+        '2xl': '16px',
       },
       boxShadow: {
-        sm: "var(--shadow-sm)",
-        md: "var(--shadow-md)",
-        lg: "var(--shadow-lg)",
+        sm: '0 1px 2px rgba(1,58,87,0.04), 0 2px 8px -2px rgba(1,58,87,0.08)',
+        md: '0 2px 4px rgba(1,58,87,0.06), 0 4px 16px -4px rgba(1,58,87,0.12)',
+        lg: '0 4px 8px rgba(1,58,87,0.08), 0 8px 32px -8px rgba(1,58,87,0.16)',
       },
     },
   },
   plugins: [],
 };
+
 export default config;
