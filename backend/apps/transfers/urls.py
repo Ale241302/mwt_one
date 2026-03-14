@@ -4,6 +4,9 @@ from apps.transfers import views
 app_name = 'transfers'
 
 urlpatterns = [
+    # S9-P02 — Nodes (URL canónica: /api/transfers/nodes/)
+    path("nodes/", views.list_nodes_view, name="nodes"),
+    # Sprint 5 — Transfer CRUD
     path("", views.list_transfers_view, name="list"),
     path("create/", views.create_transfer_view, name="create"),
     path("<str:transfer_id>/approve/", views.approve_transfer_view, name="approve"),
