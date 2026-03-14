@@ -7,6 +7,11 @@ import { Search, ShieldAlert, X, ArrowUp, ArrowDown, Folder, Plus } from "lucide
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import {
+    CANONICAL_STATES,
+    STATE_BADGE_CLASSES,
+    STATE_LABELS,
+} from "@/constants/states";
 
 interface Expediente {
     id: number;
@@ -22,11 +27,6 @@ interface Expediente {
     is_blocked: boolean;
     last_event_at: string | null;
 }
-
-const statusOptions = [
-    "REGISTRO", "EVALUACION_PREVIA", "FORMALIZACION", "PRODUCCION",
-    "QC", "TRANSITO", "ENTREGA", "CERRADO"
-];
 
 const brandOptions = [
     "SKECHERS", "ON", "SPEEDO", "TOMS", "ASICS", "VIVAIA", "TECMATER"
@@ -90,15 +90,9 @@ function ExpedientesContent() {
         currency: 'USD',
     });
 
+    // S9-01: usa STATE_BADGE_CLASSES del design system canonical
     const getStatusBadgeColor = (status: string) => {
-        switch (status) {
-            case 'REGISTRO': return 'bg-ice-soft text-navy border-ice';
-            case 'EVALUACION_PREVIA': return 'bg-amber-soft text-amber border-amber/30';
-            case 'PRODUCCION': return 'bg-mint-soft text-mint-dark border-mint/30';
-            case 'TRANSITO': return 'bg-bg-alt text-text-secondary border-border';
-            case 'CERRADO': return 'bg-success-soft text-success border-success/30';
-            default: return 'bg-surface hover:bg-surface-hover border-border text-text-secondary';
-        }
+        return STATE_BADGE_CLASSES[status] ?? 'bg-surface border-border text-text-secondary';
     };
 
     const getCreditColor = (band: string) => {
@@ -128,8 +122,9 @@ function ExpedientesContent() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-display font-bold">Expedientes</h1>
+                    {/* S9-01: copy aprobado */}
                     <p className="text-sm text-text-tertiary">
-                        Gestiona el ciclo de vida, aduanas y bodegaje.
+                        Consulta y filtra expedientes por estado, cliente y riesgo.
                     </p>
                 </div>
                 <button
@@ -153,13 +148,18 @@ function ExpedientesContent() {
                     />
                 </div>
 
+                {/* S9-01: dropdown con CANONICAL_STATES — 8 estados exactos */}
                 <select
                     value={statusFilter}
                     onChange={(e) => { setStatusFilter(e.target.value); }}
                     className="bg-bg border border-border rounded-lg px-4 py-2 text-sm text-text-secondary focus:outline-none focus:ring-2 focus:ring-mint-soft"
                 >
                     <option value="">Estado: Todos</option>
-                    {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    {CANONICAL_STATES.map(s => (
+                        <option key={s} value={s}>
+                            {STATE_LABELS[s] ?? s}
+                        </option>
+                    ))}
                 </select>
 
                 <select
@@ -263,10 +263,10 @@ function ExpedientesContent() {
                                         </td>
                                         <td className="px-5 py-4">
                                             <span className={cn(
-                                                "inline-flex font-semibold px-2.5 py-1 rounded-md text-[11px] leading-none uppercase border",
+                                                "inline-flex font-semibold px-2.5 py-1 rounded-md text-[11px] leading-none uppercase tracking-[0.5px] border",
                                                 getStatusBadgeColor(exp.status)
                                             )}>
-                                                {exp.status.replace(/_/g, ' ')}
+                                                {STATE_LABELS[exp.status] ?? exp.status.replace(/_/g, ' ')}
                                             </span>
                                         </td>
                                         <td className="px-5 py-4 text-sm font-medium text-text-secondary">
@@ -287,7 +287,7 @@ function ExpedientesContent() {
                                         <td className="px-5 py-4 text-sm text-text-tertiary">
                                             {exp.last_event_at
                                                 ? formatDistanceToNow(new Date(exp.last_event_at), { addSuffix: true, locale: es })
-                                                : 'Sin actividad'}
+                                                : 'Sin eventos registrados'}
                                         </td>
                                     </tr>
                                 ))

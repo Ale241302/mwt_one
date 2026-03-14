@@ -10,8 +10,9 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import {
     ArrowLeft, ShieldAlert, CheckCircle2, XCircle, FileText, Ban,
-    DollarSign, CreditCard,
+    DollarSign, CreditCard, XOctagon,
 } from 'lucide-react';
+import { TIMELINE_STATES_CANONICAL } from '@/constants/states';
 
 // ── Modal / Drawer imports ────────────────────────────────
 import ArtifactFormDrawer from '@/components/modals/ArtifactFormDrawer';
@@ -20,7 +21,6 @@ import CancelExpedienteModal from '@/components/modals/CancelExpedienteModal';
 import InvoiceModal from '@/components/modals/InvoiceModal';
 import RegisterCostDrawer from '@/components/modals/RegisterCostDrawer';
 import RegisterPaymentDrawer from '@/components/modals/RegisterPaymentDrawer';
-
 import SupersederModal from '@/components/modals/SupersederModal';
 import VoidArtifactModal from '@/components/modals/VoidArtifactModal';
 
@@ -28,7 +28,7 @@ import VoidArtifactModal from '@/components/modals/VoidArtifactModal';
 import CostsSection from '@/components/expediente/CostsSection';
 import DocumentMirrorPanel from '@/components/expediente/DocumentMirrorPanel';
 
-// ✅ FIX: Error Boundary para capturar crashes de componentes hijo (404 → .reduce crash)
+// ✅ FIX: Error Boundary para capturar crashes de componentes hijo
 interface EBState { hasError: boolean }
 class SectionErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, EBState> {
     constructor(props: { children: ReactNode; fallback?: ReactNode }) {
@@ -76,7 +76,6 @@ interface Artifact {
     updated_at: string;
 }
 
-// En [id]/page.tsx, reemplaza la interfaz Expediente actual por:
 interface Expediente {
     id: string;
     custom_ref: string;
@@ -100,7 +99,6 @@ interface Expediente {
     total_cost: number;
     artifact_count: number;
     last_event_at: string | null;
-    // Campos financieros opcionales del bundle
     currency?: string;
     total_billed_client?: number;
     total_paid?: number;
@@ -132,16 +130,6 @@ const ARTIFACT_LABELS: Record<string, string> = {
     'ART-19': 'Logística',
 };
 
-const TIMELINE_STATES = [
-    { id: 'REGISTRO', label: 'Registro' },
-    { id: 'PRODUCCION', label: 'Producción' },
-    { id: 'PREPARACION', label: 'Preparación' },
-    { id: 'TRANSITO', label: 'En Tránsito' },
-    { id: 'DESTINO', label: 'En Destino' },
-    { id: 'FACTURADO', label: 'Facturado' },
-    { id: 'CERRADO', label: 'Cerrado' }
-];
-
 const COMMAND_LABELS: Record<string, string> = {
     'C2': 'Registrar OC',
     'C3': 'Registrar Proforma',
@@ -167,8 +155,8 @@ const CMD_TO_ARTIFACT: Partial<Record<string, ArtifactType>> = {
     'C10': 'ART-07',
 };
 
-// Estados en los que se permite emitir factura
-const INVOICE_ALLOWED_STATUSES = ['DESTINO', 'FACTURADO'];
+// S9-02: status que permiten emitir factura (EN_DESTINO es el canónico correcto)
+const INVOICE_ALLOWED_STATUSES = ['EN_DESTINO', 'CERRADO'];
 
 // ─────────────── ArtifactPayloadCard (ART-06 / ART-08) ───
 
@@ -181,74 +169,26 @@ function ArtifactPayloadCard({ artifact }: { artifact: Artifact }) {
             <div className="bg-blue-50/50 rounded-xl border border-blue-100 p-5 space-y-3">
                 <div className="flex items-center justify-between">
                     <h5 className="text-sm font-bold text-navy flex items-center gap-2">
-                        🚢 {ARTIFACT_LABELS['ART-06'] || 'ART-06'}
+                        {ARTIFACT_LABELS['ART-06'] || 'ART-06'}
                     </h5>
                     <span className={cn(
-                        "px-2 py-0.5 text-xs font-semibold rounded-full border",
-                        artifact.status === 'COMPLETED' ? "bg-emerald-50 text-mint border-emerald-200" :
-                            "bg-amber-50 text-amber-700 border-amber-200"
+                        "badge-mwt",
+                        artifact.status === 'COMPLETED' ? "badge-success" : "badge-warning"
                     )}>
                         {artifact.status_display}
                     </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                    {p.carrier && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Naviera / Carrier</div>
-                            <div className="font-medium text-text-primary">{String(p.carrier)}</div>
-                        </div>
-                    )}
-                    {p.freight_cost !== undefined && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Costo Flete</div>
-                            <div className="font-medium text-text-primary">
-                                ${Number(p.freight_cost).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </div>
-                        </div>
-                    )}
-                    {p.transit_days !== undefined && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Días Tránsito</div>
-                            <div className="font-medium text-text-primary">{String(p.transit_days)} días</div>
-                        </div>
-                    )}
-                    {p.eta && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">ETA</div>
-                            <div className="font-medium text-text-primary">{String(p.eta)}</div>
-                        </div>
-                    )}
-                    {p.origin_port && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Puerto Origen</div>
-                            <div className="font-medium text-text-primary">{String(p.origin_port)}</div>
-                        </div>
-                    )}
-                    {p.destination_port && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Puerto Destino</div>
-                            <div className="font-medium text-text-primary">{String(p.destination_port)}</div>
-                        </div>
-                    )}
-                    {p.container_type && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Tipo Contenedor</div>
-                            <div className="font-medium text-text-primary">{String(p.container_type)}</div>
-                        </div>
-                    )}
-                    {p.incoterm && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Incoterm</div>
-                            <div className="font-medium text-text-primary">{String(p.incoterm)}</div>
-                        </div>
-                    )}
+                    {p.carrier && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Naviera / Carrier</div><div className="font-medium text-text-primary">{String(p.carrier)}</div></div>)}
+                    {p.freight_cost !== undefined && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Costo Flete</div><div className="font-medium text-text-primary">${Number(p.freight_cost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div></div>)}
+                    {p.transit_days !== undefined && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Días Tránsito</div><div className="font-medium text-text-primary">{String(p.transit_days)} días</div></div>)}
+                    {p.eta && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">ETA</div><div className="font-medium text-text-primary">{String(p.eta)}</div></div>)}
+                    {p.origin_port && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Puerto Origen</div><div className="font-medium text-text-primary">{String(p.origin_port)}</div></div>)}
+                    {p.destination_port && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Puerto Destino</div><div className="font-medium text-text-primary">{String(p.destination_port)}</div></div>)}
+                    {p.container_type && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Tipo Contenedor</div><div className="font-medium text-text-primary">{String(p.container_type)}</div></div>)}
+                    {p.incoterm && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Incoterm</div><div className="font-medium text-text-primary">{String(p.incoterm)}</div></div>)}
                 </div>
-                {p.file_url && (
-                    <a href={String(p.file_url)} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs text-navy hover:underline mt-1">
-                        <FileText className="w-3.5 h-3.5" /> Ver documento
-                    </a>
-                )}
+                {p.file_url && (<a href={String(p.file_url)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-navy hover:underline mt-1"><FileText className="w-3.5 h-3.5" /> Ver documento</a>)}
             </div>
         );
     }
@@ -258,64 +198,24 @@ function ArtifactPayloadCard({ artifact }: { artifact: Artifact }) {
             <div className="bg-emerald-50/50 rounded-xl border border-emerald-100 p-5 space-y-3">
                 <div className="flex items-center justify-between">
                     <h5 className="text-sm font-bold text-emerald-800 flex items-center gap-2">
-                        📋 {ARTIFACT_LABELS['ART-08'] || 'ART-08'}
+                        {ARTIFACT_LABELS['ART-08'] || 'ART-08'}
                     </h5>
                     <span className={cn(
-                        "px-2 py-0.5 text-xs font-semibold rounded-full border",
-                        artifact.status === 'COMPLETED' ? "bg-emerald-50 text-mint border-emerald-200" :
-                            "bg-amber-50 text-amber-700 border-amber-200"
+                        "badge-mwt",
+                        artifact.status === 'COMPLETED' ? "badge-success" : "badge-warning"
                     )}>
                         {artifact.status_display}
                     </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                    {p.customs_agent && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Agente Aduanal</div>
-                            <div className="font-medium text-text-primary">{String(p.customs_agent)}</div>
-                        </div>
-                    )}
-                    {p.customs_cost !== undefined && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Costo Aduana</div>
-                            <div className="font-medium text-text-primary">
-                                ${Number(p.customs_cost).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </div>
-                        </div>
-                    )}
-                    {p.customs_declaration && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Declaración</div>
-                            <div className="font-medium text-text-primary">{String(p.customs_declaration)}</div>
-                        </div>
-                    )}
-                    {p.tariff_code && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Código Arancelario</div>
-                            <div className="font-medium text-text-primary">{String(p.tariff_code)}</div>
-                        </div>
-                    )}
-                    {p.tax_amount !== undefined && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Impuestos</div>
-                            <div className="font-medium text-text-primary">
-                                ${Number(p.tax_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </div>
-                        </div>
-                    )}
-                    {p.dispatch_mode && (
-                        <div>
-                            <div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Modo Despacho</div>
-                            <div className="font-medium text-text-primary">{String(p.dispatch_mode).toUpperCase()}</div>
-                        </div>
-                    )}
+                    {p.customs_agent && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Agente Aduanal</div><div className="font-medium text-text-primary">{String(p.customs_agent)}</div></div>)}
+                    {p.customs_cost !== undefined && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Costo Aduana</div><div className="font-medium text-text-primary">${Number(p.customs_cost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div></div>)}
+                    {p.customs_declaration && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Declaración</div><div className="font-medium text-text-primary">{String(p.customs_declaration)}</div></div>)}
+                    {p.tariff_code && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Código Arancelario</div><div className="font-medium text-text-primary">{String(p.tariff_code)}</div></div>)}
+                    {p.tax_amount !== undefined && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Impuestos</div><div className="font-medium text-text-primary">${Number(p.tax_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div></div>)}
+                    {p.dispatch_mode && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Modo Despacho</div><div className="font-medium text-text-primary">{String(p.dispatch_mode).toUpperCase()}</div></div>)}
                 </div>
-                {p.file_url && (
-                    <a href={String(p.file_url)} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs text-emerald-700 hover:underline mt-1">
-                        <FileText className="w-3.5 h-3.5" /> Ver documento
-                    </a>
-                )}
+                {p.file_url && (<a href={String(p.file_url)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-emerald-700 hover:underline mt-1"><FileText className="w-3.5 h-3.5" /> Ver documento</a>)}
             </div>
         );
     }
@@ -331,27 +231,22 @@ export default function ExpedienteDetailPage() {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
 
-    // ── Core data ─────────────────────────────────────────
     const [bundle, setBundle] = useState<ExpedienteBundle | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // ── Modal / Drawer states ─────────────────────────────
     const [artifactDrawerOpen, setArtifactDrawerOpen] = useState(false);
     const [artifactDrawerType, setArtifactDrawerType] = useState<ArtifactType>('ART-01');
-
     const [blockModalOpen, setBlockModalOpen] = useState(false);
     const [cancelModalOpen, setCancelModalOpen] = useState(false);
     const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
     const [costDrawerOpen, setCostDrawerOpen] = useState(false);
     const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
     const [voidModalOpen, setVoidModalOpen] = useState(false);
-
     const [supersederOpen, setSupersederOpen] = useState(false);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [supersederArtifact, _setSupersederArtifact] = useState<{ id: string; type: string }>({ id: '', type: '' });
 
-    // ── Fetch ─────────────────────────────────────────────
     const fetchBundle = useCallback(async () => {
         try {
             setLoading(true);
@@ -368,12 +263,8 @@ export default function ExpedienteDetailPage() {
     }, [id]);
 
     useEffect(() => {
-        if (!authLoading && user) {
-            fetchBundle();
-        }
+        if (!authLoading && user) fetchBundle();
     }, [user, authLoading, fetchBundle]);
-
-    // ── Handlers ──────────────────────────────────────────
 
     const openArtifactDrawer = (type: ArtifactType) => {
         setArtifactDrawerType(type);
@@ -382,20 +273,12 @@ export default function ExpedienteDetailPage() {
 
     const handleAction = async (cmd: string) => {
         const drawerType = CMD_TO_ARTIFACT[cmd];
-        if (drawerType) {
-            openArtifactDrawer(drawerType);
-            return;
-        }
-
-        if (cmd === 'C13') {
-            setInvoiceModalOpen(true);
-            return;
-        }
+        if (drawerType) { openArtifactDrawer(drawerType); return; }
+        if (cmd === 'C13') { setInvoiceModalOpen(true); return; }
 
         try {
             let endpoint = '';
             const payload = {};
-
             switch (cmd) {
                 case 'C6': endpoint = `expedientes/${id}/confirm-production/`; break;
                 case 'C11': endpoint = `expedientes/${id}/confirm-departure/`; break;
@@ -405,7 +288,6 @@ export default function ExpedienteDetailPage() {
                     toast('Acción requiere payload. No implementada en UI aún.', { icon: '🚧' });
                     return;
             }
-
             toast.success(`Ejecutando ${COMMAND_LABELS[cmd] || cmd}...`);
             await api.post(endpoint, payload);
             toast.success('Comando ejecutado con éxito');
@@ -415,8 +297,6 @@ export default function ExpedienteDetailPage() {
             toast.error('Error al ejecutar: ' + (e.response?.data?.detail || e.message));
         }
     };
-
-    // ── Loading / Error states ────────────────────────────
 
     if (loading) {
         return (
@@ -436,10 +316,7 @@ export default function ExpedienteDetailPage() {
                     {error || 'No se encontró el expediente'}
                 </div>
                 <div className="mt-4">
-                    <button
-                        onClick={() => router.push('/expedientes')}
-                        className="text-navy hover:underline"
-                    >
+                    <button onClick={() => router.push('/expedientes')} className="text-navy hover:underline">
                         ← Volver a expedientes
                     </button>
                 </div>
@@ -449,26 +326,29 @@ export default function ExpedienteDetailPage() {
 
     const { expediente, artifacts, available_actions } = bundle;
 
-    // Credit clock calculation
+    // Credit clock
     let creditDays = 0;
     let creditType: 'ok' | 'amber' | 'coral' = 'ok';
-
     if (expediente.credit_clock_started_at) {
         const start = parseISO(expediente.credit_clock_started_at);
         const diffTime = Math.abs(new Date().getTime() - start.getTime());
         creditDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
         if (creditDays >= 75) creditType = 'coral';
         else if (creditDays >= 60) creditType = 'amber';
     }
 
-    const currentStateIndex = TIMELINE_STATES.findIndex(s => s.id === expediente.status);
+    // S9-02: usa TIMELINE_STATES_CANONICAL (7 pasos, sin FACTURADO, con DESPACHO)
+    const currentStateIndex = TIMELINE_STATES_CANONICAL.findIndex(
+        s => s.id === expediente.status
+    );
+    const isCancelled = expediente.status === 'CANCELADO';
 
     const enrichedArtTypes = new Set(['ART-06', 'ART-08']);
-    const enrichedArtifacts = artifacts.filter(a => enrichedArtTypes.has(a.artifact_type) && a.status !== 'SUPERSEDED');
+    const enrichedArtifacts = artifacts.filter(
+        a => enrichedArtTypes.has(a.artifact_type) && a.status !== 'SUPERSEDED'
+    );
 
     const hasInvoice = artifacts.some(a => a.artifact_type === 'ART-09' && a.status === 'COMPLETED');
-    // ✅ FIX: Solo mostrar "Emitir Factura" si el estado lo permite
     const canIssueInvoice = INVOICE_ALLOWED_STATUSES.includes(expediente.status);
 
     return (
@@ -484,18 +364,32 @@ export default function ExpedienteDetailPage() {
 
             {/* ───────── Header ───────── */}
             <div className="flex items-center gap-4 flex-wrap">
+                {/* S9-16: ref en font-mono, no font-display */}
                 <h1 className="text-3xl font-display font-medium text-text-primary tracking-tight">
-                    {expediente.custom_ref || `EXP-${expediente.id?.toString().slice(0, 8)}`}
-                </h1>
-                <div className="flex gap-2 items-center">
-                    <span className={cn(
-                        "px-2.5 py-1 text-xs font-semibold rounded-full border shadow-sm",
-                        expediente.status === 'REGISTRO' ? "bg-slate-100 text-slate-700 border-slate-200" :
-                            expediente.status === 'CERRADO' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                                "bg-blue-50 text-navy border-blue-200"
-                    )}>
-                        {expediente.status}
+                    <span className="font-mono text-2xl font-semibold">
+                        {expediente.custom_ref || `EXP-${expediente.id?.toString().slice(0, 8)}`}
                     </span>
+                </h1>
+                <div className="flex gap-2 items-center flex-wrap">
+                    {/* Estado badge — ocultar si CANCELADO (se muestra como badge lateral especial) */}
+                    {!isCancelled && (
+                        <span className={cn(
+                            "badge-mwt border shadow-sm",
+                            expediente.status === 'REGISTRO' ? "badge-neutral border-slate-200" :
+                                expediente.status === 'CERRADO' ? "badge-success border-emerald-200" :
+                                    "bg-blue-50 text-navy border-blue-200"
+                        )}>
+                            {expediente.status}
+                        </span>
+                    )}
+
+                    {/* S9-02: CANCELADO como badge rojo especial lateral */}
+                    {isCancelled && (
+                        <span className="badge-mwt badge-danger border border-red-300 flex items-center gap-1.5 shadow-sm">
+                            <XOctagon className="w-3.5 h-3.5" />
+                            CANCELADO
+                        </span>
+                    )}
 
                     {creditDays > 0 && (
                         <span className={cn(
@@ -514,7 +408,7 @@ export default function ExpedienteDetailPage() {
                     )}
 
                     {expediente.is_blocked && (
-                        <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full bg-red-100 text-red-700 border border-red-200 shadow-sm animate-pulse-soft">
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full bg-red-100 text-red-700 border border-red-200 shadow-sm">
                             <Ban className="w-3.5 h-3.5" />
                             BLOQUEADO
                         </span>
@@ -522,32 +416,50 @@ export default function ExpedienteDetailPage() {
                 </div>
             </div>
 
-            {/* ───────── Timeline ───────── */}
+            {/* ───────── S9-02: Timeline 7 pasos canónicos ───────── */}
             <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 overflow-x-auto">
-                <h4 className="text-sm font-semibold text-text-secondary mb-6 uppercase tracking-wider">Timeline</h4>
-                <div className="flex items-center justify-between min-w-[700px]">
-                    {TIMELINE_STATES.map((state, idx) => {
+                <div className="flex items-center justify-between mb-6">
+                    <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Timeline</h4>
+                    {/* Badge CANCELADO lateral — no interrumpe el flujo lineal */}
+                    {isCancelled && (
+                        <span className="badge-mwt badge-danger border border-red-300 flex items-center gap-1.5">
+                            <XOctagon className="w-3.5 h-3.5" />
+                            Expediente Cancelado
+                        </span>
+                    )}
+                </div>
+
+                <div className={cn(
+                    "flex items-center justify-between min-w-[700px]",
+                    isCancelled && "opacity-50"
+                )}>
+                    {TIMELINE_STATES_CANONICAL.map((state, idx) => {
                         const isCompleted = idx < currentStateIndex;
-                        const isCurrent = idx === currentStateIndex;
+                        const isCurrent = idx === currentStateIndex && !isCancelled;
                         return (
                             <div key={state.id} className="relative flex-1 group">
-                                {idx < TIMELINE_STATES.length - 1 && (
+                                {idx < TIMELINE_STATES_CANONICAL.length - 1 && (
                                     <div className={cn(
                                         "absolute top-4 left-1/2 w-full h-[2px] -z-10",
                                         isCompleted ? "bg-navy" : "bg-slate-200"
                                     )} />
                                 )}
-
                                 <div className="flex flex-col items-center">
                                     <div className={cn(
-                                        "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-transform duration-300",
-                                        isCompleted ? "bg-navy border-navy text-white" :
-                                            isCurrent ? "bg-white border-navy text-navy ring-4 ring-blue-50 scale-110 shadow-md" :
-                                                "bg-white border-slate-200 text-slate-400"
+                                        "flex items-center justify-center border-2 transition-all duration-300",
+                                        // S9-02: dot sizes del design system
+                                        isCompleted
+                                            ? "w-8 h-8 rounded-full bg-[#75CBB3] border-[#75CBB3] text-white"  // Mint completado
+                                            : isCurrent
+                                            ? "w-9 h-9 rounded-full bg-[#013A57] border-[#013A57] text-white animate-timeline-pulse scale-110 shadow-md"  // Navy activo + pulse
+                                            : "w-8 h-8 rounded-full bg-white border-dashed border-slate-300 text-slate-400"  // dashed futuro
                                     )}>
-                                        {isCompleted ? <CheckCircle2 className="w-5 h-5" /> :
-                                            isCurrent ? <div className="w-3 h-3 bg-navy rounded-full animate-pulse" /> :
-                                                <span className="text-xs font-medium">{idx + 1}</span>}
+                                        {isCompleted
+                                            ? <CheckCircle2 className="w-5 h-5" />
+                                            : isCurrent
+                                            ? <div className="w-3 h-3 bg-white rounded-full" />
+                                            : <span className="text-xs font-medium">{idx + 1}</span>
+                                        }
                                     </div>
                                     <div className={cn(
                                         "mt-3 text-xs font-medium text-center",
@@ -566,12 +478,9 @@ export default function ExpedienteDetailPage() {
             {/* ───────── Actions Panel ───────── */}
             <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
                 <div className="flex flex-col md:flex-row md:items-start gap-8">
-
                     {/* Pipeline actions */}
                     <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-text-secondary mb-4 flex items-center gap-2">
-                            <span className="text-lg">⚡</span> Acciones Pipeline
-                        </h4>
+                        <h4 className="text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">Acciones Pipeline</h4>
                         <div className="flex flex-wrap gap-3">
                             {available_actions.length > 0 ? (
                                 available_actions.map(cmd => (
@@ -587,8 +496,10 @@ export default function ExpedienteDetailPage() {
                                 <div className="text-sm text-text-tertiary flex items-center gap-2">
                                     <ShieldAlert className="w-4 h-4" />
                                     {expediente.is_blocked
-                                        ? "Expediente bloqueado. Desbloquear para continuar."
-                                        : "No hay acciones disponibles en el estado actual."}
+                                        ? 'Expediente bloqueado. Desbloquear para continuar.'
+                                        : expediente.status === 'CERRADO'
+                                        ? 'Este expediente completó su flujo operativo.'
+                                        : 'Sin acciones disponibles en el estado actual.'}
                                 </div>
                             )}
                         </div>
@@ -598,9 +509,7 @@ export default function ExpedienteDetailPage() {
 
                     {/* Ops / Admin actions */}
                     <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-text-secondary mb-4 flex items-center gap-2">
-                            <span className="text-lg">🔧</span> Acciones Ops / Admin
-                        </h4>
+                        <h4 className="text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">Acciones Ops</h4>
                         <div className="flex flex-wrap gap-3">
                             <button
                                 onClick={() => setBlockModalOpen(true)}
@@ -639,7 +548,6 @@ export default function ExpedienteDetailPage() {
                                 Cancelar Expediente
                             </button>
 
-                            {/* ✅ FIX: Emitir Factura solo visible si status lo permite y no hay factura activa */}
                             {!hasInvoice && canIssueInvoice && (
                                 <button
                                     onClick={() => setInvoiceModalOpen(true)}
@@ -650,7 +558,6 @@ export default function ExpedienteDetailPage() {
                                 </button>
                             )}
 
-                            {/* Anular Factura solo si ya existe una factura activa */}
                             {hasInvoice && (
                                 <button
                                     onClick={() => setVoidModalOpen(true)}
@@ -662,17 +569,15 @@ export default function ExpedienteDetailPage() {
                             )}
                         </div>
                     </div>
-
                 </div>
             </div>
 
             {/* ───────── Details Grid ───────── */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
                 {/* Info */}
-                <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
-                    <div className="px-6 py-4 border-b border-border bg-slate-50/50 flex items-center justify-between">
-                        <h4 className="text-sm font-semibold text-text-primary">📋 Datos del expediente</h4>
+                <div className="card-mwt overflow-hidden flex flex-col">
+                    <div className="px-6 py-4 border-b border-border bg-slate-50/50">
+                        <h4 className="text-sm font-semibold text-text-primary">Datos del expediente</h4>
                     </div>
                     <div className="p-6 grid grid-cols-2 gap-y-6 gap-x-4">
                         <div>
@@ -689,29 +594,25 @@ export default function ExpedienteDetailPage() {
                         </div>
                         <div>
                             <div className="text-xs text-text-tertiary uppercase tracking-wider font-semibold mb-1">Modo</div>
-                            <div className="text-sm font-medium text-text-primary">
-                                {expediente.mode || '—'}
-                            </div>
+                            <div className="text-sm font-medium text-text-primary">{expediente.mode || '—'}</div>
                         </div>
                     </div>
                 </div>
 
                 {/* Artifacts Table */}
-                <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
+                <div className="card-mwt overflow-hidden flex flex-col">
                     <div className="px-6 py-4 border-b border-border bg-slate-50/50 flex items-center justify-between">
-                        <h4 className="text-sm font-semibold text-text-primary">📎 Artefactos</h4>
-                        <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold font-mono">
-                            {artifacts.length}
-                        </span>
+                        <h4 className="text-sm font-semibold text-text-primary">Artefactos</h4>
+                        <span className="badge-mwt badge-neutral">{artifacts.length}</span>
                     </div>
                     <div className="flex-1 overflow-auto max-h-[300px]">
                         {artifacts.length > 0 ? (
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-slate-50 sticky top-0 border-b border-border text-xs text-text-tertiary uppercase font-semibold">
                                     <tr>
-                                        <th className="px-6 py-3 font-medium">Tipo</th>
-                                        <th className="px-6 py-3 font-medium">Estado</th>
-                                        <th className="px-6 py-3 font-medium text-right">Fecha</th>
+                                        <th className="px-6 py-3">Tipo</th>
+                                        <th className="px-6 py-3">Estado</th>
+                                        <th className="px-6 py-3 text-right">Fecha</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
@@ -722,10 +623,10 @@ export default function ExpedienteDetailPage() {
                                             </td>
                                             <td className="px-6 py-3">
                                                 <span className={cn(
-                                                    "px-2 py-0.5 text-xs font-semibold rounded-full border shadow-[inset_0_1px_1px_rgba(255,255,255,0.5)]",
-                                                    art.status === 'COMPLETED' ? "bg-emerald-50 text-mint border-emerald-200" :
-                                                        art.status === 'SUPERSEDED' ? "bg-slate-100 text-slate-500 border-slate-200" :
-                                                            "bg-red-50 text-coral border-red-200"
+                                                    "badge-mwt border",
+                                                    art.status === 'COMPLETED' ? "badge-success border-emerald-200" :
+                                                        art.status === 'SUPERSEDED' ? "badge-neutral border-slate-200" :
+                                                            "badge-danger border-red-200"
                                                 )}>
                                                     {art.status_display}
                                                 </span>
@@ -740,20 +641,17 @@ export default function ExpedienteDetailPage() {
                         ) : (
                             <div className="p-8 text-center text-text-tertiary text-sm flex flex-col items-center">
                                 <FileText className="w-8 h-8 opacity-20 mb-2" />
-                                No hay artefactos registrados
+                                Sin artefactos en este expediente.
                             </div>
                         )}
                     </div>
                 </div>
-
             </div>
 
-            {/* ───────── Enriched Artifact Cards (ART-06, ART-08) ───────── */}
+            {/* ───────── Enriched Artifact Cards ───────── */}
             {enrichedArtifacts.length > 0 && (
                 <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-2">
-                        📦 Detalle de Artefactos Clave
-                    </h4>
+                    <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Detalle de Artefactos Clave</h4>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {enrichedArtifacts.map(art => (
                             <ArtifactPayloadCard key={art.artifact_id} artifact={art} />
@@ -764,10 +662,7 @@ export default function ExpedienteDetailPage() {
 
             {/* ───────── Costs Section ───────── */}
             <SectionErrorBoundary>
-                <CostsSection
-                    expedienteId={id}
-                    onRegisterCost={() => setCostDrawerOpen(true)}
-                />
+                <CostsSection expedienteId={id} onRegisterCost={() => setCostDrawerOpen(true)} />
             </SectionErrorBoundary>
 
             {/* ───────── Documents Mirror Panel ───────── */}
@@ -776,7 +671,6 @@ export default function ExpedienteDetailPage() {
             </SectionErrorBoundary>
 
             {/* ═══════════ Modals / Drawers ═══════════ */}
-
             <ArtifactFormDrawer
                 open={artifactDrawerOpen}
                 onClose={() => setArtifactDrawerOpen(false)}
@@ -788,41 +682,10 @@ export default function ExpedienteDetailPage() {
                 artifacts={artifacts}
                 onSuccess={fetchBundle}
             />
-
-            <BlockUnblockModal
-                open={blockModalOpen}
-                onClose={() => setBlockModalOpen(false)}
-                expedienteId={id}
-                isBlocked={expediente.is_blocked}
-                blockReason={expediente.block_reason}
-                onSuccess={fetchBundle}
-            />
-
-            <CancelExpedienteModal
-                open={cancelModalOpen}
-                onClose={() => setCancelModalOpen(false)}
-                expedienteId={id}
-                currentStatus={expediente.status}
-                onSuccess={fetchBundle}
-            />
-
-            <InvoiceModal
-                open={invoiceModalOpen}
-                onClose={() => setInvoiceModalOpen(false)}
-                expedienteId={id}
-                clientName={expediente.client_name}
-                expedienteMode={expediente.mode}
-                dispatchMode={expediente.dispatch_mode}
-                artifacts={artifacts}
-                onSuccess={fetchBundle}
-            />
-
-            <RegisterCostDrawer
-                open={costDrawerOpen}
-                onClose={() => setCostDrawerOpen(false)}
-                expedienteId={id}
-                onSuccess={fetchBundle}
-            />
+            <BlockUnblockModal open={blockModalOpen} onClose={() => setBlockModalOpen(false)} expedienteId={id} isBlocked={expediente.is_blocked} blockReason={expediente.block_reason} onSuccess={fetchBundle} />
+            <CancelExpedienteModal open={cancelModalOpen} onClose={() => setCancelModalOpen(false)} expedienteId={id} currentStatus={expediente.status} onSuccess={fetchBundle} />
+            <InvoiceModal open={invoiceModalOpen} onClose={() => setInvoiceModalOpen(false)} expedienteId={id} clientName={expediente.client_name} expedienteMode={expediente.mode} dispatchMode={expediente.dispatch_mode} artifacts={artifacts} onSuccess={fetchBundle} />
+            <RegisterCostDrawer open={costDrawerOpen} onClose={() => setCostDrawerOpen(false)} expedienteId={id} onSuccess={fetchBundle} />
             <RegisterPaymentDrawer
                 open={paymentDrawerOpen}
                 onClose={() => setPaymentDrawerOpen(false)}
@@ -836,23 +699,8 @@ export default function ExpedienteDetailPage() {
                 }}
                 onSuccess={fetchBundle}
             />
-
-            <SupersederModal
-                open={supersederOpen}
-                onClose={() => setSupersederOpen(false)}
-                expedienteId={id}
-                artifactId={supersederArtifact.id}
-                artifactType={supersederArtifact.type}
-                onSuccess={fetchBundle}
-            />
-
-            <VoidArtifactModal
-                open={voidModalOpen}
-                onClose={() => setVoidModalOpen(false)}
-                expedienteId={id}
-                onSuccess={fetchBundle}
-            />
-
+            <SupersederModal open={supersederOpen} onClose={() => setSupersederOpen(false)} expedienteId={id} artifactId={supersederArtifact.id} artifactType={supersederArtifact.type} onSuccess={fetchBundle} />
+            <VoidArtifactModal open={voidModalOpen} onClose={() => setVoidModalOpen(false)} expedienteId={id} onSuccess={fetchBundle} />
         </div>
     );
 }
