@@ -45,7 +45,6 @@ export function PipelineView() {
     only_blocked: false,
   });
 
-  // fix: usa api (axios con token) en lugar de fetch() nativo
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -63,7 +62,7 @@ export function PipelineView() {
     } catch (err: unknown) {
       const e = err as { message?: string };
       console.error("[PipelineView] fetch error:", e);
-      setError("No se pudo cargar el pipeline. Verifica tu conexión.");
+      setError("No se pudo cargar el pipeline. Verifica tu conexion.");
     } finally {
       setLoading(false);
     }
@@ -84,40 +83,40 @@ export function PipelineView() {
   const byState = (state: CanonicalState) => filtered.filter((e) => e.status === state);
 
   return (
-    <div className="flex flex-col h-full gap-4 p-6">
-      {/* ── Header ── */}
+    <div className="flex flex-col h-full gap-4 p-6" style={{ background: "#F8F9FB" }}>
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[var(--navy)]">Pipeline operativo</h1>
-          <p className="text-sm text-[var(--text-tertiary)]">
+          <h1 className="text-xl font-semibold" style={{ color: "#013A57" }}>Pipeline operativo</h1>
+          <p className="text-sm" style={{ color: "#7A8A96" }}>
             {loading ? "Cargando..." : `${filtered.length} expediente${filtered.length !== 1 ? "s" : ""}`}
           </p>
         </div>
 
         {/* View toggle */}
-        <div className="flex items-center gap-1 border border-[var(--border)] rounded-xl p-1 bg-[var(--surface)]">
+        <div className="flex items-center gap-1 rounded-xl p-1" style={{ border: "1px solid #E2E5EA", background: "#FFFFFF" }}>
           <button
             onClick={() => setViewMode("pipeline")}
-            aria-pressed={viewMode === "pipeline"}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
-              viewMode === "pipeline"
-                ? "bg-[var(--navy)] text-[var(--text-inverse)]"
-                : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
             )}
+            style={viewMode === "pipeline"
+              ? { background: "#013A57", color: "#FFFFFF" }
+              : { color: "#7A8A96" }
+            }
           >
             <Kanban size={14} />
             Pipeline
           </button>
           <button
             onClick={() => setViewMode("table")}
-            aria-pressed={viewMode === "table"}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
-              viewMode === "table"
-                ? "bg-[var(--navy)] text-[var(--text-inverse)]"
-                : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
             )}
+            style={viewMode === "table"
+              ? { background: "#013A57", color: "#FFFFFF" }
+              : { color: "#7A8A96" }
+            }
           >
             <Table2 size={14} />
             Tabla
@@ -125,7 +124,8 @@ export function PipelineView() {
           <button
             disabled
             title="Disponible en Sprint 10"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-disabled)] cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-not-allowed"
+            style={{ color: "#B0BAC4" }}
           >
             <Calendar size={14} />
             Calendario
@@ -133,38 +133,33 @@ export function PipelineView() {
         </div>
       </div>
 
-      {/* ── Filters ── */}
+      {/* Filters */}
       <PipelineFilters expedientes={expedientes} filters={filters} onChange={setFilters} />
 
-      {/* ── Error state ── */}
+      {/* Error state */}
       {error && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+        <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm" style={{ background: "#FEF2F2", border: "1px solid #FECACA", color: "#DC2626" }}>
           <AlertTriangle size={16} className="flex-shrink-0" />
           {error}
-          <button
-            onClick={fetchAll}
-            className="ml-auto text-xs font-semibold underline hover:no-underline"
-          >
+          <button onClick={fetchAll} className="ml-auto text-xs font-semibold underline hover:no-underline">
             Reintentar
           </button>
         </div>
       )}
 
-      {/* ── Content ── */}
+      {/* Content */}
       {loading ? (
-        // Skeleton de columnas
         <div className="flex gap-3 overflow-x-auto pb-4">
           {PIPELINE_STATES.map((s) => (
             <div key={s} className="flex flex-col w-64 min-w-[256px] gap-2">
-              <div className="h-5 bg-[var(--border)] rounded animate-pulse w-24" />
+              <div className="h-5 rounded animate-pulse w-24" style={{ background: "#E2E5EA" }} />
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-24 bg-[var(--border)] rounded-xl animate-pulse" />
+                <div key={i} className="h-24 rounded-xl animate-pulse" style={{ background: "#E2E5EA" }} />
               ))}
             </div>
           ))}
         </div>
       ) : viewMode === "pipeline" ? (
-        // ── Kanban board ──
         <div className="flex-1 overflow-x-auto">
           <div className="flex gap-3 h-full min-w-max pb-4">
             {PIPELINE_STATES.map((state) => (
@@ -178,24 +173,21 @@ export function PipelineView() {
           </div>
         </div>
       ) : (
-        // ── Table view ──
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto rounded-xl" style={{ border: "1px solid #E2E5EA", background: "#FFFFFF" }}>
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b border-[var(--border)] bg-[var(--bg-alt)] text-left">
-                <th className="px-4 py-2.5 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.5px]">Ref</th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.5px]">Cliente</th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.5px]">Brand</th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.5px]">Estado</th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.5px]">Crédito</th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.5px]">Avance</th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.5px]">Acción pendiente</th>
+              <tr style={{ borderBottom: "1px solid #E2E5EA", background: "#F0F2F5" }}>
+                {["REF", "CLIENTE", "BRAND", "ESTADO", "CREDITO", "AVANCE", "ACCION PENDIENTE"].map((h) => (
+                  <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: "#3D4F5C" }}>
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-[var(--text-disabled)]">
+                  <td colSpan={7} className="px-4 py-10 text-center" style={{ color: "#B0BAC4" }}>
                     No hay expedientes con los filtros aplicados
                   </td>
                 </tr>
@@ -203,30 +195,28 @@ export function PipelineView() {
                 filtered.map((e, i) => (
                   <tr
                     key={e.id}
-                    className={cn(
-                      "border-b border-[var(--divider)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer",
-                      i % 2 === 0 ? "bg-[var(--surface)]" : "bg-[var(--bg)]"
-                    )}
+                    className="transition-colors cursor-pointer hover:bg-gray-50"
+                    style={{ borderBottom: "1px solid #ECEEF1", background: i % 2 === 0 ? "#FFFFFF" : "#F8F9FB" }}
                     onClick={() => router.push(`/expedientes/${e.id}`)}
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
                         {e.is_blocked && (
-                          <AlertTriangle size={12} className="text-[var(--coral)]" aria-label="Bloqueado" />
+                          <AlertTriangle size={12} style={{ color: "#E85D5D" }} aria-label="Bloqueado" />
                         )}
-                        <span className="font-mono text-xs font-semibold text-[var(--navy)]">{e.ref}</span>
+                        <span className="font-mono text-xs font-semibold" style={{ color: "#013A57" }}>{e.ref}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[var(--text-secondary)] max-w-[160px] truncate">{e.client}</td>
+                    <td className="px-4 py-3 max-w-[160px] truncate" style={{ color: "#3D4F5C" }}>{e.client}</td>
                     <td className="px-4 py-3">
                       <span
-                        className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-[0.5px]"
+                        className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide"
                         style={{
-                          background: e.brand_color ? `${e.brand_color}20` : "var(--bg-alt)",
-                          color: e.brand_color ?? "var(--text-tertiary)",
+                          background: e.brand_color ? `${e.brand_color}20` : "#F0F2F5",
+                          color: e.brand_color ?? "#7A8A96",
                         }}
                       >
-                        {e.brand}
+                        {e.brand || "—"}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -241,19 +231,17 @@ export function PipelineView() {
                           {Array.from({ length: e.artifacts_total }).map((_, idx) => (
                             <span
                               key={idx}
-                              className={cn(
-                                "inline-block w-2 h-2 rounded-full",
-                                idx < e.artifacts_done ? "bg-[var(--mint)]" : "bg-[var(--border)]"
-                              )}
+                              className="inline-block w-2 h-2 rounded-full"
+                              style={{ background: idx < e.artifacts_done ? "#75CBB3" : "#E2E5EA" }}
                             />
                           ))}
                         </div>
-                        <span className="text-[10px] text-[var(--text-disabled)]">
+                        <span className="text-[10px]" style={{ color: "#B0BAC4" }}>
                           {e.artifacts_done}/{e.artifacts_total}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-xs text-[var(--text-tertiary)] italic max-w-[200px] truncate">
+                    <td className="px-4 py-3 text-xs italic max-w-[200px] truncate" style={{ color: "#7A8A96" }}>
                       {e.pending_action ?? "—"}
                     </td>
                   </tr>
