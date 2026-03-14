@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Receipt, Plus, FileSpreadsheet, ChevronRight, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { useParams } from "next/navigation";
+import { Receipt, Plus, ChevronRight, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -37,6 +38,7 @@ function EstadoBadge({ estado }: { estado: string }) {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function LiquidacionesPage() {
+  const { lang } = useParams<{ lang: string }>();
   const [liquidaciones, setLiquidaciones] = useState<Liquidacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +47,6 @@ export default function LiquidacionesPage() {
     async function fetchLiquidaciones() {
       try {
         const token = localStorage.getItem("access_token");
-        // S9-P01: Verificar URL exacta con CEO — usando endpoint provisional
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/liquidaciones/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -71,7 +72,7 @@ export default function LiquidacionesPage() {
           <p className="text-sm text-text-secondary mt-0.5">Reconciliación de pagos Marluvas.</p>
         </div>
         <Link
-          href="/liquidaciones/nueva"
+          href={`/${lang}/liquidaciones/nueva`}
           className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white rounded-xl text-sm font-medium hover:bg-navy-dark transition-colors"
         >
           <Plus size={16} />
@@ -116,7 +117,7 @@ export default function LiquidacionesPage() {
                       {new Date(liq.fecha_creacion).toLocaleDateString("es-CO")}
                     </td>
                     <td className="px-6 py-4">
-                      <Link href={`/liquidaciones/${liq.id}`} className="text-navy hover:text-mint transition-colors">
+                      <Link href={`/${lang}/liquidaciones/${liq.id}`} className="text-navy hover:text-mint transition-colors">
                         <ChevronRight size={16} />
                       </Link>
                     </td>

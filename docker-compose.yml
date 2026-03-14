@@ -108,9 +108,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://consola.mwt.one}
     container_name: mwt-frontend
     restart: unless-stopped
     env_file: .env
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://consola.mwt.one}
     # command: npm run dev
     # volumes:
     #   - ./frontend:/app

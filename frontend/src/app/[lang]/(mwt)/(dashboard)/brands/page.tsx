@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Building2, Plus, Globe, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,11 +24,11 @@ const ESTADO_CONFIG: Record<string, { classes: string }> = {
   INACTIVA: { classes: "bg-bg text-text-secondary" },
 };
 
-function BrandCard({ brand }: { brand: Brand }) {
+function BrandCard({ brand, lang }: { brand: Brand; lang: string }) {
   const cfg = ESTADO_CONFIG[brand.estado] ?? ESTADO_CONFIG["INACTIVA"];
   return (
     <Link
-      href={`/brands/${brand.id}`}
+      href={`/${lang}/brands/${brand.id}`}
       className="bg-white rounded-xl border border-border p-5 hover:shadow-md hover:border-mint transition-all group"
     >
       <div className="flex items-start justify-between mb-3">
@@ -69,6 +70,7 @@ function BrandCard({ brand }: { brand: Brand }) {
 }
 
 export default function BrandsPage() {
+  const { lang } = useParams<{ lang: string }>();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +106,7 @@ export default function BrandsPage() {
           <p className="text-sm text-text-secondary mt-0.5">Marcas comerciales gestionadas por MWT.</p>
         </div>
         <Link
-          href="/brands/nueva"
+          href={`/${lang}/brands/nueva`}
           className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white rounded-xl text-sm font-medium hover:bg-navy-dark transition-colors"
         >
           <Plus size={16} />
@@ -143,7 +145,7 @@ export default function BrandsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {brands.map((b) => <BrandCard key={b.id} brand={b} />)}
+          {brands.map((b) => <BrandCard key={b.id} brand={b} lang={lang} />)}
         </div>
       )}
     </div>

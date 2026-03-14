@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Network, Plus, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -23,6 +24,7 @@ const TIPO_COLORS: Record<string, string> = {
 };
 
 export default function NodosPage() {
+  const { lang } = useParams<{ lang: string }>();
   const [nodos, setNodos] = useState<Nodo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,6 @@ export default function NodosPage() {
     async function fetchNodos() {
       try {
         const token = localStorage.getItem("access_token");
-        // S9-P02: /api/nodes/ puede ser 404; verificar con CEO si endpoint es /api/nodos/
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/nodes/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -55,7 +56,7 @@ export default function NodosPage() {
           <p className="text-sm text-text-secondary mt-0.5">Puntos de origen, destino e intermedios de la red logística.</p>
         </div>
         <Link
-          href="/nodos/nuevo"
+          href={`/${lang}/nodos/nuevo`}
           className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white rounded-xl text-sm font-medium hover:bg-navy-dark transition-colors"
         >
           <Plus size={16} />
@@ -100,7 +101,7 @@ export default function NodosPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <Link href={`/nodos/${n.id}`} className="text-navy hover:text-mint transition-colors">
+                      <Link href={`/${lang}/nodos/${n.id}`} className="text-navy hover:text-mint transition-colors">
                         <ChevronRight size={16} />
                       </Link>
                     </td>

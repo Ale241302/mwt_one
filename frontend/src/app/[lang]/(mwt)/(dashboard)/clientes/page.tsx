@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Users2, Plus, ChevronRight, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ interface Cliente {
 }
 
 export default function ClientesPage() {
+  const { lang } = useParams<{ lang: string }>();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export default function ClientesPage() {
           <p className="text-sm text-text-secondary mt-0.5">Empresas y personas con expedientes activos.</p>
         </div>
         <Link
-          href="/clientes/nuevo"
+          href={`/${lang}/clientes/nuevo`}
           className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white rounded-xl text-sm font-medium hover:bg-navy-dark transition-colors"
         >
           <Plus size={16} />
@@ -114,7 +116,7 @@ export default function ClientesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <Link href={`/clientes/${c.id}`} className="text-navy hover:text-mint transition-colors">
+                      <Link href={`/${lang}/clientes/${c.id}`} className="text-navy hover:text-mint transition-colors">
                         <ChevronRight size={16} />
                       </Link>
                     </td>

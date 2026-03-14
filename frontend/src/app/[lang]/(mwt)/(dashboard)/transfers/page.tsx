@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ArrowLeftRight, Plus, ChevronRight, Clock, CheckCircle, Truck, Package, AlertTriangle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,7 @@ function EstadoBadge({ estado }: { estado: string }) {
 const FILTERS = ["TODOS", ...Object.keys(ESTADO_CONFIG)] as const;
 
 export default function TransfersPage() {
+  const { lang } = useParams<{ lang: string }>();
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export default function TransfersPage() {
           <p className="text-sm text-text-secondary mt-0.5">Movimientos de mercancía entre nodos.</p>
         </div>
         <Link
-          href="/transfers/nuevo"
+          href={`/${lang}/transfers/nuevo`}
           className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white rounded-xl text-sm font-medium hover:bg-navy-dark transition-colors"
         >
           <Plus size={16} />
@@ -124,7 +126,7 @@ export default function TransfersPage() {
                     <td className="px-6 py-4 text-text-secondary">{t.brand ?? "—"}</td>
                     <td className="px-6 py-4">
                       {t.expediente_ref ? (
-                        <Link href={`/expedientes`} className="text-navy hover:text-mint underline text-xs">{t.expediente_ref}</Link>
+                        <Link href={`/${lang}/expedientes`} className="text-navy hover:text-mint underline text-xs">{t.expediente_ref}</Link>
                       ) : "—"}
                     </td>
                     <td className="px-6 py-4 text-text-secondary">
@@ -132,7 +134,7 @@ export default function TransfersPage() {
                     </td>
                     <td className="px-6 py-4"><EstadoBadge estado={t.estado} /></td>
                     <td className="px-6 py-4">
-                      <Link href={`/transfers/${t.id}`} className="text-navy hover:text-mint transition-colors">
+                      <Link href={`/${lang}/transfers/${t.id}`} className="text-navy hover:text-mint transition-colors">
                         <ChevronRight size={16} />
                       </Link>
                     </td>
