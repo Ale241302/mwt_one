@@ -15,6 +15,8 @@ const ICONS = {
 
 export function CreditBadge({ band, className = '' }: CreditBadgeProps) {
   const cfg = CREDIT_BAND_CONFIG[band];
+  if (!cfg) return null;
+  
   const Icon = ICONS[cfg.icon as keyof typeof ICONS];
   return (
     <span
