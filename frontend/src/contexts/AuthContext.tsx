@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const checkAuth = useCallback(async () => {
         try {
-            const response = await api.get('/core/auth/me/');
+            const response = await api.get('core/auth/me/');
             setUser(response.data.user);
         } catch {
             setUser(null);
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const logout = async () => {
         try {
-            await api.post('/core/auth/logout/');
+            await api.post('core/auth/logout/');
         } catch (e) {
             console.error('Logout failed', e);
         } finally {
