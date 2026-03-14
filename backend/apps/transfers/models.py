@@ -15,9 +15,17 @@ from apps.expedientes.models import Expediente
 
 
 def generate_transfer_id():
-    today = date.today().strftime('%Y%m%d')
-    count = Transfer.objects.filter(transfer_id__startswith=f'TRF-{today}').count()
-    return f'TRF-{today}-{str(count + 1).zfill(3)}'
+    """
+    S9-11 fix: wrapped in try/except para evitar error 500 cuando la tabla
+    no existe todavía (migración pendiente al arrancar el contenedor).
+    """
+    try:
+        today = date.today().strftime('%Y%m%d')
+        count = Transfer.objects.filter(transfer_id__startswith=f'TRF-{today}').count()
+        return f'TRF-{today}-{str(count + 1).zfill(3)}'
+    except Exception:
+        # Tabla aún no existe — devolver un ID temporal basado en UUID
+        return f'TRF-PENDING-{uuid.uuid4().hex[:8].upper()}'
 
 
 class Node(models.Model):
