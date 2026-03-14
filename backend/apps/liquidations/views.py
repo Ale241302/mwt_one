@@ -1,110 +1,147 @@
-﻿"""
-Sprint 5 S5-03: Liquidation views C25-C28 + reads
 """
+Sprint 5 + Sprint 9 — Liquidations views
+"""
+import io
+import logging
+
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
 
-from apps.liquidations.models import Liquidation
-from apps.liquidations.services import (
-    upload_liquidation, manual_match_line,
-    reconcile_liquidation, dispute_liquidation,
-)
+from apps.liquidations.models import Liquidation, LiquidationLine
+from apps.liquidations.parsers import parse_marluvas_liquidation
 from apps.liquidations.serializers import (
-    UploadLiquidationSerializer, LiquidationListSerializer,
-    LiquidationDetailSerializer, LiquidationLineSerializer,
-    ManualMatchSerializer, DisputeSerializer,
+    LiquidationSerializer,
+    LiquidationLineSerializer,
+    ManualMatchSerializer,
 )
 
+logger = logging.getLogger(__name__)
 
-# C25 â€” POST /api/liquidations/upload/
+
+# ---------------------------------------------------------------------------
+# S9-P01 — Preview: parsea Excel sin persistir
+# POST /api/liquidations/preview/
+# ---------------------------------------------------------------------------
 @api_view(["POST"])
-@permission_classes([IsAdminUser])
-def upload_liquidation_view(request):
-    ser = UploadLiquidationSerializer(data=request.data)
-    ser.is_valid(raise_exception=True)
-    liquidation = upload_liquidation(
-        data=request.data,
-        file=ser.validated_data.get("file"),
-        period=ser.validated_data["period"],
-        user=request.user,
-    )
-    return Response(
-        LiquidationDetailSerializer(liquidation).data,
-        status=status.HTTP_201_CREATED,
-    )
+@permission_classes([IsAuthenticated])
+def preview_liquidation_view(request):
+    """
+    Recibe archivo Excel (.xlsx / .xls) via multipart/form-data (campo: archivo_excel).
+    Devuelve lista de filas parseadas para la tabla comparativa del frontend.
+    No persiste nada en base de datos.
+    """
+    archivo = request.FILES.get("archivo_excel")
+    if not archivo:
+        return Response(
+            {"detail": "El campo 'archivo_excel' es requerido."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    ext = archivo.name.rsplit(".", 1)[-1].lower() if "." in archivo.name else ""
+    if ext not in ("xlsx", "xls"):
+        return Response(
+            {"detail": "Solo se aceptan archivos .xlsx o .xls."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        import openpyxl
+
+        wb = openpyxl.load_workbook(io.BytesIO(archivo.read()), data_only=True)
+        ws = wb.active
+        rows = list(ws.iter_rows(values_only=True))
+
+        if not rows:
+            return Response([], status=status.HTTP_200_OK)
+
+        headers = [
+            str(h).strip() if h is not None else f"col_{i}"
+            for i, h in enumerate(rows[0])
+        ]
+        result = []
+        for row in rows[1:]:
+            if all(v is None for v in row):
+                continue
+            result.append(
+                {k: (str(v) if v is not None else "") for k, v in zip(headers, row)}
+            )
+
+        logger.info("preview_liquidation_view: %d filas leídas de %s", len(result), archivo.name)
+        return Response(result, status=status.HTTP_200_OK)
+
+    except Exception as exc:
+        logger.exception("preview_liquidation_view: error procesando archivo")
+        return Response(
+            {"detail": f"Error al parsear el archivo: {str(exc)}"},
+            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
 
 
-# C26 â€” POST /api/liquidations/{id}/match-line/
-@api_view(["POST"])
-@permission_classes([IsAdminUser])
-def manual_match_line_view(request, liquidation_id):
-    liquidation = Liquidation.objects.get(liquidation_id=liquidation_id)
-    ser = ManualMatchSerializer(data=request.data)
-    ser.is_valid(raise_exception=True)
-    line = manual_match_line(
-        liquidation,
-        ser.validated_data["line_id"],
-        ser.validated_data["proforma_id"],
-        request.user,
-    )
-    return Response(LiquidationLineSerializer(line).data)
-
-
-# C27 â€” POST /api/liquidations/{id}/reconcile/
-@api_view(["POST"])
-@permission_classes([IsAdminUser])
-def reconcile_liquidation_view(request, liquidation_id):
-    liquidation = Liquidation.objects.get(liquidation_id=liquidation_id)
-    liquidation = reconcile_liquidation(liquidation, request.user)
-    return Response(LiquidationDetailSerializer(liquidation).data)
-
-
-# C28 â€” POST /api/liquidations/{id}/dispute/
-@api_view(["POST"])
-@permission_classes([IsAdminUser])
-def dispute_liquidation_view(request, liquidation_id):
-    liquidation = Liquidation.objects.get(liquidation_id=liquidation_id)
-    ser = DisputeSerializer(data=request.data)
-    ser.is_valid(raise_exception=True)
-    liquidation = dispute_liquidation(
-        liquidation,
-        ser.validated_data["observations"],
-        request.user,
-    )
-    return Response(LiquidationDetailSerializer(liquidation).data)
-
-
-# GET /api/liquidations/
+# ---------------------------------------------------------------------------
+# Existing views (Sprint 5)
+# ---------------------------------------------------------------------------
 @api_view(["GET"])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def list_liquidations_view(request):
-    qs = Liquidation.objects.order_by("-created_at")
-    paginator = PageNumberPagination()
-    page = paginator.paginate_queryset(qs, request)
-    return paginator.get_paginated_response(
-        LiquidationListSerializer(page, many=True).data
+    qs = Liquidation.objects.all().order_by("-created_at")
+    return Response(LiquidationSerializer(qs, many=True).data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def upload_liquidation_view(request):
+    data = request.data
+    lines_data = parse_marluvas_liquidation(data)
+
+    liq = Liquidation.objects.create(
+        source=data.get("source", "MARLUVAS"),
+        currency=data.get("currency", "USD"),
+        reference=data.get("reference", ""),
+        raw_payload=data,
     )
+    for line in lines_data:
+        LiquidationLine.objects.create(liquidation=liq, **line)
+
+    return Response(LiquidationSerializer(liq).data, status=status.HTTP_201_CREATED)
 
 
-# GET /api/liquidations/{id}/
 @api_view(["GET"])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def get_liquidation_view(request, liquidation_id):
-    liquidation = Liquidation.objects.prefetch_related("lines").get(
-        liquidation_id=liquidation_id
-    )
-    return Response(LiquidationDetailSerializer(liquidation).data)
+    try:
+        liq = Liquidation.objects.get(pk=liquidation_id)
+    except Liquidation.DoesNotExist:
+        return Response({"detail": "No encontrado."}, status=status.HTTP_404_NOT_FOUND)
+    return Response(LiquidationSerializer(liq).data)
 
 
-# GET /api/liquidations/{id}/lines/
 @api_view(["GET"])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def get_liquidation_lines_view(request, liquidation_id):
-    liquidation = Liquidation.objects.get(liquidation_id=liquidation_id)
-    lines = liquidation.lines.select_related(
-        "matched_proforma", "matched_expediente"
-    )
+    lines = LiquidationLine.objects.filter(liquidation_id=liquidation_id).order_by("id")
     return Response(LiquidationLineSerializer(lines, many=True).data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def manual_match_line_view(request, liquidation_id):
+    serializer = ManualMatchSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        line = LiquidationLine.objects.get(
+            liquidation_id=liquidation_id,
+            pk=serializer.validated_data["line_id"],
+        )
+    except LiquidationLine.DoesNotExist:
+        return Response({"detail": "Línea no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+    line.match_status = "matched"
+    line.matched_expediente_id = serializer.validated_data.get("expediente_id")
+    line.save(update_fields=["match_status", "matched_expediente_id"])
+    return Response(LiquidationLineSerializer(line).data)
