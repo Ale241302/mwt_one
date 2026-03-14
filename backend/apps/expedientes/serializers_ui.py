@@ -1,5 +1,5 @@
 """
-Sprint 3-4 â€” UI Serializers
+Sprint 3-4 – UI Serializers
 """
 import datetime
 from decimal import Decimal
@@ -8,24 +8,53 @@ from rest_framework import serializers
 
 class UIExpedienteListSerializer(serializers.Serializer):
     id = serializers.UUIDField(source='expediente_id', read_only=True)
-    custom_ref = serializers.SerializerMethodField()
+
+    # Frontend ExpedienteCard expects 'ref', not 'custom_ref'
+    ref = serializers.SerializerMethodField()
+
     status = serializers.CharField(read_only=True)
     brand_name = serializers.CharField(source='get_brand_display', read_only=True, default='')
     brand = serializers.CharField(read_only=True)
-    client_name = serializers.CharField(source='client.legal_name', read_only=True, default='')
+
+    # Frontend ExpedienteCard expects 'client', not 'client_name'
+    client = serializers.CharField(source='client.legal_name', read_only=True, default='')
 
     # Annotated fields
     credit_days_elapsed = serializers.IntegerField(read_only=True, default=0)
     credit_band = serializers.CharField(read_only=True, default='MINT')
     total_cost = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True, default=Decimal('0.00'))
-    artifact_count = serializers.IntegerField(read_only=True, default=0)
+
+    # Frontend ExpedienteCard expects 'artifacts_total' and 'artifacts_done'
+    artifacts_total = serializers.IntegerField(source='artifact_count', read_only=True, default=0)
+    artifacts_done = serializers.SerializerMethodField()
+
     last_event_at = serializers.DateTimeField(read_only=True, default=None)
 
     is_blocked = serializers.BooleanField(read_only=True)
     block_reason = serializers.CharField(source='blocked_reason', read_only=True, default='')
 
-    def get_custom_ref(self, obj):
+    # pending_action: derived from available_actions if present, else None
+    pending_action = serializers.SerializerMethodField()
+
+    def get_ref(self, obj):
         return f"EXP-{str(obj.expediente_id)[:8]}"
+
+    def get_artifacts_done(self, obj):
+        """Count completed artifacts. Uses prefetched queryset when available."""
+        try:
+            return obj.artifacts.filter(status='completed').count()
+        except Exception:
+            return 0
+
+    def get_pending_action(self, obj):
+        """Return first available action label if any, else None."""
+        actions = getattr(obj, '_available_actions', None)
+        if actions:
+            first = actions[0]
+            if isinstance(first, dict):
+                return first.get('label') or first.get('command')
+            return str(first)
+        return None
 
 
 class EventLogSummarySerializer(serializers.Serializer):
