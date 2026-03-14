@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.expedientes.models import Expediente
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from apps.expedientes.enums import ExpedienteStatus
 from apps.core.serializers import UserSerializer
 
@@ -15,7 +15,7 @@ from apps.core.serializers import UserSerializer
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []  # no session auth needed on login endpoint
+    authentication_classes = []
 
     def post(self, request):
         username = request.data.get('username')
@@ -24,7 +24,6 @@ class LoginView(APIView):
 
         if user is not None:
             login(request, user)
-            # Issue JWT tokens so the frontend can use Bearer auth
             refresh = RefreshToken.for_user(user)
             csrf_token = get_token(request)
             return Response({
@@ -50,12 +49,10 @@ class MeView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        get_token(request)  # Force CSRF cookie (S3-D06)
+        get_token(request)
         if not request.user.is_authenticated:
             return Response({"detail": "Not authenticated"}, status=status.HTTP_403_FORBIDDEN)
-        return Response({
-            'user': UserSerializer(request.user).data
-        })
+        return Response({'user': UserSerializer(request.user).data})
 
 
 class DashboardView(APIView):
@@ -120,18 +117,32 @@ class DashboardView(APIView):
 
         blocked_qs = [exp for exp in active_list if exp.is_blocked]
 
-        active_count = len(active_list)
-        alert_count = len(alerts_list_data)
+        active_count  = len(active_list)
+        alert_count   = len(alerts_list_data)
         blocked_count = len(blocked_qs)
 
         total_cost = CostLine.objects.aggregate(total=Sum('amount'))['total'] or 0
 
+        # S9-P05 — by_status: conteo de expedientes por status (para MiniPipeline)
+        by_status_qs = (
+            Expediente.objects
+            .values("status")
+            .annotate(count=Count("id"))
+            .order_by("status")
+        )
+        by_status = [
+            {"status": r["status"], "count": r["count"]}
+            for r in by_status_qs
+        ]
+
         return Response({
-            'active_count': active_count,
-            'alert_count': alert_count,
+            'active_count':  active_count,
+            'alert_count':   alert_count,
             'blocked_count': blocked_count,
-            'total_cost': total_cost,
-            'top_risk': UIExpedienteListSerializer(top_risk_data, many=True).data,
-            'blocked_list': UIExpedienteListSerializer(blocked_qs, many=True).data,
-            'alerts_list': UIExpedienteListSerializer(alerts_list_data, many=True).data,
+            'total_cost':    total_cost,
+            'top_risk':      UIExpedienteListSerializer(top_risk_data, many=True).data,
+            'blocked_list':  UIExpedienteListSerializer(blocked_qs, many=True).data,
+            'alerts_list':   UIExpedienteListSerializer(alerts_list_data, many=True).data,
+            # S9-P05 — MiniPipeline feed
+            'by_status':     by_status,
         })

@@ -20,6 +20,7 @@ class Permission(models.TextChoices):
     VIEW_COSTOS            = 'view_costos',             'View Costos'
     DOWNLOAD_DOCUMENTS     = 'download_documents',     'Download Documents'
     MANAGE_USERS           = 'manage_users',            'Manage Users'
+    MANAGE_CLIENTS         = 'manage_clients',          'Manage Clients'  # S9-P03
 
 
 ROLE_PERMISSION_CEILING = {
@@ -28,6 +29,7 @@ ROLE_PERMISSION_CEILING = {
         Permission.ASK_KNOWLEDGE_PRICING, Permission.VIEW_EXPEDIENTES_OWN,
         Permission.VIEW_EXPEDIENTES_ALL, Permission.VIEW_COSTOS,
         Permission.DOWNLOAD_DOCUMENTS, Permission.MANAGE_USERS,
+        Permission.MANAGE_CLIENTS,  # S9-P03
     ],
     UserRole.INTERNAL: [
         Permission.ASK_KNOWLEDGE_OPS, Permission.ASK_KNOWLEDGE_PRODUCTS,
