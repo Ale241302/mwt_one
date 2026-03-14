@@ -17,17 +17,17 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard',     href: '/',              icon: LayoutDashboard },
-  { label: 'Pipeline',      href: '/pipeline',      icon: Kanban },
-  { label: 'Expedientes',   href: '/expedientes',   icon: Package },
-  { label: 'Financiero',    href: '/dashboard/financial', icon: DollarSign },
-  { label: 'Liquidaciones', href: '/liquidaciones', icon: Receipt },
-  { label: 'Nodos',         href: '/nodos',         icon: MapPin },
-  { label: 'Transfers',     href: '/transfers',     icon: ArrowLeftRight },
-  { label: 'Clientes',      href: '/clientes',      icon: Users },
-  { label: 'Brands',        href: '/brands',        icon: Tag },
-  { label: 'Usuarios',      href: '/usuarios',      icon: UserCog },
-  { label: 'Configuraci\u00f3n', href: '#',          icon: Settings, disabled: true, badge: 'Sprint 10' },
+  { label: 'Dashboard',       href: '/',                    icon: LayoutDashboard },
+  { label: 'Pipeline',        href: '/pipeline',            icon: Kanban },
+  { label: 'Expedientes',     href: '/expedientes',         icon: Package },
+  { label: 'Financiero',      href: '/dashboard/financial', icon: DollarSign },
+  { label: 'Liquidaciones',   href: '/liquidaciones',       icon: Receipt },
+  { label: 'Nodos',           href: '/nodos',               icon: MapPin },
+  { label: 'Transfers',       href: '/transfers',           icon: ArrowLeftRight },
+  { label: 'Clientes',        href: '/clientes',            icon: Users },
+  { label: 'Brands',          href: '/brands',              icon: Tag },
+  { label: 'Usuarios',        href: '/usuarios',            icon: UserCog },
+  { label: 'Configuraci\u00f3n', href: '#',                icon: Settings, disabled: true, badge: 'Sprint 10' },
 ];
 
 export function Sidebar() {
@@ -36,19 +36,19 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`flex flex-col h-full bg-[#013A57] text-white transition-sidebar ${
+      className={`flex flex-col h-full bg-[var(--navy)] text-[var(--text-inverse)] transition-sidebar ${
         collapsed ? 'w-16' : 'w-60'
       }`}
       aria-label="Navegaci\u00f3n principal"
     >
-      {/* Logo area */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+      {/* Logo */}
+      <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--navy-border)]">
         {!collapsed && (
-          <span className="font-semibold text-sm tracking-wide text-white/90">MWT ONE</span>
+          <span className="font-semibold text-sm tracking-wide text-[var(--text-inverse)]/90">MWT ONE</span>
         )}
         <button
           onClick={() => setCollapsed(prev => !prev)}
-          className="ml-auto p-1 rounded hover:bg-white/10 transition-colors"
+          className="ml-auto p-1 rounded hover:bg-[var(--navy-hover)] transition-colors"
           aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -71,8 +71,8 @@ export function Sidebar() {
                 item.disabled
                   ? 'opacity-40 cursor-not-allowed border-transparent'
                   : isActive
-                  ? 'border-[#75CBB3] bg-white/8 text-white'
-                  : 'border-transparent text-white/70 hover:bg-white/6 hover:text-white',
+                  ? 'border-[var(--mint)] bg-[var(--navy-active)] text-[var(--text-inverse)]'
+                  : 'border-transparent text-[var(--text-inverse)]/70 hover:bg-[var(--navy-hover)] hover:text-[var(--text-inverse)]',
               ].join(' ')}
             >
               <Icon
@@ -84,7 +84,7 @@ export function Sidebar() {
                 <>
                   <span className="flex-1">{item.label}</span>
                   {item.badge && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/50 font-medium">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--navy-hover)] text-[var(--text-inverse)]/50 font-medium">
                       {item.badge}
                     </span>
                   )}
