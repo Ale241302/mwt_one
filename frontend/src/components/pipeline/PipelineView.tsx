@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Kanban, Table2, Calendar, AlertTriangle } from "lucide-react";
 import { PIPELINE_STATES, STATE_LABELS, CanonicalState } from "@/lib/constants/states";
 import { PipelineColumn } from "./PipelineColumn";
@@ -8,6 +8,8 @@ import { CreditBadge } from "@/components/ui/CreditBadge";
 import { StateBadge } from "@/components/ui/StateBadge";
 import { CreditBand } from "@/lib/constants/creditBands";
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 export interface ExpedienteCard {
   id: string;
@@ -26,36 +28,50 @@ export interface ExpedienteCard {
 export type ViewMode = "pipeline" | "table";
 
 export function PipelineView() {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>("pipeline");
   const [expedientes, setExpedientes] = useState<ExpedienteCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<{
     brand: string;
     credit_band: CreditBand | "";
     client: string;
     only_blocked: boolean;
-  }>({ brand: "", credit_band: "", client: "", only_blocked: false });
+  }>({
+    brand: "",
+    credit_band: "",
+    client: "",
+    only_blocked: false,
+  });
+
+  // fix: usa api (axios con token) en lugar de fetch() nativo
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const results = await Promise.all(
+        PIPELINE_STATES.map((s) =>
+          api.get(`ui/expedientes/?status=${s}`).then((r) => r.data)
+        )
+      );
+      const all: ExpedienteCard[] = results.flatMap(
+        (r: { results?: ExpedienteCard[] } | ExpedienteCard[]) =>
+          Array.isArray(r) ? r : (r.results ?? [])
+      );
+      setExpedientes(all);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      console.error("[PipelineView] fetch error:", e);
+      setError("No se pudo cargar el pipeline. Verifica tu conexión.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function fetchAll() {
-      setLoading(true);
-      try {
-        const results = await Promise.all(
-          PIPELINE_STATES.map((s) =>
-            fetch(`/api/ui/expedientes/?status=${s}`).then((r) => r.json())
-          )
-        );
-        const all: ExpedienteCard[] = results.flatMap(
-          (r: { results?: ExpedienteCard[] } | ExpedienteCard[]) =>
-            Array.isArray(r) ? r : (r.results ?? [])
-        );
-        setExpedientes(all);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchAll();
-  }, []);
+  }, [fetchAll]);
 
   const filtered = expedientes.filter((e) => {
     if (filters.brand && e.brand !== filters.brand) return false;
@@ -74,7 +90,7 @@ export function PipelineView() {
         <div>
           <h1 className="text-xl font-semibold text-[var(--navy)]">Pipeline operativo</h1>
           <p className="text-sm text-[var(--text-tertiary)]">
-            {filtered.length} expediente{filtered.length !== 1 ? "s" : ""}
+            {loading ? "Cargando..." : `${filtered.length} expediente${filtered.length !== 1 ? "s" : ""}`}
           </p>
         </div>
 
@@ -120,10 +136,32 @@ export function PipelineView() {
       {/* ── Filters ── */}
       <PipelineFilters expedientes={expedientes} filters={filters} onChange={setFilters} />
 
+      {/* ── Error state ── */}
+      {error && (
+        <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+          <AlertTriangle size={16} className="flex-shrink-0" />
+          {error}
+          <button
+            onClick={fetchAll}
+            className="ml-auto text-xs font-semibold underline hover:no-underline"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
       {/* ── Content ── */}
       {loading ? (
-        <div className="flex-1 flex items-center justify-center text-[var(--text-tertiary)] text-sm">
-          Cargando pipeline...
+        // Skeleton de columnas
+        <div className="flex gap-3 overflow-x-auto pb-4">
+          {PIPELINE_STATES.map((s) => (
+            <div key={s} className="flex flex-col w-64 min-w-[256px] gap-2">
+              <div className="h-5 bg-[var(--border)] rounded animate-pulse w-24" />
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-24 bg-[var(--border)] rounded-xl animate-pulse" />
+              ))}
+            </div>
+          ))}
         </div>
       ) : viewMode === "pipeline" ? (
         // ── Kanban board ──
@@ -169,9 +207,8 @@ export function PipelineView() {
                       "border-b border-[var(--divider)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer",
                       i % 2 === 0 ? "bg-[var(--surface)]" : "bg-[var(--bg)]"
                     )}
-                    onClick={() => window.location.assign(`/expedientes/${e.id}`)}
+                    onClick={() => router.push(`/expedientes/${e.id}`)}
                   >
-                    {/* Ref + bloqueado */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
                         {e.is_blocked && (
@@ -180,9 +217,7 @@ export function PipelineView() {
                         <span className="font-mono text-xs font-semibold text-[var(--navy)]">{e.ref}</span>
                       </div>
                     </td>
-                    {/* Cliente */}
                     <td className="px-4 py-3 text-[var(--text-secondary)] max-w-[160px] truncate">{e.client}</td>
-                    {/* Brand */}
                     <td className="px-4 py-3">
                       <span
                         className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-[0.5px]"
@@ -194,15 +229,12 @@ export function PipelineView() {
                         {e.brand}
                       </span>
                     </td>
-                    {/* Estado */}
                     <td className="px-4 py-3">
                       <StateBadge state={e.status} />
                     </td>
-                    {/* Crédito */}
                     <td className="px-4 py-3">
                       <CreditBadge band={e.credit_band} />
                     </td>
-                    {/* Avance */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
                         <div className="flex gap-0.5">
@@ -221,7 +253,6 @@ export function PipelineView() {
                         </span>
                       </div>
                     </td>
-                    {/* Acción pendiente */}
                     <td className="px-4 py-3 text-xs text-[var(--text-tertiary)] italic max-w-[200px] truncate">
                       {e.pending_action ?? "—"}
                     </td>
