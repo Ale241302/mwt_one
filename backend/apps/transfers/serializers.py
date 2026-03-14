@@ -4,7 +4,7 @@ from apps.transfers.models import Transfer, TransferLine, Node
 
 class NodeSerializer(serializers.ModelSerializer):
     class Meta:
-tml_model = Node
+        model = Node
         fields = ["node_id", "name", "node_type", "location", "status"]
 
 
@@ -22,9 +22,9 @@ class TransferLineSerializer(serializers.ModelSerializer):
 
 class TransferListSerializer(serializers.ModelSerializer):
     """
-    FIX S9-11: from_node / to_node eran FK → el serializador anterior intentaba
-    serializar el objeto Node como string → KeyError / 500.
-    Ahora se exponen como campos planos seguros con source explícito.
+    FIX S9-11: from_node / to_node eran FK -> el serializador anterior intentaba
+    serializar el objeto Node como string -> KeyError / 500.
+    Ahora se exponen como campos planos seguros con source explicito.
     """
     from_node_id   = serializers.UUIDField(source="from_node_id",    read_only=True)
     to_node_id     = serializers.UUIDField(source="to_node_id",      read_only=True)
@@ -52,14 +52,14 @@ class TransferDetailSerializer(serializers.ModelSerializer):
 
 
 class CreateTransferSerializer(serializers.Serializer):
-    from_node        = serializers.UUIDField()
-    to_node          = serializers.UUIDField()
-    legal_context    = serializers.ChoiceField(
+    from_node         = serializers.UUIDField()
+    to_node           = serializers.UUIDField()
+    legal_context     = serializers.ChoiceField(
         choices=["internal", "nationalization", "reexport", "distribution", "consignment"]
     )
-    items            = serializers.ListField(child=serializers.DictField())
+    items             = serializers.ListField(child=serializers.DictField())
     source_expediente = serializers.CharField(required=False, allow_null=True)
-    pricing_context  = serializers.JSONField(required=False, allow_null=True)
+    pricing_context   = serializers.JSONField(required=False, allow_null=True)
 
 
 class ReceiveTransferSerializer(serializers.Serializer):
