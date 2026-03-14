@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 /* ===================================================
-   S9-16 — ENT_PLAT_DESIGN_TOKENS v2.1
-   MWT ONE — Design System
+   S9-16 - ENT_PLAT_DESIGN_TOKENS v2.1
+   MWT ONE - Design System
    =================================================== */
 
 :root {
-  /* ── Brand palette ────────────────────────────────── */
+  /* Brand palette */
   --navy:           #013A57;
   --navy-light:     #014A73;
   --navy-dark:      #012B42;
@@ -24,7 +24,7 @@
   --success:        #22A06B;
   --success-soft:   #DCFFF0;
 
-  /* ── Semantic surfaces ────────────────────────────── */
+  /* Semantic surfaces */
   --bg:             #F8F9FB;
   --bg-alt:         #F0F2F5;
   --surface:        #FFFFFF;
@@ -33,18 +33,18 @@
   --border-strong:  #C8CDD5;
   --divider:        #ECEEF1;
 
-  /* ── Typography ───────────────────────────────────── */
+  /* Typography */
   --text-primary:   #013A57;
   --text-secondary: #3D4F5C;
   --text-tertiary:  #7A8A96;
   --text-disabled:  #B0BAC4;
   --text-inverse:   #FFFFFF;
 
-  /* ── Spacing ──────────────────────────────────────── */
+  /* Spacing */
   --space-1: 4px;  --space-2: 8px;  --space-3: 12px;  --space-4: 16px;
   --space-5: 20px; --space-6: 24px; --space-8: 32px;  --space-10: 40px;
 
-  /* ── Radius ───────────────────────────────────────── */
+  /* Radius */
   --radius-sm:   4px;
   --radius-md:   6px;
   --radius-lg:   8px;
@@ -52,22 +52,22 @@
   --radius-2xl:  16px;
   --radius-full: 9999px;
 
-  /* ── Shadows (multicapa) ──────────────────────────── */
+  /* Shadows */
   --shadow-sm:  0 1px 3px rgba(1,58,87,.06), 0 1px 2px rgba(1,58,87,.04);
   --shadow-md:  0 4px 12px rgba(1,58,87,.08), 0 2px 4px rgba(1,58,87,.04);
   --shadow-lg:  0 12px 32px rgba(1,58,87,.12), 0 4px 8px rgba(1,58,87,.06);
 
-  /* ── Transitions ──────────────────────────────────── */
+  /* Transitions */
   --transition-fast:   150ms ease-out;
   --transition-normal: 200ms ease-out;
   --transition-slow:   300ms cubic-bezier(0.2, 0, 0, 1);
 
-  /* ── Layout ───────────────────────────────────────── */
+  /* Layout */
   --sidebar-w:         240px;
   --sidebar-collapsed: 64px;
   --header-h:          56px;
 
-  /* ── Badge tokens (S9-16 Fix 3) ───────────────────── */
+  /* Badge tokens */
   --badge-success-bg:  #F0FAF6;
   --badge-success-fg:  #0E8A6D;
   --badge-warning-bg:  #FFF7ED;
@@ -80,7 +80,7 @@
   --badge-neutral-fg:  #475569;
 }
 
-/* ── Dark mode ────────────────────────────────────────────────────────────── */
+/* Dark mode */
 [data-theme="dark"] {
   --bg:             #0B1929;
   --bg-alt:         #0E1E30;
@@ -110,7 +110,6 @@
   --coral-soft: rgba(255,107,114,.12);
   --success:    #75CBB3;
   --success-soft: rgba(117,203,179,.12);
-  /* Dark badge tokens */
   --badge-success-bg:  rgba(14,138,109,.15);
   --badge-success-fg:  #4ADE80;
   --badge-warning-bg:  rgba(180,83,9,.15);
@@ -123,14 +122,14 @@
   --badge-neutral-fg:  #CBD5E1;
 }
 
-/* ── Base styles ──────────────────────────────────────────────────────────── */
+/* Base styles */
 body {
   color: var(--text-primary);
   background: var(--bg);
-  @apply font-body antialiased;
+  @apply font-sans antialiased;
 }
 
-/* ── Transitions ──────────────────────────────────────────────────────────── */
+/* Transitions */
 .transition-all-custom {
   transition: all var(--transition-normal);
 }
@@ -141,7 +140,7 @@ body {
   transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* ── S9-02 Timeline pulse animation ──────────────────────────────────────── */
+/* S9-02 Timeline pulse animation */
 @keyframes timeline-pulse {
   0%   { box-shadow: 0 0 0 0   rgba(1,58,87,.25); }
   70%  { box-shadow: 0 0 0 6px rgba(1,58,87,.00); }
@@ -156,7 +155,7 @@ body {
   .animate-timeline-pulse { animation: none; }
 }
 
-/* ── S9-16 Fix 3 — Badge global (.badge-mwt) ─────────────────────────────── */
+/* Badge global (.badge-mwt) */
 .badge-mwt {
   display: inline-flex;
   align-items: center;
@@ -175,7 +174,7 @@ body {
 .badge-info    { background: var(--badge-info-bg);    color: var(--badge-info-fg);    }
 .badge-neutral { background: var(--badge-neutral-bg); color: var(--badge-neutral-fg); }
 
-/* ── Card radius-xl global (.card-mwt) ───────────────────────────────────── */
+/* Card radius-xl global (.card-mwt) */
 .card-mwt {
   background: var(--surface);
   border-radius: var(--radius-xl);
@@ -188,7 +187,7 @@ body {
   transition: box-shadow var(--transition-fast);
 }
 
-/* ── Focus ring ──────────────────────────────────────────────────────────── */
+/* Focus ring */
 .focus-ring {
   outline: 2px solid var(--mint);
   outline-offset: 2px;
