@@ -1,20 +1,15 @@
 """
-Sprint 5 + Sprint 9 — Transfers views
-<<<<<<< HEAD
-"""
-import logging
-
-=======
-S9-11 fix: list_transfers_view — select_related completo + try/except para evitar 500
+Sprint 5 + Sprint 9 - Transfers views
+S9-11 fix: list_transfers_view - select_related completo + try/except para evitar 500
 """
 import logging
 
 from django.db import OperationalError, ProgrammingError
->>>>>>> origin/fix/s9-transfers-500
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 
 from apps.transfers.models import Transfer, Node
 from apps.transfers.serializers import (
@@ -47,18 +42,15 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# S9-P02 — Nodes list: GET /api/transfers/nodes/
-<<<<<<< HEAD
-# Resuelve la ambigüedad /api/nodes/ vs /api/nodos/ — la URL canonica es /api/transfers/nodes/
-=======
->>>>>>> origin/fix/s9-transfers-500
+# S9-P02 - Nodes list: GET /api/transfers/nodes/
+# URL canonica: /api/transfers/nodes/
 # ---------------------------------------------------------------------------
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_nodes_view(request):
     """
     Devuelve todos los nodos activos ordenados por nombre.
-    URL canónica: GET /api/transfers/nodes/
+    URL canonica: GET /api/transfers/nodes/
     """
     qs = Node.objects.select_related("legal_entity").filter(
         status="active"
@@ -67,25 +59,15 @@ def list_nodes_view(request):
 
 
 # ---------------------------------------------------------------------------
-<<<<<<< HEAD
-# Existing Transfer views (Sprint 5)
-=======
 # GET /api/transfers/  (S9-11 fix)
->>>>>>> origin/fix/s9-transfers-500
 # ---------------------------------------------------------------------------
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_transfers_view(request):
-<<<<<<< HEAD
-    qs = Transfer.objects.select_related("from_node", "to_node").order_by("-created_at")
-    return Response(TransferListSerializer(qs, many=True).data)
-
-
-=======
     """
     S9-11: select_related ampliado para evitar N+1 y errores de FK no resuelta.
-    try/except OperationalError | ProgrammingError para devolver 200 vacío
-    si la migración aún no se ha ejecutado en el contenedor.
+    try/except OperationalError | ProgrammingError para devolver 200 vacio
+    si la migracion aun no se ha ejecutado en el contenedor.
     """
     try:
         qs = (
@@ -118,31 +100,21 @@ def list_transfers_view(request):
 # ---------------------------------------------------------------------------
 # GET /api/transfers/{id}/
 # ---------------------------------------------------------------------------
->>>>>>> origin/fix/s9-transfers-500
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_transfer_view(request, transfer_id):
     try:
-<<<<<<< HEAD
-        t = Transfer.objects.select_related("from_node", "to_node").prefetch_related("lines").get(
-            transfer_id=transfer_id
-        )
-=======
         t = Transfer.objects.select_related(
             "from_node", "to_node", "ownership_before", "ownership_after"
         ).prefetch_related("lines").get(transfer_id=transfer_id)
->>>>>>> origin/fix/s9-transfers-500
     except Transfer.DoesNotExist:
         return Response({"detail": "Transfer no encontrado."}, status=status.HTTP_404_NOT_FOUND)
     return Response(TransferDetailSerializer(t).data)
 
 
-<<<<<<< HEAD
-=======
 # ---------------------------------------------------------------------------
 # POST /api/transfers/create/
 # ---------------------------------------------------------------------------
->>>>>>> origin/fix/s9-transfers-500
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_transfer_view(request):
@@ -156,12 +128,9 @@ def create_transfer_view(request):
     return Response(TransferDetailSerializer(transfer).data, status=status.HTTP_201_CREATED)
 
 
-<<<<<<< HEAD
-=======
 # ---------------------------------------------------------------------------
 # POST /api/transfers/{id}/approve/
 # ---------------------------------------------------------------------------
->>>>>>> origin/fix/s9-transfers-500
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def approve_transfer_view(request, transfer_id):
@@ -175,12 +144,9 @@ def approve_transfer_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-<<<<<<< HEAD
-=======
 # ---------------------------------------------------------------------------
 # POST /api/transfers/{id}/dispatch/
 # ---------------------------------------------------------------------------
->>>>>>> origin/fix/s9-transfers-500
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def dispatch_transfer_view(request, transfer_id):
@@ -194,12 +160,9 @@ def dispatch_transfer_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-<<<<<<< HEAD
-=======
 # ---------------------------------------------------------------------------
 # POST /api/transfers/{id}/receive/
 # ---------------------------------------------------------------------------
->>>>>>> origin/fix/s9-transfers-500
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def receive_transfer_view(request, transfer_id):
@@ -216,12 +179,9 @@ def receive_transfer_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-<<<<<<< HEAD
-=======
 # ---------------------------------------------------------------------------
 # POST /api/transfers/{id}/reconcile/
 # ---------------------------------------------------------------------------
->>>>>>> origin/fix/s9-transfers-500
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def reconcile_transfer_view(request, transfer_id):
@@ -240,12 +200,9 @@ def reconcile_transfer_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-<<<<<<< HEAD
-=======
 # ---------------------------------------------------------------------------
 # POST /api/transfers/{id}/cancel/
 # ---------------------------------------------------------------------------
->>>>>>> origin/fix/s9-transfers-500
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def cancel_transfer_view(request, transfer_id):
@@ -262,12 +219,9 @@ def cancel_transfer_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-<<<<<<< HEAD
-=======
 # ---------------------------------------------------------------------------
 # POST /api/transfers/{id}/complete-reception/
 # ---------------------------------------------------------------------------
->>>>>>> origin/fix/s9-transfers-500
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_reception_artifact_view(request, transfer_id):
@@ -286,12 +240,9 @@ def create_reception_artifact_view(request, transfer_id):
     return Response({"artifact_id": str(artifact.pk)}, status=status.HTTP_201_CREATED)
 
 
-<<<<<<< HEAD
-=======
 # ---------------------------------------------------------------------------
 # POST /api/transfers/{id}/complete-preparation/
 # ---------------------------------------------------------------------------
->>>>>>> origin/fix/s9-transfers-500
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_preparation_artifact_view(request, transfer_id):
@@ -310,12 +261,9 @@ def create_preparation_artifact_view(request, transfer_id):
     return Response({"artifact_id": str(artifact.pk)}, status=status.HTTP_201_CREATED)
 
 
-<<<<<<< HEAD
-=======
 # ---------------------------------------------------------------------------
 # POST /api/transfers/{id}/complete-dispatch/
 # ---------------------------------------------------------------------------
->>>>>>> origin/fix/s9-transfers-500
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_dispatch_artifact_view(request, transfer_id):
@@ -334,12 +282,9 @@ def create_dispatch_artifact_view(request, transfer_id):
     return Response({"artifact_id": str(artifact.pk)}, status=status.HTTP_201_CREATED)
 
 
-<<<<<<< HEAD
-=======
 # ---------------------------------------------------------------------------
 # POST /api/transfers/{id}/approve-pricing/
 # ---------------------------------------------------------------------------
->>>>>>> origin/fix/s9-transfers-500
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_pricing_approval_artifact_view(request, transfer_id):
