@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import api from "@/lib/api";
 import { AlertCircle, Clock, FileText, DollarSign, ArrowRight, ShieldAlert } from "lucide-react";
 import Link from "next/link";
@@ -35,12 +36,14 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
+    const { lang } = useParams<{ lang: string }>();
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
 
     const fetchDashboardData = async () => {
         try {
-            const res = await api.get('ui/dashboard/');
+            // Slash inicial obligatorio para que axios no concatene mal
+            const res = await api.get('/ui/dashboard/');
             setData(res.data);
         } catch (error) {
             console.error("Error fetching dashboard data", error);
@@ -51,7 +54,6 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchDashboardData();
-        // Refresh every 60s
         const interval = setInterval(fetchDashboardData, 60000);
         return () => clearInterval(interval);
     }, []);
@@ -67,7 +69,6 @@ export default function DashboardPage() {
         );
     }
 
-    // Formatting currency
     const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -201,7 +202,7 @@ export default function DashboardPage() {
                                                 </span>
                                             </td>
                                             <td className="px-5 py-3 border-b border-divider text-right">
-                                                <Link href={`/expedientes/${item.id}`} className="inline-flex items-center justify-center w-8 h-8 rounded-full text-text-tertiary hover:bg-bg hover:text-mint transition-colors">
+                                                <Link href={`/${lang}/expedientes/${item.id}`} className="inline-flex items-center justify-center w-8 h-8 rounded-full text-text-tertiary hover:bg-bg hover:text-mint transition-colors">
                                                     <ArrowRight size={16} />
                                                 </Link>
                                             </td>
@@ -247,7 +248,7 @@ export default function DashboardPage() {
                                                 {item.block_reason || "Sin razón especificada"}
                                             </td>
                                             <td className="px-5 py-3 border-b border-divider text-right">
-                                                <Link href={`/expedientes/${item.id}`} className="inline-flex items-center justify-center w-8 h-8 rounded-full text-text-tertiary hover:bg-bg hover:text-coral transition-colors">
+                                                <Link href={`/${lang}/expedientes/${item.id}`} className="inline-flex items-center justify-center w-8 h-8 rounded-full text-text-tertiary hover:bg-bg hover:text-coral transition-colors">
                                                     <ArrowRight size={16} />
                                                 </Link>
                                             </td>

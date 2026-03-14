@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
@@ -15,13 +15,14 @@ export default function DashboardLayout({
     const { user, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const router = useRouter();
+    const { lang } = useParams<{ lang: string }>();
 
-    // ✅ Redirect explícito cuando no hay sesión
+    // Redirect con prefijo de idioma cuando no hay sesión
     useEffect(() => {
         if (!loading && !user) {
-            router.push('/login');
+            router.push(`/${lang}/login`);
         }
-    }, [loading, user, router]);
+    }, [loading, user, router, lang]);
 
     if (loading) {
         return (
@@ -36,7 +37,7 @@ export default function DashboardLayout({
     }
 
     if (!user) {
-        return null; // ← router.push('/login') ya fue llamado arriba
+        return null; // router.push ya fue llamado
     }
 
     return (

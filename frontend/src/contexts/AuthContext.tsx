@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import api from '@/lib/api';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 export interface User {
     id: number;
@@ -24,6 +24,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    // useParams puede devolver string | string[] dependiendo del contexto;
+    // usamos cast seguro.
+    const params = useParams() as { lang?: string };
+    const lang = params?.lang ?? 'es';
 
     const checkAuth = useCallback(async () => {
         try {
@@ -36,14 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    // ✅ Solo corre UNA VEZ al montar, no en cada cambio de ruta
+    // Solo corre UNA VEZ al montar
     useEffect(() => {
         checkAuth();
     }, [checkAuth]);
 
     const login = (newUser: User) => {
         setUser(newUser);
-        router.push('/');
+        router.push(`/${lang}/dashboard`);
     };
 
     const logout = async () => {
@@ -53,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error('Logout failed', e);
         } finally {
             setUser(null);
-            router.push('/login');
+            router.push(`/${lang}/login`);
         }
     };
 
