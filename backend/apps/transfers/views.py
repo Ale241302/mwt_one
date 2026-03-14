@@ -1,7 +1,11 @@
 """
 Sprint 5 S5-02: Transfer views C30-C35 + reads
 Sprint 6: C36-C39 artifact views
+S9-11 fix: list_transfers_view — select_related completo + try/except para evitar 500
 """
+import logging
+
+from django.db import OperationalError, ProgrammingError
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -18,9 +22,11 @@ from apps.transfers.services import (
 from apps.transfers.serializers import (
     CreateTransferSerializer, TransferListSerializer, TransferDetailSerializer,
     ReceiveTransferSerializer, ReconcileTransferSerializer, CancelTransferSerializer,
-    CreatePreparationArtifactSerializer, CreateDispatchArtifactSerializer, CreateReceptionArtifactSerializer,
-    CreatePricingApprovalArtifactSerializer
+    CreatePreparationArtifactSerializer, CreateDispatchArtifactSerializer,
+    CreateReceptionArtifactSerializer, CreatePricingApprovalArtifactSerializer
 )
+
+logger = logging.getLogger(__name__)
 
 
 # C30 — POST /api/transfers/create/
@@ -141,23 +147,49 @@ def create_pricing_approval_artifact_view(request, transfer_id):
     return Response(TransferDetailSerializer(transfer).data)
 
 
-# GET /api/transfers/ (CEO-ONLY)
+# GET /api/transfers/  (S9-11 fix)
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def list_transfers_view(request):
-    qs = Transfer.objects.select_related("from_node", "to_node").order_by("-created_at")
-    paginator = PageNumberPagination()
-    page = paginator.paginate_queryset(qs, request)
-    return paginator.get_paginated_response(
-        TransferListSerializer(page, many=True).data
-    )
+    """
+    S9-11: select_related ampliado para evitar N+1 y errores de FK no resuelta.
+    try/except OperationalError | ProgrammingError para devolver 200 vacío
+    si la migración aún no se ha ejecutado en el contenedor.
+    """
+    try:
+        qs = (
+            Transfer.objects
+            .select_related(
+                "from_node",
+                "to_node",
+                "ownership_before",
+                "ownership_after",
+                "source_expediente",
+            )
+            .order_by("-created_at")
+        )
+        paginator = PageNumberPagination()
+        page = paginator.paginate_queryset(qs, request)
+        return paginator.get_paginated_response(
+            TransferListSerializer(page, many=True).data
+        )
+    except (OperationalError, ProgrammingError) as exc:
+        # Tabla no existe todavía — migración pendiente
+        logger.warning("[S9-11] transfers_transfer tabla no disponible: %s", exc)
+        return Response({"count": 0, "next": None, "previous": None, "results": []})
+    except Exception as exc:
+        logger.exception("[S9-11] Error inesperado en list_transfers_view: %s", exc)
+        return Response(
+            {"detail": "Error interno al listar transfers."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 # GET /api/transfers/{id}/
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_transfer_view(request, transfer_id):
-    transfer = Transfer.objects.prefetch_related("lines").get(
-        transfer_id=transfer_id
-    )
+    transfer = Transfer.objects.prefetch_related("lines").select_related(
+        "from_node", "to_node", "ownership_before", "ownership_after"
+    ).get(transfer_id=transfer_id)
     return Response(TransferDetailSerializer(transfer).data)
