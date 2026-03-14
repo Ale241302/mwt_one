@@ -31,17 +31,17 @@ export const TERMINAL_STATES: CanonicalState[] = ['CERRADO', 'CANCELADO'];
 
 /** Labels de display en español */
 export const STATE_LABELS: Record<CanonicalState, string> = {
-  REGISTRO: 'Registro',
-  PRODUCCION: 'Producción',
+  REGISTRO:    'Registro',
+  PRODUCCION:  'Producción',
   PREPARACION: 'Preparación',
-  DESPACHO: 'Despacho',
-  TRANSITO: 'Tránsito',
-  EN_DESTINO: 'En destino',
-  CERRADO: 'Cerrado',
-  CANCELADO: 'Cancelado',
+  DESPACHO:    'Despacho',
+  TRANSITO:    'Tránsito',
+  EN_DESTINO:  'En destino',
+  CERRADO:     'Cerrado',
+  CANCELADO:   'Cancelado',
 };
 
-/** Orden de pasos en el timeline (7 pasos lineales canónicos) */
+/** Orden de pasos en el timeline (7 pasos lineales canónicos, sin CANCELADO) */
 export const TIMELINE_STEPS: CanonicalState[] = [
   'REGISTRO',
   'PRODUCCION',
@@ -50,4 +50,19 @@ export const TIMELINE_STEPS: CanonicalState[] = [
   'TRANSITO',
   'EN_DESTINO',
   'CERRADO',
+];
+
+/**
+ * TIMELINE_STATES_CANONICAL
+ * Mismos 7 pasos del timeline pero en formato { id, label } para
+ * compatibilidad con el componente de timeline en expedientes/[id]/page.tsx
+ */
+export const TIMELINE_STATES_CANONICAL: { id: CanonicalState; label: string }[] = [
+  { id: 'REGISTRO',    label: 'Registro' },
+  { id: 'PRODUCCION',  label: 'Producción' },
+  { id: 'PREPARACION', label: 'Preparación' },
+  { id: 'DESPACHO',    label: 'Despacho' },
+  { id: 'TRANSITO',    label: 'Tránsito' },
+  { id: 'EN_DESTINO',  label: 'En destino' },
+  { id: 'CERRADO',     label: 'Cerrado' },
 ];

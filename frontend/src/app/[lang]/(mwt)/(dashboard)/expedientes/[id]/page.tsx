@@ -12,9 +12,10 @@ import {
     ArrowLeft, ShieldAlert, CheckCircle2, XCircle, FileText, Ban,
     DollarSign, CreditCard, XOctagon,
 } from 'lucide-react';
-import { TIMELINE_STATES_CANONICAL } from '@/constants/states';
+// fix(S9-Fase3): ruta canónica corregida — era @/constants/states (no existe en main)
+import { TIMELINE_STATES_CANONICAL } from '@/lib/constants/states';
 
-// ── Modal / Drawer imports ────────────────────────────────
+// ── Modal / Drawer imports ──────────────────────────────
 import ArtifactFormDrawer from '@/components/modals/ArtifactFormDrawer';
 import BlockUnblockModal from '@/components/modals/BlockUnblockModal';
 import CancelExpedienteModal from '@/components/modals/CancelExpedienteModal';
@@ -40,7 +41,7 @@ class SectionErrorBoundary extends Component<{ children: ReactNode; fallback?: R
     render() {
         if (this.state.hasError) {
             return this.props.fallback ?? (
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm text-text-tertiary flex items-center gap-2">
+                <div className="bg-[var(--bg-alt)] border border-[var(--border)] rounded-2xl p-6 text-sm text-[var(--text-tertiary)] flex items-center gap-2">
                     <FileText className="w-4 h-4 opacity-40" />
                     Sección no disponible (endpoint pendiente en backend)
                 </div>
@@ -50,8 +51,7 @@ class SectionErrorBoundary extends Component<{ children: ReactNode; fallback?: R
     }
 }
 
-// ───────────────────────── interfaces ─────────────────────
-
+// ───────────────────────── interfaces ─────────────────
 interface EventLog {
     event_id: string;
     event_type: string;
@@ -112,8 +112,7 @@ interface ExpedienteBundle {
     available_actions: string[];
 }
 
-// ───────────────────────── constants ──────────────────────
-
+// ───────────────────────── constants ──────────────
 type ArtifactType = 'ART-01' | 'ART-02' | 'ART-05' | 'ART-06' | 'ART-07' | 'ART-08';
 
 const ARTIFACT_LABELS: Record<string, string> = {
@@ -155,11 +154,10 @@ const CMD_TO_ARTIFACT: Partial<Record<string, ArtifactType>> = {
     'C10': 'ART-07',
 };
 
-// S9-02: status que permiten emitir factura (EN_DESTINO es el canónico correcto)
+// S9-02: status que permiten emitir factura
 const INVOICE_ALLOWED_STATUSES = ['EN_DESTINO', 'CERRADO'];
 
-// ─────────────── ArtifactPayloadCard (ART-06 / ART-08) ───
-
+// ───────────────── ArtifactPayloadCard (ART-06 / ART-08) ───
 function ArtifactPayloadCard({ artifact }: { artifact: Artifact }) {
     const p = artifact.payload || {};
     const type = artifact.artifact_type;
@@ -168,7 +166,7 @@ function ArtifactPayloadCard({ artifact }: { artifact: Artifact }) {
         return (
             <div className="bg-blue-50/50 rounded-xl border border-blue-100 p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                    <h5 className="text-sm font-bold text-navy flex items-center gap-2">
+                    <h5 className="text-sm font-bold text-[var(--navy)] flex items-center gap-2">
                         {ARTIFACT_LABELS['ART-06'] || 'ART-06'}
                     </h5>
                     <span className={cn(
@@ -179,16 +177,16 @@ function ArtifactPayloadCard({ artifact }: { artifact: Artifact }) {
                     </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                    {p.carrier && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Naviera / Carrier</div><div className="font-medium text-text-primary">{String(p.carrier)}</div></div>)}
-                    {p.freight_cost !== undefined && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Costo Flete</div><div className="font-medium text-text-primary">${Number(p.freight_cost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div></div>)}
-                    {p.transit_days !== undefined && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Días Tránsito</div><div className="font-medium text-text-primary">{String(p.transit_days)} días</div></div>)}
-                    {p.eta && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">ETA</div><div className="font-medium text-text-primary">{String(p.eta)}</div></div>)}
-                    {p.origin_port && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Puerto Origen</div><div className="font-medium text-text-primary">{String(p.origin_port)}</div></div>)}
-                    {p.destination_port && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Puerto Destino</div><div className="font-medium text-text-primary">{String(p.destination_port)}</div></div>)}
-                    {p.container_type && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Tipo Contenedor</div><div className="font-medium text-text-primary">{String(p.container_type)}</div></div>)}
-                    {p.incoterm && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Incoterm</div><div className="font-medium text-text-primary">{String(p.incoterm)}</div></div>)}
+                    {p.carrier && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Naviera / Carrier</div><div className="font-medium text-[var(--text-primary)]">{String(p.carrier)}</div></div>)}
+                    {p.freight_cost !== undefined && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Costo Flete</div><div className="font-medium text-[var(--text-primary)]">${Number(p.freight_cost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div></div>)}
+                    {p.transit_days !== undefined && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Días Tránsito</div><div className="font-medium text-[var(--text-primary)]">{String(p.transit_days)} días</div></div>)}
+                    {p.eta && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">ETA</div><div className="font-medium text-[var(--text-primary)]">{String(p.eta)}</div></div>)}
+                    {p.origin_port && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Puerto Origen</div><div className="font-medium text-[var(--text-primary)]">{String(p.origin_port)}</div></div>)}
+                    {p.destination_port && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Puerto Destino</div><div className="font-medium text-[var(--text-primary)]">{String(p.destination_port)}</div></div>)}
+                    {p.container_type && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Tipo Contenedor</div><div className="font-medium text-[var(--text-primary)]">{String(p.container_type)}</div></div>)}
+                    {p.incoterm && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Incoterm</div><div className="font-medium text-[var(--text-primary)]">{String(p.incoterm)}</div></div>)}
                 </div>
-                {p.file_url && (<a href={String(p.file_url)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-navy hover:underline mt-1"><FileText className="w-3.5 h-3.5" /> Ver documento</a>)}
+                {p.file_url && (<a href={String(p.file_url)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-[var(--navy)] hover:underline mt-1"><FileText className="w-3.5 h-3.5" /> Ver documento</a>)}
             </div>
         );
     }
@@ -208,12 +206,12 @@ function ArtifactPayloadCard({ artifact }: { artifact: Artifact }) {
                     </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                    {p.customs_agent && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Agente Aduanal</div><div className="font-medium text-text-primary">{String(p.customs_agent)}</div></div>)}
-                    {p.customs_cost !== undefined && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Costo Aduana</div><div className="font-medium text-text-primary">${Number(p.customs_cost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div></div>)}
-                    {p.customs_declaration && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Declaración</div><div className="font-medium text-text-primary">{String(p.customs_declaration)}</div></div>)}
-                    {p.tariff_code && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Código Arancelario</div><div className="font-medium text-text-primary">{String(p.tariff_code)}</div></div>)}
-                    {p.tax_amount !== undefined && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Impuestos</div><div className="font-medium text-text-primary">${Number(p.tax_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div></div>)}
-                    {p.dispatch_mode && (<div><div className="text-xs text-text-tertiary uppercase font-semibold mb-0.5">Modo Despacho</div><div className="font-medium text-text-primary">{String(p.dispatch_mode).toUpperCase()}</div></div>)}
+                    {p.customs_agent && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Agente Aduanal</div><div className="font-medium text-[var(--text-primary)]">{String(p.customs_agent)}</div></div>)}
+                    {p.customs_cost !== undefined && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Costo Aduana</div><div className="font-medium text-[var(--text-primary)]">${Number(p.customs_cost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div></div>)}
+                    {p.customs_declaration && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Declaración</div><div className="font-medium text-[var(--text-primary)]">{String(p.customs_declaration)}</div></div>)}
+                    {p.tariff_code && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Código Arancelario</div><div className="font-medium text-[var(--text-primary)]">{String(p.tariff_code)}</div></div>)}
+                    {p.tax_amount !== undefined && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Impuestos</div><div className="font-medium text-[var(--text-primary)]">${Number(p.tax_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div></div>)}
+                    {p.dispatch_mode && (<div><div className="text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-0.5">Modo Despacho</div><div className="font-medium text-[var(--text-primary)]">{String(p.dispatch_mode).toUpperCase()}</div></div>)}
                 </div>
                 {p.file_url && (<a href={String(p.file_url)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-emerald-700 hover:underline mt-1"><FileText className="w-3.5 h-3.5" /> Ver documento</a>)}
             </div>
@@ -223,8 +221,7 @@ function ArtifactPayloadCard({ artifact }: { artifact: Artifact }) {
     return null;
 }
 
-// ═══════════════════════════ MAIN PAGE ════════════════════
-
+// ═════════════════════════ MAIN PAGE ════════════════════════
 export default function ExpedienteDetailPage() {
     const params = useParams();
     const id = params.id as string;
@@ -280,7 +277,7 @@ export default function ExpedienteDetailPage() {
             let endpoint = '';
             const payload = {};
             switch (cmd) {
-                case 'C6': endpoint = `expedientes/${id}/confirm-production/`; break;
+                case 'C6':  endpoint = `expedientes/${id}/confirm-production/`; break;
                 case 'C11': endpoint = `expedientes/${id}/confirm-departure/`; break;
                 case 'C12': endpoint = `expedientes/${id}/confirm-arrival/`; break;
                 case 'C14': endpoint = `expedientes/${id}/close/`; break;
@@ -298,12 +295,13 @@ export default function ExpedienteDetailPage() {
         }
     };
 
+    // ── Skeleton loading ──
     if (loading) {
         return (
-            <div className="flex flex-col space-y-4 p-8">
-                <div className="h-8 w-64 bg-slate-200 animate-pulse rounded"></div>
-                <div className="h-48 bg-slate-200 animate-pulse rounded"></div>
-                <div className="h-64 bg-slate-200 animate-pulse rounded"></div>
+            <div className="flex flex-col space-y-4 p-8 animate-pulse">
+                <div className="h-8 w-64 bg-[var(--border)] rounded" />
+                <div className="h-48 bg-[var(--border)] rounded-2xl" />
+                <div className="h-64 bg-[var(--border)] rounded-2xl" />
             </div>
         );
     }
@@ -316,7 +314,7 @@ export default function ExpedienteDetailPage() {
                     {error || 'No se encontró el expediente'}
                 </div>
                 <div className="mt-4">
-                    <button onClick={() => router.push('/expedientes')} className="text-navy hover:underline">
+                    <button onClick={() => router.push('/expedientes')} className="text-[var(--navy)] hover:underline">
                         ← Volver a expedientes
                     </button>
                 </div>
@@ -337,7 +335,7 @@ export default function ExpedienteDetailPage() {
         else if (creditDays >= 60) creditType = 'amber';
     }
 
-    // S9-02: usa TIMELINE_STATES_CANONICAL (7 pasos, sin FACTURADO, con DESPACHO)
+    // S9-02: usa TIMELINE_STATES_CANONICAL importado desde @/lib/constants/states
     const currentStateIndex = TIMELINE_STATES_CANONICAL.findIndex(
         s => s.id === expediente.status
     );
@@ -356,7 +354,7 @@ export default function ExpedienteDetailPage() {
 
             <button
                 onClick={() => router.back()}
-                className="text-sm text-text-secondary hover:text-navy flex items-center transition-colors"
+                className="text-sm text-[var(--text-secondary)] hover:text-[var(--navy)] flex items-center transition-colors"
             >
                 <ArrowLeft className="w-4 h-4 mr-1" />
                 Volver a expedientes
@@ -364,26 +362,23 @@ export default function ExpedienteDetailPage() {
 
             {/* ───────── Header ───────── */}
             <div className="flex items-center gap-4 flex-wrap">
-                {/* S9-16: ref en font-mono, no font-display */}
-                <h1 className="text-3xl font-display font-medium text-text-primary tracking-tight">
+                <h1 className="text-3xl font-display font-medium text-[var(--text-primary)] tracking-tight">
                     <span className="font-mono text-2xl font-semibold">
                         {expediente.custom_ref || `EXP-${expediente.id?.toString().slice(0, 8)}`}
                     </span>
                 </h1>
                 <div className="flex gap-2 items-center flex-wrap">
-                    {/* Estado badge — ocultar si CANCELADO (se muestra como badge lateral especial) */}
                     {!isCancelled && (
                         <span className={cn(
                             "badge-mwt border shadow-sm",
                             expediente.status === 'REGISTRO' ? "badge-neutral border-slate-200" :
                                 expediente.status === 'CERRADO' ? "badge-success border-emerald-200" :
-                                    "bg-blue-50 text-navy border-blue-200"
+                                    "bg-blue-50 text-[var(--navy)] border-blue-200"
                         )}>
                             {expediente.status}
                         </span>
                     )}
 
-                    {/* S9-02: CANCELADO como badge rojo especial lateral */}
                     {isCancelled && (
                         <span className="badge-mwt badge-danger border border-red-300 flex items-center gap-1.5 shadow-sm">
                             <XOctagon className="w-3.5 h-3.5" />
@@ -394,14 +389,14 @@ export default function ExpedienteDetailPage() {
                     {creditDays > 0 && (
                         <span className={cn(
                             "flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border shadow-sm",
-                            creditType === 'coral' ? "bg-red-50 text-coral border-red-200" :
-                                creditType === 'amber' ? "bg-orange-50 text-amber border-orange-200" :
-                                    "bg-emerald-50 text-mint border-emerald-200"
+                            creditType === 'coral' ? "bg-red-50 text-[var(--coral)] border-red-200" :
+                                creditType === 'amber' ? "bg-orange-50 text-[var(--amber)] border-orange-200" :
+                                    "bg-emerald-50 text-[var(--mint)] border-emerald-200"
                         )}>
                             <span className={cn("w-2 h-2 rounded-full",
-                                creditType === 'coral' ? "bg-coral shadow-[0_0_8px_rgba(255,107,107,0.5)]" :
-                                    creditType === 'amber' ? "bg-amber shadow-[0_0_8px_rgba(255,190,40,0.5)]" :
-                                        "bg-mint shadow-[0_0_8px_rgba(50,215,140,0.5)]"
+                                creditType === 'coral' ? "bg-[var(--coral)] shadow-[0_0_8px_rgba(255,107,107,0.5)]" :
+                                    creditType === 'amber' ? "bg-[var(--amber)] shadow-[0_0_8px_rgba(255,190,40,0.5)]" :
+                                        "bg-[var(--mint)] shadow-[0_0_8px_rgba(50,215,140,0.5)]"
                             )} />
                             {creditDays} días crédito
                         </span>
@@ -417,10 +412,9 @@ export default function ExpedienteDetailPage() {
             </div>
 
             {/* ───────── S9-02: Timeline 7 pasos canónicos ───────── */}
-            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 overflow-x-auto">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm p-6 overflow-x-auto">
                 <div className="flex items-center justify-between mb-6">
-                    <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Timeline</h4>
-                    {/* Badge CANCELADO lateral — no interrumpe el flujo lineal */}
+                    <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Timeline</h4>
                     {isCancelled && (
                         <span className="badge-mwt badge-danger border border-red-300 flex items-center gap-1.5">
                             <XOctagon className="w-3.5 h-3.5" />
@@ -441,18 +435,17 @@ export default function ExpedienteDetailPage() {
                                 {idx < TIMELINE_STATES_CANONICAL.length - 1 && (
                                     <div className={cn(
                                         "absolute top-4 left-1/2 w-full h-[2px] -z-10",
-                                        isCompleted ? "bg-navy" : "bg-slate-200"
+                                        isCompleted ? "bg-[var(--navy)]" : "bg-[var(--border)]"
                                     )} />
                                 )}
                                 <div className="flex flex-col items-center">
                                     <div className={cn(
                                         "flex items-center justify-center border-2 transition-all duration-300",
-                                        // S9-02: dot sizes del design system
                                         isCompleted
-                                            ? "w-8 h-8 rounded-full bg-[#75CBB3] border-[#75CBB3] text-white"  // Mint completado
+                                            ? "w-8 h-8 rounded-full bg-[var(--mint)] border-[var(--mint)] text-white"
                                             : isCurrent
-                                            ? "w-9 h-9 rounded-full bg-[#013A57] border-[#013A57] text-white animate-timeline-pulse scale-110 shadow-md"  // Navy activo + pulse
-                                            : "w-8 h-8 rounded-full bg-white border-dashed border-slate-300 text-slate-400"  // dashed futuro
+                                            ? "w-9 h-9 rounded-full bg-[var(--navy)] border-[var(--navy)] text-white animate-timeline-pulse scale-110 shadow-md"
+                                            : "w-8 h-8 rounded-full bg-white border-dashed border-[var(--border-strong)] text-[var(--text-disabled)]"
                                     )}>
                                         {isCompleted
                                             ? <CheckCircle2 className="w-5 h-5" />
@@ -463,8 +456,9 @@ export default function ExpedienteDetailPage() {
                                     </div>
                                     <div className={cn(
                                         "mt-3 text-xs font-medium text-center",
-                                        isCurrent ? "text-navy font-bold" :
-                                            isCompleted ? "text-text-primary" : "text-text-tertiary"
+                                        isCurrent   ? "text-[var(--navy)] font-bold" :
+                                        isCompleted ? "text-[var(--text-primary)]" :
+                                                      "text-[var(--text-tertiary)]"
                                     )}>
                                         {state.label}
                                     </div>
@@ -476,24 +470,23 @@ export default function ExpedienteDetailPage() {
             </div>
 
             {/* ───────── Actions Panel ───────── */}
-            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm p-6">
                 <div className="flex flex-col md:flex-row md:items-start gap-8">
-                    {/* Pipeline actions */}
                     <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">Acciones Pipeline</h4>
+                        <h4 className="text-sm font-semibold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Acciones Pipeline</h4>
                         <div className="flex flex-wrap gap-3">
                             {available_actions.length > 0 ? (
                                 available_actions.map(cmd => (
                                     <button
                                         key={cmd}
                                         onClick={() => handleAction(cmd)}
-                                        className="bg-navy hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95"
+                                        className="bg-[var(--navy)] hover:bg-[var(--navy-light)] text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95"
                                     >
                                         {COMMAND_LABELS[cmd] || cmd}
                                     </button>
                                 ))
                             ) : (
-                                <div className="text-sm text-text-tertiary flex items-center gap-2">
+                                <div className="text-sm text-[var(--text-tertiary)] flex items-center gap-2">
                                     <ShieldAlert className="w-4 h-4" />
                                     {expediente.is_blocked
                                         ? 'Expediente bloqueado. Desbloquear para continuar.'
@@ -505,11 +498,10 @@ export default function ExpedienteDetailPage() {
                         </div>
                     </div>
 
-                    <div className="hidden md:block w-px bg-border self-stretch" />
+                    <div className="hidden md:block w-px bg-[var(--border)] self-stretch" />
 
-                    {/* Ops / Admin actions */}
                     <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">Acciones Ops</h4>
+                        <h4 className="text-sm font-semibold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Acciones Ops</h4>
                         <div className="flex flex-wrap gap-3">
                             <button
                                 onClick={() => setBlockModalOpen(true)}
@@ -517,7 +509,7 @@ export default function ExpedienteDetailPage() {
                                     "px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5",
                                     expediente.is_blocked
                                         ? "bg-red-50 hover:bg-red-100 text-red-700 border border-red-200"
-                                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200"
+                                        : "bg-[var(--surface)] hover:bg-[var(--bg-alt)] text-[var(--text-secondary)] border border-[var(--border)]"
                                 )}
                             >
                                 <Ban className="w-4 h-4" />
@@ -526,7 +518,7 @@ export default function ExpedienteDetailPage() {
 
                             <button
                                 onClick={() => setCostDrawerOpen(true)}
-                                className="bg-white hover:bg-slate-50 text-navy border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+                                className="bg-white hover:bg-[var(--bg-alt)] text-[var(--navy)] border border-[var(--border)] px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
                             >
                                 <DollarSign className="w-4 h-4" />
                                 Registrar Costo
@@ -534,7 +526,7 @@ export default function ExpedienteDetailPage() {
 
                             <button
                                 onClick={() => setPaymentDrawerOpen(true)}
-                                className="bg-white hover:bg-slate-50 text-navy border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+                                className="bg-white hover:bg-[var(--bg-alt)] text-[var(--navy)] border border-[var(--border)] px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
                             >
                                 <CreditCard className="w-4 h-4" />
                                 Registrar Pago
@@ -551,7 +543,7 @@ export default function ExpedienteDetailPage() {
                             {!hasInvoice && canIssueInvoice && (
                                 <button
                                     onClick={() => setInvoiceModalOpen(true)}
-                                    className="bg-white hover:bg-slate-50 text-navy border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+                                    className="bg-white hover:bg-[var(--bg-alt)] text-[var(--navy)] border border-[var(--border)] px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
                                 >
                                     <FileText className="w-4 h-4" />
                                     Emitir Factura
@@ -574,64 +566,62 @@ export default function ExpedienteDetailPage() {
 
             {/* ───────── Details Grid ───────── */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Info */}
                 <div className="card-mwt overflow-hidden flex flex-col">
-                    <div className="px-6 py-4 border-b border-border bg-slate-50/50">
-                        <h4 className="text-sm font-semibold text-text-primary">Datos del expediente</h4>
+                    <div className="px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-alt)]">
+                        <h4 className="text-sm font-semibold text-[var(--text-primary)]">Datos del expediente</h4>
                     </div>
                     <div className="p-6 grid grid-cols-2 gap-y-6 gap-x-4">
                         <div>
-                            <div className="text-xs text-text-tertiary uppercase tracking-wider font-semibold mb-1">Cliente</div>
-                            <div className="text-sm font-medium text-text-primary">{expediente.client_name || '—'}</div>
+                            <div className="text-xs text-[var(--text-tertiary)] uppercase tracking-wider font-semibold mb-1">Cliente</div>
+                            <div className="text-sm font-medium text-[var(--text-primary)]">{expediente.client_name || '—'}</div>
                         </div>
                         <div>
-                            <div className="text-xs text-text-tertiary uppercase tracking-wider font-semibold mb-1">Marca</div>
-                            <div className="text-sm font-medium text-text-primary">{expediente.brand || '—'}</div>
+                            <div className="text-xs text-[var(--text-tertiary)] uppercase tracking-wider font-semibold mb-1">Marca</div>
+                            <div className="text-sm font-medium text-[var(--text-primary)]">{expediente.brand || '—'}</div>
                         </div>
                         <div>
-                            <div className="text-xs text-text-tertiary uppercase tracking-wider font-semibold mb-1">Entidad</div>
-                            <div className="text-sm font-medium text-text-primary">{expediente.legal_entity_id || '—'}</div>
+                            <div className="text-xs text-[var(--text-tertiary)] uppercase tracking-wider font-semibold mb-1">Entidad</div>
+                            <div className="text-sm font-medium text-[var(--text-primary)]">{expediente.legal_entity_id || '—'}</div>
                         </div>
                         <div>
-                            <div className="text-xs text-text-tertiary uppercase tracking-wider font-semibold mb-1">Modo</div>
-                            <div className="text-sm font-medium text-text-primary">{expediente.mode || '—'}</div>
+                            <div className="text-xs text-[var(--text-tertiary)] uppercase tracking-wider font-semibold mb-1">Modo</div>
+                            <div className="text-sm font-medium text-[var(--text-primary)]">{expediente.mode || '—'}</div>
                         </div>
                     </div>
                 </div>
 
-                {/* Artifacts Table */}
                 <div className="card-mwt overflow-hidden flex flex-col">
-                    <div className="px-6 py-4 border-b border-border bg-slate-50/50 flex items-center justify-between">
-                        <h4 className="text-sm font-semibold text-text-primary">Artefactos</h4>
+                    <div className="px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-alt)] flex items-center justify-between">
+                        <h4 className="text-sm font-semibold text-[var(--text-primary)]">Artefactos</h4>
                         <span className="badge-mwt badge-neutral">{artifacts.length}</span>
                     </div>
                     <div className="flex-1 overflow-auto max-h-[300px]">
                         {artifacts.length > 0 ? (
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-slate-50 sticky top-0 border-b border-border text-xs text-text-tertiary uppercase font-semibold">
+                                <thead className="bg-[var(--bg-alt)] sticky top-0 border-b border-[var(--border)] text-xs text-[var(--text-tertiary)] uppercase font-semibold">
                                     <tr>
                                         <th className="px-6 py-3">Tipo</th>
                                         <th className="px-6 py-3">Estado</th>
                                         <th className="px-6 py-3 text-right">Fecha</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-y divide-[var(--divider)]">
                                     {artifacts.map((art) => (
-                                        <tr key={art.artifact_id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-3 font-medium text-text-secondary">
+                                        <tr key={art.artifact_id} className="hover:bg-[var(--surface-hover)] transition-colors">
+                                            <td className="px-6 py-3 font-medium text-[var(--text-secondary)]">
                                                 {ARTIFACT_LABELS[art.artifact_type] || art.artifact_type}
                                             </td>
                                             <td className="px-6 py-3">
                                                 <span className={cn(
                                                     "badge-mwt border",
-                                                    art.status === 'COMPLETED' ? "badge-success border-emerald-200" :
-                                                        art.status === 'SUPERSEDED' ? "badge-neutral border-slate-200" :
-                                                            "badge-danger border-red-200"
+                                                    art.status === 'COMPLETED'  ? "badge-success border-emerald-200" :
+                                                    art.status === 'SUPERSEDED' ? "badge-neutral border-slate-200"  :
+                                                                                   "badge-danger  border-red-200"
                                                 )}>
                                                     {art.status_display}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-3 text-right text-text-tertiary whitespace-nowrap text-xs">
+                                            <td className="px-6 py-3 text-right text-[var(--text-tertiary)] whitespace-nowrap text-xs">
                                                 {formatDistanceToNow(parseISO(art.created_at), { addSuffix: true, locale: es })}
                                             </td>
                                         </tr>
@@ -639,7 +629,7 @@ export default function ExpedienteDetailPage() {
                                 </tbody>
                             </table>
                         ) : (
-                            <div className="p-8 text-center text-text-tertiary text-sm flex flex-col items-center">
+                            <div className="p-8 text-center text-[var(--text-tertiary)] text-sm flex flex-col items-center">
                                 <FileText className="w-8 h-8 opacity-20 mb-2" />
                                 Sin artefactos en este expediente.
                             </div>
@@ -651,7 +641,7 @@ export default function ExpedienteDetailPage() {
             {/* ───────── Enriched Artifact Cards ───────── */}
             {enrichedArtifacts.length > 0 && (
                 <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Detalle de Artefactos Clave</h4>
+                    <h4 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Detalle de Artefactos Clave</h4>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {enrichedArtifacts.map(art => (
                             <ArtifactPayloadCard key={art.artifact_id} artifact={art} />
