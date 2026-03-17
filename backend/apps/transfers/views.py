@@ -11,6 +11,7 @@ from rest_framework.pagination import PageNumberPagination
 
 from apps.transfers.models import Transfer, Node
 from apps.core.models import LegalEntity
+from apps.expedientes.models import Expediente
 from apps.transfers.services import (
     create_transfer, approve_transfer, dispatch_transfer,
     receive_transfer, reconcile_transfer, cancel_transfer,
@@ -28,7 +29,6 @@ from apps.transfers.serializers import (
 
 # ─── NODE CRUD ────────────────────────────────────────────────────────────────
 
-# GET /api/transfers/nodes/
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_nodes_view(request):
@@ -39,7 +39,6 @@ def list_nodes_view(request):
     return paginator.get_paginated_response(NodeSerializer(page, many=True).data)
 
 
-# POST /api/transfers/nodes/create/
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_node_view(request):
@@ -50,7 +49,6 @@ def create_node_view(request):
     d = ser.validated_data
     entity_id = d.get("legal_entity", "").strip()
 
-    # Resolve legal_entity — use first available if not specified
     if entity_id:
         try:
             legal_entity = LegalEntity.objects.get(entity_id=entity_id)
@@ -77,7 +75,6 @@ def create_node_view(request):
     return Response(NodeSerializer(node).data, status=status.HTTP_201_CREATED)
 
 
-# PUT /api/transfers/nodes/{node_id}/
 @api_view(["PUT", "PATCH"])
 @permission_classes([IsAuthenticated])
 def update_node_view(request, node_id):
@@ -108,7 +105,6 @@ def update_node_view(request, node_id):
     return Response(NodeSerializer(node).data)
 
 
-# DELETE /api/transfers/nodes/{node_id}/
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_node_view(request, node_id):
@@ -123,12 +119,31 @@ def delete_node_view(request, node_id):
 # ─── TRANSFER CRUD ────────────────────────────────────────────────────────────
 
 # C30 — POST /api/transfers/create/
+# FIX: cambiado de IsAdminUser → IsAuthenticated para que usuarios normales puedan crear
 @api_view(["POST"])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def create_transfer_view(request):
     ser = CreateTransferSerializer(data=request.data)
     ser.is_valid(raise_exception=True)
-    transfer = create_transfer(ser.validated_data, request.user)
+    d = ser.validated_data
+
+    # Resolver source_expediente: puede venir como string (referencia) o None
+    source_exp_ref = d.pop("source_expediente", None)
+    if source_exp_ref:
+        try:
+            # Buscar por referencia (campo ref o folio según el modelo)
+            expediente = Expediente.objects.filter(
+                folio=source_exp_ref
+            ).first() or Expediente.objects.filter(
+                ref=source_exp_ref
+            ).first()
+            d["source_expediente"] = expediente  # puede ser None si no existe
+        except Exception:
+            d["source_expediente"] = None
+    else:
+        d["source_expediente"] = None
+
+    transfer = create_transfer(d, request.user)
     return Response(
         TransferDetailSerializer(transfer).data, status=status.HTTP_201_CREATED
     )
@@ -256,7 +271,11 @@ def list_transfers_view(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_transfer_view(request, transfer_id):
-    transfer = Transfer.objects.prefetch_related("lines").get(
-        transfer_id=transfer_id
-    )
+    try:
+        transfer = Transfer.objects.prefetch_related("lines").select_related(
+            "from_node", "to_node",
+            "from_node__legal_entity", "to_node__legal_entity"
+        ).get(transfer_id=transfer_id)
+    except Transfer.DoesNotExist:
+        return Response({"detail": "Transfer no encontrado."}, status=status.HTTP_404_NOT_FOUND)
     return Response(TransferDetailSerializer(transfer).data)
