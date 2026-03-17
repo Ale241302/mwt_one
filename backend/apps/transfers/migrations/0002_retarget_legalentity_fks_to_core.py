@@ -1,6 +1,6 @@
-# State-only migration: retargets Node and Transfer FKs
-# from expedientes.LegalEntity -> core.LegalEntity in Django migration state.
-# No DB changes needed (DB FKs already retargeted by expedientes/0008 RunSQL).
+# State-only: retargets Node and Transfer FKs
+# from expedientes.LegalEntity -> core.LegalEntity.
+# No DB changes (already done by expedientes/0008 RunSQL).
 import django.db.models.deletion
 from django.db import migrations, models
 
@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('transfers', '0001_initial'),
-        ('expedientes', '0009_retarget_legalentity_fks_to_core'),
+        ('expedientes', '0008_legalentity_to_core'),
         ('core', '0002_legalentity'),
     ]
 

@@ -1,6 +1,8 @@
 # Sprint 8 fix: LegalEntity moved to core app.
-# DB: core_legalentity already exists, FKs already retargeted via RunSQL.
-# State: delete LegalEntity from expedientes state AND retarget all FKs to core.
+# DB: RunSQL retargets FK constraints and drops expedientes_legalentity.
+# State: We CANNOT delete LegalEntity from expedientes state here because
+# transfers/0001_initial (which depends on expedientes/0004) still references
+# expedientes.legalentity. Deletion happens in 0009 after transfers/0002 retargets.
 import django.db.models.deletion
 from django.db import migrations, models
 
@@ -66,7 +68,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             state_operations=[
-                # Retarget Expediente FKs to core.LegalEntity in state
+                # Retarget expediente FKs to core in state
                 migrations.AlterField(
                     model_name='expediente',
                     name='client',
@@ -87,8 +89,9 @@ class Migration(migrations.Migration):
                         to='core.legalentity',
                     ),
                 ),
-                # Now safe to delete LegalEntity from expedientes state
-                migrations.DeleteModel(name='LegalEntity'),
+                # NOTE: Do NOT delete LegalEntity from expedientes state here.
+                # transfers/0001_initial still holds lazy refs to expedientes.legalentity.
+                # Deletion is deferred to expedientes/0009 after transfers/0002 clears refs.
             ],
         ),
     ]
