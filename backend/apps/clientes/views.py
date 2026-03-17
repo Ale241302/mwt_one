@@ -2,7 +2,6 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
 
 from apps.clientes.models import Cliente
 from apps.clientes.serializers import ClienteSerializer
@@ -13,12 +12,9 @@ from apps.clientes.serializers import ClienteSerializer
 def clientes_list_create(request):
     if request.method == 'GET':
         qs = Cliente.objects.select_related('legal_entity').order_by('name')
-        paginator = PageNumberPagination()
-        paginator.page_size = 100
-        page = paginator.paginate_queryset(qs, request)
-        return paginator.get_paginated_response(ClienteSerializer(page, many=True).data)
+        data = ClienteSerializer(qs, many=True).data
+        return Response({'results': data, 'count': len(data)})
 
-    # POST
     ser = ClienteSerializer(data=request.data)
     if ser.is_valid():
         ser.save()
@@ -30,7 +26,7 @@ def clientes_list_create(request):
 @permission_classes([IsAuthenticated])
 def clientes_detail(request, pk):
     try:
-        cliente = Cliente.objects.select_related('legal_entity').get(pk=pk)
+3        cliente = Cliente.objects.select_related('legal_entity').get(pk=pk)
     except Cliente.DoesNotExist:
         return Response({'detail': 'No encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -44,6 +40,5 @@ def clientes_detail(request, pk):
             return Response(ser.data)
         return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # DELETE
     cliente.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)

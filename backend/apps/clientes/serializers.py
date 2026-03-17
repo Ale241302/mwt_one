@@ -4,7 +4,7 @@ from apps.clientes.models import Cliente
 
 class ClienteSerializer(serializers.ModelSerializer):
     legal_entity_name = serializers.SerializerMethodField()
-    active_expedientes = serializers.IntegerField(read_only=True)
+    active_expedientes = serializers.SerializerMethodField()
 
     class Meta:
         model = Cliente
@@ -13,12 +13,13 @@ class ClienteSerializer(serializers.ModelSerializer):
             'legal_entity', 'legal_entity_name', 'credit_approved',
             'active_expedientes', 'is_active', 'created_at',
         ]
-        read_only_fields = ['id', 'created_at', 'legal_entity_name', 'active_expedientes']
+        read_only_fields = ['id', 'created_at']
 
     def get_legal_entity_name(self, obj):
-        return obj.legal_entity.legal_name if obj.legal_entity else None
+        try:
+            return obj.legal_entity.legal_name if obj.legal_entity_id else None
+        except Exception:
+            return None
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['active_expedientes'] = instance.active_expedientes
-        return data
+    def get_active_expedientes(self, obj):
+        return 0
