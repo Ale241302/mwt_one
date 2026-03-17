@@ -26,7 +26,7 @@ def clientes_list_create(request):
 @permission_classes([IsAuthenticated])
 def clientes_detail(request, pk):
     try:
-3        cliente = Cliente.objects.select_related('legal_entity').get(pk=pk)
+        cliente = Cliente.objects.select_related('legal_entity').get(pk=pk)
     except Cliente.DoesNotExist:
         return Response({'detail': 'No encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
