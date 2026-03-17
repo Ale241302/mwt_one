@@ -1,12 +1,23 @@
-﻿from rest_framework import serializers
+from django.utils.text import slugify
+from rest_framework import serializers
 from .models import Brand, BrandSKU
+
 
 class SKUSerializer(serializers.ModelSerializer):
     class Meta:
         model = BrandSKU
         fields = ['product_key', 'arch', 'size', 'sku_code']
 
+
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
         fields = ['slug', 'name', 'brand_type', 'is_active']
+        extra_kwargs = {
+            'slug': {'required': False},
+        }
+
+    def validate(self, attrs):
+        if not attrs.get('slug') and attrs.get('name'):
+            attrs['slug'] = slugify(attrs['name'])[:50]
+        return attrs
