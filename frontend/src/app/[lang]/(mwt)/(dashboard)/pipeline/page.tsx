@@ -77,7 +77,9 @@ export default function PipelinePage() {
     PIPELINE_STATES.map((s) => [s, filtered.filter((e) => e.status === s)])
   );
   const totalFiltered = filtered.filter((e) => (PIPELINE_STATES as readonly string[]).includes(e.status)).length;
-  const goToDetail = (id: string) => router.push(`/${lang}/dashboard/expedientes/${id}`);
+
+  // FIX: ruta correcta sin /dashboard/
+  const goToDetail = (id: string) => router.push(`/${lang}/expedientes/${id}`);
 
   if (loading) {
     return (
