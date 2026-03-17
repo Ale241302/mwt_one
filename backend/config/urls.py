@@ -1,10 +1,5 @@
-﻿"""
-Sprint 1 â€” Root URL Configuration (Item 7)
-18 command endpoints under /api/expedientes/
-Ref: LOTE_SM_SPRINT1 Item 7, PLB_SPRINT1_PROMPTS FIX-4
-
-NOTE: /api/ui/* endpoints belong to Sprint 3. Do NOT register here.
-NOTE: DashboardView belongs to Sprint 3. Do NOT import here.
+"""
+Root URL Configuration
 """
 from django.contrib import admin
 from django.urls import path, include
@@ -20,4 +15,6 @@ urlpatterns = [
     path('api/liquidations/', include('apps.liquidations.urls', namespace='liquidations')),
     path('api/brands/', include('apps.brands.urls')),
     path('api/qr/', include('apps.qr.urls')),
+    # Clientes
+    path('api/clientes/', include('apps.clientes.urls')),
 ]

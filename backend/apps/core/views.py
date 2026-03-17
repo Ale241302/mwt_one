@@ -5,17 +5,21 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.expedientes.models import Expediente
 from django.db.models import Sum
 from apps.expedientes.enums import ExpedienteStatus
-from apps.core.serializers import UserSerializer
+from apps.core.serializers import UserSerializer, LegalEntitySerializer
+from apps.core.models import LegalEntity
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []  # no session auth needed on login endpoint
+    authentication_classes = []
 
     def post(self, request):
         username = request.data.get('username')
@@ -24,7 +28,6 @@ class LoginView(APIView):
 
         if user is not None:
             login(request, user)
-            # Issue JWT tokens so the frontend can use Bearer auth
             refresh = RefreshToken.for_user(user)
             csrf_token = get_token(request)
             return Response({
@@ -50,12 +53,21 @@ class MeView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        get_token(request)  # Force CSRF cookie (S3-D06)
+        get_token(request)
         if not request.user.is_authenticated:
             return Response({"detail": "Not authenticated"}, status=status.HTTP_403_FORBIDDEN)
-        return Response({
-            'user': UserSerializer(request.user).data
-        })
+        return Response({'user': UserSerializer(request.user).data})
+
+
+# GET /api/core/legal-entities/
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_legal_entities(request):
+    qs = LegalEntity.objects.order_by('legal_name')
+    paginator = PageNumberPagination()
+    paginator.page_size = 200
+    page = paginator.paginate_queryset(qs, request)
+    return paginator.get_paginated_response(LegalEntitySerializer(page, many=True).data)
 
 
 class DashboardView(APIView):
@@ -85,7 +97,6 @@ class DashboardView(APIView):
                 events_by_exp.setdefault(ev.aggregate_id, []).append(ev)
 
         now = timezone.now()
-
         alerts_list_data = []
         top_risk_data = []
 
