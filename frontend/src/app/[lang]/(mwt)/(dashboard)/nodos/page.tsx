@@ -1,60 +1,62 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
 import { Network, Plus, Search, Pencil, Trash2, MapPin } from "lucide-react";
 import api from "@/lib/api";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import FormModal from "@/components/ui/FormModal";
 
 interface Node {
-  id: number;
+  node_id: string;
   name: string;
   node_type: string;
-  city: string | null;
-  country: string | null;
+  location: string | null;
+  status: string;
   legal_entity_name: string | null;
-  is_active: boolean;
+  legal_entity_id: string | null;
 }
 
+// Tipos reales del modelo Node (enums.py NodeType)
 const NODE_TYPES = [
-  { value: "FISCAL",        label: "Fiscal" },
-  { value: "DESTINATION",   label: "Destino" },
-  { value: "LOGISTICS_HUB", label: "Hub logístico" },
-  { value: "WAREHOUSE",     label: "Almacén" },
-  { value: "PORT",          label: "Puerto" },
-  { value: "AIRPORT",       label: "Aeropuerto" },
+  { value: "fiscal",          label: "Fiscal" },
+  { value: "owned_warehouse", label: "Almacén propio" },
+  { value: "fba",             label: "FBA" },
+  { value: "third_party",     label: "Tercero" },
+  { value: "factory",         label: "Fábrica" },
 ];
 
 const TYPE_STYLES: Record<string, { bg: string; color: string; border: string }> = {
-  FISCAL:        { bg: "var(--warning-bg)",       color: "var(--warning)",       border: "var(--warning)" },
-  DESTINATION:   { bg: "var(--info-bg)",          color: "var(--info)",          border: "var(--info)" },
-  LOGISTICS_HUB: { bg: "var(--success-bg)",       color: "var(--success)",       border: "var(--success)" },
-  WAREHOUSE:     { bg: "var(--brand-accent-soft)",color: "var(--brand-primary)", border: "var(--brand-primary)" },
-  PORT:          { bg: "var(--brand-ice-soft)",   color: "var(--info)",          border: "var(--info)" },
-  AIRPORT:       { bg: "var(--critical-bg)",      color: "var(--critical)",      border: "var(--critical)" },
+  fiscal:          { bg: "var(--warning-bg)",        color: "var(--warning)",       border: "var(--warning)" },
+  owned_warehouse: { bg: "var(--brand-accent-soft)", color: "var(--brand-primary)", border: "var(--brand-primary)" },
+  fba:             { bg: "var(--info-bg)",           color: "var(--info)",          border: "var(--info)" },
+  third_party:     { bg: "var(--bg-alt)",            color: "var(--text-secondary)",border: "var(--border)" },
+  factory:         { bg: "var(--success-bg)",        color: "var(--success)",       border: "var(--success)" },
 };
 
-const emptyForm = { name: "", node_type: "WAREHOUSE", city: "", country: "", is_active: true };
+const emptyForm = {
+  name: "",
+  node_type: "owned_warehouse",
+  location: "",
+  status: "active",
+  legal_entity: "",
+};
 
 export default function NodosPage() {
-  const params = useParams();
-  const router = useRouter();
-  const lang = (params?.lang as string) || "es";
-
   const [nodes, setNodes] = useState<Node[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Node | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const fetchNodes = useCallback(async () => {
     try {
-      setNodes((await api.get("/transfers/nodes/")).data?.results || []);
+      const res = await api.get("/transfers/nodes/");
+      setNodes(res.data?.results || res.data || []);
     } catch (err) {
       console.error("Error fetching nodes:", err);
     } finally {
@@ -70,31 +72,62 @@ export default function NodosPage() {
     return (
       n.name.toLowerCase().includes(q) ||
       n.node_type.toLowerCase().includes(q) ||
-      n.city?.toLowerCase().includes(q)
+      n.location?.toLowerCase().includes(q)
     );
   });
 
-  const openCreate = () => { setForm(emptyForm); setEditingId(null); setShowForm(true); };
+  const openCreate = () => {
+    setForm(emptyForm);
+    setEditingId(null);
+    setSaveError(null);
+    setShowForm(true);
+  };
+
   const openEdit = (node: Node) => {
-    setForm({ name: node.name, node_type: node.node_type, city: node.city || "", country: node.country || "", is_active: node.is_active });
-    setEditingId(node.id);
+    setForm({
+      name: node.name,
+      node_type: node.node_type,
+      location: node.location || "",
+      status: node.status,
+      legal_entity: node.legal_entity_id || "",
+    });
+    setEditingId(node.node_id);
+    setSaveError(null);
     setShowForm(true);
   };
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+    setSaveError(null);
     try {
+      const payload = {
+        name: form.name.trim(),
+        node_type: form.node_type,
+        location: form.location.trim(),
+        status: form.status,
+        legal_entity: form.legal_entity.trim(),
+      };
       if (editingId) {
-        await api.put(`/transfers/nodes/${editingId}/`, form);
+        await api.put(`/transfers/nodes/${editingId}/`, payload);
       } else {
-        await api.post("/transfers/nodes/create/", form);
+        await api.post("/transfers/nodes/create/", payload);
       }
       setShowForm(false);
       setEditingId(null);
       setForm(emptyForm);
       await fetchNodes();
-    } catch (err) {
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: Record<string, unknown> } };
+      const errData = axiosErr?.response?.data;
+      if (errData) {
+        const msg = Object.entries(errData)
+          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+          .join(' | ');
+        setSaveError(msg);
+      } else {
+        setSaveError("Error al guardar el nodo.");
+      }
       console.error("Error saving node:", err);
     } finally {
       setSaving(false);
@@ -105,7 +138,7 @@ export default function NodosPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await api.delete(`/transfers/nodes/${deleteTarget.id}/`);
+      await api.delete(`/transfers/nodes/${deleteTarget.node_id}/delete/`);
       setDeleteTarget(null);
       await fetchNodes();
     } catch (err) {
@@ -133,7 +166,7 @@ export default function NodosPage() {
         <input
           id="nodos-search"
           type="text"
-          placeholder="Buscar por nombre o tipo..."
+          placeholder="Buscar por nombre, tipo o ubicación..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="input"
@@ -151,16 +184,16 @@ export default function NodosPage() {
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>
           {filtered.map((node) => {
-            const st = TYPE_STYLES[node.node_type] || TYPE_STYLES.WAREHOUSE;
+            const st = TYPE_STYLES[node.node_type] || TYPE_STYLES.third_party;
             return (
-              <div key={node.id} className="card" style={{ padding: "var(--space-4)" }}>
+              <div key={node.node_id} className="card" style={{ padding: "var(--space-4)" }}>
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex-1 min-w-0">
                     <h3 className="heading-md truncate">{node.name}</h3>
-                    {node.city && (
+                    {node.location && (
                       <div className="flex items-center gap-1 mt-1" style={{ color: "var(--text-tertiary)" }}>
                         <MapPin size={12} />
-                        <span className="caption">{[node.city, node.country].filter(Boolean).join(", ")}</span>
+                        <span className="caption">{node.location}</span>
                       </div>
                     )}
                   </div>
@@ -169,10 +202,12 @@ export default function NodosPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className={`badge ${node.is_active ? "badge-success" : "badge-outline"}`}>
-                    {node.is_active ? "Activo" : "Inactivo"}
+                  <span className={`badge ${node.status === 'active' ? 'badge-success' : 'badge-outline'}`}>
+                    {node.status === 'active' ? 'Activo' : 'Inactivo'}
                   </span>
-                  {node.legal_entity_name && <span className="caption truncate">{node.legal_entity_name}</span>}
+                  {node.legal_entity_name && (
+                    <span className="caption truncate">{node.legal_entity_name}</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 pt-3" style={{ borderTop: "1px solid var(--divider)" }}>
                   <button className="btn btn-sm btn-ghost" onClick={() => openEdit(node)} aria-label={`Editar ${node.name}`}>
@@ -180,9 +215,6 @@ export default function NodosPage() {
                   </button>
                   <button className="btn btn-sm btn-danger-outline" onClick={() => setDeleteTarget(node)} aria-label={`Eliminar ${node.name}`}>
                     <Trash2 size={14} /> Eliminar
-                  </button>
-                  <button className="btn btn-sm btn-secondary ml-auto" onClick={() => router.push(`/${lang}/dashboard/nodos/${node.id}`)}>
-                    Ver detalle
                   </button>
                 </div>
               </div>
@@ -199,36 +231,71 @@ export default function NodosPage() {
         footer={
           <>
             <button className="btn btn-md btn-secondary" onClick={() => setShowForm(false)}>Cancelar</button>
-            <button className="btn btn-md btn-primary" onClick={handleSave} disabled={saving || !form.name.trim()}>
+            <button
+              className="btn btn-md btn-primary"
+              onClick={handleSave}
+              disabled={saving || !form.name.trim()}
+            >
               {saving ? "Guardando..." : editingId ? "Guardar cambios" : "Crear nodo"}
             </button>
           </>
         }
       >
+        {saveError && (
+          <div className="p-3 rounded-lg bg-coral-soft/20 border border-coral/30 text-sm text-coral mb-2">
+            {saveError}
+          </div>
+        )}
         <div>
-          <label htmlFor="node-name" className="th-label block mb-1">Nombre</label>
-          <input id="node-name" type="text" className="input" placeholder="Ej: Almacén Fiscal CR" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <label htmlFor="node-name" className="th-label block mb-1">Nombre *</label>
+          <input
+            id="node-name" type="text" className="input"
+            placeholder="Ej: Almacén Fiscal CR"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
         </div>
         <div>
           <label htmlFor="node-type" className="th-label block mb-1">Tipo de nodo</label>
-          <select id="node-type" className="input" value={form.node_type} onChange={(e) => setForm({ ...form, node_type: e.target.value })}>
+          <select
+            id="node-type" className="input"
+            value={form.node_type}
+            onChange={(e) => setForm({ ...form, node_type: e.target.value })}
+          >
             {NODE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="node-city" className="th-label block mb-1">Ciudad</label>
-            <input id="node-city" type="text" className="input" placeholder="San José" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-          </div>
-          <div>
-            <label htmlFor="node-country" className="th-label block mb-1">País</label>
-            <input id="node-country" type="text" className="input" placeholder="Costa Rica" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
-          </div>
+        <div>
+          <label htmlFor="node-location" className="th-label block mb-1">Ubicación</label>
+          <input
+            id="node-location" type="text" className="input"
+            placeholder="Ej: San José, Costa Rica"
+            value={form.location}
+            onChange={(e) => setForm({ ...form, location: e.target.value })}
+          />
         </div>
-        <label htmlFor="node-active" className="flex items-center gap-2 cursor-pointer">
-          <input id="node-active" type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="rounded" />
-          <span className="body-md">Nodo activo</span>
-        </label>
+        <div>
+          <label htmlFor="node-legal-entity" className="th-label block mb-1">
+            Entidad Legal <span className="text-text-tertiary font-normal">(entity_id, ej: MWT-CR)</span>
+          </label>
+          <input
+            id="node-legal-entity" type="text" className="input"
+            placeholder="MWT-CR (dejar vacío para usar la primera disponible)"
+            value={form.legal_entity}
+            onChange={(e) => setForm({ ...form, legal_entity: e.target.value })}
+          />
+        </div>
+        <div>
+          <label htmlFor="node-status" className="th-label block mb-1">Estado</label>
+          <select
+            id="node-status" className="input"
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+          >
+            <option value="active">Activo</option>
+            <option value="inactive">Inactivo</option>
+          </select>
+        </div>
       </FormModal>
 
       <ConfirmDialog

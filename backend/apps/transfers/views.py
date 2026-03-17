@@ -1,6 +1,7 @@
 """
 Sprint 5 S5-02: Transfer views C30-C35 + reads
 Sprint 6: C36-C39 artifact views
+Sprint 9: Node CRUD views
 """
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -8,7 +9,8 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 
-from apps.transfers.models import Transfer
+from apps.transfers.models import Transfer, Node
+from apps.core.models import LegalEntity
 from apps.transfers.services import (
     create_transfer, approve_transfer, dispatch_transfer,
     receive_transfer, reconcile_transfer, cancel_transfer,
@@ -18,10 +20,107 @@ from apps.transfers.services import (
 from apps.transfers.serializers import (
     CreateTransferSerializer, TransferListSerializer, TransferDetailSerializer,
     ReceiveTransferSerializer, ReconcileTransferSerializer, CancelTransferSerializer,
-    CreatePreparationArtifactSerializer, CreateDispatchArtifactSerializer, CreateReceptionArtifactSerializer,
-    CreatePricingApprovalArtifactSerializer
+    CreatePreparationArtifactSerializer, CreateDispatchArtifactSerializer,
+    CreateReceptionArtifactSerializer, CreatePricingApprovalArtifactSerializer,
+    NodeSerializer, NodeCreateSerializer
 )
 
+
+# ─── NODE CRUD ────────────────────────────────────────────────────────────────
+
+# GET /api/transfers/nodes/
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_nodes_view(request):
+    qs = Node.objects.select_related("legal_entity").order_by("name")
+    paginator = PageNumberPagination()
+    paginator.page_size = 100
+    page = paginator.paginate_queryset(qs, request)
+    return paginator.get_paginated_response(NodeSerializer(page, many=True).data)
+
+
+# POST /api/transfers/nodes/create/
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def create_node_view(request):
+    ser = NodeCreateSerializer(data=request.data)
+    if not ser.is_valid():
+        return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    d = ser.validated_data
+    entity_id = d.get("legal_entity", "").strip()
+
+    # Resolve legal_entity — use first available if not specified
+    if entity_id:
+        try:
+            legal_entity = LegalEntity.objects.get(entity_id=entity_id)
+        except LegalEntity.DoesNotExist:
+            return Response(
+                {"legal_entity": f"No existe LegalEntity con entity_id='{entity_id}'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    else:
+        legal_entity = LegalEntity.objects.first()
+        if not legal_entity:
+            return Response(
+                {"legal_entity": "No hay LegalEntities registradas. Crea una primero."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    node = Node.objects.create(
+        name=d["name"],
+        node_type=d["node_type"],
+        location=d.get("location", ""),
+        status=d.get("status", "active"),
+        legal_entity=legal_entity,
+    )
+    return Response(NodeSerializer(node).data, status=status.HTTP_201_CREATED)
+
+
+# PUT /api/transfers/nodes/{node_id}/
+@api_view(["PUT", "PATCH"])
+@permission_classes([IsAuthenticated])
+def update_node_view(request, node_id):
+    try:
+        node = Node.objects.get(node_id=node_id)
+    except Node.DoesNotExist:
+        return Response({"detail": "Node no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    ser = NodeCreateSerializer(data=request.data, partial=True)
+    if not ser.is_valid():
+        return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    d = ser.validated_data
+    entity_id = d.get("legal_entity", "").strip() if "legal_entity" in d else ""
+    if entity_id:
+        try:
+            node.legal_entity = LegalEntity.objects.get(entity_id=entity_id)
+        except LegalEntity.DoesNotExist:
+            return Response(
+                {"legal_entity": f"No existe LegalEntity con entity_id='{entity_id}'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    for field in ["name", "node_type", "location", "status"]:
+        if field in d:
+            setattr(node, field, d[field])
+    node.save()
+    return Response(NodeSerializer(node).data)
+
+
+# DELETE /api/transfers/nodes/{node_id}/
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_node_view(request, node_id):
+    try:
+        node = Node.objects.get(node_id=node_id)
+    except Node.DoesNotExist:
+        return Response({"detail": "Node no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+    node.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ─── TRANSFER CRUD ────────────────────────────────────────────────────────────
 
 # C30 — POST /api/transfers/create/
 @api_view(["POST"])
