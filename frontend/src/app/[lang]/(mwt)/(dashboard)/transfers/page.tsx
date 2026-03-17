@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeftRight, Plus, ChevronRight, Clock, CheckCircle, Truck, Package, AlertTriangle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Transfer {
@@ -35,10 +37,12 @@ function EstadoBadge({ estado }: { estado: string }) {
   );
 }
 
-// Estado filter pills
 const FILTERS = ["TODOS", ...Object.keys(ESTADO_CONFIG)] as const;
 
 export default function TransfersPage() {
+  const params = useParams();
+  const lang = (params?.lang as string) || "es";
+
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,16 +51,16 @@ export default function TransfersPage() {
   useEffect(() => {
     async function fetchTransfers() {
       try {
-        const token = localStorage.getItem("access_token");
-        const url = filtro !== "TODOS"
-          ? `${process.env.NEXT_PUBLIC_API_URL}/api/transfers/?estado=${filtro}`
-          : `${process.env.NEXT_PUBLIC_API_URL}/api/transfers/`;
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        const data = await res.json();
-        setTransfers(data.results ?? data);
+        // FIX 1: usar api (axios con baseURL=/api), ruta /ui/transfers/
+        // evita /es/undefined/api/transfers que causaba 404
+        const endpoint = filtro !== "TODOS"
+          ? `/ui/transfers/?estado=${filtro}`
+          : `/ui/transfers/`;
+        const res = await api.get(endpoint);
+        setTransfers(res.data.results ?? res.data);
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Error");
+        const msg = e instanceof Error ? e.message : "Error";
+        setError(msg);
       } finally {
         setLoading(false);
       }
@@ -71,8 +75,9 @@ export default function TransfersPage() {
           <h1 className="text-2xl font-display font-bold text-navy">Transfers</h1>
           <p className="text-sm text-text-secondary mt-0.5">Movimientos de mercancía entre nodos.</p>
         </div>
+        {/* FIX 2: incluir /${lang}/ en la ruta para evitar 404 en /transfers/nuevo */}
         <Link
-          href="/transfers/nuevo"
+          href={`/${lang}/transfers/nuevo`}
           className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white rounded-xl text-sm font-medium hover:bg-navy-dark transition-colors"
         >
           <Plus size={16} />
@@ -123,8 +128,9 @@ export default function TransfersPage() {
                     <td className="px-6 py-4 text-text-secondary">{t.origen} → {t.destino}</td>
                     <td className="px-6 py-4 text-text-secondary">{t.brand ?? "—"}</td>
                     <td className="px-6 py-4">
+                      {/* FIX 3: incluir /${lang}/ en href de expediente */}
                       {t.expediente_ref ? (
-                        <Link href={`/expedientes`} className="text-navy hover:text-mint underline text-xs">{t.expediente_ref}</Link>
+                        <Link href={`/${lang}/expedientes`} className="text-navy hover:text-mint underline text-xs">{t.expediente_ref}</Link>
                       ) : "—"}
                     </td>
                     <td className="px-6 py-4 text-text-secondary">
@@ -132,7 +138,8 @@ export default function TransfersPage() {
                     </td>
                     <td className="px-6 py-4"><EstadoBadge estado={t.estado} /></td>
                     <td className="px-6 py-4">
-                      <Link href={`/transfers/${t.id}`} className="text-navy hover:text-mint transition-colors">
+                      {/* FIX 3: incluir /${lang}/ en href de detalle */}
+                      <Link href={`/${lang}/transfers/${t.id}`} className="text-navy hover:text-mint transition-colors">
                         <ChevronRight size={16} />
                       </Link>
                     </td>
