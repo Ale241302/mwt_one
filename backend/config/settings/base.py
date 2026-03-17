@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     # Sprint 8
     'apps.users',
     'apps.knowledge',
+    # Clientes
+    'apps.clientes',
 ]
 
 MIDDLEWARE = [
@@ -102,7 +104,6 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'America/Costa_Rica'
-# CELERY_BEAT_SCHEDULER removed - schedule is hardcoded in celery.py (D-04)
 
 # --- MINIO ---
 MINIO_ENDPOINT = env('MINIO_ENDPOINT', default='minio:9000')
