@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 from apps.transfers.models import Transfer, Node
 from apps.core.models import LegalEntity
@@ -118,18 +119,31 @@ def delete_node_view(request, node_id):
 # ─── TRANSFER CRUD ────────────────────────────────────────────────────────────
 
 # C30 — POST /api/transfers/create/
-# IsAuthenticated: usuarios normales pueden crear transfers
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_transfer_view(request):
     ser = CreateTransferSerializer(data=request.data)
-    ser.is_valid(raise_exception=True)
-    # IMPORTANTE: pasar validated_data directo al service
-    # El service resuelve source_expediente internamente (string -> instancia)
-    transfer = create_transfer(ser.validated_data, request.user)
-    return Response(
-        TransferDetailSerializer(transfer).data, status=status.HTTP_201_CREATED
-    )
+    if not ser.is_valid():
+        return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        transfer = create_transfer(ser.validated_data, request.user)
+        return Response(
+            TransferDetailSerializer(transfer).data, status=status.HTTP_201_CREATED
+        )
+    except Node.DoesNotExist:
+        return Response(
+            {"detail": "Node no encontrado. Verifica los UUIDs de from_node y to_node."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except DjangoValidationError as e:
+        return Response(
+            {"detail": e.messages if hasattr(e, "messages") else str(e)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except ValueError as e:
+        return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # C31 — POST /api/transfers/{id}/approve/
