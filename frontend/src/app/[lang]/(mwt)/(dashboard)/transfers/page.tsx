@@ -5,13 +5,12 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeftRight, Plus, ChevronRight,
-  Clock, CheckCircle, Truck, Package, AlertTriangle, XCircle
+  Clock, CheckCircle, Truck, Package, XCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-// Shape que devuelve TransferListSerializer
 interface Transfer {
   transfer_id: string;
   status: "planned" | "approved" | "in_transit" | "received" | "reconciled" | "cancelled";
@@ -31,12 +30,12 @@ function nodeName(n: Transfer["from_node"]): string {
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; classes: string; icon: React.ReactNode }> = {
-  planned:     { label: "Planeado",    classes: "bg-[#F1F5F9] text-[#475569]",   icon: <Clock size={12} /> },
-  approved:    { label: "Aprobado",    classes: "bg-[#FFF7ED] text-[#B45309]",   icon: <CheckCircle size={12} /> },
-  in_transit:  { label: "En tránsito", classes: "bg-[#EFF6FF] text-[#1D4ED8]",  icon: <Truck size={12} /> },
-  received:    { label: "Recibido",    classes: "bg-[#F5F3FF] text-[#7C3AED]",   icon: <Package size={12} /> },
-  reconciled:  { label: "Reconciliado",classes: "bg-[#F0FAF6] text-[#0E8A6D]",  icon: <CheckCircle size={12} /> },
-  cancelled:   { label: "Cancelado",   classes: "bg-[#FEF2F2] text-[#DC2626]",   icon: <XCircle size={12} /> },
+  planned:     { label: "Planeado",     classes: "bg-[#F1F5F9] text-[#475569]",  icon: <Clock size={12} /> },
+  approved:    { label: "Aprobado",     classes: "bg-[#FFF7ED] text-[#B45309]",  icon: <CheckCircle size={12} /> },
+  in_transit:  { label: "En tránsito",  classes: "bg-[#EFF6FF] text-[#1D4ED8]",  icon: <Truck size={12} /> },
+  received:    { label: "Recibido",     classes: "bg-[#F5F3FF] text-[#7C3AED]",  icon: <Package size={12} /> },
+  reconciled:  { label: "Reconciliado", classes: "bg-[#F0FAF6] text-[#0E8A6D]",  icon: <CheckCircle size={12} /> },
+  cancelled:   { label: "Cancelado",    classes: "bg-[#FEF2F2] text-[#DC2626]",  icon: <XCircle size={12} /> },
 };
 
 const STATUS_KEYS = Object.keys(STATUS_CONFIG);
@@ -54,7 +53,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ─── Page ───────────────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function TransfersPage() {
   const params = useParams();
   const lang = (params?.lang as string) || "es";
@@ -75,8 +74,6 @@ export default function TransfersPage() {
           : `ui/transfers/`;
         const res = await api.get(endpoint);
         if (cancelled) return;
-        // API devuelve { transfers: [...], nodes: [...] }
-        // Nunca llamar .map sobre el objeto completo
         const raw = res.data;
         const list: Transfer[] = Array.isArray(raw)
           ? raw
