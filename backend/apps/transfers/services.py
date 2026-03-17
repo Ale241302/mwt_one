@@ -17,7 +17,7 @@ def _create_transfer_event(transfer, event_type, emitted_by, payload=None):
     return EventLog.objects.create(
         event_type=event_type,
         aggregate_type='transfer',
-        aggregate_id=uuid.UUID(int=0),
+        aggregate_id=uuid.uuid4(),
         payload={
             'transfer_id': transfer.transfer_id,
             **(payload or {}),
@@ -163,30 +163,23 @@ def reconcile_transfer(transfer: Transfer, user, exception_reason: str = None) -
     with transaction.atomic():
         transfer.status = TransferStatus.RECONCILED
         transfer.reconciled_at = timezone.now()
-        transfer.save(update_fields=[
-            "status", "reconciled_at", "exception_reason", "updated_at"
-        ])
+        transfer.save(update_fields=["status", "reconciled_at", "updated_at", "exception_reason"])
         _create_transfer_event(
             transfer, "transfer.reconciled", "C34:ReconcileTransfer",
-            payload={
-                "has_discrepancy": has_discrepancy,
-                "exception_reason": exception_reason,
-            },
         )
     return transfer
 
 
 def cancel_transfer(transfer: Transfer, user, reason: str) -> Transfer:
-    """C35 — any → cancelled. CEO only. Solo desde planned o approved."""
-    if transfer.status not in (TransferStatus.PLANNED, TransferStatus.APPROVED):
-        raise ValueError("Transfer can only be cancelled from planned or approved status.")
+    """C35 — any non-terminal state → cancelled."""
+    terminal = {TransferStatus.RECONCILED, TransferStatus.CANCELLED}
+    if transfer.status in terminal:
+        raise ValueError(f"Cannot cancel a transfer in status '{transfer.status}'.")
     with transaction.atomic():
         transfer.status = TransferStatus.CANCELLED
         transfer.cancel_reason = reason
         transfer.cancelled_at = timezone.now()
-        transfer.save(update_fields=[
-            "status", "cancel_reason", "cancelled_at", "updated_at"
-        ])
+        transfer.save(update_fields=["status", "cancel_reason", "cancelled_at", "updated_at"])
         _create_transfer_event(
             transfer, "transfer.cancelled", "C35:CancelTransfer",
             payload={"reason": reason},
@@ -194,9 +187,35 @@ def cancel_transfer(transfer: Transfer, user, reason: str) -> Transfer:
     return transfer
 
 
-from .artifact_handlers import (
-    create_preparation_artifact,
-    create_dispatch_artifact,
-    create_reception_artifact,
-    create_pricing_approval_artifact
-)
+# ─── Artifact helpers C36-C39 ───────────────────────────────────────────────────────────
+
+def _create_artifact(transfer, artifact_type, payload, user):
+    from apps.expedientes.models import ArtifactInstance
+    from apps.expedientes.enums import ArtifactStatus
+    return ArtifactInstance.objects.create(
+        expediente=transfer.source_expediente,
+        artifact_type=artifact_type,
+        status=ArtifactStatus.COMPLETED,
+        payload={"transfer_id": transfer.transfer_id, **(payload or {})},
+        created_by=str(user),
+    )
+
+
+def create_preparation_artifact(transfer, payload, user):
+    """C37 — ART-14: Preparation."""
+    return _create_artifact(transfer, "ART-14", payload, user)
+
+
+def create_dispatch_artifact(transfer, payload, user):
+    """C38 — ART-15: Dispatch."""
+    return _create_artifact(transfer, "ART-15", payload, user)
+
+
+def create_reception_artifact(transfer, lines, payload, user):
+    """C36 — ART-13: Reception."""
+    return _create_artifact(transfer, "ART-13", {"lines": lines, **(payload or {})}, user)
+
+
+def create_pricing_approval_artifact(transfer, payload, user):
+    """C39 — ART-16: Pricing Approval."""
+    return _create_artifact(transfer, "ART-16", payload, user)
