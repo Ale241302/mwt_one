@@ -23,6 +23,7 @@ interface DashboardData {
         id: number;
         custom_ref: string;
         brand_name: string;
+        client_name: string;
         is_blocked: boolean;
         block_reason: string;
     }>;
@@ -51,7 +52,6 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchDashboardData();
-        // Refresh every 60s
         const interval = setInterval(fetchDashboardData, 60000);
         return () => clearInterval(interval);
     }, []);
@@ -67,7 +67,6 @@ export default function DashboardPage() {
         );
     }
 
-    // Formatting currency
     const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -84,7 +83,6 @@ export default function DashboardPage() {
 
             {/* STAT CARDS */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Card 1: Activos */}
                 <div className="p-6 bg-surface rounded-xl shadow-sm border border-border flex flex-col justify-between">
                     <div className="flex items-center space-x-3 mb-4">
                         <div className="p-2 bg-ice-soft text-navy rounded-lg">
@@ -97,7 +95,6 @@ export default function DashboardPage() {
                     </p>
                 </div>
 
-                {/* Card 2: Alertas */}
                 <div className={cn(
                     "p-6 bg-surface rounded-xl shadow-sm border flex flex-col justify-between transition-colors",
                     (data?.alert_count && data.alert_count > 0) ? "border-coral bg-coral-soft/10" : "border-border"
@@ -119,7 +116,6 @@ export default function DashboardPage() {
                     </p>
                 </div>
 
-                {/* Card 3: Bloqueados */}
                 <div className={cn(
                     "p-6 bg-surface rounded-xl shadow-sm border flex flex-col justify-between transition-colors",
                     (data?.blocked_count && data.blocked_count > 0) ? "border-coral bg-coral-soft/10" : "border-border"
@@ -141,7 +137,6 @@ export default function DashboardPage() {
                     </p>
                 </div>
 
-                {/* Card 4: Costo Total */}
                 <div className="p-6 bg-surface rounded-xl shadow-sm border border-border flex flex-col justify-between">
                     <div className="flex items-center space-x-3 mb-4">
                         <div className="p-2 bg-success-soft text-success rounded-lg">
@@ -188,7 +183,7 @@ export default function DashboardPage() {
                                                 {item.custom_ref}
                                             </td>
                                             <td className="px-5 py-3 border-b border-divider text-sm text-text-secondary max-w-[150px] truncate">
-                                                {item.client_name}
+                                                {item.client_name || '—'}
                                             </td>
                                             <td className="px-5 py-3 border-b border-divider text-right">
                                                 <span className={cn(
@@ -213,7 +208,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Expedientes Bloqueados */}
+                {/* Expedientes Bloqueados — REF + CLIENTE + RAZÓN */}
                 <div className="bg-surface rounded-xl shadow-sm border border-border overflow-hidden flex flex-col">
                     <div className="p-5 border-b border-border bg-bg-alt/50">
                         <h2 className="font-semibold text-text-primary flex items-center">
@@ -226,6 +221,7 @@ export default function DashboardPage() {
                             <thead>
                                 <tr className="bg-bg text-xs uppercase text-text-tertiary font-semibold tracking-wider">
                                     <th className="px-5 py-3 border-b border-divider">Ref</th>
+                                    <th className="px-5 py-3 border-b border-divider">Cliente</th>
                                     <th className="px-5 py-3 border-b border-divider">Razón</th>
                                     <th className="px-5 py-3 border-b border-divider"></th>
                                 </tr>
@@ -233,7 +229,7 @@ export default function DashboardPage() {
                             <tbody>
                                 {data?.blocked_list?.length === 0 ? (
                                     <tr>
-                                        <td colSpan={3} className="px-5 py-8 text-center text-text-tertiary">
+                                        <td colSpan={4} className="px-5 py-8 text-center text-text-tertiary">
                                             No hay expedientes bloqueados.
                                         </td>
                                     </tr>
@@ -243,7 +239,10 @@ export default function DashboardPage() {
                                             <td className="px-5 py-3 border-b border-divider font-mono text-sm text-coral">
                                                 {item.custom_ref}
                                             </td>
-                                            <td className="px-5 py-3 border-b border-divider text-sm text-text-secondary max-w-[200px] truncate" title={item.block_reason}>
+                                            <td className="px-5 py-3 border-b border-divider text-sm text-text-secondary max-w-[120px] truncate">
+                                                {item.client_name || '—'}
+                                            </td>
+                                            <td className="px-5 py-3 border-b border-divider text-sm text-text-secondary max-w-[160px] truncate" title={item.block_reason}>
                                                 {item.block_reason || "Sin razón especificada"}
                                             </td>
                                             <td className="px-5 py-3 border-b border-divider text-right">

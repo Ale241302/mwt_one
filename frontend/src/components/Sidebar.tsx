@@ -9,12 +9,10 @@ import {
   FolderOpen,
   PieChart,
   Kanban,
-  Receipt,
   Network,
   ArrowLeftRight,
   Users2,
   Building2,
-  Users,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -30,29 +28,26 @@ interface NavItem {
   group?: string;
 }
 
-// ── All nav items (S9-03) ─────────────────────────────────────────────────────
+// ── All nav items ─────────────────────────────────────────────────────────────
+// NOTE: /usuarios y /liquidaciones fueron eliminados (rutas no implementadas — 404).
 const NAV_ITEMS: NavItem[] = [
   // Core
-  { label: "Dashboard",     href: "/dashboard",      icon: <LayoutDashboard size={20} />,  group: "core" },
-  { label: "Expedientes",   href: "/expedientes",     icon: <FolderOpen size={20} />,       group: "core" },
-  { label: "Pipeline",      href: "/pipeline",        icon: <Kanban size={20} />,            group: "core" },
+  { label: "Dashboard",   href: "/dashboard",  icon: <LayoutDashboard size={20} />, group: "core" },
+  { label: "Expedientes", href: "/expedientes", icon: <FolderOpen size={20} />,      group: "core" },
+  { label: "Pipeline",    href: "/pipeline",    icon: <Kanban size={20} />,           group: "core" },
   // Financiero
-  { label: "Financiero",    href: "/dashboard/financial", icon: <PieChart size={20} />,    group: "financiero" },
-  { label: "Liquidaciones", href: "/liquidaciones",   icon: <Receipt size={20} />,          group: "financiero" },
-  { label: "Transfers",     href: "/transfers",       icon: <ArrowLeftRight size={20} />,   group: "financiero" },
+  { label: "Financiero",  href: "/dashboard/financial", icon: <PieChart size={20} />,       group: "financiero" },
+  { label: "Transfers",   href: "/transfers",   icon: <ArrowLeftRight size={20} />,   group: "financiero" },
   // Estructura
-  { label: "Nodos",         href: "/nodos",           icon: <Network size={20} />,          group: "estructura" },
-  { label: "Clientes",      href: "/clientes",        icon: <Users2 size={20} />,           group: "estructura" },
-  { label: "Brands",        href: "/brands",          icon: <Building2 size={20} />,        group: "estructura" },
-  // Admin
-  { label: "Usuarios",      href: "/usuarios",        icon: <Users size={20} />,            group: "admin" },
+  { label: "Nodos",    href: "/nodos",    icon: <Network size={20} />,   group: "estructura" },
+  { label: "Clientes", href: "/clientes", icon: <Users2 size={20} />,    group: "estructura" },
+  { label: "Brands",   href: "/brands",   icon: <Building2 size={20} />, group: "estructura" },
 ];
 
 const GROUP_LABELS: Record<string, string> = {
-  core:        "",
-  financiero:  "Financiero",
-  estructura:  "Estructura",
-  admin:       "Administración",
+  core:       "",
+  financiero: "Financiero",
+  estructura: "Estructura",
 };
 
 export default function Sidebar({
@@ -79,8 +74,7 @@ export default function Sidebar({
     return () => window.removeEventListener("resize", handleResize);
   }, [setIsOpen]);
 
-  // Group items
-  const groups = ["core", "financiero", "estructura", "admin"];
+  const groups = ["core", "financiero", "estructura"];
 
   return (
     <aside
@@ -122,7 +116,6 @@ export default function Sidebar({
           const label = GROUP_LABELS[group];
           return (
             <div key={group}>
-              {/* Group separator label */}
               {label && (
                 <div className="px-6 pt-4 pb-1">
                   {isOpen ? (
@@ -151,7 +144,6 @@ export default function Sidebar({
                         title={!isOpen ? item.label : undefined}
                         className={cn(
                           "flex items-center px-4 py-2.5 mx-2 rounded-md transition-colors",
-                          // S9-03B: border-l-[3px] (corregido de border-l-4)
                           isActive
                             ? "bg-[rgba(117,203,179,0.08)] text-mint border-l-[3px] border-mint"
                             : "text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white border-l-[3px] border-transparent"
