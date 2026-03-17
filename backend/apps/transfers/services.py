@@ -1,4 +1,4 @@
-﻿"""
+"""
 Sprint 5 S5-02: Transfer domain services C30-C35
 Ref: LOTE_SM_SPRINT5 Item 3B
 """
@@ -17,7 +17,7 @@ def _create_transfer_event(transfer, event_type, emitted_by, payload=None):
     return EventLog.objects.create(
         event_type=event_type,
         aggregate_type='transfer',
-        aggregate_id=uuid.UUID(int=0),  # placeholder â€” transfers use char id
+        aggregate_id=uuid.UUID(int=0),
         payload={
             'transfer_id': transfer.transfer_id,
             **(payload or {}),
@@ -30,11 +30,31 @@ def _create_transfer_event(transfer, event_type, emitted_by, payload=None):
 
 def create_transfer(data: dict, user) -> Transfer:
     """
-    C30 CreateTransfer â€” estado inicial: planned.
-    Calcula ownership_before/after y customs_required automÃ¡ticamente.
+    C30 CreateTransfer — estado inicial: planned.
+    Calcula ownership_before/after y customs_required automáticamente.
+
+    data esperado:
+      from_node          : UUID (node_id)
+      to_node            : UUID (node_id)
+      legal_context      : str
+      items              : [{sku, quantity_dispatched}, ...]
+      source_expediente  : str | None  (folio o referencia; se resuelve aquí)
+      pricing_context    : dict | None
     """
+    from apps.expedientes.models import Expediente
+
     from_node = Node.objects.get(pk=data["from_node"])
     to_node = Node.objects.get(pk=data["to_node"])
+
+    # Resolver source_expediente: string -> instancia o None
+    raw_exp = data.get("source_expediente")
+    if raw_exp:
+        expediente = (
+            Expediente.objects.filter(folio=raw_exp).first()
+            or Expediente.objects.filter(ref=raw_exp).first()
+        )
+    else:
+        expediente = None
 
     with transaction.atomic():
         transfer = Transfer(
@@ -42,17 +62,19 @@ def create_transfer(data: dict, user) -> Transfer:
             to_node=to_node,
             legal_context=data["legal_context"],
             pricing_context=data.get("pricing_context"),
-            source_expediente_id=data.get("source_expediente"),
+            source_expediente=expediente,  # instancia o None (nunca string)
         )
         transfer.compute_ownership_fields()
         transfer.full_clean()
         transfer.save()
 
         for item in data.get("items", []):
+            # FIX: el frontend/serializer envian 'quantity_dispatched', no 'quantity'
+            qty = item.get("quantity_dispatched") or item.get("quantity") or 0
             TransferLine.objects.create(
                 transfer=transfer,
                 sku=item["sku"],
-                quantity_dispatched=item["quantity"],
+                quantity_dispatched=qty,
             )
 
         _create_transfer_event(
@@ -62,21 +84,20 @@ def create_transfer(data: dict, user) -> Transfer:
 
 
 def approve_transfer(transfer: Transfer, user) -> Transfer:
-    """C31 â€” planned â†’ approved. CEO only."""
+    """C31 — planned → approved. CEO only."""
     if transfer.status != TransferStatus.PLANNED:
         raise ValueError("Transfer must be in planned status to approve.")
-        
-    # ART-16 rule: if ownership changes, we need pricing approval before approval
+
     if transfer.ownership_changes and transfer.source_expediente:
         art_16s = ArtifactInstance.objects.filter(
-            expediente=transfer.source_expediente, 
-            artifact_type="ART-16", 
+            expediente=transfer.source_expediente,
+            artifact_type="ART-16",
             status=ArtifactStatus.COMPLETED
         )
         art_16_exists = any(a.payload.get("transfer_id") == transfer.transfer_id for a in art_16s)
         if not art_16_exists:
             raise ValueError("Transfer with ownership_changes=True requires ART-16 (Pricing Approval) before approval (C31).")
-            
+
     with transaction.atomic():
         transfer.status = TransferStatus.APPROVED
         transfer.approved_at = timezone.now()
@@ -88,10 +109,7 @@ def approve_transfer(transfer: Transfer, user) -> Transfer:
 
 
 def dispatch_transfer(transfer: Transfer, user) -> Transfer:
-    """
-    C32 â€” approved â†’ in_transit.
-    Regla puente Sprint 5: CEO confirma manualmente (ART-15 no existe aÃºn).
-    """
+    """C32 — approved → in_transit."""
     if transfer.status != TransferStatus.APPROVED:
         raise ValueError("Transfer must be approved to dispatch.")
     with transaction.atomic():
@@ -106,10 +124,7 @@ def dispatch_transfer(transfer: Transfer, user) -> Transfer:
 
 
 def receive_transfer(transfer: Transfer, lines_data: list, user) -> Transfer:
-    """
-    C33 â€” in_transit â†’ received.
-    lines_data = [{sku, quantity_received, condition}, ...]
-    """
+    """C33 — in_transit → received."""
     if transfer.status != TransferStatus.IN_TRANSIT:
         raise ValueError("Transfer must be in_transit to receive.")
     with transaction.atomic():
@@ -131,10 +146,7 @@ def receive_transfer(transfer: Transfer, lines_data: list, user) -> Transfer:
 
 
 def reconcile_transfer(transfer: Transfer, user, exception_reason: str = None) -> Transfer:
-    """
-    C34 â€” received â†’ reconciled.
-    Si hay discrepancias: SOLO CEO puede reconciliar + exception_reason obligatorio.
-    """
+    """C34 — received → reconciled."""
     if transfer.status != TransferStatus.RECEIVED:
         raise ValueError("Transfer must be received to reconcile.")
 
@@ -165,7 +177,7 @@ def reconcile_transfer(transfer: Transfer, user, exception_reason: str = None) -
 
 
 def cancel_transfer(transfer: Transfer, user, reason: str) -> Transfer:
-    """C35 â€” any â†’ cancelled. CEO only. Solo desde planned o approved."""
+    """C35 — any → cancelled. CEO only. Solo desde planned o approved."""
     if transfer.status not in (TransferStatus.PLANNED, TransferStatus.APPROVED):
         raise ValueError("Transfer can only be cancelled from planned or approved status.")
     with transaction.atomic():

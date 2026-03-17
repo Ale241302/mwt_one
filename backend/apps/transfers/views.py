@@ -11,7 +11,6 @@ from rest_framework.pagination import PageNumberPagination
 
 from apps.transfers.models import Transfer, Node
 from apps.core.models import LegalEntity
-from apps.expedientes.models import Expediente
 from apps.transfers.services import (
     create_transfer, approve_transfer, dispatch_transfer,
     receive_transfer, reconcile_transfer, cancel_transfer,
@@ -119,31 +118,15 @@ def delete_node_view(request, node_id):
 # ─── TRANSFER CRUD ────────────────────────────────────────────────────────────
 
 # C30 — POST /api/transfers/create/
-# FIX: cambiado de IsAdminUser → IsAuthenticated para que usuarios normales puedan crear
+# IsAuthenticated: usuarios normales pueden crear transfers
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_transfer_view(request):
     ser = CreateTransferSerializer(data=request.data)
     ser.is_valid(raise_exception=True)
-    d = ser.validated_data
-
-    # Resolver source_expediente: puede venir como string (referencia) o None
-    source_exp_ref = d.pop("source_expediente", None)
-    if source_exp_ref:
-        try:
-            # Buscar por referencia (campo ref o folio según el modelo)
-            expediente = Expediente.objects.filter(
-                folio=source_exp_ref
-            ).first() or Expediente.objects.filter(
-                ref=source_exp_ref
-            ).first()
-            d["source_expediente"] = expediente  # puede ser None si no existe
-        except Exception:
-            d["source_expediente"] = None
-    else:
-        d["source_expediente"] = None
-
-    transfer = create_transfer(d, request.user)
+    # IMPORTANTE: pasar validated_data directo al service
+    # El service resuelve source_expediente internamente (string -> instancia)
+    transfer = create_transfer(ser.validated_data, request.user)
     return Response(
         TransferDetailSerializer(transfer).data, status=status.HTTP_201_CREATED
     )
