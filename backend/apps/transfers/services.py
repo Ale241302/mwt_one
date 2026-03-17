@@ -38,7 +38,7 @@ def create_transfer(data: dict, user) -> Transfer:
       to_node            : UUID (node_id)
       legal_context      : str
       items              : [{sku, quantity_dispatched}, ...]
-      source_expediente  : str | None  (folio o referencia; se resuelve aquí)
+      source_expediente  : str | None  (expediente_id UUID; se resuelve aquí)
       pricing_context    : dict | None
     """
     from apps.expedientes.models import Expediente
@@ -46,15 +46,16 @@ def create_transfer(data: dict, user) -> Transfer:
     from_node = Node.objects.get(pk=data["from_node"])
     to_node = Node.objects.get(pk=data["to_node"])
 
-    # Resolver source_expediente: string -> instancia o None
+    # Resolver source_expediente: string UUID -> instancia o None
+    # El modelo Expediente no tiene campos 'folio' ni 'ref';
+    # el identificador es expediente_id (UUIDField primary key).
     raw_exp = data.get("source_expediente")
+    expediente = None
     if raw_exp:
-        expediente = (
-            Expediente.objects.filter(folio=raw_exp).first()
-            or Expediente.objects.filter(ref=raw_exp).first()
-        )
-    else:
-        expediente = None
+        try:
+            expediente = Expediente.objects.get(expediente_id=raw_exp)
+        except (Expediente.DoesNotExist, Exception):
+            expediente = None
 
     with transaction.atomic():
         transfer = Transfer(
@@ -69,7 +70,6 @@ def create_transfer(data: dict, user) -> Transfer:
         transfer.save()
 
         for item in data.get("items", []):
-            # FIX: el frontend/serializer envian 'quantity_dispatched', no 'quantity'
             qty = item.get("quantity_dispatched") or item.get("quantity") or 0
             TransferLine.objects.create(
                 transfer=transfer,
