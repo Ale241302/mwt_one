@@ -55,7 +55,7 @@ export default function PipelinePage() {
       const res = await api.get("/api/ui/expedientes/");
       const data = res.data?.results || res.data || [];
       setExpedientes(data);
-      setBrands([...new Set(data.map((e: Expediente) => e.brand).filter(Boolean))] as string[]);
+      setBrands(Array.from(new Set(data.map((e: Expediente) => e.brand).filter(Boolean))) as string[]);
     } catch (err) {
       console.error("Pipeline fetch error:", err);
     } finally {
