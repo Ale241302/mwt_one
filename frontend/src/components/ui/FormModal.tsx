@@ -4,12 +4,9 @@ import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 /* FormModal — Sprint 9.1 audit round 2
-   S9.1-04: Shell reutilizable para todos los formularios CRUD
-   - Escape handler
-   - Focus automático en primer input al abrir
-   - aria-modal=true, role=dialog, aria-labelledby
-   - Overlay click para cerrar
-   - Prop size (sm/md/lg) */
+   Fix #2: Escape handler + focus trap for ALL form modals (not just ConfirmDialog)
+   Fix #4: Single shell replaces 3 duplicated modal structures
+   S9.1-04: aria-modal=true, overlay click para cerrar, prop size (sm/md/lg) */
 
 interface FormModalProps {
   open: boolean;

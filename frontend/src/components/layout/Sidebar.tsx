@@ -70,7 +70,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean; setIsO
       <div className="sidebar-brand">
         <Link href={basePath} className="flex items-center gap-3">
           <Image
-            src="/logo.png"
+            src="/recurso-1logo_foot.png"
             alt="MWT ONE"
             width={120}
             height={32}

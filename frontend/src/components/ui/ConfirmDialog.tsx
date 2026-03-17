@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 import { AlertTriangle } from "lucide-react";
 
 /* ConfirmDialog — Sprint 9.1 post-audit
-   S9.1-03: role="alertdialog", aria-modal, aria-labelledby, aria-describedby, autoFocus on cancel
-   z-index: 50 garantizado desde .modal-overlay en globals.css */
+   Fix #4: role="alertdialog", aria-modal, aria-labelledby, aria-describedby, autoFocus on cancel
+   S9.1-03: z-index: 50 en modal-overlay (via globals.css) */
 
 interface ConfirmDialogProps {
   open: boolean;
