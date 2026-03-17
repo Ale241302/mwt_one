@@ -12,7 +12,7 @@ urlpatterns = [
     path('api/core/', include('apps.core.urls', namespace='core')),
     # Sprint 5
     path('api/transfers/', include('apps.transfers.urls', namespace='transfers')),
-    path('api/ui/transfers/', include('apps.transfers.urls', namespace='transfers-ui')),
+    path('api/ui/transfers/', include('apps.transfers.urls_ui', namespace='transfers-ui')),  # fixed: uses own urls_ui
     path('api/liquidations/', include('apps.liquidations.urls', namespace='liquidations')),
     path('api/brands/', include('apps.brands.urls')),
     path('api/qr/', include('apps.qr.urls')),
