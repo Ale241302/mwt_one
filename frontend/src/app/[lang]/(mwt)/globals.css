@@ -127,7 +127,7 @@
 body {
   color: var(--text-primary);
   background: var(--bg);
-  @apply font-body antialiased;
+  @apply font-sans antialiased;
 }
 
 /* ── Transitions ──────────────────────────────────────────────────────────── */
