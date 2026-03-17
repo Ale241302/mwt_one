@@ -26,12 +26,11 @@ const NODE_TYPES = [
   { value: "AIRPORT", label: "Aeropuerto" },
 ];
 
-/* S9.1-07: TYPE_STYLES usa CSS vars semánticos (no concatenación inválida de Tailwind) */
 const TYPE_STYLES: Record<string, { bg: string; color: string; border: string }> = {
   FISCAL:        { bg: "var(--warning-bg)",       color: "var(--warning)",       border: "var(--warning)" },
   DESTINATION:   { bg: "var(--info-bg)",          color: "var(--info)",          border: "var(--info)" },
   LOGISTICS_HUB: { bg: "var(--success-bg)",       color: "var(--success)",       border: "var(--success)" },
-  WAREHOUSE:     { bg: "var(--brand-accent-soft)", color: "var(--brand-primary)", border: "var(--brand-primary)" },
+  WAREHOUSE:     { bg: "var(--brand-accent-soft)",color: "var(--brand-primary)", border: "var(--brand-primary)" },
   PORT:          { bg: "var(--brand-ice-soft)",   color: "var(--info)",          border: "var(--info)" },
   AIRPORT:       { bg: "var(--critical-bg)",      color: "var(--critical)",      border: "var(--critical)" },
 };
@@ -50,6 +49,7 @@ export default function NodosPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [deleteTarget, setDeleteTarget] = useState<Node | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -75,9 +75,10 @@ export default function NodosPage() {
     );
   });
 
-  const openCreate = () => { setForm(emptyForm); setEditingId(null); setShowForm(true); };
+  const openCreate = () => { setForm(emptyForm); setFieldErrors({}); setEditingId(null); setShowForm(true); };
   const openEdit = (node: Node) => {
     setForm({ name: node.name, node_type: node.node_type, city: node.city || "", country: node.country || "", is_active: node.is_active });
+    setFieldErrors({});
     setEditingId(node.id);
     setShowForm(true);
   };
@@ -85,6 +86,7 @@ export default function NodosPage() {
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+    setFieldErrors({});
     try {
       if (editingId) {
         await api.put(`/api/transfers/nodes/${editingId}/`, form);
@@ -95,8 +97,17 @@ export default function NodosPage() {
       setEditingId(null);
       setForm(emptyForm);
       await fetchNodes();
-    } catch (err) {
-      console.error("Error saving node:", err);
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: Record<string, string[]> } };
+      if (axiosErr?.response?.status === 400 && axiosErr.response?.data) {
+        const errs: Record<string, string> = {};
+        for (const [key, msgs] of Object.entries(axiosErr.response.data)) {
+          errs[key] = Array.isArray(msgs) ? msgs[0] : String(msgs);
+        }
+        setFieldErrors(errs);
+      } else {
+        console.error("Error saving node:", err);
+      }
     } finally {
       setSaving(false);
     }
@@ -204,10 +215,10 @@ export default function NodosPage() {
         open={showForm}
         title={editingId ? "Editar nodo" : "Nuevo nodo"}
         titleId="node-form-title"
-        onClose={() => setShowForm(false)}
+        onClose={() => { setShowForm(false); setFieldErrors({}); }}
         footer={
           <>
-            <button className="btn btn-md btn-secondary" onClick={() => setShowForm(false)}>Cancelar</button>
+            <button className="btn btn-md btn-secondary" onClick={() => { setShowForm(false); setFieldErrors({}); }}>Cancelar</button>
             <button className="btn btn-md btn-primary" onClick={handleSave} disabled={saving || !form.name.trim()}>
               {saving ? "Guardando..." : editingId ? "Guardar cambios" : "Crear nodo"}
             </button>
@@ -215,29 +226,68 @@ export default function NodosPage() {
         }
       >
         <div>
-          <label htmlFor="node-name" className="th-label block mb-1">Nombre</label>
-          <input id="node-name" type="text" className="input" placeholder="Ej: Almacén Fiscal CR" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <label htmlFor="node-name" className="th-label block mb-1">Nombre *</label>
+          <input
+            id="node-name"
+            type="text"
+            className={`input${fieldErrors.name ? " input-error" : ""}`}
+            placeholder="Ej: Almacén Fiscal CR"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+          {fieldErrors.name && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.name}</p>}
         </div>
         <div>
           <label htmlFor="node-type" className="th-label block mb-1">Tipo de nodo</label>
-          <select id="node-type" className="input" value={form.node_type} onChange={(e) => setForm({ ...form, node_type: e.target.value })}>
+          <select
+            id="node-type"
+            className={`input${fieldErrors.node_type ? " input-error" : ""}`}
+            value={form.node_type}
+            onChange={(e) => setForm({ ...form, node_type: e.target.value })}
+          >
             {NODE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
+          {fieldErrors.node_type && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.node_type}</p>}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="node-city" className="th-label block mb-1">Ciudad</label>
-            <input id="node-city" type="text" className="input" placeholder="San José" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+            <input
+              id="node-city"
+              type="text"
+              className={`input${fieldErrors.city ? " input-error" : ""}`}
+              placeholder="San José"
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+            />
+            {fieldErrors.city && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.city}</p>}
           </div>
           <div>
             <label htmlFor="node-country" className="th-label block mb-1">País</label>
-            <input id="node-country" type="text" className="input" placeholder="Costa Rica" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+            <input
+              id="node-country"
+              type="text"
+              className={`input${fieldErrors.country ? " input-error" : ""}`}
+              placeholder="Costa Rica"
+              value={form.country}
+              onChange={(e) => setForm({ ...form, country: e.target.value })}
+            />
+            {fieldErrors.country && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.country}</p>}
           </div>
         </div>
         <label htmlFor="node-active" className="flex items-center gap-2 cursor-pointer">
-          <input id="node-active" type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="rounded" />
+          <input
+            id="node-active"
+            type="checkbox"
+            checked={form.is_active}
+            onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+            className="rounded"
+          />
           <span className="body-md">Nodo activo</span>
         </label>
+        {fieldErrors.non_field_errors && (
+          <p className="caption" style={{ color: "var(--critical)" }}>{fieldErrors.non_field_errors}</p>
+        )}
       </FormModal>
 
       <ConfirmDialog

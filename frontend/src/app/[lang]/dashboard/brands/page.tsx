@@ -18,7 +18,6 @@ interface Brand {
 
 type StatusFilter = "all" | "active" | "inactive";
 
-/* S9.1-08: Filtro 'Pausada' placebo eliminado */
 const emptyForm = { name: "", code: "", is_active: true };
 
 export default function BrandsPage() {
@@ -30,6 +29,7 @@ export default function BrandsPage() {
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -55,9 +55,10 @@ export default function BrandsPage() {
     return true;
   });
 
-  const openCreate = () => { setForm(emptyForm); setEditingSlug(null); setShowForm(true); };
+  const openCreate = () => { setForm(emptyForm); setFieldErrors({}); setEditingSlug(null); setShowForm(true); };
   const openEdit = (b: Brand) => {
     setForm({ name: b.name, code: b.code || "", is_active: b.is_active });
+    setFieldErrors({});
     setEditingSlug(b.slug);
     setShowForm(true);
   };
@@ -65,17 +66,27 @@ export default function BrandsPage() {
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+    setFieldErrors({});
     try {
       if (editingSlug) {
-        await api.put(`/api/brands/${editingSlug}/`, form);
+        await api.put(`/api/brands/${editingSlug}/update/`, form);
       } else {
-        await api.post("/api/brands/", form);
+        await api.post("/api/brands/create/", form);
       }
       setShowForm(false);
       setEditingSlug(null);
       await fetchBrands();
-    } catch (err) {
-      console.error(err);
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: Record<string, string[]> } };
+      if (axiosErr?.response?.status === 400 && axiosErr.response?.data) {
+        const errs: Record<string, string> = {};
+        for (const [key, msgs] of Object.entries(axiosErr.response.data)) {
+          errs[key] = Array.isArray(msgs) ? msgs[0] : String(msgs);
+        }
+        setFieldErrors(errs);
+      } else {
+        console.error(err);
+      }
     } finally {
       setSaving(false);
     }
@@ -85,7 +96,7 @@ export default function BrandsPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await api.delete(`/api/brands/${deleteTarget.slug}/`);
+      await api.delete(`/api/brands/${deleteTarget.slug}/delete/`);
       setDeleteTarget(null);
       await fetchBrands();
     } catch (err) {
@@ -178,10 +189,10 @@ export default function BrandsPage() {
         open={showForm}
         title={editingSlug ? "Editar brand" : "Nueva brand"}
         titleId="brand-form-title"
-        onClose={() => setShowForm(false)}
+        onClose={() => { setShowForm(false); setFieldErrors({}); }}
         footer={
           <>
-            <button className="btn btn-md btn-secondary" onClick={() => setShowForm(false)}>Cancelar</button>
+            <button className="btn btn-md btn-secondary" onClick={() => { setShowForm(false); setFieldErrors({}); }}>Cancelar</button>
             <button className="btn btn-md btn-primary" onClick={handleSave} disabled={saving || !form.name.trim()}>
               {saving ? "Guardando..." : editingSlug ? "Guardar cambios" : "Crear brand"}
             </button>
@@ -189,17 +200,42 @@ export default function BrandsPage() {
         }
       >
         <div>
-          <label htmlFor="brand-name" className="th-label block mb-1">Nombre</label>
-          <input id="brand-name" type="text" className="input" placeholder="Ej: Rana Walk" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <label htmlFor="brand-name" className="th-label block mb-1">Nombre *</label>
+          <input
+            id="brand-name"
+            type="text"
+            className={`input${fieldErrors.name ? " input-error" : ""}`}
+            placeholder="Ej: Rana Walk"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+          {fieldErrors.name && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.name}</p>}
         </div>
         <div>
           <label htmlFor="brand-code" className="th-label block mb-1">Código</label>
-          <input id="brand-code" type="text" className="input" placeholder="Ej: RW" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+          <input
+            id="brand-code"
+            type="text"
+            className={`input${fieldErrors.code ? " input-error" : ""}`}
+            placeholder="Ej: RW"
+            value={form.code}
+            onChange={(e) => setForm({ ...form, code: e.target.value })}
+          />
+          {fieldErrors.code && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.code}</p>}
         </div>
         <label htmlFor="brand-active" className="flex items-center gap-2 cursor-pointer">
-          <input id="brand-active" type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="rounded" />
+          <input
+            id="brand-active"
+            type="checkbox"
+            checked={form.is_active}
+            onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+            className="rounded"
+          />
           <span className="body-md">Brand activa</span>
         </label>
+        {fieldErrors.non_field_errors && (
+          <p className="caption" style={{ color: "var(--critical)" }}>{fieldErrors.non_field_errors}</p>
+        )}
       </FormModal>
 
       <ConfirmDialog

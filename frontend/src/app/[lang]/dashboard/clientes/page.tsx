@@ -49,6 +49,7 @@ export default function ClientesPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -79,7 +80,7 @@ export default function ClientesPage() {
     );
   });
 
-  const openCreate = () => { setForm(emptyForm); setEditingId(null); setShowForm(true); };
+  const openCreate = () => { setForm(emptyForm); setFieldErrors({}); setEditingId(null); setShowForm(true); };
   const openEdit = (c: Client) => {
     setForm({
       name: c.name,
@@ -90,6 +91,7 @@ export default function ClientesPage() {
       legal_entity: c.legal_entity?.toString() || "",
       is_active: c.is_active,
     });
+    setFieldErrors({});
     setEditingId(c.id);
     setShowForm(true);
   };
@@ -97,18 +99,36 @@ export default function ClientesPage() {
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+    setFieldErrors({});
     const payload = { ...form, legal_entity: form.legal_entity ? parseInt(form.legal_entity) : null };
     try {
       if (editingId) {
-        await api.put(`/api/clientes/${editingId}/`, payload);
+        await api.put(`/api/clientes/${editingId}/update/`, {
+          ...payload,
+          nombre: payload.name,
+          activo: payload.is_active,
+        });
       } else {
-        await api.post("/api/clientes/", payload);
+        await api.post("/api/clientes/create/", {
+          ...payload,
+          nombre: payload.name,
+          activo: payload.is_active,
+        });
       }
       setShowForm(false);
       setEditingId(null);
       await fetchClients();
-    } catch (err) {
-      console.error(err);
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: Record<string, string[]> } };
+      if (axiosErr?.response?.status === 400 && axiosErr.response?.data) {
+        const errs: Record<string, string> = {};
+        for (const [key, msgs] of Object.entries(axiosErr.response.data)) {
+          errs[key] = Array.isArray(msgs) ? msgs[0] : String(msgs);
+        }
+        setFieldErrors(errs);
+      } else {
+        console.error(err);
+      }
     } finally {
       setSaving(false);
     }
@@ -118,7 +138,7 @@ export default function ClientesPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await api.delete(`/api/clientes/${deleteTarget.id}/`);
+      await api.delete(`/api/clientes/${deleteTarget.id}/delete/`);
       setDeleteTarget(null);
       await fetchClients();
     } catch (err) {
@@ -212,10 +232,10 @@ export default function ClientesPage() {
         open={showForm}
         title={editingId ? "Editar cliente" : "Nuevo cliente"}
         titleId="client-form-title"
-        onClose={() => setShowForm(false)}
+        onClose={() => { setShowForm(false); setFieldErrors({}); }}
         footer={
           <>
-            <button className="btn btn-md btn-secondary" onClick={() => setShowForm(false)}>Cancelar</button>
+            <button className="btn btn-md btn-secondary" onClick={() => { setShowForm(false); setFieldErrors({}); }}>Cancelar</button>
             <button className="btn btn-md btn-primary" onClick={handleSave} disabled={saving || !form.name.trim()}>
               {saving ? "Guardando..." : editingId ? "Guardar cambios" : "Crear cliente"}
             </button>
@@ -223,40 +243,95 @@ export default function ClientesPage() {
         }
       >
         <div>
-          <label htmlFor="client-name" className="th-label block mb-1">Nombre</label>
-          <input id="client-name" type="text" className="input" placeholder="Nombre del cliente" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <label htmlFor="client-name" className="th-label block mb-1">Nombre *</label>
+          <input
+            id="client-name"
+            type="text"
+            className={`input${fieldErrors.name ? " input-error" : ""}`}
+            placeholder="Nombre del cliente"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+          {fieldErrors.name && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.name}</p>}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="client-contact" className="th-label block mb-1">Contacto</label>
-            <input id="client-contact" type="text" className="input" placeholder="Persona de contacto" value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} />
+            <input
+              id="client-contact"
+              type="text"
+              className={`input${fieldErrors.contact_name ? " input-error" : ""}`}
+              placeholder="Persona de contacto"
+              value={form.contact_name}
+              onChange={(e) => setForm({ ...form, contact_name: e.target.value })}
+            />
+            {fieldErrors.contact_name && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.contact_name}</p>}
           </div>
           <div>
             <label htmlFor="client-email" className="th-label block mb-1">Email</label>
-            <input id="client-email" type="email" className="input" placeholder="email@empresa.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <input
+              id="client-email"
+              type="email"
+              className={`input${fieldErrors.email ? " input-error" : ""}`}
+              placeholder="email@empresa.com"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+            {fieldErrors.email && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.email}</p>}
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="client-phone" className="th-label block mb-1">Teléfono</label>
-            <input id="client-phone" type="text" className="input" placeholder="+506 8888-8888" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <input
+              id="client-phone"
+              type="text"
+              className={`input${fieldErrors.phone ? " input-error" : ""}`}
+              placeholder="+506 8888-8888"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            />
+            {fieldErrors.phone && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.phone}</p>}
           </div>
           <div>
             <label htmlFor="client-country" className="th-label block mb-1">País</label>
-            <input id="client-country" type="text" className="input" placeholder="Costa Rica" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+            <input
+              id="client-country"
+              type="text"
+              className={`input${fieldErrors.country ? " input-error" : ""}`}
+              placeholder="Costa Rica"
+              value={form.country}
+              onChange={(e) => setForm({ ...form, country: e.target.value })}
+            />
+            {fieldErrors.country && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.country}</p>}
           </div>
         </div>
         <div>
           <label htmlFor="client-entity" className="th-label block mb-1">Entidad legal</label>
-          <select id="client-entity" className="input" value={form.legal_entity} onChange={(e) => setForm({ ...form, legal_entity: e.target.value })}>
+          <select
+            id="client-entity"
+            className={`input${fieldErrors.legal_entity ? " input-error" : ""}`}
+            value={form.legal_entity}
+            onChange={(e) => setForm({ ...form, legal_entity: e.target.value })}
+          >
             <option value="">Sin entidad</option>
             {legalEntities.map((le) => <option key={le.id} value={le.id}>{le.name}</option>)}
           </select>
+          {fieldErrors.legal_entity && <p className="caption mt-1" style={{ color: "var(--critical)" }}>{fieldErrors.legal_entity}</p>}
         </div>
         <label htmlFor="client-active" className="flex items-center gap-2 cursor-pointer">
-          <input id="client-active" type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="rounded" />
+          <input
+            id="client-active"
+            type="checkbox"
+            checked={form.is_active}
+            onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+            className="rounded"
+          />
           <span className="body-md">Cliente activo</span>
         </label>
+        {fieldErrors.non_field_errors && (
+          <p className="caption" style={{ color: "var(--critical)" }}>{fieldErrors.non_field_errors}</p>
+        )}
       </FormModal>
 
       <ConfirmDialog
