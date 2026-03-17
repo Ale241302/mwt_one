@@ -1,119 +1,135 @@
-'use client';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import {
-  LayoutDashboard, Kanban, Package, DollarSign,
-  Receipt, MapPin, ArrowLeftRight, Users, Tag, UserCog, Settings,
-  ChevronLeft, ChevronRight,
-} from 'lucide-react';
+"use client";
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ElementType;
-  disabled?: boolean;
-  badge?: string;
-}
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname, useParams } from "next/navigation";
+import {
+  LayoutDashboard, FolderOpen, Kanban, PieChart, Receipt,
+  ArrowLeftRight, Network, Users2, Building2, Users,
+  LogOut, ChevronLeft, ChevronRight,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+
+interface NavItem { label: string; href: string; icon: React.ReactNode; group: string; }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard',     href: '/',              icon: LayoutDashboard },
-  { label: 'Pipeline',      href: '/pipeline',      icon: Kanban },
-  { label: 'Expedientes',   href: '/expedientes',   icon: Package },
-  { label: 'Financiero',    href: '/dashboard/financial', icon: DollarSign },
-  { label: 'Liquidaciones', href: '/liquidaciones', icon: Receipt },
-  { label: 'Nodos',         href: '/nodos',         icon: MapPin },
-  { label: 'Transfers',     href: '/transfers',     icon: ArrowLeftRight },
-  { label: 'Clientes',      href: '/clientes',      icon: Users },
-  { label: 'Brands',        href: '/brands',        icon: Tag },
-  { label: 'Usuarios',      href: '/usuarios',      icon: UserCog },
-  { label: 'Configuraci\u00f3n', href: '#',          icon: Settings, disabled: true, badge: 'Sprint 10' },
+  { label: "Dashboard",     href: "",              icon: <LayoutDashboard size={20} />, group: "core" },
+  { label: "Expedientes",   href: "/expedientes",  icon: <FolderOpen size={20} />,      group: "core" },
+  { label: "Pipeline",      href: "/pipeline",     icon: <Kanban size={20} />,          group: "core" },
+  { label: "Financiero",    href: "/financial",    icon: <PieChart size={20} />,         group: "financiero" },
+  { label: "Liquidaciones", href: "/liquidaciones",icon: <Receipt size={20} />,          group: "financiero" },
+  { label: "Transfers",     href: "/transfers",    icon: <ArrowLeftRight size={20} />,   group: "financiero" },
+  { label: "Nodos",         href: "/nodos",        icon: <Network size={20} />,          group: "estructura" },
+  { label: "Clientes",      href: "/clientes",     icon: <Users2 size={20} />,           group: "estructura" },
+  { label: "Brands",        href: "/brands",       icon: <Building2 size={20} />,        group: "estructura" },
+  { label: "Usuarios",      href: "/usuarios",     icon: <Users size={20} />,            group: "admin" },
 ];
 
-export function Sidebar() {
+const GROUP_LABELS: Record<string, string> = {
+  core: "",
+  financiero: "Financiero",
+  estructura: "Estructura",
+  admin: "Administración",
+};
+const GROUPS = ["core", "financiero", "estructura", "admin"];
+
+export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (open: boolean) => void }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const params = useParams();
+  const { logout } = useAuth();
+  const lang = (params?.lang as string) || "es";
+  const basePath = `/${lang}/dashboard`;
+  const [isMobile, setIsMobile] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
+  // S9.1-05: detect breakpoint separately, only set isOpen on first mount (no loop)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    if (!initialized) {
+      setIsOpen(window.innerWidth >= 1024);
+      setInitialized(true);
+    }
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [initialized, setIsOpen]);
+
+  const isActive = (item: NavItem) => {
+    const fullHref = basePath + item.href;
+    if (item.href === "") return pathname === basePath || pathname === basePath + "/";
+    return pathname.startsWith(fullHref);
+  };
 
   return (
     <aside
-      className={`flex flex-col h-full bg-[#013A57] text-white transition-sidebar ${
-        collapsed ? 'w-16' : 'w-60'
-      }`}
-      aria-label="Navegaci\u00f3n principal"
+      className={cn("sidebar", !isOpen && "sidebar-collapsed", isMobile && isOpen && "sidebar-mobile-open")}
+      aria-label="Navegación principal"
     >
-      {/* Logo area */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
-        {!collapsed && (
-          <span className="font-semibold text-sm tracking-wide text-white/90">MWT ONE</span>
-        )}
+      <div className="sidebar-brand">
+        <Link href={basePath} className="flex items-center gap-3">
+          <Image
+            src="/logo.png"
+            alt="MWT ONE"
+            width={120}
+            height={32}
+            style={{ height: "32px", width: "auto" }}
+            priority
+          />
+        </Link>
         <button
-          onClick={() => setCollapsed(prev => !prev)}
-          className="ml-auto p-1 rounded hover:bg-white/10 transition-colors"
-          aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+          onClick={() => setIsOpen(!isOpen)}
+          style={{
+            marginLeft: "auto", padding: 4,
+            borderRadius: "var(--radius-md)",
+            color: "var(--nav-text)",
+            background: "none", border: "none", cursor: "pointer",
+          }}
+          aria-label={isOpen ? "Colapsar sidebar" : "Expandir sidebar"}
         >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {isOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
         </button>
       </div>
-
-      {/* Nav items */}
-      <nav className="flex-1 overflow-y-auto py-2">
-        {NAV_ITEMS.map(item => {
-          const isActive = item.href !== '#' && (
-            item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
-          );
-          const Icon = item.icon;
-
-          const inner = (
-            <span
-              className={[
-                'flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-none',
-                'border-l-[3px] transition-colors',
-                item.disabled
-                  ? 'opacity-40 cursor-not-allowed border-transparent'
-                  : isActive
-                  ? 'border-[#75CBB3] bg-white/8 text-white'
-                  : 'border-transparent text-white/70 hover:bg-white/6 hover:text-white',
-              ].join(' ')}
-            >
-              <Icon
-                size={18}
-                aria-hidden={!collapsed}
-                aria-label={collapsed ? item.label : undefined}
-              />
-              {!collapsed && (
-                <>
-                  <span className="flex-1">{item.label}</span>
-                  {item.badge && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/50 font-medium">
-                      {item.badge}
-                    </span>
-                  )}
-                </>
-              )}
-            </span>
-          );
-
-          if (item.disabled) {
-            return (
-              <div key={item.label} title={collapsed ? item.label : undefined}>
-                {inner}
-              </div>
-            );
-          }
-
+      <nav className="sidebar-nav">
+        {GROUPS.map((group) => {
+          const items = NAV_ITEMS.filter((i) => i.group === group);
+          if (!items.length) return null;
           return (
-            <Link
-              key={item.label}
-              href={item.href}
-              aria-label={collapsed ? item.label : undefined}
-              title={collapsed ? item.label : undefined}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {inner}
-            </Link>
+            <div key={group} className={group !== "core" ? "mt-4" : ""}>
+              {GROUP_LABELS[group] && isOpen && (
+                <div className="sidebar-group-label">{GROUP_LABELS[group]}</div>
+              )}
+              {items.map((item) => {
+                const active = isActive(item);
+                return (
+                  <Link
+                    key={item.label}
+                    href={basePath + item.href}
+                    className={cn("sidebar-item", active && "sidebar-item-active")}
+                    title={!isOpen ? item.label : undefined}
+                    aria-current={active ? "page" : undefined}
+                  >
+                    <span className="flex-shrink-0">{item.icon}</span>
+                    {isOpen && <span>{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
           );
         })}
       </nav>
+      <div style={{ padding: "var(--space-2)", marginTop: "auto" }}>
+        <button
+          onClick={logout}
+          className="sidebar-item"
+          style={{ width: "100%", border: "none", background: "none", cursor: "pointer" }}
+          aria-label="Cerrar sesión"
+        >
+          <LogOut size={20} />
+          {isOpen && <span>Cerrar sesión</span>}
+        </button>
+      </div>
     </aside>
   );
 }
