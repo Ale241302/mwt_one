@@ -55,8 +55,8 @@ export default function ClientesPage() {
   const fetchClients = useCallback(async () => {
     try {
       const [cr, er] = await Promise.all([
-        api.get("/api/clientes/"),
-        api.get("/api/core/legal-entities/").catch(() => ({ data: [] })),
+        api.get("/clientes/"),
+        api.get("/core/legal-entities/").catch(() => ({ data: [] })),
       ]);
       setClients(cr.data?.results || cr.data || []);
       setLegalEntities(er.data?.results || er.data || []);
@@ -100,9 +100,9 @@ export default function ClientesPage() {
     const payload = { ...form, legal_entity: form.legal_entity ? parseInt(form.legal_entity) : null };
     try {
       if (editingId) {
-        await api.put(`/api/clientes/${editingId}/`, payload);
+        await api.put(`/clientes/${editingId}/`, payload);
       } else {
-        await api.post("/api/clientes/", payload);
+        await api.post("/clientes/", payload);
       }
       setShowForm(false);
       setEditingId(null);
@@ -118,7 +118,7 @@ export default function ClientesPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await api.delete(`/api/clientes/${deleteTarget.id}/`);
+      await api.delete(`/clientes/${deleteTarget.id}/`);
       setDeleteTarget(null);
       await fetchClients();
     } catch (err) {
@@ -190,15 +190,9 @@ export default function ClientesPage() {
                   </td>
                   <td>
                     <div className="flex items-center gap-1">
-                      <button className="btn btn-sm btn-ghost" onClick={() => openEdit(c)} aria-label={`Editar ${c.name}`}>
-                        <Pencil size={14} />
-                      </button>
-                      <button className="btn btn-sm btn-ghost" onClick={() => setDeleteTarget(c)} aria-label={`Eliminar ${c.name}`} style={{ color: "var(--critical)" }}>
-                        <Trash2 size={14} />
-                      </button>
-                      <button className="btn btn-sm btn-ghost" onClick={() => router.push(`/${lang}/dashboard/clientes/${c.id}`)} aria-label={`Ver detalle de ${c.name}`}>
-                        <ChevronRight size={14} />
-                      </button>
+                      <button className="btn btn-sm btn-ghost" onClick={() => openEdit(c)} aria-label={`Editar ${c.name}`}><Pencil size={14} /></button>
+                      <button className="btn btn-sm btn-ghost" onClick={() => setDeleteTarget(c)} aria-label={`Eliminar ${c.name}`} style={{ color: "var(--critical)" }}><Trash2 size={14} /></button>
+                      <button className="btn btn-sm btn-ghost" onClick={() => router.push(`/${lang}/dashboard/clientes/${c.id}`)} aria-label={`Ver detalle de ${c.name}`}><ChevronRight size={14} /></button>
                     </div>
                   </td>
                 </tr>

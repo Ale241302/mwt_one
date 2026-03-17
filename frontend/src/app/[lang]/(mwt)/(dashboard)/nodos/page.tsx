@@ -18,20 +18,19 @@ interface Node {
 }
 
 const NODE_TYPES = [
-  { value: "FISCAL", label: "Fiscal" },
-  { value: "DESTINATION", label: "Destino" },
+  { value: "FISCAL",        label: "Fiscal" },
+  { value: "DESTINATION",   label: "Destino" },
   { value: "LOGISTICS_HUB", label: "Hub logístico" },
-  { value: "WAREHOUSE", label: "Almacén" },
-  { value: "PORT", label: "Puerto" },
-  { value: "AIRPORT", label: "Aeropuerto" },
+  { value: "WAREHOUSE",     label: "Almacén" },
+  { value: "PORT",          label: "Puerto" },
+  { value: "AIRPORT",       label: "Aeropuerto" },
 ];
 
-/* S9.1-07: TYPE_STYLES usa CSS vars semánticos (no concatenación inválida de Tailwind) */
 const TYPE_STYLES: Record<string, { bg: string; color: string; border: string }> = {
   FISCAL:        { bg: "var(--warning-bg)",       color: "var(--warning)",       border: "var(--warning)" },
   DESTINATION:   { bg: "var(--info-bg)",          color: "var(--info)",          border: "var(--info)" },
   LOGISTICS_HUB: { bg: "var(--success-bg)",       color: "var(--success)",       border: "var(--success)" },
-  WAREHOUSE:     { bg: "var(--brand-accent-soft)", color: "var(--brand-primary)", border: "var(--brand-primary)" },
+  WAREHOUSE:     { bg: "var(--brand-accent-soft)",color: "var(--brand-primary)", border: "var(--brand-primary)" },
   PORT:          { bg: "var(--brand-ice-soft)",   color: "var(--info)",          border: "var(--info)" },
   AIRPORT:       { bg: "var(--critical-bg)",      color: "var(--critical)",      border: "var(--critical)" },
 };
@@ -55,7 +54,7 @@ export default function NodosPage() {
 
   const fetchNodes = useCallback(async () => {
     try {
-      setNodes((await api.get("/api/transfers/nodes/")).data?.results || []);
+      setNodes((await api.get("/transfers/nodes/")).data?.results || []);
     } catch (err) {
       console.error("Error fetching nodes:", err);
     } finally {
@@ -87,9 +86,9 @@ export default function NodosPage() {
     setSaving(true);
     try {
       if (editingId) {
-        await api.put(`/api/transfers/nodes/${editingId}/`, form);
+        await api.put(`/transfers/nodes/${editingId}/`, form);
       } else {
-        await api.post("/api/transfers/nodes/create/", form);
+        await api.post("/transfers/nodes/create/", form);
       }
       setShowForm(false);
       setEditingId(null);
@@ -106,7 +105,7 @@ export default function NodosPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await api.delete(`/api/transfers/nodes/${deleteTarget.id}/`);
+      await api.delete(`/transfers/nodes/${deleteTarget.id}/`);
       setDeleteTarget(null);
       await fetchNodes();
     } catch (err) {
@@ -165,10 +164,7 @@ export default function NodosPage() {
                       </div>
                     )}
                   </div>
-                  <span
-                    className="badge"
-                    style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}
-                  >
+                  <span className="badge" style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
                     {NODE_TYPES.find((t) => t.value === node.node_type)?.label || node.node_type}
                   </span>
                 </div>
@@ -176,9 +172,7 @@ export default function NodosPage() {
                   <span className={`badge ${node.is_active ? "badge-success" : "badge-outline"}`}>
                     {node.is_active ? "Activo" : "Inactivo"}
                   </span>
-                  {node.legal_entity_name && (
-                    <span className="caption truncate">{node.legal_entity_name}</span>
-                  )}
+                  {node.legal_entity_name && <span className="caption truncate">{node.legal_entity_name}</span>}
                 </div>
                 <div className="flex items-center gap-2 pt-3" style={{ borderTop: "1px solid var(--divider)" }}>
                   <button className="btn btn-sm btn-ghost" onClick={() => openEdit(node)} aria-label={`Editar ${node.name}`}>
@@ -187,10 +181,7 @@ export default function NodosPage() {
                   <button className="btn btn-sm btn-danger-outline" onClick={() => setDeleteTarget(node)} aria-label={`Eliminar ${node.name}`}>
                     <Trash2 size={14} /> Eliminar
                   </button>
-                  <button
-                    className="btn btn-sm btn-secondary ml-auto"
-                    onClick={() => router.push(`/${lang}/dashboard/nodos/${node.id}`)}
-                  >
+                  <button className="btn btn-sm btn-secondary ml-auto" onClick={() => router.push(`/${lang}/dashboard/nodos/${node.id}`)}>
                     Ver detalle
                   </button>
                 </div>

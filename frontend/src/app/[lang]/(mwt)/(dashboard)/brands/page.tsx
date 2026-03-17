@@ -17,7 +17,6 @@ interface Brand {
 
 type StatusFilter = "all" | "active" | "inactive";
 
-/* S9.1-08: Filtro 'Pausada' placebo eliminado */
 const emptyForm = { name: "", code: "", is_active: true };
 
 export default function BrandsPage() {
@@ -34,7 +33,7 @@ export default function BrandsPage() {
 
   const fetchBrands = useCallback(async () => {
     try {
-      setBrands((await api.get("/api/brands/")).data?.results || []);
+      setBrands((await api.get("/brands/")).data?.results || []);
     } catch (err) {
       console.error("Error fetching brands:", err);
     } finally {
@@ -66,9 +65,9 @@ export default function BrandsPage() {
     setSaving(true);
     try {
       if (editingSlug) {
-        await api.put(`/api/brands/${editingSlug}/`, form);
+        await api.put(`/brands/${editingSlug}/`, form);
       } else {
-        await api.post("/api/brands/", form);
+        await api.post("/brands/", form);
       }
       setShowForm(false);
       setEditingSlug(null);
@@ -84,7 +83,7 @@ export default function BrandsPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await api.delete(`/api/brands/${deleteTarget.slug}/`);
+      await api.delete(`/brands/${deleteTarget.slug}/`);
       setDeleteTarget(null);
       await fetchBrands();
     } catch (err) {
