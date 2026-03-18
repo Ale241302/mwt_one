@@ -2,6 +2,7 @@
 Sprint 5 S5-02: Transfer views C30-C35 + reads
 Sprint 6: C36-C39 artifact views
 Sprint 9: Node CRUD views
+Sprint 10 S10-02a: Transfer Edit (PUT/PATCH) + Delete (DELETE)
 """
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -144,6 +145,67 @@ def create_transfer_view(request):
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# S10-02a — PUT/PATCH /api/transfers/{id}/edit/
+@api_view(["PUT", "PATCH"])
+@permission_classes([IsAdminUser])
+def update_transfer_view(request, transfer_id):
+    """S10-02a: Edit a transfer (only planned/approved status)."""
+    try:
+        transfer = Transfer.objects.get(transfer_id=transfer_id)
+    except Transfer.DoesNotExist:
+        return Response({"detail": "Transfer no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    EDITABLE_STATUSES = ["planned", "approved"]
+    if transfer.status not in EDITABLE_STATUSES:
+        return Response(
+            {"detail": f"Solo se pueden editar transfers en estado: {', '.join(EDITABLE_STATUSES)}. Estado actual: {transfer.status}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    data = request.data
+    if "from_node" in data:
+        try:
+            transfer.from_node = Node.objects.get(node_id=data["from_node"])
+        except Node.DoesNotExist:
+            return Response({"detail": "from_node no encontrado."}, status=status.HTTP_400_BAD_REQUEST)
+    if "to_node" in data:
+        try:
+            transfer.to_node = Node.objects.get(node_id=data["to_node"])
+        except Node.DoesNotExist:
+            return Response({"detail": "to_node no encontrado."}, status=status.HTTP_400_BAD_REQUEST)
+    if "legal_context" in data:
+        transfer.legal_context = data["legal_context"]
+    if "ownership_changes" in data:
+        transfer.ownership_changes = bool(data["ownership_changes"])
+    if "customs_required" in data:
+        transfer.customs_required = bool(data["customs_required"])
+    if "notes" in data:
+        transfer.notes = data.get("notes", "")
+
+    transfer.save()
+    return Response(TransferDetailSerializer(transfer).data)
+
+
+# S10-02a — DELETE /api/transfers/{id}/delete/
+@api_view(["DELETE"])
+@permission_classes([IsAdminUser])
+def delete_transfer_view(request, transfer_id):
+    """S10-02a: Delete a transfer (only planned status)."""
+    try:
+        transfer = Transfer.objects.get(transfer_id=transfer_id)
+    except Transfer.DoesNotExist:
+        return Response({"detail": "Transfer no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    if transfer.status != "planned":
+        return Response(
+            {"detail": f"Solo se pueden eliminar transfers en estado 'planned'. Estado actual: {transfer.status}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    transfer.delete()
+    return Response({"detail": "Transfer eliminado."}, status=status.HTTP_200_OK)
 
 
 # C31 — POST /api/transfers/{id}/approve/
