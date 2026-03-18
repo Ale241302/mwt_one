@@ -91,9 +91,9 @@ def run_indexer(db_conn) -> dict:
                 emb_str = '[' + ','.join(str(v) for v in emb) + ']'
                 db_conn.execute(text('''
                     INSERT INTO knowledge_chunks
-                        (file_path, chunk_index, content, embedding, kb_visibility, metadata, indexed_at)
+                        (file_path, chunk_index, content, embedding, kb_visibility, chunk_metadata, indexed_at)
                     VALUES
-                        (:fp, :ci, :content, :emb::vector, :vis, :meta::jsonb, NOW())
+                        (:fp, :ci, :content, :emb::vector, :vis, :chunk_metadata::jsonb, NOW())
                     ON CONFLICT (file_path, chunk_index) DO UPDATE SET
                         content      = EXCLUDED.content,
                         embedding    = EXCLUDED.embedding,
@@ -105,7 +105,7 @@ def run_indexer(db_conn) -> dict:
                     'content': chunk,
                     'emb':     emb_str,
                     'vis':     visibility,
-                    'meta':    json.dumps({'source': file_path}),
+                    'chunk_metadata': json.dumps({'source': file_path}),
                 })
                 chunks_inserted += 1
 

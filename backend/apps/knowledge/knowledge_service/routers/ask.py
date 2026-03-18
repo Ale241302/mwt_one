@@ -70,7 +70,8 @@ async def ask(req: AskRequest, payload: dict = Depends(decode_token), db: Sessio
             (:sid, :uid, :role, :q, :a, :chunks, NOW(),
              NOW() + INTERVAL '90 days')
     """), {
-        "sid": session_id, "uid": user_id,
+        "sid": session_id,
+        "uid": int(user_id) if isinstance(user_id, int) or (isinstance(user_id, str) and user_id.isdigit()) else None,
         "role": payload.get("role", ""),
         "q": req.question, "a": answer,
         "chunks": json.dumps(chunks_used)

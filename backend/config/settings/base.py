@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'django_celery_beat',
     'corsheaders',
     'apps.core',
@@ -90,7 +91,7 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('REDIS_URL', default='redis://redis:6379/0'),
+        'LOCATION': env('REDIS_URL', default='redis://:mwt2024@redis:6379/0'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -98,8 +99,8 @@ CACHES = {
 }
 
 # --- CELERY ---
-CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://redis:6379/0')
-CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://redis:6379/1')
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://:mwt2024@redis:6379/0')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://:mwt2024@redis:6379/1')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -185,12 +186,22 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '30/min',
+        'user': '120/min',
+    },
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
     'AUTH_HEADER_TYPES': ('Bearer',),
     'TOKEN_OBTAIN_SERIALIZER': 'apps.users.serializers.MWTTokenObtainPairSerializer',

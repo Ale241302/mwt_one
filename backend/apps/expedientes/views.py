@@ -390,11 +390,15 @@ class FinancialComparisonView(APIView):
         return Response(comparison)
 
 
-# ── S4-07: ART-19 Logistics ──
+class IssueCommissionInvoiceView(CommandView):
+    """C22: POST /api/expedientes/<pk>/issue-commission-invoice/"""
+    permission_classes = [IsCEO]
+    command_name = 'C22'
+
 
 class MaterializeLogisticsView(CommandView):
-    """C22: POST /api/expedientes/<pk>/materialize-logistics/"""
-    command_name = 'C22'
+    """C30: POST /api/expedientes/<pk>/materialize-logistics/"""
+    command_name = 'C30'
 
 
 class AddLogisticsOptionView(CommandView):

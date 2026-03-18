@@ -1,0 +1,50 @@
+﻿mwt-knowledge  |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 324, in run_endpoint_function
+mwt-knowledge  |     return await dependant.call(**values)
+mwt-knowledge  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/app/knowledge_service/routers/ask.py", line 39, in ask
+mwt-knowledge  |     history_raw = redis.get(redis_key)
+mwt-knowledge  |                   ^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/commands/core.py", line 2073, in get
+mwt-knowledge  |     return self.execute_command("GET", name, keys=[name])
+mwt-knowledge  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/client.py", line 716, in execute_command
+mwt-knowledge  |     return self._execute_command(*args, **options)
+mwt-knowledge  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/client.py", line 722, in _execute_command
+mwt-knowledge  |     conn = self.connection or pool.get_connection()
+mwt-knowledge  |                               ^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/utils.py", line 236, in wrapper
+mwt-knowledge  |     return func(*args, **kwargs)
+mwt-knowledge  |            ^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/connection.py", line 2960, in get_connection
+mwt-knowledge  |     connection.connect()
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/connection.py", line 975, in connect
+mwt-knowledge  |     self.retry.call_with_retry(
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/retry.py", line 132, in call_with_retry
+mwt-knowledge  |     raise error
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/retry.py", line 120, in call_with_retry
+mwt-knowledge  |     return do()
+mwt-knowledge  |            ^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/connection.py", line 976, in <lambda>
+mwt-knowledge  |     lambda: self.connect_check_health(
+mwt-knowledge  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/connection.py", line 1030, in connect_check_health
+mwt-knowledge  |     self.on_connect_check_health(check_health=check_health)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/connection.py", line 1155, in on_connect_check_health
+mwt-knowledge  |     self.read_response()
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/connection.py", line 1341, in read_response
+mwt-knowledge  |     response = self._parser.read_response(disable_decoding=disable_decoding)
+mwt-knowledge  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/_parsers/resp2.py", line 15, in read_response
+mwt-knowledge  |     result = self._read_response(disable_decoding=disable_decoding)
+mwt-knowledge  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/redis/_parsers/resp2.py", line 38, in _read_response
+mwt-knowledge  |     raise error
+mwt-knowledge  | redis.exceptions.AuthenticationError: Authentication required.
+mwt-knowledge  | INFO:     127.0.0.1:59984 - "GET /health HTTP/1.1" 200 OK
+mwt-knowledge  | INFO:     127.0.0.1:52404 - "GET /health HTTP/1.1" 200 OK
+mwt-knowledge  | INFO:     127.0.0.1:45602 - "GET /health HTTP/1.1" 200 OK
+mwt-knowledge  | INFO:     127.0.0.1:39072 - "GET /health HTTP/1.1" 200 OK
+mwt-knowledge  | INFO:     127.0.0.1:46150 - "GET /health HTTP/1.1" 200 OK
+mwt-knowledge  | INFO:     127.0.0.1:60108 - "GET /health HTTP/1.1" 200 OK

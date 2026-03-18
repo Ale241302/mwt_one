@@ -1,4 +1,4 @@
-﻿"""
+"""
 Sprint 1-4 â€” Domain Logic (services.py)
 Ref: LOTE_SM_SPRINT1 Item 2, ENT_OPS_STATE_MACHINE Â§B/Â§C/Â§F/Â§J/Â§L/Â§M
 Sprint 4: Costs doble vista, ART-09 invoice, financial comparison,
@@ -122,8 +122,13 @@ COMMAND_SPEC = {
     'C20': {'name': 'VoidArtifact',            'event': 'artifact.voided',
             'ceo_only': True,
             'not_in_state': ['CERRADO', 'CANCELADO']},
+    # C22: Sprint 10 Factura Comisión
+    'C22': {'name': 'IssueCommissionInvoice',  'event': 'commission_invoice.issued',
+            'creates_art': 'ART-10',
+            'ceo_only': True,
+            'not_in_state': ['CERRADO', 'CANCELADO']},
     # Sprint 4 S4-07: ART-19 Logistics Decision
-    'C22': {'name': 'MaterializeLogistics',    'event': 'logistics.materialized',
+    'C30': {'name': 'MaterializeLogistics',    'event': 'logistics.materialized',
             'creates_art': 'ART-19',
             'not_in_state': ['CERRADO', 'CANCELADO', 'REGISTRO', 'DESPACHO', 'TRANSITO', 'EN_DESTINO']},
     'C23': {'name': 'AddLogisticsOption',      'event': 'logistics.option_added',
@@ -451,8 +456,8 @@ def can_execute_command(expediente, command_name, user):
         if not _has_artifact(expediente, 'ART-01'):
             raise ArtifactMissingError('C14 requires ART-01 for COMISION mode.')
 
-    # --- C22 specific: requires ART-04 ---
-    if command_name == 'C22':
+    # --- C30 specific: requires ART-04 ---
+    if command_name == 'C30':
         if _is_tecmater(expediente):
             from rest_framework.exceptions import APIException
             class Conflict409(APIException):
@@ -460,10 +465,10 @@ def can_execute_command(expediente, command_name, user):
                 default_detail = 'ART-19 is not applicable for Tecmater brand.'
             raise Conflict409()
         if not _has_artifact(expediente, 'ART-04'):
-            raise ArtifactMissingError('C22 requires ART-04 to be completed.')
+            raise ArtifactMissingError('C30 requires ART-04 to be completed.')
         if expediente.status not in ('PRODUCCION', 'PREPARACION'):
             raise TransitionNotAllowedError(
-                f'C22 requires status PRODUCCION or PREPARACION, current={expediente.status}.'
+                f'C30 requires status PRODUCCION or PREPARACION, current={expediente.status}.'
             )
 
     # --- C23 specific: requires ART-19 pending ---

@@ -6,11 +6,10 @@ export type CreditBand = 'GREEN' | 'AMBER' | 'RED';
 
 export const CREDIT_BAND_CONFIG: Record<CreditBand, {
   label: string;
-  bg: string;
-  text: string;
+  className: string;
   icon: string;
 }> = {
-  GREEN: { label: 'AL DÍA', bg: '#F0FAF6', text: '#0E8A6D', icon: 'check-circle' },
-  AMBER: { label: 'RIESGO', bg: '#FFF7ED', text: '#B45309', icon: 'alert-triangle' },
-  RED:   { label: 'CRÍTICO', bg: '#FEF2F2', text: '#DC2626', icon: 'alert-octagon' },
+  GREEN: { label: 'AL DÍA', className: 'bg-green-50 text-green-700 border-green-200', icon: 'check-circle' },
+  AMBER: { label: 'RIESGO', className: 'bg-amber-50 text-amber-700 border-amber-200', icon: 'alert-triangle' },
+  RED:   { label: 'CRÍTICO', className: 'bg-red-50 text-red-700 border-red-200', icon: 'alert-octagon' },
 };

@@ -16,7 +16,7 @@ from apps.expedientes.views import (
     SupersedeArtifactView, VoidArtifactView,
     # Sprint 4
     CostsListView, CostsSummaryView,
-    InvoiceSuggestionView, InvoiceView,
+    InvoiceSuggestionView, InvoiceView, IssueCommissionInvoiceView,
     FinancialComparisonView,
     MaterializeLogisticsView, AddLogisticsOptionView, DecideLogisticsView,
     MirrorPDFView,
@@ -59,7 +59,10 @@ urlpatterns = [
     path('<uuid:pk>/void-artifact/', VoidArtifactView.as_view(), name='void-artifact'),
     path('<uuid:pk>/register-payment/', RegisterPaymentView.as_view(), name='register-payment'),
 
-    # ── Sprint 4: C22-C24 Logistics ──
+    # ── Sprint 10: C22 Factura Comisión ──
+    path('<uuid:pk>/issue-commission-invoice/', IssueCommissionInvoiceView.as_view(), name='issue-commission-invoice'),
+
+    # ── Sprint 4: C30/C23/C24 Logistics ──
     path('<uuid:pk>/materialize-logistics/', MaterializeLogisticsView.as_view(), name='materialize-logistics'),
     path('<uuid:pk>/add-logistics-option/', AddLogisticsOptionView.as_view(), name='add-logistics-option'),
     path('<uuid:pk>/decide-logistics/', DecideLogisticsView.as_view(), name='decide-logistics'),

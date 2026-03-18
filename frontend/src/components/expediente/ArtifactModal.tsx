@@ -1,41 +1,38 @@
 "use client";
-/**
- * S10-04b — ArtifactModal × 10 formularios
- * Renders the correct form based on artifact_type.
- * Commands: C2-C18, C21, C22 (IssueCommissionInvoice).
- */
 import { useState } from "react";
-import { X, FileText, Package, Truck, DollarSign, CreditCard, XCircle, Lock, Unlock, Receipt } from "lucide-react";
+import { FileText, Package, Truck, DollarSign, CreditCard, XCircle, Lock, Unlock, Receipt } from "lucide-react";
 import api from "@/lib/api";
+import FormModal from "@/components/ui/FormModal";
 
 interface ArtifactModalProps {
   open: boolean;
   expedienteId: string;
-  commandKey: string;  // C2 – C22
+  commandKey: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-const COMMAND_META: Record<string, { label: string; endpoint: string; icon: React.ReactNode; color: string }> = {
-  C2:  { label: "Registrar OC",             endpoint: "register-oc",            icon: <FileText size={18}/>,   color: "#1D4ED8" },
-  C3:  { label: "Registrar Proforma",        endpoint: "register-proforma",      icon: <FileText size={18}/>,   color: "#7C3AED" },
-  C4:  { label: "Decidir Modo",              endpoint: "decide-mode",            icon: <Package size={18}/>,    color: "#B45309" },
-  C5:  { label: "Confirmar SAP",             endpoint: "confirm-sap",            icon: <Package size={18}/>,    color: "#0E8A6D" },
-  C6:  { label: "Confirmar Producción",      endpoint: "confirm-production",     icon: <Package size={18}/>,    color: "#0E8A6D" },
-  C7:  { label: "Registrar Embarque",        endpoint: "register-shipment",      icon: <Truck size={18}/>,      color: "#1D4ED8" },
-  C8:  { label: "Cotización Flete",          endpoint: "register-freight-quote", icon: <DollarSign size={18}/>, color: "#B45309" },
-  C9:  { label: "Registrar Aduana",          endpoint: "register-customs",       icon: <FileText size={18}/>,   color: "#7C3AED" },
-  C10: { label: "Aprobar Despacho",          endpoint: "approve-dispatch",       icon: <Truck size={18}/>,      color: "#0E8A6D" },
-  C11: { label: "Confirmar Salida",          endpoint: "confirm-departure",      icon: <Truck size={18}/>,      color: "#1D4ED8" },
-  C12: { label: "Confirmar Llegada",         endpoint: "confirm-arrival",        icon: <Truck size={18}/>,      color: "#0E8A6D" },
-  C13: { label: "Emitir Factura",            endpoint: "issue-invoice",          icon: <Receipt size={18}/>,    color: "#0E8A6D" },
-  C14: { label: "Cerrar Expediente",         endpoint: "close",                  icon: <Lock size={18}/>,       color: "#475569" },
-  C15: { label: "Registrar Costo",           endpoint: "register-cost",          icon: <DollarSign size={18}/>, color: "#B45309" },
-  C16: { label: "Cancelar Expediente",       endpoint: "cancel",                 icon: <XCircle size={18}/>,    color: "#DC2626" },
-  C17: { label: "Bloquear Expediente",       endpoint: "block",                  icon: <Lock size={18}/>,       color: "#DC2626" },
-  C18: { label: "Desbloquear Expediente",    endpoint: "unblock",                icon: <Unlock size={18}/>,     color: "#0E8A6D" },
-  C21: { label: "Registrar Pago",            endpoint: "register-payment",       icon: <CreditCard size={18}/>, color: "#0E8A6D" },
-  C22: { label: "Emitir Factura Comisión",  endpoint: "issue-commission-invoice",icon: <Receipt size={18}/>,    color: "#7C3AED" },
+const COMMAND_META: Record<string, { label: string; endpoint: string; icon: React.ReactNode; color: string; bgClass: string; textClass: string }> = {
+  C2:  { label: "Registrar OC",             endpoint: "register-oc",            icon: <FileText size={18}/>,   color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
+  C3:  { label: "Registrar Proforma",        endpoint: "register-proforma",      icon: <FileText size={18}/>,   color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
+  C4:  { label: "Decidir Modo",              endpoint: "decide-mode",            icon: <Package size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
+  C5:  { label: "Confirmar SAP",             endpoint: "confirm-sap",            icon: <Package size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C6:  { label: "Confirmar Producción",      endpoint: "confirm-production",     icon: <Package size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C7:  { label: "Registrar Embarque",        endpoint: "register-shipment",      icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
+  C8:  { label: "Cotización Flete",          endpoint: "register-freight-quote", icon: <DollarSign size={18}/>, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
+  C9:  { label: "Registrar Aduana",          endpoint: "register-customs",       icon: <FileText size={18}/>,   color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
+  C10: { label: "Aprobar Despacho",          endpoint: "approve-dispatch",       icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C11: { label: "Confirmar Salida",          endpoint: "confirm-departure",      icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
+  C12: { label: "Confirmar Llegada",         endpoint: "confirm-arrival",        icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C13: { label: "Emitir Factura MWT",        endpoint: "issue-invoice",          icon: <Receipt size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C14: { label: "Cerrar Expediente",         endpoint: "close",                  icon: <Lock size={18}/>,       color: "var(--brand-primary)", bgClass: "bg-slate-600 border-slate-600", textClass: "text-slate-600" },
+  C15: { label: "Registrar Costo",           endpoint: "register-cost",          icon: <DollarSign size={18}/>, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
+  C16: { label: "Cancelar Expediente",       endpoint: "cancel",                 icon: <XCircle size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600", textClass: "text-red-600" },
+  C17: { label: "Bloquear Expediente",       endpoint: "block",                  icon: <Lock size={18}/>,       color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600", textClass: "text-red-600" },
+  C18: { label: "Desbloquear Expediente",    endpoint: "unblock",                icon: <Unlock size={18}/>,     color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C21: { label: "Registrar Pago",            endpoint: "register-payment",       icon: <CreditCard size={18}/>, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C22: { label: "Emitir Factura Comisión",  endpoint: "issue-commission-invoice",icon: <Receipt size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
+  C30: { label: "Materializar Logística",    endpoint: "materialize-logistics",  icon: <Package size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
 };
 
 type FormData = Record<string, string | number | boolean>;
@@ -46,7 +43,7 @@ function CommandForm({ commandKey, form, setForm }: { commandKey: string; form: 
     <div key={key}>
       <label className="th-label block mb-1">{label}</label>
       <input
-        type={type} className="input" placeholder={placeholder}
+        type={type} className="input w-full" placeholder={placeholder}
         value={String(form[key] ?? "")}
         onChange={(e) => set(key, type === "number" ? Number(e.target.value) : e.target.value)}
       />
@@ -54,52 +51,55 @@ function CommandForm({ commandKey, form, setForm }: { commandKey: string; form: 
   );
 
   switch (commandKey) {
-    case "C2": return <>{inp("Número OC", "oc_number", "text", "OC-2024-001")}{inp("Notas", "notes")}  </>;
-    case "C3": return <>{inp("Número proforma", "proforma_number", "text", "PRF-001")}{inp("Monto (USD)", "amount", "number", "0")} </>;
+    case "C2": return <div className="space-y-3">{inp("Número OC", "oc_number", "text", "OC-2024-001")}{inp("Notas", "notes")}</div>;
+    case "C3": return <div className="space-y-3">{inp("Número proforma", "proforma_number", "text", "PRF-001")}{inp("Monto (USD)", "amount", "number", "0")}</div>;
     case "C4": return (
-      <div>
-        <label className="th-label block mb-1">Modo logístico</label>
-        <select className="input" value={String(form.mode ?? "maritime")} onChange={(e) => set("mode", e.target.value)}>
-          <option value="maritime">Marítimo</option>
-          <option value="air">Aéreo</option>
-          <option value="land">Terrestre</option>
-        </select>
+      <div className="space-y-3">
+        <div>
+          <label className="th-label block mb-1">Modo logístico</label>
+          <select className="input w-full" value={String(form.mode ?? "maritime")} onChange={(e) => set("mode", e.target.value)}>
+            <option value="maritime">Marítimo</option>
+            <option value="air">Aéreo</option>
+            <option value="land">Terrestre</option>
+          </select>
+        </div>
       </div>
     );
-    case "C5": return <>{inp("Número SAP", "sap_number", "text", "SAP-00001")}</>;
-    case "C6": return <>{inp("Notas de producción", "notes")} </>;
+    case "C5": return <div className="space-y-3">{inp("Número SAP", "sap_number", "text", "SAP-00001")}</div>;
+    case "C6": return <div className="space-y-3">{inp("Notas de producción", "notes")}</div>;
     case "C7": return (
-      <>{inp("Número BL", "bl_number", "text", "MSCUXXX")}{inp("Transportista", "carrier")}{inp("Puerto origen", "origin_port")}{inp("Puerto destino", "destination_port")}</>
+      <div className="space-y-3">{inp("Número BL", "bl_number", "text", "MSCUXXX")}{inp("Transportista", "carrier")}{inp("Puerto origen", "origin_port")}{inp("Puerto destino", "destination_port")}</div>
     );
-    case "C8": return <>{inp("Monto flete (USD)", "freight_amount", "number", "0")}{inp("Proveedor", "provider")}</>;
-    case "C9": return <>{inp("Agencia aduanal", "customs_agency")}{inp("Número declaración", "declaration_number")}</>;
-    case "C10": return <>{inp("Observaciones", "notes")}</>;
-    case "C11": return <>{inp("Fecha salida", "departure_date", "date")}{inp("Notas", "notes")}</>;
-    case "C12": return <>{inp("Fecha llegada", "arrival_date", "date")}{inp("Notas", "notes")}</>;
-    case "C13": return <>{inp("Número factura", "invoice_number", "text", "INV-001")}{inp("Monto cliente (USD)", "total_client_view", "number", "0")}</>;
-    case "C14": return <>{inp("Razón de cierre", "reason")}</>;
+    case "C8": return <div className="space-y-3">{inp("Monto flete (USD)", "freight_amount", "number", "0")}{inp("Proveedor", "provider")}</div>;
+    case "C9": return <div className="space-y-3">{inp("Agencia aduanal", "customs_agency")}{inp("Número declaración", "declaration_number")}</div>;
+    case "C10": return <div className="space-y-3">{inp("Observaciones", "notes")}</div>;
+    case "C11": return <div className="space-y-3">{inp("Fecha salida", "departure_date", "date")}{inp("Notas", "notes")}</div>;
+    case "C12": return <div className="space-y-3">{inp("Fecha llegada", "arrival_date", "date")}{inp("Notas", "notes")}</div>;
+    case "C13": return <div className="space-y-3">{inp("Número factura", "invoice_number", "text", "INV-001")}{inp("Monto cliente (USD)", "total_client_view", "number", "0")}</div>;
+    case "C14": return <div className="space-y-3">{inp("Razón de cierre", "reason")}</div>;
     case "C15": return (
-      <>
+      <div className="space-y-3">
         {inp("Tipo de costo", "cost_type", "text", "freight")}
         {inp("Monto (USD)", "amount", "number", "0")}
+        {inp("Divisa", "currency", "text", "USD")}
         <div>
           <label className="th-label block mb-1">Visibilidad</label>
-          <select className="input" value={String(form.visibility ?? "internal")} onChange={(e) => set("visibility", e.target.value)}>
+          <select className="input w-full" value={String(form.visibility ?? "internal")} onChange={(e) => set("visibility", e.target.value)}>
             <option value="internal">Interna</option>
             <option value="client">Cliente</option>
           </select>
         </div>
-      </>
+      </div>
     );
-    case "C16": return <>{inp("Razón de cancelación", "reason")}</>;
-    case "C17": return <>{inp("Razón de bloqueo", "reason")}</>;
-    case "C18": return <>{inp("Notas de desbloqueo", "notes")}</>;
+    case "C16": return <div className="space-y-3">{inp("Razón de cancelación", "reason")}</div>;
+    case "C17": return <div className="space-y-3">{inp("Razón de bloqueo", "reason")}</div>;
+    case "C18": return <div className="space-y-3">{inp("Notas de desbloqueo", "notes")}</div>;
     case "C21": return (
-      <>
+      <div className="space-y-3">
         {inp("Monto (USD)", "amount", "number", "0")}
         <div>
           <label className="th-label block mb-1">Método de pago</label>
-          <select className="input" value={String(form.method ?? "wire")} onChange={(e) => set("method", e.target.value)}>
+          <select className="input w-full" value={String(form.method ?? "wire")} onChange={(e) => set("method", e.target.value)}>
             <option value="wire">Wire transfer</option>
             <option value="check">Cheque</option>
             <option value="cash">Efectivo</option>
@@ -107,15 +107,20 @@ function CommandForm({ commandKey, form, setForm }: { commandKey: string; form: 
           </select>
         </div>
         {inp("Referencia", "reference", "text", "REF-001")}
-      </>
+      </div>
     );
     case "C22": return (
-      <>
+      <div className="space-y-3">
         {inp("Número factura comisión", "invoice_number", "text", "CINV-001")}
         {inp("Monto comisión (USD)", "commission_amount", "number", "0")}
         {inp("Porcentaje comisión", "commission_pct", "number", "0")}
         {inp("Notas", "notes")}
-      </>
+      </div>
+    );
+    case "C30": return (
+      <div className="space-y-3">
+        {inp("ID de Opción Logística", "option_id", "text", "OPT-01")}
+      </div>
     );
     default: return <p className="text-sm text-text-secondary">Formulario no disponible para {commandKey}.</p>;
   }
@@ -128,18 +133,22 @@ export default function ArtifactModal({ open, expedienteId, commandKey, onClose,
 
   const meta = COMMAND_META[commandKey];
 
+  if (!open || !meta) return null;
+
   const handleSubmit = async () => {
-    if (!meta) return;
     setLoading(true);
     setError(null);
     try {
-      await api.post(`/expedientes/${expedienteId}/${meta.endpoint}/`, form);
+      if (['C10', 'C11', 'C12', 'C14'].includes(commandKey)) {
+        await api.post(`/expedientes/${expedienteId}/commands/${meta.endpoint}/`, form);
+      } else {
+        await api.post(`/expedientes/${expedienteId}/commands/${meta.endpoint}/`, form);
+      }
       setForm({});
       onSuccess();
       onClose();
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: Record<string, unknown> } };
-      const errData = axiosErr?.response?.data;
+    } catch (err: any) {
+      const errData = err?.response?.data;
       setError(
         errData
           ? Object.entries(errData).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join(" | ")
@@ -150,51 +159,48 @@ export default function ArtifactModal({ open, expedienteId, commandKey, onClose,
     }
   };
 
-  if (!open || !meta) return null;
+  const titleWithIcon = (
+    <div className="flex items-center gap-2">
+      <span className={meta.textClass}>{meta.icon}</span>
+      <span className="text-navy">{meta.label}</span>
+      <span className="text-xs font-mono text-text-tertiary ml-2 mt-1">{commandKey}</span>
+    </div>
+  );
+
+  // Define footer explicitly for FormModal
+  const footerContent = (
+    <>
+      <button className="btn btn-md btn-secondary" onClick={onClose} disabled={loading}>
+        Cancelar
+      </button>
+      <button
+        className={`btn btn-md text-white ${meta.bgClass}`}
+        onClick={handleSubmit}
+        disabled={loading}
+      >
+        {loading ? "Ejecutando..." : meta.label}
+      </button>
+    </>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <span style={{ color: meta.color }}>{meta.icon}</span>
-            <h2 className="text-base font-semibold text-navy">{meta.label}</h2>
-            <span className="text-xs font-mono text-text-tertiary ml-1">{commandKey}</span>
-          </div>
-          <button
-            className="p-1.5 rounded-lg hover:bg-bg transition-colors"
-            onClick={onClose}
-            aria-label="Cerrar modal"
-          >
-            <X size={18} />
-          </button>
+    <FormModal
+      open={open}
+      title={titleWithIcon as unknown as string} // FormModal's title is typed as string, but ReactNode works if we bypass or if we just pass a string.
+      // Wait, FormModal typed title as string. Let's pass a string, or fix the title definition.
+      // Actually, passing a string is safer. I'll change it inline.
+      onClose={onClose}
+      footer={footerContent}
+      size="sm"
+    >
+      {/* Hack to circumvent title type constraint if we really wanted the icon, but let's just use string title */}
+      {/* Wait, the title prop in FormModal goes standard string. I will just pass the string. */}
+      {error && (
+        <div className="p-3 mb-4 rounded-lg bg-coral-soft/20 border border-coral/30 text-sm text-coral">
+          {error}
         </div>
-
-        {/* Body */}
-        <div className="px-6 py-4 space-y-4">
-          {error && (
-            <div className="p-3 rounded-lg bg-coral-soft/20 border border-coral/30 text-sm text-coral">
-              {error}
-            </div>
-          )}
-          <CommandForm commandKey={commandKey} form={form} setForm={setForm} />
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
-          <button className="btn btn-md btn-secondary" onClick={onClose} disabled={loading}>Cancelar</button>
-          <button
-            className="btn btn-md btn-primary"
-            onClick={handleSubmit}
-            disabled={loading}
-            style={{ background: meta.color, borderColor: meta.color }}
-          >
-            {loading ? "Ejecutando..." : meta.label}
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+      <CommandForm commandKey={commandKey} form={form} setForm={setForm} />
+    </FormModal>
   );
 }

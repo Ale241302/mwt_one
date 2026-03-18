@@ -29,9 +29,9 @@ export function ExpedienteTimeline({ currentState, isCancelled = false }: Expedi
               aria-label={`${STATE_LABELS[step]}: ${status}`}
               className={[
                 'flex items-center justify-center rounded-full border-2 transition-all',
-                status === 'completed' ? 'w-4 h-4 bg-[#75CBB3] border-[#75CBB3]' : '',
+                status === 'completed' ? 'w-4 h-4 bg-brand-accent border-brand-accent' : '',
                 status === 'active'
-                  ? 'w-5 h-5 bg-[#013A57] border-[#013A57] animate-timeline-pulse'
+                  ? 'w-5 h-5 bg-brand-primary border-brand-primary animate-timeline-pulse'
                   : '',
                 status === 'future' ? 'w-4 h-4 bg-white border-dashed border-slate-300' : '',
               ].join(' ')}
@@ -42,7 +42,7 @@ export function ExpedienteTimeline({ currentState, isCancelled = false }: Expedi
             <span
               className={[
                 'hidden md:block text-[10px] ml-1 font-medium',
-                status === 'active' ? 'text-[#013A57] font-semibold' : 'text-slate-400',
+                status === 'active' ? 'text-brand-primary font-semibold' : 'text-slate-400',
               ].join(' ')}
             >
               {STATE_LABELS[step]}
@@ -51,7 +51,7 @@ export function ExpedienteTimeline({ currentState, isCancelled = false }: Expedi
             {i < displaySteps.length - 1 && (
               <div
                 className={`mx-1 h-px flex-1 min-w-[12px] ${
-                  status === 'completed' ? 'bg-[#75CBB3]' : 'border-t border-dashed border-slate-300'
+                  status === 'completed' ? 'bg-brand-accent' : 'border-t border-dashed border-slate-300'
                 }`}
               />
             )}
@@ -61,7 +61,7 @@ export function ExpedienteTimeline({ currentState, isCancelled = false }: Expedi
 
       {/* CANCELADO badge lateral */}
       {isCancelled && (
-        <span className="ml-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold tracking-[0.5px] uppercase bg-[#FEF2F2] text-[#DC2626] border border-red-200">
+        <span className="ml-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold tracking-[0.5px] uppercase bg-red-50 text-red-600 border border-red-200">
           Cancelado
         </span>
       )}

@@ -1,0 +1,100 @@
+﻿mwt-knowledge  | INFO:     127.0.0.1:36772 - "GET /health HTTP/1.1" 200 OK
+mwt-knowledge  | INFO:     45.230.33.86:31338 - "POST /api/knowledge/ask/ HTTP/1.1" 500 Internal Server Error
+mwt-knowledge  | ERROR:    Exception in ASGI application
+mwt-knowledge  | Traceback (most recent call last):
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+mwt-knowledge  |     self.dialect.do_execute(
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+mwt-knowledge  |     cursor.execute(statement, parameters)
+mwt-knowledge  | psycopg2.errors.InvalidTextRepresentation: invalid input syntax for type bigint: "admin"
+mwt-knowledge  | LINE 5:             ('string', 'admin', '', 'que prodcutos tiene ran...
+mwt-knowledge  |                                ^
+mwt-knowledge  | 
+mwt-knowledge  | 
+mwt-knowledge  | The above exception was the direct cause of the following exception:
+mwt-knowledge  | 
+mwt-knowledge  | Traceback (most recent call last):
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 416, in run_asgi
+mwt-knowledge  |     result = await app(  # type: ignore[func-returns-value]
+mwt-knowledge  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+mwt-knowledge  |     return await self.app(scope, receive, send)
+mwt-knowledge  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/fastapi/applications.py", line 1160, in __call__
+mwt-knowledge  |     await super().__call__(scope, receive, send)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+mwt-knowledge  |     await self.middleware_stack(scope, receive, send)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+mwt-knowledge  |     raise exc
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+mwt-knowledge  |     await self.app(scope, receive, _send)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+mwt-knowledge  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+mwt-knowledge  |     raise exc
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+mwt-knowledge  |     await app(scope, receive, sender)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+mwt-knowledge  |     await self.app(scope, receive, send)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+mwt-knowledge  |     await self.middleware_stack(scope, receive, send)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+mwt-knowledge  |     await route.handle(scope, receive, send)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+mwt-knowledge  |     await self.app(scope, receive, send)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 130, in app
+mwt-knowledge  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+mwt-knowledge  |     raise exc
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+mwt-knowledge  |     await app(scope, receive, sender)
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 116, in app
+mwt-knowledge  |     response = await f(request)
+mwt-knowledge  |                ^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 670, in app
+mwt-knowledge  |     raw_response = await run_endpoint_function(
+mwt-knowledge  |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 324, in run_endpoint_function
+mwt-knowledge  |     return await dependant.call(**values)
+mwt-knowledge  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/app/knowledge_service/routers/ask.py", line 66, in ask
+mwt-knowledge  |     db.execute(text("""
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2351, in execute
+mwt-knowledge  |     return self._execute_internal(
+mwt-knowledge  |            ^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2258, in _execute_internal
+mwt-knowledge  |     result = conn.execute(
+mwt-knowledge  |              ^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+mwt-knowledge  |     return meth(
+mwt-knowledge  |            ^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 527, in _execute_on_connection
+mwt-knowledge  |     return connection._execute_clauseelement(
+mwt-knowledge  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+mwt-knowledge  |     ret = self._execute_context(
+mwt-knowledge  |           ^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+mwt-knowledge  |     return self._exec_single_context(
+mwt-knowledge  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+mwt-knowledge  |     self._handle_dbapi_exception(
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+mwt-knowledge  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+mwt-knowledge  |     self.dialect.do_execute(
+mwt-knowledge  |   File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+mwt-knowledge  |     cursor.execute(statement, parameters)
+mwt-knowledge  | sqlalchemy.exc.DataError: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type bigint: "admin"
+mwt-knowledge  | LINE 5:             ('string', 'admin', '', 'que prodcutos tiene ran...
+mwt-knowledge  |                                ^
+mwt-knowledge  | 
+mwt-knowledge  | [SQL: 
+mwt-knowledge  |         INSERT INTO knowledge_conversationlog
+mwt-knowledge  |             (session_id, user_id, user_role, question, answer, chunks_used, created_at, retain_until)
+mwt-knowledge  |         VALUES
+mwt-knowledge  |             (%(sid)s, %(uid)s, %(role)s, %(q)s, %(a)s, %(chunks)s, NOW(),
+mwt-knowledge  |              NOW() + INTERVAL '90 days')
+mwt-knowledge  |     ]
+mwt-knowledge  | [parameters: {'sid': 'string', 'uid': 'admin', 'role': '', 'q': 'que prodcutos tiene rana walk', 'a': 'Rana Walk es una marca que se especializa en calzado, principalmente en zapatos y sandalias dise├▒ados para ser c├│modos y funcionales. Sus productos s ... (318 characters truncated) ... tos espec├¡ficos o la ├║ltima colecci├│n, te recomendar├¡a visitar su sitio web oficial o sus redes sociales para obtener la informaci├│n m├ís actualizada.', 'chunks': '[]'}]
+mwt-knowledge  | (Background on this error at: https://sqlalche.me/e/20/9h9h)

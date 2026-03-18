@@ -137,6 +137,34 @@ class DashboardView(APIView):
 
         total_cost = CostLine.objects.aggregate(total=Sum('amount'))['total'] or 0
 
+        by_status_dict = {}
+        for exp in active_list:
+            by_status_dict[exp.status] = by_status_dict.get(exp.status, 0) + 1
+        
+        by_status = [{"status": k, "count": v} for k, v in by_status_dict.items()]
+
+        next_actions = [
+            {
+                "id": str(e.id),
+                "ref_number": e.ref_number,
+                "client": e.client.legal_name if e.client else 'N/A',
+                "action": f"Revisar ({e.status})",
+                "urgency": "high" if getattr(e, 'credit_band', '') == "CRITICAL" else "medium"
+            } for e in top_risk_data
+        ]
+        if not next_actions:
+            next_actions = [
+                {
+                    "id": str(e.id),
+                    "ref_number": e.ref_number,
+                    "client": e.client.legal_name if e.client else 'N/A',
+                    "action": f"Avanzar ({e.status})",
+                    "urgency": "normal"
+                } for e in active_list[:3]
+            ]
+        else:
+            next_actions = next_actions[:3]
+
         return Response({
             'active_count': active_count,
             'alert_count': alert_count,
@@ -145,4 +173,6 @@ class DashboardView(APIView):
             'top_risk': UIExpedienteListSerializer(top_risk_data, many=True).data,
             'blocked_list': UIExpedienteListSerializer(blocked_qs, many=True).data,
             'alerts_list': UIExpedienteListSerializer(alerts_list_data, many=True).data,
+            'by_status': by_status,
+            'next_actions': next_actions,
         })

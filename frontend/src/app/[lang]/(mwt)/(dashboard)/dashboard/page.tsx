@@ -38,11 +38,11 @@ interface StatusBreakdown {
 }
 
 interface NextAction {
-  expediente_id: string;
-  expediente_short: string;
-  client_name: string;
-  available_commands: string[];
-  credit_band: "MINT" | "AMBER" | "RED";
+  id: string;
+  ref_number: string;
+  client: string;
+  action: string;
+  urgency: "high" | "medium" | "normal";
 }
 
 interface DashboardData {
@@ -102,21 +102,21 @@ export default function DashboardPage() {
     else setRefreshing(true);
     setError(null);
     try {
-      const [finRes, statusRes] = await Promise.allSettled([
+      const [finRes, dashRes] = await Promise.allSettled([
         api.get("/ui/dashboard/financial/"),
-        api.get("/ui/dashboard/status-breakdown/"),
+        api.get("/ui/dashboard/"),
       ]);
 
       const fin = finRes.status === "fulfilled" ? finRes.value.data : null;
-      const statusBreakdown = statusRes.status === "fulfilled" ? statusRes.value.data?.breakdown : undefined;
+      const dash = dashRes.status === "fulfilled" ? dashRes.value.data : null;
 
-      if (!fin) throw new Error("No se pudo cargar el dashboard financiero.");
+      if (!fin || !dash) throw new Error("No se pudo cargar el dashboard completo.");
 
       setData({
         cards: fin.cards,
         brand_breakdown: fin.brand_breakdown ?? [],
-        status_breakdown: statusBreakdown,
-        next_actions: fin.next_actions,
+        status_breakdown: dash.by_status,
+        next_actions: dash.next_actions,
       });
     } catch (e: unknown) {
       setError((e as { message?: string })?.message ?? "Error al cargar dashboard.");
@@ -183,6 +183,31 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Mini Pipeline */}
+      {status_breakdown && status_breakdown.length > 0 && (
+        <div className="card p-5">
+          <h2 className="heading-sm font-semibold mb-4 text-navy">Pipeline Operativo</h2>
+          <div className="flex gap-[2px] h-3 rounded-full overflow-hidden shadow-sm bg-border/40">
+            {["RECIBIDO", "PREPARACION", "REVISION", "OPERACION", "LIQUIDACION", "CERRADO"].map(st => {
+              const count = status_breakdown.find(s => s.status === st)?.count || 0;
+              const total = status_breakdown.reduce((acc, curr) => acc + curr.count, 0) || 1;
+              const flexBasis = `${(count / total) * 100}%`;
+              return count > 0 ? (
+                <div key={st} style={{ width: flexBasis }} className="bg-brand-primary transition-all duration-300" title={`${st}: ${count}`} />
+              ) : null;
+            })}
+          </div>
+          <div className="flex justify-between mt-3 text-xs text-text-tertiary">
+            {["RECIBIDO", "PREPARACION", "REVISION", "OPERACION", "LIQUIDACION", "CERRADO"].map(st => (
+              <div key={st} className="flex flex-col items-center flex-1">
+                <span className="font-semibold text-navy">{status_breakdown.find(s => s.status === st)?.count || 0}</span>
+                <span className="text-[10px] uppercase truncate w-full text-center mt-0.5" style={{letterSpacing: "0.5px"}}>{st}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Brand breakdown */}
         <div>
@@ -236,15 +261,19 @@ export default function DashboardPage() {
           <h2 className="heading-sm font-semibold mb-3 text-navy">Acciones pendientes</h2>
           <div className="grid gap-3">
             {next_actions.map((item) => (
-              <div key={item.expediente_id} className={cn("card p-4 border flex items-center justify-between gap-4", CREDIT_COLORS[item.credit_band])}>
+              <div key={item.id} className={cn("card p-4 border flex items-center justify-between gap-4", 
+                item.urgency === "high" ? "border-red-200 bg-red-50 text-red-700" :
+                item.urgency === "medium" ? "border-amber-200 bg-amber-50 text-amber-700" :
+                "border-green-200 bg-green-50 text-green-700"
+              )}>
                 <div>
-                  <p className="font-semibold text-sm">{item.client_name} — #{item.expediente_short}</p>
+                  <p className="font-semibold text-sm">{item.client} — #{item.ref_number}</p>
                   <p className="caption mt-0.5">
-                    Comandos: {item.available_commands.join(", ")}
+                    {item.action}
                   </p>
                 </div>
                 <Link
-                  href={`/${lang}/expedientes/${item.expediente_id}`}
+                  href={`/${lang}/expedientes/${item.id}`}
                   className="btn btn-sm btn-ghost shrink-0"
                 >
                   Ver <ArrowRight size={13}/>

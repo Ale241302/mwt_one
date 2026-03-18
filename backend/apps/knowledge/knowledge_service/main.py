@@ -4,9 +4,13 @@ Sprint 8 · S8-07/08/09/10
 """
 from fastapi import FastAPI
 from .routers import ask, index, sessions
-from .database import engine, Base
+from .database import engine, Base, init_db
 
 app = FastAPI(title="mwt-knowledge", version="0.1.0")
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
 
 # Health check
 @app.get("/health")

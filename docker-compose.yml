@@ -18,10 +18,11 @@ services:
     image: redis:7-alpine
     container_name: mwt-redis
     restart: unless-stopped
+    command: redis-server --requirepass mwt2024
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "mwt2024", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -152,7 +153,7 @@ services:
       - paperless_consume:/usr/src/paperless/consume
       - paperless_export:/usr/src/paperless/export
     environment:
-      PAPERLESS_REDIS: redis://redis:6379
+      PAPERLESS_REDIS: redis://:mwt2024@redis:6379
       PAPERLESS_DBHOST: postgres
       PAPERLESS_DBPORT: 5432
       PAPERLESS_DBNAME: paperless
