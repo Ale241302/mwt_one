@@ -22,4 +22,7 @@ urlpatterns = [
 
     # Legal Entities para formularios UI (e.g. Nuevo Expediente)
     path('legal-entities/', LegalEntitiesListView.as_view(), name='legal-entities'),
+
+    # S4-11: Financial Dashboard — GET /api/ui/expedientes/dashboard/financial/
+    path('dashboard/financial/', FinancialDashboardView.as_view(), name='financial-dashboard'),
 ]
