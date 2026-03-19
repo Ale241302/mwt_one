@@ -30,6 +30,8 @@ Ref → POL_ARTIFACT_CONTRACT para contrato normativo que todo artefacto debe cu
 | ART-10 | Factura comisión | 1.0 | document | ACTIVE | ENT_PLAT_ARTEFACTOS.B |
 | ART-11 | Registro costos | 1.0 | pricing | ACTIVE | ENT_PLAT_ARTEFACTOS.B |
 | ART-12 | Nota compensación | 1.0 | document | ACTIVE | ENT_PLAT_ARTEFACTOS.B |
+| ART-19 | Certificado de Origen | 1.0 | document | DRAFT | H5: CASO_2391 |
+| ART-20 | DU-E Exportación Brasil | 1.0 | document | DRAFT | H5: CASO_2391 |
 
 ## TRANSFER (artefactos que se pegan a transfers entre nodos)
 
@@ -99,9 +101,9 @@ Ref → POL_ARTIFACT_CONTRACT para contrato normativo que todo artefacto debe cu
 
 ## Métricas del registry
 
-Total artefactos: 18
+Total artefactos: 20
 - ACTIVE: 12 (ART-01 a ART-12)
-- DRAFT: 6 (ART-13 a ART-18)
+- DRAFT: 8 (ART-13 a ART-20)
 - DEPRECATED: 0
 
 ---

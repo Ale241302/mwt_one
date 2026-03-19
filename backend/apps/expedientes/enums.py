@@ -111,3 +111,23 @@ class LogisticsMode(models.TextChoices):
 class LogisticsSource(models.TextChoices):
     MANUAL = 'MANUAL', 'Manual'
     AUTO   = 'AUTO',   'Auto'
+
+
+class CostCategory(models.TextChoices):
+    LANDED_COST    = 'LANDED_COST',    'Landed Cost'
+    TAX_CREDIT     = 'TAX_CREDIT',     'Tax Credit (IVA)'
+    RECOVERABLE    = 'RECOVERABLE',    'Recoverable'
+    NON_DEDUCTIBLE = 'NON_DEDUCTIBLE', 'Non-Deductible'
+
+
+class CostBehavior(models.TextChoices):
+    FIXED_PER_OPERATION = 'FIXED_PER_OPERATION', 'Fixed per Operation'
+    VARIABLE_PER_UNIT   = 'VARIABLE_PER_UNIT',   'Variable per Unit'
+    VARIABLE_PER_WEIGHT = 'VARIABLE_PER_WEIGHT', 'Variable per Weight'
+    SEMI_VARIABLE       = 'SEMI_VARIABLE',       'Semi-variable'
+
+
+class AforoType(models.TextChoices):
+    VERDE    = 'VERDE',    'Verde (Levante Inmediato)'
+    AMARILLO = 'AMARILLO', 'Amarillo (Revisi\u00f3n Documental)'
+    ROJO     = 'ROJO',     'Rojo (Revisi\u00f3n F\u00edsica)'

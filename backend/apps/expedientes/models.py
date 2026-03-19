@@ -7,6 +7,7 @@ from .enums import (
     ExpedienteStatus, BlockedByType, DispatchMode, PaymentStatus,
     CreditClockStartRule, ArtifactStatus, AggregateType,
     RegisteredByType, CostLineVisibility, LogisticsMode, LogisticsSource,
+    CostCategory, CostBehavior, AforoType,
 )
 
 
@@ -40,6 +41,15 @@ class Expediente(TimestampMixin):
         related_name='expedientes_destino',
         help_text='Target node (triggers transfer suggestion on close)'
     )
+    external_fiscal_refs = models.JSONField(
+        default=dict, blank=True,
+        help_text='DANFE, DU-E, etc. (H5)'
+    )
+    aforo_type = models.CharField(
+        max_length=10, choices=AforoType.choices,
+        blank=True, null=True, help_text='H9'
+    )
+    aforo_date = models.DateField(blank=True, null=True, help_text='H9')
 
     class Meta:
         verbose_name = 'Expediente'
@@ -129,6 +139,25 @@ class CostLine(AppendOnlyModel):
         choices=CostLineVisibility.choices,
         default=CostLineVisibility.INTERNAL,
         help_text='internal=CEO-only, client=visible to client'
+    )
+    category = models.CharField(
+        max_length=20, choices=CostCategory.choices,
+        default=CostCategory.LANDED_COST, help_text='H2'
+    )
+    behavior = models.CharField(
+        max_length=20, choices=CostBehavior.choices,
+        default=CostBehavior.VARIABLE_PER_UNIT, help_text='H3'
+    )
+    exchange_rate = models.DecimalField(
+        max_digits=12, decimal_places=4,
+        blank=True, null=True, help_text='H8'
+    )
+    amount_base_currency = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        blank=True, null=True, help_text='H8 (USD)'
+    )
+    base_currency = models.CharField(
+        max_length=3, default='USD', help_text='H8'
     )
 
     class Meta:

@@ -523,8 +523,11 @@ def execute_command(expediente, command_name, data, user):
         # â”€â”€ C13: IssueInvoice (Sprint 4 enriched) â”€â”€
         if command_name == 'C13':
             _handle_issue_invoice(expediente, data, emitted_by, events)
-        # â”€â”€ Standard artifact creation (C2-C10, except C13) â”€â”€
-        elif 'creates_art' in spec and command_name not in ('C22',):
+        # â”€â”€ C4: DecideMode (H7 findings) â”€â”€
+        elif command_name == 'C4':
+            _handle_decide_mode(expediente, data, emitted_by, events, user)
+        # â”€â”€ Standard artifact creation (C2-C10, except C4, C13) â”€â”€
+        elif 'creates_art' in spec and command_name not in ('C22', 'C4', 'C13'):
             ArtifactInstance.objects.create(
                 expediente=expediente,
                 artifact_type=spec['creates_art'],
@@ -712,6 +715,51 @@ def _handle_issue_invoice(expediente, data, emitted_by, events):
     ArtifactInstance.objects.create(
         expediente=expediente,
         artifact_type='ART-09',
+        status='completed',
+        payload=payload,
+    )
+
+
+# â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
+# H7: Model C Viability Validation
+# â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
+
+def _handle_decide_mode(expediente, data, emitted_by, events, user):
+    """
+    C4: DecideMode handler.
+    Checks model viability (H7).
+    """
+    payload = data.get('payload', {})
+    mode = payload.get('mode', '').upper()
+    
+    # Update expediente mode
+    expediente.mode = mode
+    expediente.save(update_fields=['mode'])
+
+    # H7 Validation: Model C (COMISION) viability
+    if mode == 'COMISION':
+        # Check total PO from ART-01 or ART-02
+        art02_payload = _get_artifact(expediente, 'ART-02').payload if _has_artifact(expediente, 'ART-02') else {}
+        total_value = Decimal(str(art02_payload.get('total', 0)))
+        
+        # Arbitrary threshold for viability warning ($2000 as per MWT rules of thumb)
+        threshold = Decimal('2000.00')
+        if total_value < threshold:
+            event_warn = _create_event(
+                expediente,
+                event_type='business_rule.viability_warning',
+                emitted_by=emitted_by,
+                payload={
+                    'rule': 'H7:ModelC_Threshold',
+                    'message': f'FOB Total ${total_value} is below threshold ${threshold}. Model C (COMISION) might not be viable.',
+                    'severity': 'WARNING'
+                }
+            )
+            events.append(event_warn)
+
+    ArtifactInstance.objects.create(
+        expediente=expediente,
+        artifact_type='ART-03',
         status='completed',
         payload=payload,
     )
