@@ -37,6 +37,10 @@ export const PIPELINE_STATES = CANONICAL_STATES.filter(
 );
 
 export const TERMINAL_STATES = ["CERRADO", "CANCELADO"] as const;
+export const CANCELLABLE_STATES = ["REGISTRO", "PRODUCCION", "PREPARACION"] as const;
+export const COST_PHASES = CANONICAL_STATES.filter(s => !TERMINAL_STATES.includes(s as any));
+export const TIMELINE_STEPS = ["REGISTRO", "PRODUCCION", "PREPARACION", "DESPACHO", "TRANSITO", "EN_DESTINO", "CERRADO"] as const;
+
 
 // Estados lineales del timeline (sin CANCELADO — va como badge lateral)
 export const TIMELINE_STATES_CANONICAL = [

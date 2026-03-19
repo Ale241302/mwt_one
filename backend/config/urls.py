@@ -18,4 +18,6 @@ urlpatterns = [
     path('api/qr/', include('apps.qr.urls')),
     # Clientes
     path('api/clientes/', include('apps.clientes.urls')),
+    path('api/productos/', include('apps.productos.urls')),
+    path('api/portal/', include('apps.portal.urls')),
 ]

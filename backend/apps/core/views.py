@@ -145,8 +145,8 @@ class DashboardView(APIView):
 
         next_actions = [
             {
-                "id": str(e.id),
-                "ref_number": e.ref_number,
+                "id": str(e.expediente_id),
+                "ref_number": f"EXP-{str(e.expediente_id)[:8]}",
                 "client": e.client.legal_name if e.client else 'N/A',
                 "action": f"Revisar ({e.status})",
                 "urgency": "high" if getattr(e, 'credit_band', '') == "CRITICAL" else "medium"
@@ -155,8 +155,8 @@ class DashboardView(APIView):
         if not next_actions:
             next_actions = [
                 {
-                    "id": str(e.id),
-                    "ref_number": e.ref_number,
+                    "id": str(e.expediente_id),
+                    "ref_number": f"EXP-{str(e.expediente_id)[:8]}",
                     "client": e.client.legal_name if e.client else 'N/A',
                     "action": f"Avanzar ({e.status})",
                     "urgency": "normal"

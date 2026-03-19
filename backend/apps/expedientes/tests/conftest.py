@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
 
@@ -10,5 +10,12 @@ def api_client():
 
 @pytest.fixture
 def superuser(db):
-    user = User.objects.create_superuser('ceo', 'ceo@mwt.com', 'password')
+    user = User.objects.create(
+        username='ceo',
+        email='ceo@mwt.com',
+        is_superuser=True,
+        is_staff=True
+    )
+    user.set_password('password')
+    user.save()
     return user

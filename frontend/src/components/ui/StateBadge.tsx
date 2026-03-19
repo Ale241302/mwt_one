@@ -1,16 +1,8 @@
 'use client';
-import { STATE_LABELS, CanonicalState } from '@/lib/constants/states';
+import { STATE_LABELS, STATE_BADGE_CLASSES, CanonicalState } from '@/constants/states';
 
-const STATE_COLORS: Record<CanonicalState, string> = {
-  REGISTRO:    'bg-blue-50 text-blue-700',
-  PRODUCCION:  'bg-orange-50 text-orange-700',
-  PREPARACION: 'bg-amber-50 text-amber-700',
-  DESPACHO:    'bg-purple-50 text-purple-700',
-  TRANSITO:    'bg-sky-50 text-sky-700',
-  EN_DESTINO:  'bg-green-50 text-green-700',
-  CERRADO:     'bg-slate-100 text-slate-600',
-  CANCELADO:   'bg-red-50 text-red-600',
-};
+const STATE_COLORS: Record<string, string> = STATE_BADGE_CLASSES;
+
 
 interface StateBadgeProps {
   state: CanonicalState;

@@ -48,8 +48,8 @@ class ExpedienteStatus(models.TextChoices):
     TRANSITO    = 'TRANSITO',    'Tr\u00e1nsito'
     EN_DESTINO  = 'EN_DESTINO',  'En Destino'
     CERRADO     = 'CERRADO',     'Cerrado'
-    ARCHIVADO   = 'ARCHIVADO',   'Archivado'
     CANCELADO   = 'CANCELADO',   'Cancelado'
+
 
 
 class BlockedByType(models.TextChoices):

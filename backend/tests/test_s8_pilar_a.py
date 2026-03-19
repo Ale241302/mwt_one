@@ -101,8 +101,9 @@ class TestCalculateRetention(TestCase):
     def test_open_expediente_90_days(self):
         from apps.knowledge.utils import calculate_retention
         today = date.today()
-        exp = MagicMock(status='ABIERTO', closed_at=None)
+        exp = MagicMock(status='REGISTRO', closed_at=None)
         assert calculate_retention(expediente=exp) == today + timedelta(days=90)
+
 
     def test_closed_expediente_365_from_closed_at(self):
         from apps.knowledge.utils import calculate_retention

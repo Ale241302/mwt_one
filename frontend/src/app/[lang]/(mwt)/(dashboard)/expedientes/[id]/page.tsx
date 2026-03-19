@@ -16,6 +16,8 @@ import ExpedienteAccordion from "@/components/expediente/ExpedienteAccordion";
 import GateMessage from "@/components/expediente/GateMessage";
 import CostTable from "@/components/expediente/CostTable";
 import ArtifactModal from "@/components/expediente/ArtifactModal";
+import { CANONICAL_STATES, STATE_BADGE_CLASSES } from "@/constants/states";
+
 
 interface ExpedienteBundle {
   expediente: {
@@ -60,17 +62,8 @@ interface ExpedienteBundle {
   };
 }
 
-const STATE_BADGE_CLASSES: Record<string, string> = {
-  REGISTRO: "bg-[#EFF6FF] text-[#1D4ED8]",
-  PREPARACION: "bg-[#FEF3C7] text-[#D97706]",
-  PRODUCCION: "bg-[#FEF3C7] text-[#D97706]",
-  DESPACHO: "bg-[#FEF3C7] text-[#D97706]",
-  TRANSITO: "bg-[#FEF3C7] text-[#D97706]",
-  EN_DESTINO: "bg-[#FEF3C7] text-[#D97706]",
-  CERRADO: "bg-[#F0FAF6] text-[#0E8A6D]",
-  CANCELADO: "bg-[#FEF2F2] text-[#DC2626]",
-  BLOQUEADO: "bg-[#F1F5F9] text-[#475569]",
-};
+// STATE_BADGE_CLASSES is now imported from @/constants/states
+
 
 const CREDIT_BAND_COLORS = {
   MINT: "bg-[#F0FAF6] text-[#0E8A6D] border-[#BBF7D0]",
@@ -78,10 +71,8 @@ const CREDIT_BAND_COLORS = {
   RED: "bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]",
 };
 
-const CANONICAL_STATES = [
-  "REGISTRO", "PREPARACION", "PRODUCCION", 
-  "DESPACHO", "TRANSITO", "EN_DESTINO", "CERRADO"
-];
+// CANONICAL_STATES is now imported from @/constants/states
+
 
 // Requisitos para avanzar de cada fase según canonical workflow
 const PHASE_REQUIREMENTS: Record<string, string[]> = {
@@ -249,7 +240,8 @@ export default function ExpedienteDetailPage() {
       <div className="card p-5 overflow-x-auto hide-scrollbar">
         <div className="flex items-center min-w-max">
           {CANONICAL_STATES.map((state, idx) => {
-            const isPast = CANONICAL_STATES.indexOf(state) < CANONICAL_STATES.indexOf(currentState);
+            const isPast = CANONICAL_STATES.indexOf(state as any) < CANONICAL_STATES.indexOf(currentState as any);
+
             const isCurrent = state === currentState;
             return (
               <div key={state} className="flex items-center">

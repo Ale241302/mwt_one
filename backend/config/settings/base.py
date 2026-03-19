@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'apps.knowledge',
     # Clientes
     'apps.clientes',
+    'apps.productos',
+    'apps.portal',
 ]
 
 MIDDLEWARE = [

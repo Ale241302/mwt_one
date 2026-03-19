@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 import TechCard from './TechCard';
 import LanguageToggle from './LanguageToggle';
+import { COLORS } from '@/constants/colors';
 
 export type InsideProductProps = {
     productName: string;
@@ -16,7 +17,7 @@ export default function InsideProduct({
     productName,
     primaryColor,
     accentColor,
-    textColor = '#FFFFFF',
+    textColor = COLORS.WHITE,
     techs,
     seal,
     archProfiles
@@ -62,7 +63,7 @@ export default function InsideProduct({
                         </h3>
                         <div className="flex gap-4 justify-center flex-wrap">
                             {archProfiles.map((arch) => (
-                                <div key={arch} className="px-6 py-3 rounded-xl text-sm font-bold shadow-lg" style={{ backgroundColor: accentColor, color: primaryColor === '#FFFFFF' ? '#FFFFFF' : primaryColor }}>
+                                <div key={arch} className="px-6 py-3 rounded-xl text-sm font-bold shadow-lg" style={{ backgroundColor: accentColor, color: primaryColor === COLORS.WHITE ? COLORS.WHITE : primaryColor }}>
                                     {arch}
                                 </div>
                             ))}

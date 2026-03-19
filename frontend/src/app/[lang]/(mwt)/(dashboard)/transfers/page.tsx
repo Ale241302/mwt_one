@@ -39,13 +39,14 @@ function nodeId(n: Transfer["from_node"]): string {
 
 // ─── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; classes: string; icon: React.ReactNode }> = {
-  planned:     { label: "Planeado",     classes: "bg-[#F1F5F9] text-[#475569]",  icon: <Clock size={12} /> },
-  approved:    { label: "Aprobado",     classes: "bg-[#FFF7ED] text-[#B45309]",  icon: <CheckCircle size={12} /> },
-  in_transit:  { label: "En tránsito",  classes: "bg-[#EFF6FF] text-[#1D4ED8]",  icon: <Truck size={12} /> },
-  received:    { label: "Recibido",     classes: "bg-[#F5F3FF] text-[#7C3AED]",  icon: <Package size={12} /> },
-  reconciled:  { label: "Reconciliado", classes: "bg-[#F0FAF6] text-[#0E8A6D]",  icon: <CheckCircle size={12} /> },
-  cancelled:   { label: "Cancelado",    classes: "bg-[#FEF2F2] text-[#DC2626]",  icon: <XCircle size={12} /> },
+  planned:     { label: "Planeado",     classes: "badge-outline",  icon: <Clock size={12} /> },
+  approved:    { label: "Aprobado",     classes: "badge-warning",  icon: <CheckCircle size={12} /> },
+  in_transit:  { label: "En tránsito",  classes: "badge-info",  icon: <Truck size={12} /> },
+  received:    { label: "Recibido",     classes: "badge-navy",  icon: <Package size={12} /> },
+  reconciled:  { label: "Reconciliado", classes: "badge-success",  icon: <CheckCircle size={12} /> },
+  cancelled:   { label: "Cancelado",    classes: "badge-critical",  icon: <XCircle size={12} /> },
 };
+
 
 const STATUS_KEYS = Object.keys(STATUS_CONFIG);
 const FILTERS = ["todos", ...STATUS_KEYS] as const;
@@ -54,7 +55,7 @@ function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG["planned"];
   return (
     <span className={cn(
-      "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-[0.5px]",
+      "badge",
       cfg.classes
     )}>
       {cfg.icon} {cfg.label}
@@ -177,7 +178,7 @@ export default function TransfersPage() {
         </div>
         <Link
           href={`/${lang}/transfers/nuevo`}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white rounded-xl text-sm font-medium hover:bg-navy-dark transition-colors"
+          className="btn btn-md btn-primary"
         >
           <Plus size={16} /> Nuevo transfer
         </Link>
@@ -240,9 +241,9 @@ export default function TransfersPage() {
                     <td className="px-6 py-4 text-text-secondary capitalize">{t.legal_context ?? "—"}</td>
                     <td className="px-6 py-4">
                       {t.customs_required ? (
-                        <span className="text-xs text-[#B45309] bg-[#FFF7ED] px-2 py-0.5 rounded-full font-semibold">Sí</span>
+                        <span className="badge badge-warning">Sí</span>
                       ) : (
-                        <span className="text-xs text-text-secondary">No</span>
+                        <span className="text-xs text-text-tertiary">No</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-text-secondary text-xs">

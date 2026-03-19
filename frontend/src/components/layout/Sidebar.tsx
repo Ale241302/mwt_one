@@ -7,15 +7,16 @@ import { usePathname, useParams } from "next/navigation";
 import {
   LayoutDashboard, FolderOpen, Kanban, PieChart, Receipt,
   ArrowLeftRight, Network, Users2, Building2, Users,
-  LogOut, ChevronLeft, ChevronRight,
+  LogOut, ChevronLeft, ChevronRight, Package,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
-interface NavItem { label: string; href: string; icon: React.ReactNode; group: string; }
+interface NavItem { label: string; href: string; icon: React.ReactNode; group: string; roles?: string[]; }
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard",     href: "",              icon: <LayoutDashboard size={20} />, group: "core" },
+  { label: "Mi Portal",     href: "/portal",       icon: <Building2 size={20} />,       group: "core", roles: ["CLIENT_MARLUVAS", "CLIENT_TECMATER"] },
   { label: "Expedientes",   href: "/expedientes",  icon: <FolderOpen size={20} />,      group: "core" },
   { label: "Pipeline",      href: "/pipeline",     icon: <Kanban size={20} />,          group: "core" },
   { label: "Financiero",    href: "/financial",    icon: <PieChart size={20} />,         group: "financiero" },
@@ -24,6 +25,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Nodos",         href: "/nodos",        icon: <Network size={20} />,          group: "estructura" },
   { label: "Clientes",      href: "/clientes",     icon: <Users2 size={20} />,           group: "estructura" },
   { label: "Brands",        href: "/brands",       icon: <Building2 size={20} />,        group: "estructura" },
+  { label: "Productos",     href: "/productos",    icon: <Package size={20} />,          group: "estructura" },
   { label: "Usuarios",      href: "/usuarios",     icon: <Users size={20} />,            group: "admin" },
 ];
 
@@ -38,7 +40,7 @@ const GROUPS = ["core", "financiero", "estructura", "admin"];
 export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (open: boolean) => void }) {
   const pathname = usePathname();
   const params = useParams();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const lang = (params?.lang as string) || "es";
   const basePath = `/${lang}/dashboard`;
   const [isMobile, setIsMobile] = useState(false);
@@ -93,7 +95,11 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean; setIsO
       </div>
       <nav className="sidebar-nav">
         {GROUPS.map((group) => {
-          const items = NAV_ITEMS.filter((i) => i.group === group);
+          const items = NAV_ITEMS.filter((i) => {
+            if (i.group !== group) return false;
+            if (i.roles && user && !i.roles.includes(user.role)) return false;
+            return true;
+          });
           if (!items.length) return null;
           return (
             <div key={group} className={group !== "core" ? "mt-4" : ""}>

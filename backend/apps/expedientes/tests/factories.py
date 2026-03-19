@@ -1,14 +1,21 @@
-﻿from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model
 from apps.expedientes.models import Expediente, LegalEntity, ArtifactInstance
 from apps.expedientes.enums import DispatchMode, LegalEntityRole, ArtifactStatus
 
 User = get_user_model()
 
 def UserFactory(username='testuser', email='test@example.com', is_superuser=False):
-    user, _ = User.objects.get_or_create(username=username, defaults={
-        'email': email,
-        'is_superuser': is_superuser
-    })
+    user = User.objects.filter(username=username).first()
+    if user:
+        return user
+    user = User.objects.create(
+        username=username,
+        email=email,
+        is_superuser=is_superuser,
+        is_staff=is_superuser,
+    )
+    user.set_password('password123')
+    user.save()
     return user
 
 def LegalEntityFactory(entity_id='CL123'):

@@ -7,13 +7,12 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import ArtifactModal from "./ArtifactModal";
 import ArtifactRow from "./ArtifactRow";
+import { CANONICAL_STATES } from "@/constants/states";
 
 interface Artifact {
-  artifact_id: string;
   artifact_type: string;
-  status: "pending" | "completed" | "voided" | "superseded";
+  status: string;
   created_at: string;
-  payload: Record<string, unknown>;
 }
 
 interface ExpedienteAccordionProps {
@@ -23,17 +22,6 @@ interface ExpedienteAccordionProps {
   onRefresh: () => void;
   currentState: string;
 }
-
-// Canonical 7 states
-const CANONICAL_STATES = [
-  "REGISTRO",
-  "PREPARACION",
-  "PRODUCCION",
-  "DESPACHO",
-  "TRANSITO",
-  "EN_DESTINO",
-  "CERRADO"
-];
 
 const STATE_ARTIFACTS: Record<string, string[]> = {
   "REGISTRO": ["ART-01", "ART-02"],
@@ -63,7 +51,8 @@ export default function ExpedienteAccordion({
   expedienteId, artifacts, availableActions, onRefresh, currentState
 }: ExpedienteAccordionProps) {
   // Open current state by default
-  const [openPhases, setOpenPhases] = useState<Record<string, boolean>>({ [currentState === "ABIERTO" ? "REGISTRO" : currentState]: true });
+  const [openPhases, setOpenPhases] = useState<Record<string, boolean>>({ [currentState]: true });
+
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
   const toggle = (label: string) =>
@@ -95,7 +84,7 @@ export default function ExpedienteAccordion({
                 <span className="heading-sm font-semibold text-navy">{stateName}</span>
                 <span className="caption text-text-tertiary">{completedCount} / {stateArtifactTypes.length} completados</span>
                 {hasAvailable && (
-                  <span className="badge badge-primary text-[10px]">Acción disponible</span>
+                  <span className="badge badge-info text-[10px]">Acción disponible</span>
                 )}
               </div>
               {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}

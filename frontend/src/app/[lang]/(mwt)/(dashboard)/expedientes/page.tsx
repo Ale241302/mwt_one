@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/lib/api";
 import { Search, ShieldAlert, X, ArrowUp, ArrowDown, Folder, Plus } from "lucide-react";
+import { CANONICAL_STATES, STATE_LABELS, STATE_BADGE_CLASSES } from "@/constants/states";
+
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -23,10 +25,8 @@ interface Expediente {
     last_event_at: string | null;
 }
 
-const statusOptions = [
-    "REGISTRO", "EVALUACION_PREVIA", "FORMALIZACION", "PRODUCCION",
-    "QC", "TRANSITO", "ENTREGA", "CERRADO"
-];
+const statusOptions = CANONICAL_STATES;
+
 
 const brandOptions = [
     "SKECHERS", "ON", "SPEEDO", "TOMS", "ASICS", "VIVAIA", "TECMATER"
@@ -91,15 +91,9 @@ function ExpedientesContent() {
     });
 
     const getStatusBadgeColor = (status: string) => {
-        switch (status) {
-            case 'REGISTRO': return 'bg-ice-soft text-navy border-ice';
-            case 'EVALUACION_PREVIA': return 'bg-amber-soft text-amber border-amber/30';
-            case 'PRODUCCION': return 'bg-mint-soft text-mint-dark border-mint/30';
-            case 'TRANSITO': return 'bg-bg-alt text-text-secondary border-border';
-            case 'CERRADO': return 'bg-success-soft text-success border-success/30';
-            default: return 'bg-surface hover:bg-surface-hover border-border text-text-secondary';
-        }
+        return STATE_BADGE_CLASSES[status] ?? 'bg-surface hover:bg-surface-hover border-border text-text-secondary';
     };
+
 
     const getCreditColor = (band: string) => {
         if (band === 'CORAL' || band === 'RED') return 'bg-coral';

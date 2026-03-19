@@ -16,6 +16,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Package,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Nodos",    href: "/nodos",    icon: <Network size={20} />,   group: "estructura" },
   { label: "Clientes", href: "/clientes", icon: <Users2 size={20} />,    group: "estructura" },
   { label: "Brands",   href: "/brands",   icon: <Building2 size={20} />, group: "estructura" },
+  { label: "Productos", href: "/productos", icon: <Package size={20} />, group: "estructura" },
 ];
 
 const GROUP_LABELS: Record<string, string> = {

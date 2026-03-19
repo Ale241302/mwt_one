@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.core.exceptions import ValidationError
 
@@ -48,6 +48,7 @@ ROLE_PERMISSION_CEILING = {
 
 class MWTUser(AbstractUser):
     role            = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.CEO)
+    objects         = UserManager()
     legal_entity    = models.ForeignKey(
         'core.LegalEntity',
         null=True, blank=True,
@@ -55,6 +56,7 @@ class MWTUser(AbstractUser):
     )
     whatsapp_number = models.CharField(max_length=20, null=True, blank=True)
     is_api_user     = models.BooleanField(default=False)
+    is_blocked      = models.BooleanField(default=False)
     created_by      = models.ForeignKey(
         'self',
         null=True, blank=True,

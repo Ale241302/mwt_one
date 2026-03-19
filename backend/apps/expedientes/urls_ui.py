@@ -20,9 +20,6 @@ urlpatterns = [
     # Download endpoint
     path('documents/<uuid:artifact_id>/download/', DocumentDownloadView.as_view(), name='document-download'),
 
-    # Sprint 4 S4-11: Financial Dashboard
-    path('dashboard/financial/', FinancialDashboardView.as_view(), name='financial-dashboard'),
-
     # Legal Entities para formularios UI (e.g. Nuevo Expediente)
     path('legal-entities/', LegalEntitiesListView.as_view(), name='legal-entities'),
 ]
