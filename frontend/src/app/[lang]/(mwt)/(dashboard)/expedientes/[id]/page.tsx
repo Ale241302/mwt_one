@@ -53,7 +53,11 @@ interface ExpedienteBundle {
   costs: any[];
   payments: any[];
   documents: any[];
-  available_actions: string[];
+  available_actions: {
+    primary: any[];
+    secondary: any[];
+    ops: any[];
+  };
   credit_clock: {
     days: number;
     band: "MINT" | "AMBER" | "RED";
@@ -114,7 +118,25 @@ export default function ExpedienteDetailPage() {
     setError(null);
     try {
       const res = await api.get(`/ui/expedientes/${id}/`);
-      setBundle(res.data);
+      const data = res.data;
+      
+      // Sanitizar arrays para evitar .map is not a function
+      if (data) {
+        if (!Array.isArray(data.artifacts)) data.artifacts = [];
+        if (!Array.isArray(data.events)) data.events = [];
+        if (!Array.isArray(data.costs)) data.costs = [];
+        if (!Array.isArray(data.payments)) data.payments = [];
+        if (!Array.isArray(data.documents)) data.documents = [];
+        if (data.available_actions) {
+          if (!Array.isArray(data.available_actions.primary)) data.available_actions.primary = [];
+          if (!Array.isArray(data.available_actions.secondary)) data.available_actions.secondary = [];
+          if (!Array.isArray(data.available_actions.ops)) data.available_actions.ops = [];
+        } else {
+          data.available_actions = { primary: [], secondary: [], ops: [] };
+        }
+      }
+      
+      setBundle(data);
     } catch (e: any) {
       setError(e.message ?? "Error al cargar expediente");
     } finally {
@@ -158,7 +180,7 @@ export default function ExpedienteDetailPage() {
     reqs.forEach(reqName => {
       const artifactId = reqName.split(" ")[0]; // ej: "ART-01"
       if (artifactId.startsWith("ART-")) {
-        const hasCompletedArtifact = bundle.artifacts.some(
+        const hasCompletedArtifact = (bundle.artifacts || []).some(
           a => a.artifact_type === artifactId && a.status === "completed"
         );
         if (!hasCompletedArtifact) missing.push(reqName);
@@ -170,9 +192,19 @@ export default function ExpedienteDetailPage() {
     return missing;
   };
 
+  const hasAction = (actionId: string) => {
+    const actions = bundle.available_actions;
+    if (!actions) return false;
+    return (
+      actions.primary?.some((a: any) => a.id === actionId) ||
+      actions.secondary?.some((a: any) => a.id === actionId) ||
+      actions.ops?.some((a: any) => a.id === actionId)
+    );
+  };
+
   const missingReqs = calculateMissingRequirements();
   const gateCommand = GATE_ACTIONS[currentState];
-  const canAdvance = missingReqs.length === 0 && gateCommand && bundle.available_actions.includes(gateCommand);
+  const canAdvance = !!(missingReqs.length === 0 && gateCommand && hasAction(gateCommand));
 
   return (
     <div className="space-y-6">
@@ -205,16 +237,16 @@ export default function ExpedienteDetailPage() {
         </div>
         
         <div className="flex flex-wrap items-center gap-2">
-          {bundle.available_actions.includes("C17") && !expediente.is_blocked && (
+          {hasAction("C17") && !expediente.is_blocked && (
              <button className="btn btn-sm btn-outline text-coral border-coral/30 hover:bg-coral/5" onClick={() => setActiveModal("C17")}><Lock size={14}/> Bloquear</button>
           )}
-          {bundle.available_actions.includes("C18") && expediente.is_blocked && (
+          {hasAction("C18") && expediente.is_blocked && (
              <button className="btn btn-sm btn-outline text-success border-success/30 hover:bg-success/5" onClick={() => setActiveModal("C18")}><Lock size={14}/> Desbloquear</button>
           )}
           {/* Default actions */}
           <button className="btn btn-sm btn-secondary" onClick={() => setActiveModal("C15")}>Costos</button>
           <button className="btn btn-sm btn-secondary" onClick={() => setActiveModal("C21")}>Pagos</button>
-          {bundle.available_actions.includes("C16") && (
+          {hasAction("C16") && (
              <button className="btn btn-sm btn-outline text-coral" onClick={() => setActiveModal("C16")}>Cancelar</button>
           )}
           <button
@@ -304,7 +336,7 @@ export default function ExpedienteDetailPage() {
           
           <ExpedienteAccordion
             expedienteId={expediente.id}
-            artifacts={bundle.artifacts.map(a => ({
+            artifacts={(bundle.artifacts || []).map(a => ({
               artifact_id: a.id,
               artifact_type: a.artifact_type,
               status: a.status,
@@ -327,7 +359,7 @@ export default function ExpedienteDetailPage() {
               <div className="p-6 text-center text-text-tertiary text-sm absolute inset-0 flex items-center justify-center">Sin eventos aún.</div>
             ) : (
               <div className="divide-y divide-divider">
-                {bundle.events.map((ev) => (
+                {(bundle.events || []).map((ev) => (
                   <div key={ev.id} className="px-5 py-3.5 hover:bg-bg/50 transition-colors group">
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">

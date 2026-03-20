@@ -40,7 +40,7 @@ export default function CostTable({ expedienteId }: CostTableProps) {
     fetchCosts();
   }, [fetchCosts]);
 
-  const filteredCosts = internalView ? costs : costs.filter(c => c.visible_to_client);
+  const filteredCosts = internalView ? (costs || []) : (costs || []).filter(c => c.visible_to_client);
 
   if (loading) {
     return (
@@ -76,7 +76,7 @@ export default function CostTable({ expedienteId }: CostTableProps) {
         </button>
       </div>
       
-      {filteredCosts.length === 0 ? (
+      {(filteredCosts || []).length === 0 ? (
         <div className="p-6 text-center text-text-tertiary text-sm">
           No hay costos registrados.
         </div>
@@ -95,7 +95,7 @@ export default function CostTable({ expedienteId }: CostTableProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-divider text-sm text-navy">
-              {filteredCosts.map(cost => (
+              {(filteredCosts || []).map(cost => (
                 <tr key={cost.id} className="hover:bg-bg/50 transition-colors">
                   <td className="px-5 py-3 font-medium whitespace-nowrap">{cost.cost_type}</td>
                   <td className="px-5 py-3">{cost.description || "—"}</td>

@@ -18,7 +18,11 @@ interface Artifact {
 interface ExpedienteAccordionProps {
   expedienteId: string;
   artifacts: Artifact[];
-  availableActions: string[];
+  availableActions: {
+    primary: any[];
+    secondary: any[];
+    ops: any[];
+  } | string[]; // Support both for safety during transition
   onRefresh: () => void;
   currentState: string;
 }
@@ -50,6 +54,17 @@ const ARTIFACT_LABELS: Record<string, string> = {
 export default function ExpedienteAccordion({
   expedienteId, artifacts, availableActions, onRefresh, currentState
 }: ExpedienteAccordionProps) {
+  // Helper to check if a command is available
+  const hasAction = (actionId: string) => {
+    if (!availableActions) return false;
+    if (Array.isArray(availableActions)) return availableActions.includes(actionId);
+    return (
+      availableActions.primary?.some((a: any) => a.id === actionId) ||
+      availableActions.secondary?.some((a: any) => a.id === actionId) ||
+      availableActions.ops?.some((a: any) => a.id === actionId)
+    );
+  };
+
   // Open current state by default
   const [openPhases, setOpenPhases] = useState<Record<string, boolean>>({ [currentState]: true });
 
@@ -60,18 +75,18 @@ export default function ExpedienteAccordion({
 
   return (
     <div className="space-y-3">
-      {CANONICAL_STATES.map((stateName) => {
+      {(CANONICAL_STATES || []).map((stateName) => {
         const isOpen = !!openPhases[stateName];
         const stateArtifactTypes = STATE_ARTIFACTS[stateName] || [];
         
         // Hide CERRADO if no artifacts to show (which there normally aren't any)
         if (stateName === "CERRADO" && stateArtifactTypes.length === 0) return null;
 
-        const phaseArtifacts = artifacts.filter(a => stateArtifactTypes.includes(a.artifact_type));
+        const phaseArtifacts = (artifacts || []).filter(a => stateArtifactTypes.includes(a.artifact_type));
         const completedCount = phaseArtifacts.filter((a) => a.status === "completed").length;
         
         const commandsInState = stateArtifactTypes.map(type => ARTIFACT_COMMAND_MAP[type]).filter(Boolean);
-        const hasAvailable = commandsInState.some(cmd => availableActions.includes(cmd));
+        const hasAvailable = !!(commandsInState.some(cmd => hasAction(cmd)));
 
         return (
           <div key={stateName} className="card overflow-hidden">
@@ -96,11 +111,11 @@ export default function ExpedienteAccordion({
                   const cmdKey = ARTIFACT_COMMAND_MAP[artType];
                   if (!cmdKey) return null;
 
-                  const latestArt = artifacts.filter(a => a.artifact_type === artType).sort(
+                  const latestArt = (artifacts || []).filter(a => a.artifact_type === artType).sort(
                     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                   )[0];
                   
-                  const isAvailable = availableActions.includes(cmdKey);
+                  const isAvailable = hasAction(cmdKey);
 
                   return (
                     <ArtifactRow
