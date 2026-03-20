@@ -4,7 +4,7 @@ Ref: LOTE_SM_SPRINT5 Item 1
 """
 from django.conf import settings
 from django.db import models
-from apps.liquidations.enums import (
+from apps.liquidations.enums_exp import (
     LiquidationStatus, LiquidationLineConcept, MatchStatus
 )
 from apps.expedientes.models import Expediente, ArtifactInstance

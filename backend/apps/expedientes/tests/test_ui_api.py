@@ -1,9 +1,10 @@
-﻿import pytest
+import pytest
 from django.urls import reverse
 from rest_framework import status
 from .factories import ExpedienteFactory, ArtifactInstanceFactory, UserFactory, LegalEntityFactory
 from apps.expedientes.models import CostLine, Expediente
-from apps.expedientes.enums import ExpedienteStatus, ArtifactStatus
+from apps.expedientes.enums_exp import ExpedienteStatus
+from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
@@ -72,9 +73,9 @@ class TestUIAPI:
         for item in response.data['results']:
             assert item['status'] == 'REGISTRO'
 
-    # UI List â€” Expansion:
+    # UI List — Expansion:
     def test_list_pagination(self):
-        """test_list_pagination() â†’ paginaciÃ³n default=25 max=100"""
+        """test_list_pagination() → paginación default=25 max=100"""
         Expediente.objects.all().delete()
         for _ in range(30):
             ExpedienteFactory()
@@ -86,7 +87,7 @@ class TestUIAPI:
         assert 'next' in response.data
 
     def test_list_ordering_by_credit_days(self):
-        """test_list_ordering_by_credit_days() â†’ ordenamiento por credit_days_elapsed"""
+        """test_list_ordering_by_credit_days() → ordenamiento por credit_days_elapsed"""
         now = timezone.now()
         Expediente.objects.all().delete()
         e1 = ExpedienteFactory(credit_clock_started_at=now - timedelta(days=5))
@@ -97,7 +98,7 @@ class TestUIAPI:
         assert response.data['results'][0]['id'] == str(e2.pk)
 
     def test_list_ordering_by_date(self):
-        """test_list_ordering_by_date() â†’ ordenamiento por created_at"""
+        """test_list_ordering_by_date() → ordenamiento por created_at"""
         Expediente.objects.all().delete()
         e1 = ExpedienteFactory()
         e2 = ExpedienteFactory()
@@ -106,7 +107,7 @@ class TestUIAPI:
         assert response.data['results'][0]['id'] == str(e2.pk)
 
     def test_list_filter_is_blocked(self):
-        """test_list_filter_is_blocked() â†’ filtro ?is_blocked=true"""
+        """test_list_filter_is_blocked() → filtro ?is_blocked=true"""
         Expediente.objects.all().delete()
         ExpedienteFactory(is_blocked=True)
         ExpedienteFactory(is_blocked=False)
@@ -116,7 +117,7 @@ class TestUIAPI:
         assert response.data['results'][0]['is_blocked'] is True
 
     def test_list_filter_credit_band(self):
-        """test_list_filter_credit_band() â†’ filtro ?credit_band=CORAL"""
+        """test_list_filter_credit_band() → filtro ?credit_band=CORAL"""
         now = timezone.now()
         Expediente.objects.all().delete()
         # CRITICAL is > 30 days
@@ -126,7 +127,7 @@ class TestUIAPI:
         assert len(response.data['results']) == 1
 
     def test_list_aggregations(self):
-        """test_list_aggregations() â†’ total_cost via SQL annotate, no loop Python"""
+        """test_list_aggregations() → total_cost via SQL annotate, no loop Python"""
         exp = ExpedienteFactory()
         CostLine.objects.create(expediente=exp, amount=Decimal('150.50'), currency='USD', cost_type='FREIGHT', phase='ORIGIN')
         
@@ -135,9 +136,9 @@ class TestUIAPI:
         item = next(i for i in response.data['results'] if i['id'] == str(exp.pk))
         assert Decimal(item['total_cost']) == Decimal('150.50')
 
-    # UI Detail â€” Expansion:
+    # UI Detail — Expansion:
     def test_bundle_available_actions_registro(self):
-        """test_bundle_available_actions_registro() â†’ estado REGISTRO: C2 habilitado, C14 deshabilitado"""
+        """test_bundle_available_actions_registro() → estado REGISTRO: C2 habilitado, C14 deshabilitado"""
         exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
         url = reverse('expedientes-ui:bundle', kwargs={'pk': exp.pk})
         response = self.client_auth.get(url)
@@ -146,7 +147,7 @@ class TestUIAPI:
         assert any(a['id'] == 'C14' and not a['enabled'] for a in actions['secondary'])
 
     def test_bundle_available_actions_produccion(self):
-        """test_bundle_available_actions_produccion() â†’ estado PRODUCCION: C6-C10 segÃºn orden"""
+        """test_bundle_available_actions_produccion() → estado PRODUCCION: C6-C10 según orden"""
         exp = ExpedienteFactory(status=ExpedienteStatus.PRODUCCION)
         url = reverse('expedientes-ui:bundle', kwargs={'pk': exp.pk})
         response = self.client_auth.get(url)
@@ -154,7 +155,7 @@ class TestUIAPI:
         assert any(a['id'] == 'C6' for a in actions['primary'])
 
     def test_bundle_available_actions_cerrado(self):
-        """test_bundle_available_actions_cerrado() â†’ estado CERRADO: solo ops lectura"""
+        """test_bundle_available_actions_cerrado() → estado CERRADO: solo ops lectura"""
         exp = ExpedienteFactory(status=ExpedienteStatus.CERRADO)
         url = reverse('expedientes-ui:bundle', kwargs={'pk': exp.pk})
         response = self.client_auth.get(url)
@@ -163,7 +164,7 @@ class TestUIAPI:
         assert all(not a['enabled'] for a in actions['secondary'])
 
     def test_ops_c17_enabled_when_not_blocked(self):
-        """test_ops_c17_enabled_when_not_blocked() â†’ C17 enabled si is_blocked=false"""
+        """test_ops_c17_enabled_when_not_blocked() → C17 enabled si is_blocked=false"""
         exp = ExpedienteFactory(is_blocked=False)
         url = reverse('expedientes-ui:bundle', kwargs={'pk': exp.pk})
         response = self.client_auth.get(url)
@@ -171,7 +172,7 @@ class TestUIAPI:
         assert any(a['id'] == 'C17' and a['enabled'] for a in actions['ops'])
 
     def test_ops_c18_disabled_when_not_blocked(self):
-        """test_ops_c18_disabled_when_not_blocked() â†’ C18 disabled con disabled_reason"""
+        """test_ops_c18_disabled_when_not_blocked() → C18 disabled con disabled_reason"""
         exp = ExpedienteFactory(is_blocked=False)
         url = reverse('expedientes-ui:bundle', kwargs={'pk': exp.pk})
         response = self.client_auth.get(url)
@@ -181,7 +182,7 @@ class TestUIAPI:
         assert 'disabled_reason' in unblock_action
 
     def test_ops_c15_fields_contract(self):
-        """test_ops_c15_fields_contract() â†’ C15 fields: name, amount, currency, category"""
+        """test_ops_c15_fields_contract() → C15 fields: name, amount, currency, category"""
         exp = ExpedienteFactory()
         url = reverse('expedientes-ui:bundle', kwargs={'pk': exp.pk})
         response = self.client_auth.get(url)
@@ -190,7 +191,7 @@ class TestUIAPI:
         assert 'fields' in c15
 
     def test_available_actions_order(self):
-        """test_available_actions_order() â†’ Pipeline PRIMARY â†’ SECONDARY â†’ Ops"""
+        """test_available_actions_order() → Pipeline PRIMARY → SECONDARY → Ops"""
         exp = ExpedienteFactory()
         url = reverse('expedientes-ui:bundle', kwargs={'pk': exp.pk})
         response = self.client_auth.get(url)
@@ -200,7 +201,7 @@ class TestUIAPI:
 
     # Dashboard :
     def test_dashboard_active_count(self):
-        """test_dashboard_active_count() â†’ count correcto de expedientes activos"""
+        """test_dashboard_active_count() → count correcto de expedientes activos"""
         Expediente.objects.all().delete()
         ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
         ExpedienteFactory(status=ExpedienteStatus.CERRADO)
@@ -210,7 +211,7 @@ class TestUIAPI:
         assert response.data['active_count'] == 1
 
     def test_dashboard_alert_count(self):
-        """test_dashboard_alert_count() â†’ AMBER+CORAL correctamente sumados"""
+        """test_dashboard_alert_count() → AMBER+CORAL correctamente sumados"""
         now = timezone.now()
         Expediente.objects.all().delete()
         ExpedienteFactory(credit_clock_started_at=now - timedelta(days=20)) # WARNING/AMBER
@@ -220,7 +221,7 @@ class TestUIAPI:
         assert response.data['alert_count'] >= 2
 
     def test_dashboard_blocked_count(self):
-        """test_dashboard_blocked_count() â†’ is_blocked=True correctamente"""
+        """test_dashboard_blocked_count() → is_blocked=True correctamente"""
         Expediente.objects.all().delete()
         ExpedienteFactory(is_blocked=True)
         url = reverse('core-ui:dashboard')
@@ -228,7 +229,7 @@ class TestUIAPI:
         assert response.data['blocked_count'] == 1
 
     def test_dashboard_total_cost(self):
-        """test_dashboard_total_cost() â†’ SQL aggregation, no loop"""
+        """test_dashboard_total_cost() → SQL aggregation, no loop"""
         Expediente.objects.all().delete()
         exp = ExpedienteFactory()
         CostLine.objects.create(expediente=exp, amount=Decimal('1000.00'), currency='USD', cost_type='TEST')
@@ -237,7 +238,7 @@ class TestUIAPI:
         assert Decimal(response.data['total_cost']) >= Decimal('1000.00')
 
     def test_dashboard_top_risk(self):
-        """test_dashboard_top_risk() â†’ top 5 por credit_days DESC"""
+        """test_dashboard_top_risk() → top 5 por credit_days DESC"""
         now = timezone.now()
         Expediente.objects.all().delete()
         for i in range(10):
@@ -248,16 +249,16 @@ class TestUIAPI:
         assert response.data['top_risk'][0]['credit_days_elapsed'] > response.data['top_risk'][4]['credit_days_elapsed']
 
     def test_dashboard_blocked_list(self):
-        """test_dashboard_blocked_list() â†’ lista completa de bloqueados"""
+        """test_dashboard_blocked_list() → lista completa de bloqueados"""
         Expediente.objects.all().delete()
         exp = ExpedienteFactory(is_blocked=True)
         url = reverse('core-ui:dashboard')
         response = self.client_auth.get(url)
         assert any(item['id'] == str(exp.pk) for item in response.data['blocked_list'])
 
-    # RegresiÃ³n:
+    # Regresión:
     def test_regression_all_22_endpoints(self):
-        """test_regression_all_22_endpoints() â†’ C1-C21 + C19 + C20 siguen funcionales"""
+        """test_regression_all_22_endpoints() → C1-C21 + C19 + C20 siguen funcionales"""
         exp = ExpedienteFactory()
         urls = [
             reverse('expedientes:register-oc', kwargs={'pk': exp.pk}),

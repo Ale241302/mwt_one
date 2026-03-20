@@ -1,0 +1,136 @@
+from apps.expedientes import enums_exp
+
+COMMAND_SPEC = {
+    'C1': {
+        'name': 'Crear Expediente',
+        'requires_status': None,
+        'transition_to': enums_exp.ExpedienteStatus.REGISTRO,
+        'creates_art': 'ART-01'
+    },
+    'C2': {
+        'name': 'Registrar Proforma',
+        'requires_status': enums_exp.ExpedienteStatus.REGISTRO,
+        'creates_art': 'ART-02'
+    },
+    'C3': {
+        'name': 'Registrar Orden de Compra',
+        'requires_status': enums_exp.ExpedienteStatus.REGISTRO,
+        'creates_art': 'ART-03'
+    },
+    'C4': {
+        'name': 'Decidir Modo Import/Comision',
+        'requires_status': enums_exp.ExpedienteStatus.REGISTRO,
+        'creates_art': None
+    },
+    'C5': {
+        'name': 'Confirmar Registro',
+        'requires_status': enums_exp.ExpedienteStatus.REGISTRO,
+        'transition_to': enums_exp.ExpedienteStatus.PRODUCCION,
+        'creates_art': 'ART-04'
+    },
+    'C6': {
+        'name': 'Finalizar Producción',
+        'requires_status': enums_exp.ExpedienteStatus.PRODUCCION,
+        'transition_to': enums_exp.ExpedienteStatus.PREPARACION,
+        'creates_art': 'ART-05'
+    },
+    'C7': {
+        'name': 'Cargar Packing List',
+        'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
+        'creates_art': 'ART-06'
+    },
+    'C8': {
+        'name': 'Cargar Factura Comercial',
+        'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
+        'creates_art': 'ART-07'
+    },
+    'C9': {
+        'name': 'Cargar Certificado de Origen',
+        'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
+        'creates_art': 'ART-08'
+    },
+    'C10': {
+        'name': 'Cargar Otros Documentos',
+        'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
+        'creates_art': 'ART-13'
+    },
+    'C11': {
+        'name': 'Confirmar Salida Aduana (China)',
+        'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
+        'transition_to': enums_exp.ExpedienteStatus.TRANSITO,
+        'creates_art': 'ART-09'
+    },
+    'C12': {
+        'name': 'Confirmar Arribo CR',
+        'requires_status': enums_exp.ExpedienteStatus.TRANSITO,
+        'transition_to': enums_exp.ExpedienteStatus.EN_DESTINO,
+        'creates_art': 'ART-11'
+    },
+    'C13': {
+        'name': 'Registrar Factura MWT',
+        'requires_status': enums_exp.ExpedienteStatus.EN_DESTINO,
+        'creates_art': 'ART-12'
+    },
+    'C14': {
+        'name': 'Finalizar Expediente',
+        'requires_status': enums_exp.ExpedienteStatus.EN_DESTINO,
+        'transition_to': enums_exp.ExpedienteStatus.CERRADO,
+        'creates_art': None
+    },
+    'C15': {
+        'name': 'Registrar Gasto (Financial)',
+        'requires_status': None,
+        'creates_art': None
+    },
+    'C16': {
+        'name': 'Cancelar Expediente',
+        'requires_status': None,
+        'transition_to': enums_exp.ExpedienteStatus.CANCELADO,
+        'creates_art': None
+    },
+    'C17': {
+        'name': 'Bloquear Expediente',
+        'requires_status': None,
+        'creates_art': None
+    },
+    'C18': {
+        'name': 'Desbloquear Expediente',
+        'requires_status': None,
+        'creates_art': None
+    },
+    'C19': {
+        'name': 'Supersede Artifact',
+        'requires_status': None,
+        'creates_art': None
+    },
+    'C20': {
+        'name': 'Void Artifact',
+        'requires_status': None,
+        'creates_art': None
+    },
+    'C21': {
+        'name': 'Registrar Pago (Financial)',
+        'requires_status': None,
+        'creates_art': None
+    },
+    'C22': {
+        'name': 'Factura Comisión (COMISION mode)',
+        'requires_status': enums_exp.ExpedienteStatus.EN_DESTINO,
+        'creates_art': 'ART-10'
+    },
+    'C23': {
+        'name': 'Agregar Opción Logística (ART-19)',
+        'requires_status': None,
+        'creates_art': None
+    },
+    'C24': {
+        'name': 'Decidir Logística (ART-19)',
+        'requires_status': None,
+        'creates_art': None
+    },
+    'C30': {
+        'name': 'Materializar Logística (Sprint 4)',
+        'requires_status': None,
+        'creates_art': 'ART-11'
+    }
+}

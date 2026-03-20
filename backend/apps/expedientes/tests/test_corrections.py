@@ -1,6 +1,7 @@
-﻿import pytest
+import pytest
 from apps.expedientes.models import ArtifactInstance, EventLog
-from apps.expedientes.enums import ExpedienteStatus, ArtifactStatus
+from apps.expedientes.enums_exp import ExpedienteStatus
+from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 from apps.expedientes.services import supersede_artifact, void_artifact, execute_command
 from .factories import ExpedienteFactory, ArtifactInstanceFactory, UserFactory
 
@@ -11,7 +12,7 @@ def test_supersede_artifact_happy_path():
     art = ArtifactInstanceFactory(
         expediente=exp,
         artifact_type='ART-01',
-        status=ArtifactStatus.COMPLETED,
+        status=ArtifactStatusEnum.COMPLETED,
         payload={'data': 'old'}
     )
     
@@ -19,7 +20,7 @@ def test_supersede_artifact_happy_path():
     exp, new_art, event = supersede_artifact(art.artifact_id, new_payload, user)
     
     art.refresh_from_db()
-    assert art.status == ArtifactStatus.SUPERSEDED
+    assert art.status == ArtifactStatusEnum.SUPERSEDED
     assert art.superseded_by == new_art
     assert new_art.payload == new_payload
     assert event.event_type == 'artifact.superseded'
@@ -33,7 +34,7 @@ def test_supersede_artifact_triggers_block():
     art = ArtifactInstanceFactory(
         expediente=exp,
         artifact_type='ART-01',
-        status=ArtifactStatus.COMPLETED
+        status=ArtifactStatusEnum.COMPLETED
     )
     
     exp, new_art, event = supersede_artifact(art.artifact_id, {}, user)
@@ -54,15 +55,15 @@ def test_void_artifact_art09_only():
     exp = ExpedienteFactory(status=ExpedienteStatus.EN_DESTINO)
     
     # 1. Try to void ART-01 (should fail)
-    art01 = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatus.COMPLETED)
+    art01 = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatusEnum.COMPLETED)
     with pytest.raises(Exception): # CommandValidationError
         void_artifact(art01.artifact_id, user)
         
     # 2. Void ART-09 (should work)
-    art09 = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-09', status=ArtifactStatus.COMPLETED)
+    art09 = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-09', status=ArtifactStatusEnum.COMPLETED)
     exp, voided_art, event = void_artifact(art09.artifact_id, user)
     
-    assert voided_art.status == ArtifactStatus.VOID
+    assert voided_art.status == ArtifactStatusEnum.VOID
     assert event.event_type == 'artifact.voided'
 
 @pytest.mark.django_db
@@ -72,7 +73,7 @@ def test_void_artifact_triggers_block():
     # Note: Terminal states check happens before block check.
     # Actually, if CERRADO, it should raise error.
     exp = ExpedienteFactory(status=ExpedienteStatus.CERRADO)
-    art = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-09', status=ArtifactStatus.COMPLETED)
+    art = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-09', status=ArtifactStatusEnum.COMPLETED)
     
     with pytest.raises(Exception): # Terminal state check
         void_artifact(art.artifact_id, user)
@@ -81,7 +82,7 @@ def test_void_artifact_triggers_block():
 def test_artifact_correction_terminal_state_denied():
     user = UserFactory(is_superuser=True)
     exp = ExpedienteFactory(status=ExpedienteStatus.CANCELADO)
-    art = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatus.COMPLETED)
+    art = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatusEnum.COMPLETED)
     
     with pytest.raises(Exception):
         supersede_artifact(art.artifact_id, {}, user)
@@ -91,7 +92,7 @@ def test_supersede_artifact_not_completed():
     """Cannot supersede an artifact that is not yet completed."""
     user = UserFactory(is_superuser=True)
     exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
-    art = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatus.DRAFT)
+    art = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatusEnum.DRAFT)
     
     with pytest.raises(Exception):
         supersede_artifact(art.artifact_id, {}, user)
@@ -101,7 +102,7 @@ def test_void_artifact_not_art09():
     """Only ART-09 can be voided."""
     user = UserFactory(is_superuser=True)
     exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
-    art = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatus.COMPLETED)
+    art = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatusEnum.COMPLETED)
     
     with pytest.raises(Exception):
         void_artifact(art.artifact_id, user)
@@ -111,7 +112,7 @@ def test_supersede_artifact_atomicity():
     """Verify that if something fails, no changes are committed."""
     user = UserFactory(is_superuser=True)
     exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
-    art = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatus.COMPLETED)
+    art = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatusEnum.COMPLETED)
     
     # Mocking something to fail downstream might be complex, 
     # but the logic is wrapped in transaction.atomic().
@@ -121,14 +122,14 @@ def test_supersede_artifact_atomicity():
         supersede_artifact(None, {}, user)
     
     art.refresh_from_db()
-    assert art.status == ArtifactStatus.COMPLETED
+    assert art.status == ArtifactStatusEnum.COMPLETED
 
 @pytest.mark.django_db
 def test_supersede_artifact_already_superseded():
     """Verification of chaining corrections."""
     user = UserFactory(is_superuser=True)
     exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
-    art1 = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatus.COMPLETED)
+    art1 = ArtifactInstanceFactory(expediente=exp, artifact_type='ART-01', status=ArtifactStatusEnum.COMPLETED)
     
     # Supersede once
     exp, art2, event = supersede_artifact(art1.artifact_id, {'v': 2}, user)
@@ -139,5 +140,6 @@ def test_supersede_artifact_already_superseded():
         
     # Supersede art2 (should work)
     exp, art3, event = supersede_artifact(art2.artifact_id, {'v': 3}, user)
-    assert art2.status == ArtifactStatus.SUPERSEDED
-    assert art3.status == ArtifactStatus.COMPLETED
+    art2.refresh_from_db()
+    assert art2.status == ArtifactStatusEnum.SUPERSEDED
+    assert art3.status == ArtifactStatusEnum.COMPLETED

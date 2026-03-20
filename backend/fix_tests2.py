@@ -1,4 +1,4 @@
-﻿import os
+import os
 import re
 
 tests_dir = 'apps/expedientes/tests'

@@ -1,5 +1,5 @@
-﻿"""
-Sprint 1 â€” Read + Write Serializers
+"""
+Sprint 1 — Read + Write Serializers
 Ref: LOTE_SM_SPRINT1 Items 1A + 1B
 """
 from rest_framework import serializers
@@ -8,9 +8,9 @@ from apps.expedientes.models import (
 )
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ──────────────────────────────────────────────────
 # READ SERIALIZERS (Item 1A)
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ──────────────────────────────────────────────────
 
 class EventLogSerializer(serializers.ModelSerializer):
     class Meta:
@@ -81,12 +81,12 @@ class ExpedienteSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ──────────────────────────────────────────────────
 # WRITE SERIALIZERS (Item 1B)
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ──────────────────────────────────────────────────
 
 class ExpedienteCreateSerializer(serializers.Serializer):
-    """C1: CreateExpediente â€” inputs."""
+    """C1: CreateExpediente — inputs."""
     legal_entity_id = serializers.CharField(max_length=50, required=True)
     brand = serializers.CharField(max_length=50, required=False, default='marluvas')
     destination = serializers.ChoiceField(choices=['CR', 'USA'], default='CR')
@@ -103,12 +103,12 @@ class ExpedienteCreateSerializer(serializers.Serializer):
 
 class ArtifactPayloadSerializer(serializers.Serializer):
     """Generic serializer for commands C2-C10 that create artifacts.
-    Payload is a JSON object â€” validation is intentionally lenient in MVP."""
+    Payload is a JSON object — validation is intentionally lenient in MVP."""
     payload = serializers.DictField(required=False, default=dict)
 
 
 class RegisterCostSerializer(serializers.Serializer):
-    """C15: RegisterCost â€” inputs."""
+    """C15: RegisterCost — inputs."""
     cost_type = serializers.CharField(max_length=50)
     amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     currency = serializers.CharField(max_length=3)
@@ -117,7 +117,7 @@ class RegisterCostSerializer(serializers.Serializer):
 
 
 class RegisterPaymentSerializer(serializers.Serializer):
-    """C21: RegisterPayment â€” inputs."""
+    """C21: RegisterPayment — inputs."""
     amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     currency = serializers.CharField(max_length=3)
     method = serializers.CharField(max_length=50)
@@ -125,5 +125,5 @@ class RegisterPaymentSerializer(serializers.Serializer):
 
 
 class SupersedeArtifactSerializer(serializers.Serializer):
-    """C19: SupersedeArtifact â€” inputs."""
+    """C19: SupersedeArtifact — inputs."""
     payload = serializers.DictField(required=True)

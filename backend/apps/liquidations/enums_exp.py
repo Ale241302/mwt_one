@@ -1,4 +1,4 @@
-﻿from django.db import models
+from django.db import models
 
 
 class LiquidationStatus(models.TextChoices):
@@ -9,7 +9,7 @@ class LiquidationStatus(models.TextChoices):
 
 
 class LiquidationLineConcept(models.TextChoices):
-    COMISION = "comision", "ComisiÃ³n"
+    COMISION = "comision", "Comisión"
     PREMIO = "premio", "Premio"
     AJUSTE = "ajuste", "Ajuste"
     OTRO = "otro", "Otro"

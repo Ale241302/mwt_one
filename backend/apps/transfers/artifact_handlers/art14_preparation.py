@@ -1,15 +1,15 @@
-﻿import uuid
+import uuid
 from django.utils import timezone
 from django.db import transaction
 from apps.transfers.models import Transfer
-from apps.transfers.enums import TransferStatus
+from apps.transfers.enums_exp import TransferStatus
 from apps.expedientes.models import ArtifactInstance
-from apps.expedientes.enums import ArtifactStatus
+from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 
 
 def create_preparation_artifact(transfer: Transfer, payload: dict, user) -> ArtifactInstance:
     """
-    C36 â€” Create ART-14 (Preparation).
+    C36 — Create ART-14 (Preparation).
     Pre-condition: status == APPROVED.
     Generates ART-14.
     """
@@ -20,7 +20,7 @@ def create_preparation_artifact(transfer: Transfer, payload: dict, user) -> Arti
         artifact = ArtifactInstance.objects.create(
             expediente=transfer.source_expediente,  # Allow NULL if model permits, though it's typically required
             artifact_type="ART-14",
-            status=ArtifactStatus.COMPLETED,
+            status=ArtifactStatusEnum.COMPLETED,
             payload={
                 "transfer_id": transfer.transfer_id,
                 **payload

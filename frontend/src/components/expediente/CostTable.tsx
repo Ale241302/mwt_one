@@ -40,7 +40,7 @@ export default function CostTable({ expedienteId }: CostTableProps) {
     fetchCosts();
   }, [fetchCosts]);
 
-  const filteredCosts = internalView ? (costs || []) : (costs || []).filter(c => c.visible_to_client);
+  const filteredCosts = internalView ? (Array.isArray(costs) ? costs : []) : (Array.isArray(costs) ? costs : []).filter(c => c.visible_to_client);
 
   if (loading) {
     return (
@@ -95,7 +95,7 @@ export default function CostTable({ expedienteId }: CostTableProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-divider text-sm text-navy">
-              {(filteredCosts || []).map(cost => (
+              {(Array.isArray(filteredCosts) ? filteredCosts : []).map(cost => (
                 <tr key={cost.id} className="hover:bg-bg/50 transition-colors">
                   <td className="px-5 py-3 font-medium whitespace-nowrap">{cost.cost_type}</td>
                   <td className="px-5 py-3">{cost.description || "—"}</td>

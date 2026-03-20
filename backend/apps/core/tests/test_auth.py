@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from django.urls import reverse
 from rest_framework import status
 from django.contrib.auth import get_user_model
@@ -21,7 +21,7 @@ class TestAuthAPI:
         self.me_url = reverse('core:me')
 
     def test_login_success(self):
-        """test_login_success() â†’ POST /api/auth/login/ â†’ 200 + session + user info"""
+        """test_login_success() → POST /api/auth/login/ → 200 + session + user info"""
         response = self.client.post(self.login_url, {
             'username': 'testuser',
             'password': 'testpassword123'
@@ -33,7 +33,7 @@ class TestAuthAPI:
         assert 'sessionid' in response.cookies
 
     def test_login_fail_wrong_password(self):
-        """test_login_fail_wrong_password() â†’ POST /api/auth/login/ â†’ 401"""
+        """test_login_fail_wrong_password() → POST /api/auth/login/ → 401"""
         response = self.client.post(self.login_url, {
             'username': 'testuser',
             'password': 'wrongpassword'
@@ -41,7 +41,7 @@ class TestAuthAPI:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_logout_clears_session(self):
-        """test_logout_clears_session() â†’ POST /api/auth/logout/ â†’ 200 + sesiÃ³n limpia"""
+        """test_logout_clears_session() → POST /api/auth/logout/ → 200 + sesión limpia"""
         self.client.login(username='testuser', password='testpassword123')
         response = self.client.post(self.logout_url)
         assert response.status_code == status.HTTP_200_OK
@@ -51,14 +51,14 @@ class TestAuthAPI:
         assert me_response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
 
     def test_me_authenticated(self):
-        """test_me_authenticated() â†’ GET /api/auth/me/ â†’ 200 + user info"""
+        """test_me_authenticated() → GET /api/auth/me/ → 200 + user info"""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.me_url)
         assert response.status_code == status.HTTP_200_OK
         assert response.data['user']['username'] == 'testuser'
 
     def test_me_unauthenticated_has_csrf(self):
-        """test_me_unauthenticated_has_csrf()â†’ GET /api/auth/me/ â†’ 401/403 PERO csrftoken cookie SIEMPRE presente (S3-D06)"""
+        """test_me_unauthenticated_has_csrf()→ GET /api/auth/me/ → 401/403 PERO csrftoken cookie SIEMPRE presente (S3-D06)"""
         response = self.client.get(self.me_url)
         assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
         assert 'csrftoken' in response.cookies

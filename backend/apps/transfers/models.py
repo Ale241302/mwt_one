@@ -7,7 +7,7 @@ import uuid
 from datetime import date
 from django.db import models
 from django.core.exceptions import ValidationError
-from apps.transfers.enums import (
+from apps.transfers.enums_exp import (
     NodeType, NodeStatus, LegalContext, TransferStatus, TransferLineCondition
 )
 from apps.core.models import LegalEntity

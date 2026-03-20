@@ -1,4 +1,4 @@
-﻿import os
+import os
 
 filepath = 'apps/expedientes/tests/test_commands.py'
 with open(filepath, 'r', encoding='utf-8') as f:

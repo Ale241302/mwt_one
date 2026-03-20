@@ -1,15 +1,15 @@
-﻿import uuid
+import uuid
 from django.utils import timezone
 from django.db import transaction
 from apps.transfers.models import Transfer
-from apps.transfers.enums import TransferStatus
+from apps.transfers.enums_exp import TransferStatus
 from apps.expedientes.models import ArtifactInstance
-from apps.expedientes.enums import ArtifactStatus
+from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 
 
 def create_reception_artifact(transfer: Transfer, lines_data: list, payload: dict, user) -> ArtifactInstance:
     """
-    C38 â€” Create ART-13 (Reception).
+    C38 — Create ART-13 (Reception).
     Pre-condition: status == IN_TRANSIT.
     Changes status to RECEIVED. Updates TransferLines.
     """
@@ -27,7 +27,7 @@ def create_reception_artifact(transfer: Transfer, lines_data: list, payload: dic
         artifact = ArtifactInstance.objects.create(
             expediente=transfer.source_expediente,
             artifact_type="ART-13",
-            status=ArtifactStatus.COMPLETED,
+            status=ArtifactStatusEnum.COMPLETED,
             payload={
                 "transfer_id": transfer.transfer_id,
                 "lines_data": lines_data,

@@ -1,15 +1,15 @@
-﻿import uuid
+import uuid
 from django.utils import timezone
 from django.db import transaction
 from apps.transfers.models import Transfer
-from apps.transfers.enums import TransferStatus
+from apps.transfers.enums_exp import TransferStatus
 from apps.expedientes.models import ArtifactInstance
-from apps.expedientes.enums import ArtifactStatus
+from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 
 
 def create_dispatch_artifact(transfer: Transfer, payload: dict, user) -> ArtifactInstance:
     """
-    C37 â€” Create ART-15 (Dispatch).
+    C37 — Create ART-15 (Dispatch).
     Pre-condition: ART-14 exists for this transfer.
     Changes status to IN_TRANSIT.
     """
@@ -22,7 +22,7 @@ def create_dispatch_artifact(transfer: Transfer, payload: dict, user) -> Artifac
         art_14s = ArtifactInstance.objects.filter(
             expediente=transfer.source_expediente, 
             artifact_type="ART-14", 
-            status=ArtifactStatus.COMPLETED
+            status=ArtifactStatusEnum.COMPLETED
         )
         # Verify it's actually for this transfer
         art_14_exists = any(a.payload.get("transfer_id") == transfer.transfer_id for a in art_14s)
@@ -33,7 +33,7 @@ def create_dispatch_artifact(transfer: Transfer, payload: dict, user) -> Artifac
         artifact = ArtifactInstance.objects.create(
             expediente=transfer.source_expediente,
             artifact_type="ART-15",
-            status=ArtifactStatus.COMPLETED,
+            status=ArtifactStatusEnum.COMPLETED,
             payload={
                 "transfer_id": transfer.transfer_id,
                 **payload

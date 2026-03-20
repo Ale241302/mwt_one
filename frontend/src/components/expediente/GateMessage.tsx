@@ -38,7 +38,7 @@ export default function GateMessage({ requiredToAdvance, currentState }: GateMes
           Requisitos para avanzar
         </h4>
         <ul className="text-xs text-amber-700/80 space-y-1 mt-2">
-          {requiredToAdvance.map((req, i) => (
+          {(Array.isArray(requiredToAdvance) ? requiredToAdvance : []).map((req, i) => (
             <li key={i} className="flex items-center gap-2">
               <ArrowRight size={10} /> {req}
             </li>

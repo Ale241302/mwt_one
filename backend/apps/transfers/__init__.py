@@ -1,1 +1,1 @@
-﻿# Sprint 5 S5-01: Transfers module
+# Sprint 5 S5-01: Transfers module

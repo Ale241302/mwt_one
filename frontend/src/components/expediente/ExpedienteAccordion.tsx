@@ -58,10 +58,12 @@ export default function ExpedienteAccordion({
   const hasAction = (actionId: string) => {
     if (!availableActions) return false;
     if (Array.isArray(availableActions)) return availableActions.includes(actionId);
+    
+    const { primary, secondary, ops } = availableActions as any;
     return (
-      availableActions.primary?.some((a: any) => a.id === actionId) ||
-      availableActions.secondary?.some((a: any) => a.id === actionId) ||
-      availableActions.ops?.some((a: any) => a.id === actionId)
+      (Array.isArray(primary) && primary.some((a: any) => a.id === actionId)) ||
+      (Array.isArray(secondary) && secondary.some((a: any) => a.id === actionId)) ||
+      (Array.isArray(ops) && ops.some((a: any) => a.id === actionId))
     );
   };
 
@@ -75,14 +77,14 @@ export default function ExpedienteAccordion({
 
   return (
     <div className="space-y-3">
-      {(CANONICAL_STATES || []).map((stateName) => {
+      {Array.isArray(CANONICAL_STATES) && CANONICAL_STATES.map((stateName) => {
         const isOpen = !!openPhases[stateName];
-        const stateArtifactTypes = STATE_ARTIFACTS[stateName] || [];
+        const stateArtifactTypes = Array.isArray(STATE_ARTIFACTS[stateName]) ? STATE_ARTIFACTS[stateName] : [];
         
         // Hide CERRADO if no artifacts to show (which there normally aren't any)
         if (stateName === "CERRADO" && stateArtifactTypes.length === 0) return null;
 
-        const phaseArtifacts = (artifacts || []).filter(a => stateArtifactTypes.includes(a.artifact_type));
+        const phaseArtifacts = (Array.isArray(artifacts) ? artifacts : []).filter(a => stateArtifactTypes.includes(a.artifact_type));
         const completedCount = phaseArtifacts.filter((a) => a.status === "completed").length;
         
         const commandsInState = stateArtifactTypes.map(type => ARTIFACT_COMMAND_MAP[type]).filter(Boolean);
@@ -111,7 +113,7 @@ export default function ExpedienteAccordion({
                   const cmdKey = ARTIFACT_COMMAND_MAP[artType];
                   if (!cmdKey) return null;
 
-                  const latestArt = (artifacts || []).filter(a => a.artifact_type === artType).sort(
+                  const latestArt = (Array.isArray(artifacts) ? artifacts : []).filter(a => a.artifact_type === artType).sort(
                     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                   )[0];
                   

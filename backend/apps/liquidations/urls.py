@@ -1,4 +1,4 @@
-﻿from django.urls import path
+from django.urls import path
 from apps.liquidations import views
 
 app_name = 'liquidations'

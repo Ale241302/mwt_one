@@ -1,4 +1,4 @@
-﻿from django.contrib import admin
+from django.contrib import admin
 from .models import LegalEntity, Expediente, ArtifactInstance, EventLog, CostLine, PaymentLine, LogisticsOption
 
 @admin.register(LegalEntity)

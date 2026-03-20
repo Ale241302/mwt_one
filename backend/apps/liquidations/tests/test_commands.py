@@ -1,13 +1,13 @@
-﻿import pytest
+import pytest
 from unittest.mock import patch
 from rest_framework import status
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from apps.liquidations.models import Liquidation, LiquidationLine
-from apps.liquidations.enums import LiquidationStatus, MatchStatus, LiquidationLineConcept
+from apps.liquidations.enums_exp import LiquidationStatus, MatchStatus, LiquidationLineConcept
 from apps.expedientes.models import Expediente, LegalEntity, ArtifactInstance
-from apps.expedientes.enums import ExpedienteStatus
+from apps.expedientes.enums_exp import ExpedienteStatus
 
 User = get_user_model()
 
@@ -21,7 +21,7 @@ class TestLiquidationCommands:
         self.client.force_authenticate(user=self.admin_user)
         
         # Setup Legal Entity
-        from apps.expedientes.enums import LegalEntityRole, LegalEntityRelationship, LegalEntityFrontend, LegalEntityVisibility, PricingVisibility
+        from apps.expedientes.enums_exp import LegalEntityRole, LegalEntityRelationship, LegalEntityFrontend, LegalEntityVisibility, PricingVisibility
         self.le = LegalEntity.objects.create(
             entity_id="LE_MARLUVAS", legal_name="Marluvas", country="BR", role=LegalEntityRole.DISTRIBUTOR, 
             relationship_to_mwt=LegalEntityRelationship.DISTRIBUTION, frontend=LegalEntityFrontend.EXTERNAL, 

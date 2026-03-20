@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from apps.expedientes.models import Expediente, LegalEntity, ArtifactInstance
-from apps.expedientes.enums import DispatchMode, LegalEntityRole, ArtifactStatus
+from apps.expedientes.enums_exp import DispatchMode, LegalEntityRole
+from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 
 User = get_user_model()
 
@@ -30,14 +31,28 @@ def LegalEntityFactory(entity_id='CL123'):
     return le
 
 def ExpedienteFactory(**kwargs):
+    from apps.brands.models import Brand
+    
+    brand_input = kwargs.pop('brand', 'MARLUVAS')
+    if isinstance(brand_input, str):
+        brand_slug = brand_input.lower()
+        brand, _ = Brand.objects.get_or_create(
+            slug=brand_slug,
+            defaults={'name': brand_slug.upper()}
+        )
+    else:
+        brand = brand_input
+
     le = LegalEntityFactory()
     defaults = {
         'legal_entity': le,
         'client': le,
-        'brand': 'MARLUVAS',
+        'brand': brand,
         'mode': 'IMPORT',
         'freight_mode': 'FCL',
         'dispatch_mode': DispatchMode.MWT,
+        'status': 'REGISTRO',
+        'payment_status': 'pending',
     }
     defaults.update(kwargs)
     return Expediente.objects.create(**defaults)
@@ -47,7 +62,7 @@ def ArtifactInstanceFactory(**kwargs):
         kwargs['expediente'] = ExpedienteFactory()
     defaults = {
         'artifact_type': 'ART-01',
-        'status': ArtifactStatus.DRAFT,
+        'status': ArtifactStatusEnum.DRAFT,
         'payload': {}
     }
     defaults.update(kwargs)

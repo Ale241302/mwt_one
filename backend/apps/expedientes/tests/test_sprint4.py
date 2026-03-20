@@ -1,5 +1,5 @@
-﻿"""
-Sprint 4 â€” Comprehensive Test Suite (S4-12)
+"""
+Sprint 4 — Comprehensive Test Suite (S4-12)
 Tests cover: models, enums, services (all commands), doble vista costs,
              ART-09 invoice, financial comparison, logistics C22/C23/C24,
              Tecmater brand logic, views endpoints, mirror-pdf.
@@ -16,9 +16,10 @@ from apps.expedientes.models import (
     LegalEntity, Expediente, ArtifactInstance, EventLog,
     CostLine, PaymentLine, LogisticsOption,
 )
-from apps.expedientes.enums import (
-    Brand, CostLineVisibility, ArtifactStatus, LogisticsMode, LogisticsSource,
+from apps.expedientes.enums_exp import (
+    Brand, CostLineVisibility, LogisticsMode, LogisticsSource,
 )
+from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 from apps.expedientes.services import (
     create_expediente, execute_command, can_execute_command,
     can_transition_to, supersede_artifact, void_artifact,
@@ -30,9 +31,9 @@ from apps.expedientes.exceptions import (
 )
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 # Fixtures
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 
 class BaseTestCase(TestCase):
     """Common setup for Sprint 4 tests."""
@@ -94,9 +95,9 @@ class BaseTestCase(TestCase):
         )
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 # S4-01: Model Tests
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 
 class TestModels(BaseTestCase):
     """S4-01: Verify new model fields and LogisticsOption."""
@@ -132,7 +133,7 @@ class TestModels(BaseTestCase):
         self.assertEqual(opt.mode, 'aereo')
 
     def test_artifact_status_pending(self):
-        self.assertIn('pending', [c[0] for c in ArtifactStatus.choices])
+        self.assertIn('pending', [c[0] for c in ArtifactStatusEnum.choices])
 
     def test_cost_line_append_only(self):
         exp = self._create_expediente()
@@ -146,9 +147,9 @@ class TestModels(BaseTestCase):
         self.assertEqual(exp.brand, 'TECMATER')
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 # S4-02: Costs Doble Vista Tests
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 
 class TestCostsDobleVista(BaseTestCase):
     """S4-02: Test cost visibility filtering and summary."""
@@ -201,9 +202,9 @@ class TestCostsDobleVista(BaseTestCase):
         self.assertEqual(cost.visibility, 'internal')
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 # S4-03: ART-09 Invoice Tests
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 
 class TestInvoice(BaseTestCase):
     """S4-03: Test invoice generation and doble vista."""
@@ -271,9 +272,9 @@ class TestInvoice(BaseTestCase):
         self.assertIn('COMISION', str(ctx.exception.detail))
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 # S4-05: Financial Comparison Tests
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 
 class TestFinancialComparison(BaseTestCase):
     """S4-05: Test financial comparison calculation."""
@@ -304,9 +305,9 @@ class TestFinancialComparison(BaseTestCase):
         self.assertEqual(result['actual']['revenue'], 800.0)
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 # S4-07: ART-19 Logistics Tests
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 
 class TestLogistics(BaseTestCase):
     """S4-07: Test C22/C23/C24 logistics commands."""
@@ -372,9 +373,9 @@ class TestLogistics(BaseTestCase):
             can_execute_command(exp, 'C22', self.ceo_user)
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 # S4-09: Tecmater Brand Tests
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 
 class TestTecmaterBrand(BaseTestCase):
     """S4-09: Test Tecmater parametrization."""
@@ -403,7 +404,7 @@ class TestTecmaterBrand(BaseTestCase):
             can_execute_command(exp, 'C5', self.ceo_user)
 
     def test_tecmater_skips_produccion(self):
-        """Tecmater transitions REGISTRO â†’ PREPARACION (skipping PRODUCCION)."""
+        """Tecmater transitions REGISTRO → PREPARACION (skipping PRODUCCION)."""
         exp = self._create_expediente(brand='TECMATER')
         self._add_artifact(exp, 'ART-01', {'total_po': 10000})
         self._add_artifact(exp, 'ART-02', {'comision_pactada': 8})
@@ -426,9 +427,9 @@ class TestTecmaterBrand(BaseTestCase):
         self.assertEqual(exp.status, 'PREPARACION')
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 # S4-08: Mirror PDF Tests
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 
 class TestMirrorPDF(BaseTestCase):
     """S4-08: Test mirror PDF generation."""
@@ -454,9 +455,9 @@ class TestMirrorPDF(BaseTestCase):
         self.assertIsNone(result)
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 # Payments Regression (Sprint 4 extended)
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 
 class TestPayments(BaseTestCase):
     """S4-04: Payment accumulation and COMISION mode."""
@@ -502,9 +503,9 @@ class TestPayments(BaseTestCase):
         self.assertEqual(exp.payment_status, 'paid')
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 # Sprint 1-3 Regression Tests
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# ═══════════════════════════════════════════════════
 
 class TestRegressionSprint1(BaseTestCase):
     """Regression: Sprint 1-2 commands still work."""

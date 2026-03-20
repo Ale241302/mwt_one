@@ -1,4 +1,4 @@
-﻿import re
+import re
 
 with open('/app/apps/expedientes/models.py', 'r') as f:
     content = f.read()

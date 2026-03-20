@@ -35,7 +35,7 @@ class Cliente(models.Model):
     @property
     def active_expedientes(self):
         from apps.expedientes.models import Expediente
-        from apps.expedientes.enums import ExpedienteStatus
+        from apps.expedientes.enums_exp import ExpedienteStatus
         try:
             return Expediente.objects.filter(
                 client__name=self.name

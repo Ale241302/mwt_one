@@ -1,4 +1,4 @@
-﻿from .models import Brand, BrandArtifactRule
+from .models import Brand, BrandArtifactRule
 
 class BrandService:
     @staticmethod
@@ -9,4 +9,6 @@ class BrandService:
             is_required=True,
             destination__in=[destination, 'ALL']
         )
+        if not rules.exists():
+            return None
         return list(rules.values_list('artifact_type', flat=True))

@@ -7,9 +7,9 @@ from django.utils import timezone
 from django.db import transaction
 
 from apps.transfers.models import Transfer, TransferLine, Node
-from apps.transfers.enums import TransferStatus, LegalContext
+from apps.transfers.enums_exp import TransferStatus, LegalContext
 from apps.expedientes.models import EventLog, ArtifactInstance
-from apps.expedientes.enums import ArtifactStatus
+from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 
 
 def _create_transfer_event(transfer, event_type, emitted_by, payload=None):
@@ -92,7 +92,7 @@ def approve_transfer(transfer: Transfer, user) -> Transfer:
         art_16s = ArtifactInstance.objects.filter(
             expediente=transfer.source_expediente,
             artifact_type="ART-16",
-            status=ArtifactStatus.COMPLETED
+            status=ArtifactStatusEnum.COMPLETED
         )
         art_16_exists = any(a.payload.get("transfer_id") == transfer.transfer_id for a in art_16s)
         if not art_16_exists:
@@ -191,11 +191,11 @@ def cancel_transfer(transfer: Transfer, user, reason: str) -> Transfer:
 
 def _create_artifact(transfer, artifact_type, payload, user):
     from apps.expedientes.models import ArtifactInstance
-    from apps.expedientes.enums import ArtifactStatus
+    from apps.expedientes.enums_artifacts import ArtifactStatusEnum
     return ArtifactInstance.objects.create(
         expediente=transfer.source_expediente,
         artifact_type=artifact_type,
-        status=ArtifactStatus.COMPLETED,
+        status=ArtifactStatusEnum.COMPLETED,
         payload={"transfer_id": transfer.transfer_id, **(payload or {})},
         created_by=str(user),
     )

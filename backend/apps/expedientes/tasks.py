@@ -1,11 +1,11 @@
-﻿from celery import shared_task
+from celery import shared_task
 from django.utils import timezone
 from django.db import transaction
 import logging
 import uuid
 
 from .models import Expediente, EventLog
-from .enums import ExpedienteStatus, AggregateType, BlockedByType
+from .enums_exp import ExpedienteStatus, AggregateType, BlockedByType
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def evaluar_relojes_credito():
     """
     logger.info("Starting evaluar_relojes_credito task")
     
-    from .enums import CREDIT_CLOCK_IGNORED_STATUSES
+    from .enums_exp import CREDIT_CLOCK_IGNORED_STATUSES
     estados_activos = [s[0] for s in ExpedienteStatus.choices if s[0] not in CREDIT_CLOCK_IGNORED_STATUSES]
     
     hoy = timezone.now().date()
@@ -59,7 +59,7 @@ def evaluar_relojes_credito():
                         user=None
                     )
                 
-                # STEP 2: EmisiÃ³n de eventos (Una vez por vida por umbral) - FIX-13
+                # STEP 2: Emisión de eventos (Una vez por vida por umbral) - FIX-13
                 # Spec: credit_clock.warning (60d), credit_clock.critical (75d), credit_clock.expired (90d)
                 
                 event_thresholds = [
@@ -101,7 +101,7 @@ def evaluar_relojes_credito():
 def process_pending_events():
     """ 
     Processes pending EventLogs and marks them as processed.
-    Ref: LOTE_SM_SPRINT2 Item 5 â€” Audit Fix: Added batch limit of 100 and renamed to process_pending_events.
+    Ref: LOTE_SM_SPRINT2 Item 5 — Audit Fix: Added batch limit of 100 and renamed to process_pending_events.
     """
     logger.info("Starting process_pending_events task to process outbox queue")
     

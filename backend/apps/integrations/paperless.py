@@ -1,4 +1,4 @@
-﻿"""
+"""
 Sprint 5 S5-09: Paperless-ngx Integration
 Ref: ASANA_TASK_SPRINT5 Item 9
 

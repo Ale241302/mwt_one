@@ -1,5 +1,5 @@
-﻿"""
-Sprint 1 â€” API Permission Guards (thin wrappers)
+"""
+Sprint 1 — API Permission Guards (thin wrappers)
 Ref: LOTE_SM_SPRINT1 Item 2, FIX-8
 """
 from rest_framework.permissions import BasePermission

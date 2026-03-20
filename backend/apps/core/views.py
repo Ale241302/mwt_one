@@ -11,7 +11,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.expedientes.models import Expediente
 from django.db.models import Sum
-from apps.expedientes.enums import ExpedienteStatus
+from apps.expedientes.enums_exp import ExpedienteStatus
 from apps.core.serializers import UserSerializer, LegalEntitySerializer
 from apps.core.models import LegalEntity
 
@@ -88,7 +88,7 @@ class DashboardView(APIView):
         events_by_exp = {}
         if exp_ids:
             from apps.expedientes.models import EventLog
-            from apps.expedientes.enums import AggregateType
+            from apps.expedientes.enums_exp import AggregateType
             all_events = EventLog.objects.filter(
                 aggregate_id__in=exp_ids,
                 aggregate_type=AggregateType.EXPEDIENTE

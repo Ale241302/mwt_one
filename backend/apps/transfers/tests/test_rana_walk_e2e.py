@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 
 from apps.transfers.models import Transfer, Node
 from apps.expedientes.models import Expediente, ArtifactInstance, LegalEntity
-from apps.expedientes.enums import ExpedienteStatus
+from apps.expedientes.enums_exp import ExpedienteStatus
 from apps.expedientes.tests.factories import create_user, create_expediente, create_legal_entity
 
 class RanaWalkE2ETests(APITestCase):

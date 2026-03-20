@@ -1,6 +1,6 @@
 from django.test import TestCase
 from apps.expedientes.models import Expediente
-from apps.expedientes.enums import ExpedienteStatus, DispatchMode
+from apps.expedientes.enums_exp import ExpedienteStatus, DispatchMode
 from apps.expedientes.services import can_transition_to, execute_command
 from apps.expedientes.exceptions import TransitionNotAllowedError, ArtifactMissingError
 from apps.expedientes.tests.factories import create_expediente, create_user

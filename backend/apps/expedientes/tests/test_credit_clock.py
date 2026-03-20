@@ -1,8 +1,8 @@
-﻿import pytest
+import pytest
 from django.utils import timezone
 from datetime import timedelta
 from apps.expedientes.models import Expediente, EventLog
-from apps.expedientes.enums import ExpedienteStatus, BlockedByType
+from apps.expedientes.enums_exp import ExpedienteStatus, BlockedByType
 from apps.expedientes.tasks import evaluar_relojes_credito
 from .factories import LegalEntityFactory, ExpedienteFactory
 

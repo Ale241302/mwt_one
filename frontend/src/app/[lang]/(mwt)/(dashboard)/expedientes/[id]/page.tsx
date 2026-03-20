@@ -122,15 +122,15 @@ export default function ExpedienteDetailPage() {
       
       // Sanitizar arrays para evitar .map is not a function
       if (data) {
-        if (!Array.isArray(data.artifacts)) data.artifacts = [];
-        if (!Array.isArray(data.events)) data.events = [];
-        if (!Array.isArray(data.costs)) data.costs = [];
-        if (!Array.isArray(data.payments)) data.payments = [];
-        if (!Array.isArray(data.documents)) data.documents = [];
+        data.artifacts = Array.isArray(data.artifacts) ? data.artifacts : [];
+        data.events = Array.isArray(data.events) ? data.events : [];
+        data.costs = Array.isArray(data.costs) ? data.costs : [];
+        data.payments = Array.isArray(data.payments) ? data.payments : [];
+        data.documents = Array.isArray(data.documents) ? data.documents : [];
         if (data.available_actions) {
-          if (!Array.isArray(data.available_actions.primary)) data.available_actions.primary = [];
-          if (!Array.isArray(data.available_actions.secondary)) data.available_actions.secondary = [];
-          if (!Array.isArray(data.available_actions.ops)) data.available_actions.ops = [];
+          data.available_actions.primary = Array.isArray(data.available_actions.primary) ? data.available_actions.primary : [];
+          data.available_actions.secondary = Array.isArray(data.available_actions.secondary) ? data.available_actions.secondary : [];
+          data.available_actions.ops = Array.isArray(data.available_actions.ops) ? data.available_actions.ops : [];
         } else {
           data.available_actions = { primary: [], secondary: [], ops: [] };
         }
@@ -308,7 +308,7 @@ export default function ExpedienteDetailPage() {
         </div>
         <div className="card p-4">
           <p className="caption text-text-tertiary mb-1">Artefactos</p>
-          <p className="heading-sm font-semibold">{bundle.artifacts.length}</p>
+          <p className="heading-sm font-semibold">{Array.isArray(bundle.artifacts) ? bundle.artifacts.length : 0}</p>
         </div>
         <div className="card p-4">
           <p className="caption text-text-tertiary mb-1">Costo Total</p>
@@ -336,14 +336,14 @@ export default function ExpedienteDetailPage() {
           
           <ExpedienteAccordion
             expedienteId={expediente.id}
-            artifacts={(bundle.artifacts || []).map(a => ({
+            artifacts={(Array.isArray(bundle.artifacts) ? bundle.artifacts : []).map(a => ({
               artifact_id: a.id,
               artifact_type: a.artifact_type,
               status: a.status,
               created_at: a.created_at,
               payload: a.payload
             }))}
-            availableActions={bundle.available_actions}
+            availableActions={bundle.available_actions || { primary: [], secondary: [], ops: [] }}
             onRefresh={() => fetchBundle(true)}
             currentState={currentState}
           />
@@ -355,11 +355,11 @@ export default function ExpedienteDetailPage() {
           <h2 className="heading-sm font-semibold mb-3 text-navy">Historial de eventos</h2>
           <div className="card overflow-hidden h-[600px] flex flex-col">
             <div className="flex-1 overflow-y-auto min-h-0 relative">
-            {bundle.events.length === 0 ? (
+            {(!Array.isArray(bundle.events) || bundle.events.length === 0) ? (
               <div className="p-6 text-center text-text-tertiary text-sm absolute inset-0 flex items-center justify-center">Sin eventos aún.</div>
             ) : (
               <div className="divide-y divide-divider">
-                {(bundle.events || []).map((ev) => (
+                {bundle.events.map((ev) => (
                   <div key={ev.id} className="px-5 py-3.5 hover:bg-bg/50 transition-colors group">
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">

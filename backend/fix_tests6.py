@@ -1,4 +1,4 @@
-﻿import os
+import os
 
 filepath_disp = 'apps/expedientes/tests/test_dispatcher.py'
 with open(filepath_disp, 'r', encoding='utf-8') as f:

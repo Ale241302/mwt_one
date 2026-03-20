@@ -1,0 +1,1986 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.0.2, pluggy-1.6.0
+django: version: 5.2.11, settings: config.settings.test (from env)
+rootdir: C:\Users\ale13\OneDrive\Documents\mwt_one
+plugins: Faker-40.4.0, django-4.12.0
+collected 138 items
+
+backend\apps\expedientes\tests\test_available_commands.py FFFFFFFF       [  5%]
+backend\apps\expedientes\tests\test_commands.py FFFFFFFFFFFFFFFFFFFFFFFF [ 23%]
+F                                                                        [ 23%]
+backend\apps\expedientes\tests\test_corrections.py FFFFFFFFF             [ 30%]
+backend\apps\expedientes\tests\test_credit_clock.py FFFFF                [ 34%]
+backend\apps\expedientes\tests\test_dispatcher.py FF                     [ 35%]
+backend\apps\expedientes\tests\test_permissions.py FFF                   [ 37%]
+backend\apps\expedientes\tests\test_sprint4.py FFFFFFFFFFFFFFFFFFFFFFFFF [ 55%]
+FFFFFFFFFFFFFFF                                                          [ 66%]
+backend\apps\expedientes\tests\test_sprint5.py FFFFFFFFFFFFFFFFF         [ 78%]
+backend\apps\expedientes\tests\test_transitions.py FFFFF                 [ 82%]
+backend\apps\expedientes\tests\test_ui_api.py FFFFFFFFFFFFFFFFFFFFFFFF   [100%]
+
+================================== FAILURES ===================================
+_____________ TestAvailableCommands.test_commands_estado_registro _____________
+backend\apps\expedientes\tests\test_available_commands.py:13: in test_commands_estado_registro
+    exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________ TestAvailableCommands.test_commands_estado_produccion ____________
+backend\apps\expedientes\tests\test_available_commands.py:29: in test_commands_estado_produccion
+    exp = ExpedienteFactory(status=ExpedienteStatus.PRODUCCION)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________ TestAvailableCommands.test_commands_estado_preparacion ____________
+backend\apps\expedientes\tests\test_available_commands.py:38: in test_commands_estado_preparacion
+    exp = ExpedienteFactory(status=ExpedienteStatus.PREPARACION)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_____________ TestAvailableCommands.test_commands_estado_despacho _____________
+backend\apps\expedientes\tests\test_available_commands.py:51: in test_commands_estado_despacho
+    exp = ExpedienteFactory(status=ExpedienteStatus.DESPACHO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________ TestAvailableCommands.test_commands_estado_recepcion _____________
+backend\apps\expedientes\tests\test_available_commands.py:58: in test_commands_estado_recepcion
+    exp = ExpedienteFactory(status=ExpedienteStatus.TRANSITO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________ TestAvailableCommands.test_commands_estado_facturacion ____________
+backend\apps\expedientes\tests\test_available_commands.py:65: in test_commands_estado_facturacion
+    exp = ExpedienteFactory(status=ExpedienteStatus.EN_DESTINO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_____________ TestAvailableCommands.test_commands_estado_cerrado ______________
+backend\apps\expedientes\tests\test_available_commands.py:72: in test_commands_estado_cerrado
+    exp = ExpedienteFactory(status=ExpedienteStatus.CERRADO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________ TestAvailableCommands.test_commands_estado_cancelado _____________
+backend\apps\expedientes\tests\test_available_commands.py:81: in test_commands_estado_cancelado
+    exp = ExpedienteFactory(status=ExpedienteStatus.CANCELADO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________ CommandAPITests.test_atomicity_c2_exception_rolls_back ____________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________ CommandAPITests.test_atomicity_c5_transition_rollback ____________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_____ CommandAPITests.test_atomicity_event_failure_rolls_back_expediente ______
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________ CommandAPITests.test_c10_approve_dispatch_transitions ____________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_________________ CommandAPITests.test_c11_confirm_departure __________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__________________ CommandAPITests.test_c12_confirm_arrival ___________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________________ CommandAPITests.test_c13_issue_invoice ____________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______________ CommandAPITests.test_c14_close_fails_if_unpaid ________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________________ CommandAPITests.test_c14_close_success ____________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________________ CommandAPITests.test_c15_register_cost ____________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+________________ CommandAPITests.test_c16_cancel_requires_ceo _________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______________________ CommandAPITests.test_c17_block ________________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+________________ CommandAPITests.test_c18_unblock_requires_ceo ________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__________________ CommandAPITests.test_c1_create_expediente __________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________________ CommandAPITests.test_c1_invalid_entity ____________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__________________ CommandAPITests.test_c1_on_shipment_rule ___________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__________________ CommandAPITests.test_c21_register_payment __________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_____________________ CommandAPITests.test_c2_register_oc _____________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__________________ CommandAPITests.test_c3_register_proforma __________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________ CommandAPITests.test_c4_decide_mode_requires_ceo _______________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_________ CommandAPITests.test_c5_confirm_sap_transitions_and_events __________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_________________ CommandAPITests.test_c6_confirm_production __________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________ CommandAPITests.test_c7_register_shipment_starts_clock ____________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______________ CommandAPITests.test_c8_register_freight_quote ________________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________ CommandAPITests.test_c9_register_customs_only_mwt ______________
+backend\apps\expedientes\tests\test_commands.py:14: in setUp
+    self.exp = create_expediente(client=self.le)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_____________________ test_supersede_artifact_happy_path ______________________
+backend\apps\expedientes\tests\test_corrections.py:10: in test_supersede_artifact_happy_path
+    exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________________ test_supersede_artifact_triggers_block ____________________
+backend\apps\expedientes\tests\test_corrections.py:32: in test_supersede_artifact_triggers_block
+    exp = ExpedienteFactory(status=ExpedienteStatus.PRODUCCION)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+________________________ test_void_artifact_art09_only ________________________
+backend\apps\expedientes\tests\test_corrections.py:54: in test_void_artifact_art09_only
+    exp = ExpedienteFactory(status=ExpedienteStatus.EN_DESTINO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________________ test_void_artifact_triggers_block ______________________
+backend\apps\expedientes\tests\test_corrections.py:74: in test_void_artifact_triggers_block
+    exp = ExpedienteFactory(status=ExpedienteStatus.CERRADO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______________ test_artifact_correction_terminal_state_denied ________________
+backend\apps\expedientes\tests\test_corrections.py:83: in test_artifact_correction_terminal_state_denied
+    exp = ExpedienteFactory(status=ExpedienteStatus.CANCELADO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________________ test_supersede_artifact_not_completed ____________________
+backend\apps\expedientes\tests\test_corrections.py:93: in test_supersede_artifact_not_completed
+    exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+________________________ test_void_artifact_not_art09 _________________________
+backend\apps\expedientes\tests\test_corrections.py:103: in test_void_artifact_not_art09
+    exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________________ test_supersede_artifact_atomicity ______________________
+backend\apps\expedientes\tests\test_corrections.py:113: in test_supersede_artifact_atomicity
+    exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_________________ test_supersede_artifact_already_superseded __________________
+backend\apps\expedientes\tests\test_corrections.py:130: in test_supersede_artifact_already_superseded
+    exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________________ test_credit_clock_60_days_warning ______________________
+backend\apps\expedientes\tests\test_credit_clock.py:12: in test_credit_clock_60_days_warning
+    exp = ExpedienteFactory(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_____________________ test_credit_clock_75_days_blocking ______________________
+backend\apps\expedientes\tests\test_credit_clock.py:28: in test_credit_clock_75_days_blocking
+    exp = ExpedienteFactory(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__________________ test_credit_clock_concurrency_skip_locked __________________
+backend\apps\expedientes\tests\test_credit_clock.py:51: in test_credit_clock_concurrency_skip_locked
+    exp = ExpedienteFactory(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+________________________ test_credit_clock_idempotency ________________________
+backend\apps\expedientes\tests\test_credit_clock.py:70: in test_credit_clock_idempotency
+    exp = ExpedienteFactory(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__________________ test_credit_clock_ignored_terminal_status __________________
+backend\apps\expedientes\tests\test_credit_clock.py:88: in test_credit_clock_ignored_terminal_status
+    exp = ExpedienteFactory(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_________________________ test_process_pending_events _________________________
+backend\apps\expedientes\tests\test_dispatcher.py:12: in test_process_pending_events
+    exp = ExpedienteFactory()
+          ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________________ test_process_pending_events_limit ______________________
+backend\apps\expedientes\tests\test_dispatcher.py:42: in test_process_pending_events_limit
+    exp = ExpedienteFactory()
+          ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______ TestPermissions.test_ensure_not_blocked_blocks_normal_commands ________
+backend\apps\expedientes\tests\test_permissions.py:13: in test_ensure_not_blocked_blocks_normal_commands
+    exp = create_expediente()
+          ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______ TestPermissions.test_is_ceo_bypasses_blocked_for_certain_commands ______
+backend\apps\expedientes\tests\test_permissions.py:27: in test_is_ceo_bypasses_blocked_for_certain_commands
+    exp = create_expediente()
+          ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________ TestPermissions.test_normal_user_may_block_expediente ____________
+backend\apps\expedientes\tests\test_permissions.py:45: in test_normal_user_may_block_expediente
+    exp = create_expediente()
+          ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________________ TestModels.test_artifact_status_pending ___________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+____________________ TestModels.test_brand_tecmater_exists ____________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+____________________ TestModels.test_cost_line_append_only ____________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+_________________ TestModels.test_cost_line_visibility_client _________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+________________ TestModels.test_cost_line_visibility_default _________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+__________________ TestModels.test_expediente_brand_choices ___________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+__________________ TestModels.test_logistics_option_creation __________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+___________________ TestCostsDobleVista.test_costs_summary ____________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+_______________ TestCostsDobleVista.test_get_costs_client_view ________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+___________ TestCostsDobleVista.test_get_costs_internal_returns_all ___________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+__________ TestCostsDobleVista.test_register_cost_default_visibility __________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+___________ TestCostsDobleVista.test_register_cost_with_visibility ____________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+__________________ TestInvoice.test_c13_blocked_for_comision __________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+____________________ TestInvoice.test_invoice_doble_vista _____________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+_____________________ TestInvoice.test_invoice_suggestion _____________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+________________ TestInvoice.test_issue_invoice_creates_art09 _________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+____________ TestFinancialComparison.test_comparison_comision_mode ____________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+______________ TestFinancialComparison.test_comparison_full_mode ______________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+_________________ TestLogistics.test_c22_blocked_for_tecmater _________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+________________ TestLogistics.test_c22_materialize_logistics _________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+_________________ TestLogistics.test_c23_add_logistics_option _________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+___________________ TestLogistics.test_c24_decide_logistics ___________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+__________ TestTecmaterBrand.test_tecmater_auto_transition_after_c3 ___________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+_________________ TestTecmaterBrand.test_tecmater_c4_blocked __________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+_________________ TestTecmaterBrand.test_tecmater_c5_blocked __________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+______________ TestTecmaterBrand.test_tecmater_forces_full_mode _______________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+__________ TestTecmaterBrand.test_tecmater_no_produccion_transition ___________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+______________ TestTecmaterBrand.test_tecmater_rejects_comision _______________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+______________ TestTecmaterBrand.test_tecmater_skips_produccion _______________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+______________________ TestMirrorPDF.test_generate_html _______________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+___________________ TestMirrorPDF.test_no_data_returns_none ___________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+___________________ TestPayments.test_c21_registers_payment ___________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+________________ TestPayments.test_comision_payment_uses_art01 ________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+____________________ TestPayments.test_payment_status_paid ____________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+__________________ TestPayments.test_payment_status_partial ___________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+____________________ TestRegressionSprint1.test_c16_cancel ____________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+____________________ TestRegressionSprint1.test_c17_block _____________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+___________________ TestRegressionSprint1.test_c18_unblock ____________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+____________________ TestRegressionSprint1.test_c1_create _____________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+__________________ TestRegressionSprint1.test_c2_register_oc __________________
+backend\apps\expedientes\tests\test_sprint4.py:41: in setUp
+    self.ceo_user = User.objects.create_superuser(
+                    ^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:196: in __get__
+    raise AttributeError(
+E   AttributeError: Manager isn't available; 'auth.User' has been swapped for 'users.MWTUser'
+_________________ S5_05_CompensationTests.test_c20_void_art12 _________________
+backend\apps\expedientes\tests\test_sprint5.py:30: in setUp
+    self.exp = create_expediente(client=self.le, brand='MARLUVAS', status=ExpedienteStatus.CERRADO)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__________________ S5_05_CompensationTests.test_c29_ceo_only __________________
+backend\apps\expedientes\tests\test_sprint5.py:30: in setUp
+    self.exp = create_expediente(client=self.le, brand='MARLUVAS', status=ExpedienteStatus.CERRADO)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______________ S5_05_CompensationTests.test_c29_creates_art12 ________________
+backend\apps\expedientes\tests\test_sprint5.py:30: in setUp
+    self.exp = create_expediente(client=self.le, brand='MARLUVAS', status=ExpedienteStatus.CERRADO)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_____ S5_06_HandoffTests.test_close_with_nodo_destino_returns_suggestion ______
+backend\apps\expedientes\tests\test_sprint5.py:67: in setUp
+    self.exp = create_expediente(client=self.le, brand='MARLUVAS', status=ExpedienteStatus.EN_DESTINO)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__________________ S5_06_HandoffTests.test_handoff_ceo_only ___________________
+backend\apps\expedientes\tests\test_sprint5.py:67: in setUp
+    self.exp = create_expediente(client=self.le, brand='MARLUVAS', status=ExpedienteStatus.EN_DESTINO)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__________ S5_06_HandoffTests.test_handoff_includes_items_from_art01 __________
+backend\apps\expedientes\tests\test_sprint5.py:67: in setUp
+    self.exp = create_expediente(client=self.le, brand='MARLUVAS', status=ExpedienteStatus.EN_DESTINO)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+________ S5_06_HandoffTests.test_handoff_no_suggestion_when_not_closed ________
+backend\apps\expedientes\tests\test_sprint5.py:67: in setUp
+    self.exp = create_expediente(client=self.le, brand='MARLUVAS', status=ExpedienteStatus.EN_DESTINO)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_________ S5_06_HandoffTests.test_handoff_no_suggestion_without_nodo __________
+backend\apps\expedientes\tests\test_sprint5.py:67: in setUp
+    self.exp = create_expediente(client=self.le, brand='MARLUVAS', status=ExpedienteStatus.EN_DESTINO)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_ S5_07_LogisticsSuggestionsTests.test_suggestions_empty_when_insufficient_data _
+backend\apps\expedientes\tests\test_sprint5.py:153: in setUp
+    self.exp = create_expediente(client=self.le, brand='MARLUVAS')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________ S5_08_ShipmentUpdateTests.test_c36_adds_tracking_info ____________
+backend\apps\expedientes\tests\test_sprint5.py:170: in setUp
+    self.exp = create_expediente(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______ S5_08_ShipmentUpdateTests.test_c36_multiple_updates_accumulate ________
+backend\apps\expedientes\tests\test_sprint5.py:170: in setUp
+    self.exp = create_expediente(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______ S5_10_C21_ComisionModeTests.test_c21_import_mode_uses_total_po ________
+backend\apps\expedientes\tests\test_sprint5.py:216: in setUp
+    self.exp = create_expediente(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______ S5_10_C21_ComisionModeTests.test_c21_liquidacion_marluvas_method _______
+backend\apps\expedientes\tests\test_sprint5.py:216: in setUp
+    self.exp = create_expediente(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_________ S5_10_C21_ComisionModeTests.test_c21_overpayment_still_paid _________
+backend\apps\expedientes\tests\test_sprint5.py:216: in setUp
+    self.exp = create_expediente(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________ S5_10_C21_ComisionModeTests.test_c21_partial_then_paid ____________
+backend\apps\expedientes\tests\test_sprint5.py:216: in setUp
+    self.exp = create_expediente(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__ S5_10_C21_ComisionModeTests.test_liquidation_payment_suggestion_endpoint ___
+backend\apps\expedientes\tests\test_sprint5.py:216: in setUp
+    self.exp = create_expediente(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_ S5_10_C21_ComisionModeTests.test_liquidation_payment_suggestion_not_comision _
+backend\apps\expedientes\tests\test_sprint5.py:216: in setUp
+    self.exp = create_expediente(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_________ TransitionTests.test_happy_path_transitions_import_fcl_mwt __________
+backend\apps\expedientes\tests\test_transitions.py:12: in setUp
+    self.exp = create_expediente(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+__________________ TransitionTests.test_invalid_transitions ___________________
+backend\apps\expedientes\tests\test_transitions.py:12: in setUp
+    self.exp = create_expediente(
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+________________ ParametricMatrixTests.test_ceo_only_commands _________________
+backend\apps\expedientes\tests\test_transitions.py:82: in setUp
+    self.exp = create_expediente(mode='IMPORT', brand='MARLUVAS', dispatch_mode=DispatchMode.MWT)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________ ParametricMatrixTests.test_command_guards_matrix _______________
+backend\apps\expedientes\tests\test_transitions.py:82: in setUp
+    self.exp = create_expediente(mode='IMPORT', brand='MARLUVAS', dispatch_mode=DispatchMode.MWT)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______ ParametricMatrixTests.test_portal_and_products_logical_integrity _______
+backend\apps\expedientes\tests\test_transitions.py:82: in setUp
+    self.exp = create_expediente(mode='IMPORT', brand='MARLUVAS', dispatch_mode=DispatchMode.MWT)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______________________ TestUIAPI.test_list_expedientes _______________________
+backend\apps\expedientes\tests\test_ui_api.py:20: in test_list_expedientes
+    ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________________ TestUIAPI.test_expediente_bundle _______________________
+backend\apps\expedientes\tests\test_ui_api.py:37: in test_expediente_bundle
+    exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________________ TestUIAPI.test_document_download_url _____________________
+backend\apps\expedientes\tests\test_ui_api.py:52: in test_document_download_url
+    exp = ExpedienteFactory()
+          ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_________________________ TestUIAPI.test_list_filters _________________________
+backend\apps\expedientes\tests\test_ui_api.py:65: in test_list_filters
+    ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______________________ TestUIAPI.test_list_pagination ________________________
+backend\apps\expedientes\tests\test_ui_api.py:80: in test_list_pagination
+    ExpedienteFactory()
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_________________ TestUIAPI.test_list_ordering_by_credit_days _________________
+backend\apps\expedientes\tests\test_ui_api.py:92: in test_list_ordering_by_credit_days
+    e1 = ExpedienteFactory(credit_clock_started_at=now - timedelta(days=5))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________________ TestUIAPI.test_list_ordering_by_date _____________________
+backend\apps\expedientes\tests\test_ui_api.py:102: in test_list_ordering_by_date
+    e1 = ExpedienteFactory()
+         ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________________ TestUIAPI.test_list_filter_is_blocked ____________________
+backend\apps\expedientes\tests\test_ui_api.py:111: in test_list_filter_is_blocked
+    ExpedienteFactory(is_blocked=True)
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________________ TestUIAPI.test_list_filter_credit_band ____________________
+backend\apps\expedientes\tests\test_ui_api.py:123: in test_list_filter_credit_band
+    ExpedienteFactory(credit_clock_started_at=now - timedelta(days=40))
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________________ TestUIAPI.test_list_aggregations _______________________
+backend\apps\expedientes\tests\test_ui_api.py:130: in test_list_aggregations
+    exp = ExpedienteFactory()
+          ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________ TestUIAPI.test_bundle_available_actions_registro _______________
+backend\apps\expedientes\tests\test_ui_api.py:141: in test_bundle_available_actions_registro
+    exp = ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_____________ TestUIAPI.test_bundle_available_actions_produccion ______________
+backend\apps\expedientes\tests\test_ui_api.py:150: in test_bundle_available_actions_produccion
+    exp = ExpedienteFactory(status=ExpedienteStatus.PRODUCCION)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______________ TestUIAPI.test_bundle_available_actions_cerrado _______________
+backend\apps\expedientes\tests\test_ui_api.py:158: in test_bundle_available_actions_cerrado
+    exp = ExpedienteFactory(status=ExpedienteStatus.CERRADO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_______________ TestUIAPI.test_ops_c17_enabled_when_not_blocked _______________
+backend\apps\expedientes\tests\test_ui_api.py:167: in test_ops_c17_enabled_when_not_blocked
+    exp = ExpedienteFactory(is_blocked=False)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________ TestUIAPI.test_ops_c18_disabled_when_not_blocked _______________
+backend\apps\expedientes\tests\test_ui_api.py:175: in test_ops_c18_disabled_when_not_blocked
+    exp = ExpedienteFactory(is_blocked=False)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________________ TestUIAPI.test_ops_c15_fields_contract ____________________
+backend\apps\expedientes\tests\test_ui_api.py:185: in test_ops_c15_fields_contract
+    exp = ExpedienteFactory()
+          ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________________ TestUIAPI.test_available_actions_order ____________________
+backend\apps\expedientes\tests\test_ui_api.py:194: in test_available_actions_order
+    exp = ExpedienteFactory()
+          ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________________ TestUIAPI.test_dashboard_active_count ____________________
+backend\apps\expedientes\tests\test_ui_api.py:205: in test_dashboard_active_count
+    ExpedienteFactory(status=ExpedienteStatus.REGISTRO)
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________________ TestUIAPI.test_dashboard_alert_count _____________________
+backend\apps\expedientes\tests\test_ui_api.py:216: in test_dashboard_alert_count
+    ExpedienteFactory(credit_clock_started_at=now - timedelta(days=20)) # WARNING/AMBER
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+___________________ TestUIAPI.test_dashboard_blocked_count ____________________
+backend\apps\expedientes\tests\test_ui_api.py:225: in test_dashboard_blocked_count
+    ExpedienteFactory(is_blocked=True)
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_____________________ TestUIAPI.test_dashboard_total_cost _____________________
+backend\apps\expedientes\tests\test_ui_api.py:233: in test_dashboard_total_cost
+    exp = ExpedienteFactory()
+          ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+______________________ TestUIAPI.test_dashboard_top_risk ______________________
+backend\apps\expedientes\tests\test_ui_api.py:244: in test_dashboard_top_risk
+    ExpedienteFactory(credit_clock_started_at=now - timedelta(days=31+i))
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+____________________ TestUIAPI.test_dashboard_blocked_list ____________________
+backend\apps\expedientes\tests\test_ui_api.py:253: in test_dashboard_blocked_list
+    exp = ExpedienteFactory(is_blocked=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+_________________ TestUIAPI.test_regression_all_22_endpoints __________________
+backend\apps\expedientes\tests\test_ui_api.py:261: in test_regression_all_22_endpoints
+    exp = ExpedienteFactory()
+          ^^^^^^^^^^^^^^^^^^^
+backend\apps\expedientes\tests\factories.py:59: in ExpedienteFactory
+    return Expediente.objects.create(**defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\manager.py:87: in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\query.py:663: in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\db\models\base.py:569: in __init__
+    raise TypeError(
+E   TypeError: Expediente() got unexpected keyword arguments: 'external_id'
+=========================== short test summary info ===========================
+FAILED backend/apps/expedientes/tests/test_available_commands.py::TestAvailableCommands::test_commands_estado_registro
+FAILED backend/apps/expedientes/tests/test_available_commands.py::TestAvailableCommands::test_commands_estado_produccion
+FAILED backend/apps/expedientes/tests/test_available_commands.py::TestAvailableCommands::test_commands_estado_preparacion
+FAILED backend/apps/expedientes/tests/test_available_commands.py::TestAvailableCommands::test_commands_estado_despacho
+FAILED backend/apps/expedientes/tests/test_available_commands.py::TestAvailableCommands::test_commands_estado_recepcion
+FAILED backend/apps/expedientes/tests/test_available_commands.py::TestAvailableCommands::test_commands_estado_facturacion
+FAILED backend/apps/expedientes/tests/test_available_commands.py::TestAvailableCommands::test_commands_estado_cerrado
+FAILED backend/apps/expedientes/tests/test_available_commands.py::TestAvailableCommands::test_commands_estado_cancelado
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_atomicity_c2_exception_rolls_back
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_atomicity_c5_transition_rollback
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_atomicity_event_failure_rolls_back_expediente
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c10_approve_dispatch_transitions
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c11_confirm_departure
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c12_confirm_arrival
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c13_issue_invoice
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c14_close_fails_if_unpaid
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c14_close_success
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c15_register_cost
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c16_cancel_requires_ceo
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c17_block
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c18_unblock_requires_ceo
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c1_create_expediente
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c1_invalid_entity
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c1_on_shipment_rule
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c21_register_payment
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c2_register_oc
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c3_register_proforma
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c4_decide_mode_requires_ceo
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c5_confirm_sap_transitions_and_events
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c6_confirm_production
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c7_register_shipment_starts_clock
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c8_register_freight_quote
+FAILED backend/apps/expedientes/tests/test_commands.py::CommandAPITests::test_c9_register_customs_only_mwt
+FAILED backend/apps/expedientes/tests/test_corrections.py::test_supersede_artifact_happy_path
+FAILED backend/apps/expedientes/tests/test_corrections.py::test_supersede_artifact_triggers_block
+FAILED backend/apps/expedientes/tests/test_corrections.py::test_void_artifact_art09_only
+FAILED backend/apps/expedientes/tests/test_corrections.py::test_void_artifact_triggers_block
+FAILED backend/apps/expedientes/tests/test_corrections.py::test_artifact_correction_terminal_state_denied
+FAILED backend/apps/expedientes/tests/test_corrections.py::test_supersede_artifact_not_completed
+FAILED backend/apps/expedientes/tests/test_corrections.py::test_void_artifact_not_art09
+FAILED backend/apps/expedientes/tests/test_corrections.py::test_supersede_artifact_atomicity
+FAILED backend/apps/expedientes/tests/test_corrections.py::test_supersede_artifact_already_superseded
+FAILED backend/apps/expedientes/tests/test_credit_clock.py::test_credit_clock_60_days_warning
+FAILED backend/apps/expedientes/tests/test_credit_clock.py::test_credit_clock_75_days_blocking
+FAILED backend/apps/expedientes/tests/test_credit_clock.py::test_credit_clock_concurrency_skip_locked
+FAILED backend/apps/expedientes/tests/test_credit_clock.py::test_credit_clock_idempotency
+FAILED backend/apps/expedientes/tests/test_credit_clock.py::test_credit_clock_ignored_terminal_status
+FAILED backend/apps/expedientes/tests/test_dispatcher.py::test_process_pending_events
+FAILED backend/apps/expedientes/tests/test_dispatcher.py::test_process_pending_events_limit
+FAILED backend/apps/expedientes/tests/test_permissions.py::TestPermissions::test_ensure_not_blocked_blocks_normal_commands
+FAILED backend/apps/expedientes/tests/test_permissions.py::TestPermissions::test_is_ceo_bypasses_blocked_for_certain_commands
+FAILED backend/apps/expedientes/tests/test_permissions.py::TestPermissions::test_normal_user_may_block_expediente
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestModels::test_artifact_status_pending
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestModels::test_brand_tecmater_exists
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestModels::test_cost_line_append_only
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestModels::test_cost_line_visibility_client
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestModels::test_cost_line_visibility_default
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestModels::test_expediente_brand_choices
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestModels::test_logistics_option_creation
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestCostsDobleVista::test_costs_summary
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestCostsDobleVista::test_get_costs_client_view
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestCostsDobleVista::test_get_costs_internal_returns_all
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestCostsDobleVista::test_register_cost_default_visibility
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestCostsDobleVista::test_register_cost_with_visibility
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestInvoice::test_c13_blocked_for_comision
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestInvoice::test_invoice_doble_vista
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestInvoice::test_invoice_suggestion
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestInvoice::test_issue_invoice_creates_art09
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestFinancialComparison::test_comparison_comision_mode
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestFinancialComparison::test_comparison_full_mode
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestLogistics::test_c22_blocked_for_tecmater
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestLogistics::test_c22_materialize_logistics
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestLogistics::test_c23_add_logistics_option
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestLogistics::test_c24_decide_logistics
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestTecmaterBrand::test_tecmater_auto_transition_after_c3
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestTecmaterBrand::test_tecmater_c4_blocked
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestTecmaterBrand::test_tecmater_c5_blocked
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestTecmaterBrand::test_tecmater_forces_full_mode
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestTecmaterBrand::test_tecmater_no_produccion_transition
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestTecmaterBrand::test_tecmater_rejects_comision
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestTecmaterBrand::test_tecmater_skips_produccion
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestMirrorPDF::test_generate_html
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestMirrorPDF::test_no_data_returns_none
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestPayments::test_c21_registers_payment
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestPayments::test_comision_payment_uses_art01
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestPayments::test_payment_status_paid
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestPayments::test_payment_status_partial
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestRegressionSprint1::test_c16_cancel
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestRegressionSprint1::test_c17_block
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestRegressionSprint1::test_c18_unblock
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestRegressionSprint1::test_c1_create
+FAILED backend/apps/expedientes/tests/test_sprint4.py::TestRegressionSprint1::test_c2_register_oc
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_05_CompensationTests::test_c20_void_art12
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_05_CompensationTests::test_c29_ceo_only
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_05_CompensationTests::test_c29_creates_art12
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_06_HandoffTests::test_close_with_nodo_destino_returns_suggestion
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_06_HandoffTests::test_handoff_ceo_only
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_06_HandoffTests::test_handoff_includes_items_from_art01
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_06_HandoffTests::test_handoff_no_suggestion_when_not_closed
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_06_HandoffTests::test_handoff_no_suggestion_without_nodo
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_07_LogisticsSuggestionsTests::test_suggestions_empty_when_insufficient_data
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_08_ShipmentUpdateTests::test_c36_adds_tracking_info
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_08_ShipmentUpdateTests::test_c36_multiple_updates_accumulate
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_10_C21_ComisionModeTests::test_c21_import_mode_uses_total_po
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_10_C21_ComisionModeTests::test_c21_liquidacion_marluvas_method
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_10_C21_ComisionModeTests::test_c21_overpayment_still_paid
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_10_C21_ComisionModeTests::test_c21_partial_then_paid
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_10_C21_ComisionModeTests::test_liquidation_payment_suggestion_endpoint
+FAILED backend/apps/expedientes/tests/test_sprint5.py::S5_10_C21_ComisionModeTests::test_liquidation_payment_suggestion_not_comision
+FAILED backend/apps/expedientes/tests/test_transitions.py::TransitionTests::test_happy_path_transitions_import_fcl_mwt
+FAILED backend/apps/expedientes/tests/test_transitions.py::TransitionTests::test_invalid_transitions
+FAILED backend/apps/expedientes/tests/test_transitions.py::ParametricMatrixTests::test_ceo_only_commands
+FAILED backend/apps/expedientes/tests/test_transitions.py::ParametricMatrixTests::test_command_guards_matrix
+FAILED backend/apps/expedientes/tests/test_transitions.py::ParametricMatrixTests::test_portal_and_products_logical_integrity
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_list_expedientes
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_expediente_bundle
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_document_download_url
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_list_filters
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_list_pagination
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_list_ordering_by_credit_days
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_list_ordering_by_date
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_list_filter_is_blocked
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_list_filter_credit_band
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_list_aggregations
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_bundle_available_actions_registro
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_bundle_available_actions_produccion
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_bundle_available_actions_cerrado
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_ops_c17_enabled_when_not_blocked
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_ops_c18_disabled_when_not_blocked
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_ops_c15_fields_contract
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_available_actions_order
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_dashboard_active_count
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_dashboard_alert_count
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_dashboard_blocked_count
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_dashboard_total_cost
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_dashboard_top_risk
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_dashboard_blocked_list
+FAILED backend/apps/expedientes/tests/test_ui_api.py::TestUIAPI::test_regression_all_22_endpoints
+============================= 138 failed in 9.58s =============================

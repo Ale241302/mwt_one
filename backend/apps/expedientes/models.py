@@ -3,9 +3,10 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 from apps.core.models import TimestampMixin, AppendOnlyModel, LegalEntity
-from .enums import (
+from .enums_artifacts import ArtifactStatusEnum
+from .enums_exp import (
     ExpedienteStatus, BlockedByType, DispatchMode, PaymentStatus,
-    CreditClockStartRule, ArtifactStatus, AggregateType,
+    CreditClockStartRule, AggregateType,
     RegisteredByType, CostLineVisibility, LogisticsMode, LogisticsSource,
     CostCategory, CostBehavior, AforoType,
 )
@@ -64,7 +65,7 @@ class ArtifactInstance(TimestampMixin):
     artifact_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     expediente = models.ForeignKey(Expediente, on_delete=models.CASCADE, related_name='artifacts')
     artifact_type = models.CharField(max_length=20, help_text='ART-01 to ART-19')
-    status = models.CharField(max_length=20, choices=ArtifactStatus.choices, default=ArtifactStatus.DRAFT)
+    status = models.CharField(max_length=20, choices=ArtifactStatusEnum.choices(), default=ArtifactStatusEnum.DRAFT)
     payload = models.JSONField(default=dict)
     supersedes = models.ForeignKey(
         'self',
