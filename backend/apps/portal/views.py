@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from apps.expedientes.models import Expediente
@@ -71,13 +72,24 @@ class CatalogView(APIView):
         
         catalog = []
         for product in products:
-            price_data = resolve_client_price(context, product.sku, commission_pct=Decimal('0'), payment_days=30)
+            price_data = resolve_client_price(
+                brand_id=brand_slug,
+                party_type='subsidiary', 
+                party_id=user.id,
+                sku=product.sku_base,
+                mode='FOB', # Default for catalog
+                currency=context['currency'],
+                date=context['date']
+            )
+            
+            price = price_data['price'] if price_data else 0
+            
             catalog.append({
-                'sku': product.sku,
+                'sku': product.sku_base,
                 'name': product.name,
-                'price': float(price_data['resolved_price']),
+                'price': float(price),
                 'currency': context['currency'],
-                'pricing_source': price_data.get('pricing_source_type', 'base')
+                'pricing_source': price_data.get('source', 'none') if price_data else 'none'
             })
             
         return Response(catalog)
