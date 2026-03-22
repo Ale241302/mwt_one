@@ -46,3 +46,32 @@ class BrandSKU(TimestampMixin):
 
     def __str__(self):
         return self.sku_code
+
+class BrandConfigVersion(TimestampMixin):
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='config_versions')
+    version = models.CharField(max_length=20) # semver
+    default_currency = models.CharField(max_length=3, default='USD')
+    default_mode = models.CharField(max_length=20, default='CIF')
+    allowed_operation_modes = models.JSONField(default=list)
+    dispatch_modes = models.JSONField(default=list)
+    has_sap = models.BooleanField(default=False)
+    has_production = models.BooleanField(default=True)
+    max_order_revisions = models.IntegerField(default=3)
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=[
+        ('draft', 'Draft'), ('active', 'Active'), ('superseded', 'Superseded'), ('archived', 'Archived')
+    ], default='draft')
+
+    def __str__(self):
+        return f"{self.brand.slug} Config {self.version}"
+
+class CatalogVersion(TimestampMixin):
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='catalogs')
+    version = models.CharField(max_length=20)
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, default='draft')
+
+    def __str__(self):
+        return f"{self.brand.slug} Catalog {self.version}"

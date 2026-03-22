@@ -20,6 +20,8 @@ from apps.expedientes.services import (
     supersede_artifact, void_artifact, get_available_commands,
     get_costs, get_costs_summary, get_invoice_suggestion, get_invoice,
     calculate_financial_comparison, generate_mirror_pdf,
+    register_compensation, get_logistics_suggestions, add_shipment_update,
+    get_handoff_suggestion, get_liquidation_payment_suggestion,
 )
 from apps.expedientes.serializers_ui import (
     UIExpedienteListSerializer, ExpedienteBundleSerializer,
@@ -75,76 +77,37 @@ class CreateExpedienteView(APIView):
         return _command_response(exp, [event], status_code=201)
 
 
-class CommandView(APIView):
-    """Generic POST for C2-C18."""
+class CommandDispatchView(APIView):
+    """
+    Sprint 12: Single entry point for all 22+ commands.
+    URL pattern should provide 'cmd_id' via lookup or kwarg.
+    """
     permission_classes = [IsAuthenticated]
-    command_name = None
 
-    def post(self, request, pk):
+    def post(self, request, pk, cmd_id=None):
+        # 1. Get command ID from URL kwarg or payload
+        # If not in URL (fallback), look in payload 'command' field
+        cmd_id = cmd_id or request.data.get('command')
+        if not cmd_id:
+            return Response({'detail': 'Command ID is required.'}, status=400)
+
+        # 2. Get expediente
         exp = _get_expediente(pk)
         if not exp:
-            return Response({'detail': 'Not found.'}, status=404)
-        exp, events = execute_command(exp, self.command_name, request.data, request.user)
-        return _command_response(exp, events)
+            return Response({'detail': 'Expediente not found.'}, status=404)
 
+        # 3. Execute
+        try:
+            exp, events = execute_command(exp, cmd_id, request.data, request.user)
+            return _command_response(exp, events)
+        except PermissionError as e:
+            return Response({'detail': str(e)}, status=403)
+        except Exception as e:
+            # We filter some internal exceptions if needed, but for now:
+            return Response({'detail': str(e)}, status=400)
 
-# Individual command views
-class RegisterOCView(CommandView):
-    command_name = 'C2'
-
-class RegisterProformaView(CommandView):
-    command_name = 'C3'
-
-class DecideModeView(CommandView):
-    permission_classes = [IsCEO]
-    command_name = 'C4'
-
-class ConfirmSAPView(CommandView):
-    command_name = 'C5'
-
-class ConfirmProductionView(CommandView):
-    command_name = 'C6'
-
-class RegisterShipmentView(CommandView):
-    command_name = 'C7'
-
-class RegisterFreightQuoteView(CommandView):
-    command_name = 'C8'
-
-class RegisterCustomsView(CommandView):
-    command_name = 'C9'
-
-class ApproveDispatchView(CommandView):
-    command_name = 'C10'
-
-class ConfirmDepartureView(CommandView):
-    command_name = 'C11'
-
-class ConfirmArrivalView(CommandView):
-    command_name = 'C12'
-
-class IssueInvoiceView(CommandView):
-    command_name = 'C13'
-
-class CloseExpedienteView(CommandView):
-    command_name = 'C14'
-
-class RegisterCostView(CommandView):
-    command_name = 'C15'
-
-class CancelExpedienteView(CommandView):
-    permission_classes = [IsCEO]
-    command_name = 'C16'
-
-class BlockExpedienteView(CommandView):
-    command_name = 'C17'
-
-class UnblockExpedienteView(CommandView):
-    permission_classes = [IsCEO]
-    command_name = 'C18'
-
-class RegisterPaymentView(CommandView):
-    command_name = 'C21'
+# The individual views (RegisterOCView, etc.) are now removed or deprecated.
+# To maintain URL compatibility, we will point existing URLs to this view.
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -202,6 +165,10 @@ class ListExpedientesView(APIView):
         if brand_filter:
             qs = qs.filter(brand=brand_filter)
 
+        client_filter = request.query_params.get('client')
+        if client_filter:
+            qs = qs.filter(client_id=client_filter)
+
         search = request.query_params.get('search')
         if search:
             qs = qs.filter(client__legal_name__icontains=search)
@@ -224,8 +191,11 @@ class ListExpedientesView(APIView):
                 elif delta > 60:
                     exp.credit_band = 'AMBER'
 
-        serializer = UIExpedienteListSerializer(qs, many=True)
-        return Response(serializer.data)
+        from core.pagination import StandardPagination
+        paginator = StandardPagination()
+        page = paginator.paginate_queryset(qs, request)
+        serializer = UIExpedienteListSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class ExpedienteBundleView(APIView):
@@ -390,27 +360,8 @@ class FinancialComparisonView(APIView):
         return Response(comparison)
 
 
-class IssueCommissionInvoiceView(CommandView):
-    """C22: POST /api/expedientes/<pk>/issue-commission-invoice/"""
-    permission_classes = [IsCEO]
-    command_name = 'C22'
-
-
-class MaterializeLogisticsView(CommandView):
-    """C30: POST /api/expedientes/<pk>/materialize-logistics/"""
-    command_name = 'C30'
-
-
-class AddLogisticsOptionView(CommandView):
-    """C23: POST /api/expedientes/<pk>/add-logistics-option/"""
-    permission_classes = [IsCEO]
-    command_name = 'C23'
-
-
-class DecideLogisticsView(CommandView):
-    """C24: POST /api/expedientes/<pk>/decide-logistics/"""
-    permission_classes = [IsCEO]
-    command_name = 'C24'
+# Individual command views (deprecated in favor of CommandDispatchView)
+# URL configuration will now map these directly to CommandDispatchView(cmd_id='...')
 
 
 # ── S4-08: Mirror PDF ──
@@ -695,46 +646,17 @@ class DocumentsListView(APIView):
 # Sprint 5 Views
 # ═══════════════════════════════════════════════════════════════════
 
-class RegisterCompensationView(APIView):
-    """S5-05 C29 – POST /api/expedientes/{pk}/register-compensation/
-    CEO-only. Creates ART-12 Nota Compensación."""
-    permission_classes = [IsCEO]
-
-    def post(self, request, pk):
-        from apps.expedientes.services_sprint5 import register_compensation
-        exp = Expediente.objects.get(pk=pk)
-        artifact = register_compensation(exp, request.data, request.user)
-        return Response({
-            'artifact_id': str(artifact.artifact_id),
-            'artifact_type': artifact.artifact_type,
-            'payload': artifact.payload,
-        }, status=status.HTTP_201_CREATED)
-
-
 class LogisticsSuggestionsView(APIView):
     """S5-07 – GET /api/expedientes/{pk}/logistics-suggestions/
     CEO-only. Returns ranked suggestions from historical data."""
     permission_classes = [IsCEO]
 
     def get(self, request, pk):
-        from apps.expedientes.services_sprint5 import get_logistics_suggestions
-        exp = Expediente.objects.get(pk=pk)
+        from apps.expedientes.services import get_logistics_suggestions
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
         return Response(get_logistics_suggestions(exp))
-
-
-class AddShipmentUpdateView(APIView):
-    """S5-08 C36 – POST /api/expedientes/{pk}/add-shipment-update/
-    Manual tracking update appended to ART-05."""
-    permission_classes = [IsCEO]
-
-    def post(self, request, pk):
-        from apps.expedientes.services_sprint5 import add_shipment_update
-        exp = Expediente.objects.get(pk=pk)
-        artifact = add_shipment_update(exp, request.data, request.user)
-        return Response({
-            'artifact_id': str(artifact.artifact_id),
-            'payload': artifact.payload,
-        })
 
 
 class HandoffSuggestionView(APIView):
@@ -742,8 +664,10 @@ class HandoffSuggestionView(APIView):
     permission_classes = [IsCEO]
 
     def get(self, request, pk):
-        from apps.expedientes.services_sprint5 import get_handoff_suggestion
-        exp = Expediente.objects.get(pk=pk)
+        from apps.expedientes.services import get_handoff_suggestion
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
         return Response(get_handoff_suggestion(exp))
 
 
@@ -752,6 +676,36 @@ class LiquidationPaymentSuggestionView(APIView):
     permission_classes = [IsCEO]
 
     def get(self, request, pk):
-        from apps.expedientes.services_sprint5 import get_liquidation_payment_suggestion
-        exp = Expediente.objects.get(pk=pk)
+        from apps.expedientes.services import get_liquidation_payment_suggestion
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
         return Response(get_liquidation_payment_suggestion(exp))
+
+
+class CEOOverrideView(APIView):
+    """S14-15: POST /api/expedientes/{pk}/ceo-override/"""
+    permission_classes = [IsCEO]
+
+    def post(self, request, pk):
+        exp = _get_expediente(pk)
+        if not exp:
+            return Response({'detail': 'Not found.'}, status=404)
+        
+        target_state = request.data.get('target_state')
+        reason = request.data.get('reason')
+        if not target_state or not reason:
+            return Response({'detail': 'target_state and reason are required'}, status=400)
+            
+        old_state = exp.status
+        exp.status = target_state
+        exp.save(update_fields=['status'])
+        
+        EventLog.objects.create(
+            aggregate_id=exp.expediente_id,
+            aggregate_type='expediente',
+            event_type='CEO_OVERRIDE',
+            emitted_by=request.user.email,
+            payload={'old_state': old_state, 'new_state': target_state, 'reason': reason}
+        )
+        return Response({'detail': 'Override successful', 'new_state': exp.status})

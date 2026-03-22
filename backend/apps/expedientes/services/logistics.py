@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.db import transaction
 from apps.expedientes.enums_exp import ExpedienteStatus
 from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 from apps.expedientes.models import ArtifactInstance
@@ -45,3 +46,70 @@ def handle_c30(expediente, payload):
     # This usually creates ART-11 (Arribo) or similar?
     # In services.py it was just a mock logic for now
     pass
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Sprint 5: Shipment Updates (migrated from services_sprint5.py)
+# ─────────────────────────────────────────────────────────────────────
+
+def add_shipment_update(expediente, payload, user):
+    """
+    S5-08 C36: Add Shipment Update — manual tracking update.
+    Appends update entry to ART-05 payload.updates array.
+    If ART-05 doesn't exist, creates one with the update.
+    """
+    import uuid
+    from django.utils import timezone
+
+    art05 = ArtifactInstance.objects.filter(
+        expediente=expediente,
+        artifact_type='ART-05',
+        status='completed',
+    ).order_by('-created_at').first()
+
+    update_entry = {
+        'timestamp': timezone.now().isoformat(),
+        'status': payload.get('status', ''),
+        'location': payload.get('location', ''),
+        'notes': payload.get('notes', ''),
+        'source': 'manual',
+    }
+
+    with transaction.atomic():
+        if art05:
+            current_payload = art05.payload or {}
+            updates = current_payload.get('updates', [])
+            updates.append(update_entry)
+            current_payload['updates'] = updates
+
+            if payload.get('tracking_url'):
+                current_payload['tracking_url'] = payload['tracking_url']
+
+            art05.payload = current_payload
+            art05.save(update_fields=['payload'])
+        else:
+            art05 = ArtifactInstance.objects.create(
+                expediente=expediente,
+                artifact_type='ART-05',
+                payload={
+                    'tracking_url': payload.get('tracking_url', ''),
+                    'updates': [update_entry],
+                },
+                status='completed',
+            )
+
+        from apps.expedientes.models import EventLog
+        EventLog.objects.create(
+            event_type='shipment.update_added',
+            aggregate_type='expediente',
+            aggregate_id=expediente.expediente_id,
+            payload={
+                'artifact_id': str(art05.artifact_id),
+                'update': update_entry,
+            },
+            occurred_at=timezone.now(),
+            emitted_by='C36:AddShipmentUpdate',
+            correlation_id=uuid.uuid4(),
+        )
+
+    return art05

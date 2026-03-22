@@ -20,7 +20,8 @@ COMMAND_SPEC = {
     'C4': {
         'name': 'Decidir Modo Import/Comision',
         'requires_status': enums_exp.ExpedienteStatus.REGISTRO,
-        'creates_art': None
+        'creates_art': None,
+        'requires_ceo': True
     },
     'C5': {
         'name': 'Confirmar Registro',
@@ -86,7 +87,8 @@ COMMAND_SPEC = {
         'name': 'Cancelar Expediente',
         'requires_status': None,
         'transition_to': enums_exp.ExpedienteStatus.CANCELADO,
-        'creates_art': None
+        'creates_art': None,
+        'requires_ceo': True
     },
     'C17': {
         'name': 'Bloquear Expediente',
@@ -96,7 +98,9 @@ COMMAND_SPEC = {
     'C18': {
         'name': 'Desbloquear Expediente',
         'requires_status': None,
-        'creates_art': None
+        'creates_art': None,
+        'requires_ceo': True,
+        'bypass_block': True
     },
     'C19': {
         'name': 'Supersede Artifact',
@@ -128,9 +132,20 @@ COMMAND_SPEC = {
         'requires_status': None,
         'creates_art': None
     },
+    'C29': {
+        'name': 'Registrar Compensación (CEO Only)',
+        'requires_status': None,
+        'creates_art': 'ART-12',
+        'requires_ceo': True
+    },
     'C30': {
         'name': 'Materializar Logística (Sprint 4)',
         'requires_status': None,
         'creates_art': 'ART-11'
+    },
+    'C36': {
+        'name': 'Add Shipment Update (Manual)',
+        'requires_status': None,
+        'creates_art': 'ART-05'
     }
 }

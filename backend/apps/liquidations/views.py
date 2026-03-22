@@ -81,8 +81,9 @@ def dispute_liquidation_view(request, liquidation_id):
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def list_liquidations_view(request):
+    from core.pagination import StandardPagination
     qs = Liquidation.objects.order_by("-created_at")
-    paginator = PageNumberPagination()
+    paginator = StandardPagination()
     page = paginator.paginate_queryset(qs, request)
     return paginator.get_paginated_response(
         LiquidationListSerializer(page, many=True).data

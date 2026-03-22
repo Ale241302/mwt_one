@@ -9,9 +9,9 @@ class LegalEntityAdmin(admin.ModelAdmin):
 
 @admin.register(Expediente)
 class ExpedienteAdmin(admin.ModelAdmin):
-    list_display = ('expediente_id', 'client', 'brand', 'mode', 'status', 'created_at', 'is_blocked')
+    list_display = ('expediente_id', 'client', 'brand', 'mode', 'status', 'created_at', 'is_blocked', 'aforo_type', 'aforo_date')
     search_fields = ('brand', 'mode')
-    list_filter = ('status', 'is_blocked', 'brand')
+    list_filter = ('status', 'is_blocked', 'brand', 'aforo_type')
 
 @admin.register(ArtifactInstance)
 class ArtifactInstanceAdmin(admin.ModelAdmin):
@@ -27,9 +27,9 @@ class EventLogAdmin(admin.ModelAdmin):
 
 @admin.register(CostLine)
 class CostLineAdmin(admin.ModelAdmin):
-    list_display = ('cost_line_id', 'expediente', 'cost_type', 'amount', 'currency', 'phase', 'visibility')
+    list_display = ('cost_line_id', 'expediente', 'cost_type', 'amount', 'currency', 'amount_base_currency', 'phase', 'visibility', 'cost_category')
     search_fields = ('cost_type', 'description')
-    list_filter = ('cost_type', 'currency', 'phase', 'visibility')
+    list_filter = ('cost_type', 'currency', 'phase', 'visibility', 'cost_category', 'cost_behavior')
 
 @admin.register(PaymentLine)
 class PaymentLineAdmin(admin.ModelAdmin):

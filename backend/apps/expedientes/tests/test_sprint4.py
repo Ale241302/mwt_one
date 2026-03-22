@@ -10,7 +10,8 @@ from decimal import Decimal
 from datetime import date, timedelta
 from django.test import TestCase, override_settings
 from django.utils import timezone
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 from apps.expedientes.models import (
     LegalEntity, Expediente, ArtifactInstance, EventLog,

@@ -36,3 +36,48 @@ class PortalExpedienteViewSet(viewsets.ReadOnlyModelViewSet):
         artifacts = ArtifactInstance.objects.filter(expediente=expediente)
         serializer = ArtifactPortalSerializer(artifacts, many=True)
         return Response(serializer.data)
+
+
+class CatalogView(APIView):
+    """S14-14: GET /api/portal/catalog/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from apps.productos.models import ProductMaster
+        from apps.pricing.services import resolve_client_price
+        from decimal import Decimal
+        from django.utils import timezone
+        
+        user = request.user
+        
+        brand_slug = None
+        if user.role == UserRole.CLIENT_MARLUVAS:
+            brand_slug = 'marluvas'
+        elif user.role == UserRole.CLIENT_TECMATER:
+            brand_slug = 'tecmater'
+            
+        if not brand_slug:
+            return Response({"error": "No brand associated with client"}, status=403)
+            
+        products = ProductMaster.objects.filter(brand_id=brand_slug)
+        
+        context = {
+            'brand': brand_slug,
+            'client_subsidiary_id': user.id, # mock resolution
+            'date': timezone.now().date(),
+            'currency': 'USD',
+            'channel': 'distributor' # simplified generic for portal
+        }
+        
+        catalog = []
+        for product in products:
+            price_data = resolve_client_price(context, product.sku, commission_pct=Decimal('0'), payment_days=30)
+            catalog.append({
+                'sku': product.sku,
+                'name': product.name,
+                'price': float(price_data['resolved_price']),
+                'currency': context['currency'],
+                'pricing_source': price_data.get('pricing_source_type', 'base')
+            })
+            
+        return Response(catalog)

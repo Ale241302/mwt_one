@@ -1,0 +1,200 @@
+﻿mwt-django  |     obj_list, additional_lookups = prefetch_one_level(
+mwt-django  |                                    ^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 2544, in prefetch_one_level
+mwt-django  |     ) = prefetcher.get_prefetch_querysets(
+mwt-django  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/related_descriptors.py", line 797, in get_prefetch_querysets
+mwt-django  |     for rel_obj in queryset:
+mwt-django  |                    ^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 400, in __iter__
+mwt-django  |     self._fetch_all()
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1928, in _fetch_all
+mwt-django  |     self._result_cache = list(self._iterable_class(self))
+mwt-django  |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 91, in __iter__
+mwt-django  |     results = compiler.execute_sql(
+mwt-django  |               ^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1574, in execute_sql
+mwt-django  |     cursor.execute(sql, params)
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 79, in execute
+mwt-django  |     return self._execute_with_wrappers(
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+mwt-django  |     return executor(sql, params, many, context)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 100, in _execute
+mwt-django  |     with self.db.wrap_database_errors:
+mwt-django  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
+mwt-django  |     raise dj_exc_value.with_traceback(traceback) from exc_value
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 105, in _execute
+mwt-django  |     return self.cursor.execute(sql, params)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  | django.db.utils.ProgrammingError: column expedientes_costline.cost_category does not exist
+mwt-django  | LINE 1: ...escription", "expedientes_costline"."visibility", "expedient...
+mwt-django  |                                                              ^
+mwt-django  | 
+mwt-django  | ERROR 2026-03-22 13:04:18,444 log Internal Server Error: /api/ui/dashboard/
+mwt-django  | Traceback (most recent call last):
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 105, in _execute
+mwt-django  |     return self.cursor.execute(sql, params)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  | psycopg2.errors.UndefinedColumn: column expedientes_costline.cost_category does not exist
+mwt-django  | LINE 1: ...escription", "expedientes_costline"."visibility", "expedient...
+mwt-django  |                                                              ^
+mwt-django  | 
+mwt-django  | 
+mwt-django  | The above exception was the direct cause of the following exception:
+mwt-django  | 
+mwt-django  | Traceback (most recent call last):
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+mwt-django  |     response = get_response(request)
+mwt-django  |                ^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+mwt-django  |     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+mwt-django  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+mwt-django  |     return view_func(request, *args, **kwargs)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/views/generic/base.py", line 104, in view
+mwt-django  |     return self.dispatch(request, *args, **kwargs)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 509, in dispatch
+mwt-django  |     response = self.handle_exception(exc)
+mwt-django  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 469, in handle_exception
+mwt-django  |     self.raise_uncaught_exception(exc)
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+mwt-django  |     raise exc
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 506, in dispatch
+mwt-django  |     response = handler(request, *args, **kwargs)
+mwt-django  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/app/apps/core/views.py", line 94, in get
+mwt-django  |     active_list = list(active_qs)
+mwt-django  |                   ^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 400, in __iter__
+mwt-django  |     self._fetch_all()
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1930, in _fetch_all
+mwt-django  |     self._prefetch_related_objects()
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1320, in _prefetch_related_objects
+mwt-django  |     prefetch_related_objects(self._result_cache, *self._prefetch_related_lookups)
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 2380, in prefetch_related_objects
+mwt-django  |     obj_list, additional_lookups = prefetch_one_level(
+mwt-django  |                                    ^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 2544, in prefetch_one_level
+mwt-django  |     ) = prefetcher.get_prefetch_querysets(
+mwt-django  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/related_descriptors.py", line 797, in get_prefetch_querysets
+mwt-django  |     for rel_obj in queryset:
+mwt-django  |                    ^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 400, in __iter__
+mwt-django  |     self._fetch_all()
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1928, in _fetch_all
+mwt-django  |     self._result_cache = list(self._iterable_class(self))
+mwt-django  |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 91, in __iter__
+mwt-django  |     results = compiler.execute_sql(
+mwt-django  |               ^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1574, in execute_sql
+mwt-django  |     cursor.execute(sql, params)
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 79, in execute
+mwt-django  |     return self._execute_with_wrappers(
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+mwt-django  |     return executor(sql, params, many, context)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 100, in _execute
+mwt-django  |     with self.db.wrap_database_errors:
+mwt-django  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
+mwt-django  |     raise dj_exc_value.with_traceback(traceback) from exc_value
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 105, in _execute
+mwt-django  |     return self.cursor.execute(sql, params)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  | django.db.utils.ProgrammingError: column expedientes_costline.cost_category does not exist
+mwt-django  | LINE 1: ...escription", "expedientes_costline"."visibility", "expedient...
+mwt-django  |                                                              ^
+mwt-django  | 
+mwt-django  | /usr/local/lib/python3.12/site-packages/rest_framework/pagination.py:207: UnorderedObjectListWarning: Pagination may yield inconsistent results with an unordered object_list: <class 'apps.expedientes.models.Expediente'> QuerySet.
+mwt-django  |   paginator = self.django_paginator_class(queryset, page_size)
+mwt-django  | ERROR 2026-03-22 13:04:28,812 log Internal Server Error: /api/ui/dashboard/
+mwt-django  | Traceback (most recent call last):
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 105, in _execute
+mwt-django  |     return self.cursor.execute(sql, params)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  | psycopg2.errors.UndefinedColumn: column expedientes_costline.cost_category does not exist
+mwt-django  | LINE 1: ...escription", "expedientes_costline"."visibility", "expedient...
+mwt-django  |                                                              ^
+mwt-django  | 
+mwt-django  | 
+mwt-django  | The above exception was the direct cause of the following exception:
+mwt-django  | 
+mwt-django  | Traceback (most recent call last):
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+mwt-django  |     response = get_response(request)
+mwt-django  |                ^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+mwt-django  |     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+mwt-django  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+mwt-django  |     return view_func(request, *args, **kwargs)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/views/generic/base.py", line 104, in view
+mwt-django  |     return self.dispatch(request, *args, **kwargs)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 509, in dispatch
+mwt-django  |     response = self.handle_exception(exc)
+mwt-django  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 469, in handle_exception
+mwt-django  |     self.raise_uncaught_exception(exc)
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+mwt-django  |     raise exc
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 506, in dispatch
+mwt-django  |     response = handler(request, *args, **kwargs)
+mwt-django  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/app/apps/core/views.py", line 94, in get
+mwt-django  |     active_list = list(active_qs)
+mwt-django  |                   ^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 400, in __iter__
+mwt-django  |     self._fetch_all()
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1930, in _fetch_all
+mwt-django  |     self._prefetch_related_objects()
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1320, in _prefetch_related_objects
+mwt-django  |     prefetch_related_objects(self._result_cache, *self._prefetch_related_lookups)
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 2380, in prefetch_related_objects
+mwt-django  |     obj_list, additional_lookups = prefetch_one_level(
+mwt-django  |                                    ^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 2544, in prefetch_one_level
+mwt-django  |     ) = prefetcher.get_prefetch_querysets(
+mwt-django  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/related_descriptors.py", line 797, in get_prefetch_querysets
+mwt-django  |     for rel_obj in queryset:
+mwt-django  |                    ^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 400, in __iter__
+mwt-django  |     self._fetch_all()
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1928, in _fetch_all
+mwt-django  |     self._result_cache = list(self._iterable_class(self))
+mwt-django  |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 91, in __iter__
+mwt-django  |     results = compiler.execute_sql(
+mwt-django  |               ^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1574, in execute_sql
+mwt-django  |     cursor.execute(sql, params)
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 79, in execute
+mwt-django  |     return self._execute_with_wrappers(
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+mwt-django  |     return executor(sql, params, many, context)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 100, in _execute
+mwt-django  |     with self.db.wrap_database_errors:
+mwt-django  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
+mwt-django  |     raise dj_exc_value.with_traceback(traceback) from exc_value
+mwt-django  |   File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 105, in _execute
+mwt-django  |     return self.cursor.execute(sql, params)
+mwt-django  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mwt-django  | django.db.utils.ProgrammingError: column expedientes_costline.cost_category does not exist
+mwt-django  | LINE 1: ...escription", "expedientes_costline"."visibility", "expedient...
+mwt-django  |                                                              ^
+mwt-django  | 

@@ -1,0 +1,71 @@
+﻿python : Creating test 
+database for alias 
+'default'...
+En línea: 1 Carácter: 
+13
++ cd backend; python 
+manage.py test apps.exp
+edientes.tests.test_com
+mand ...
++             ~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (Creating test   
+  d...as 'default'.    
+..:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+
+F
+=======================
+=======================
+=======================
+=
+FAIL: 
+test_c2_register_oc (ap
+ps.expedientes.tests.te
+st_commands.CommandAPIT
+ests.test_c2_register_o
+c)
+-----------------------
+-----------------------
+-----------------------
+-
+Traceback (most recent 
+call last):
+  File "C:\Users\ale13\
+OneDrive\Documents\mwt_
+one\backend\apps\expedi
+entes\tests\test_comman
+ds.py", line 59, in 
+test_c2_register_oc
+    self.assertTrue(Art
+ifactInstance.objects.f
+ilter(artifact_type='AR
+T-01').exists())
+    ~~~~~~~~~~~~~~~^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
+AssertionError: False 
+is not true
+
+-----------------------
+-----------------------
+-----------------------
+-
+Ran 1 test in 0.077s
+
+FAILED (failures=1)
+Destroying test 
+database for alias 
+'default'...
+
+Found 1 test(s).
+System check identified no issues (0 silenced).

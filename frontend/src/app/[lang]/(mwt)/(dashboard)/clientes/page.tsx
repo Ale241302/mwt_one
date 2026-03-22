@@ -192,7 +192,7 @@ export default function ClientesPage() {
                     <div className="flex items-center gap-1">
                       <button className="btn btn-sm btn-ghost" onClick={() => openEdit(c)} aria-label={`Editar ${c.name}`}><Pencil size={14} /></button>
                       <button className="btn btn-sm btn-ghost" onClick={() => setDeleteTarget(c)} aria-label={`Eliminar ${c.name}`} style={{ color: "var(--critical)" }}><Trash2 size={14} /></button>
-                      <button className="btn btn-sm btn-ghost" onClick={() => router.push(`/${lang}/dashboard/clientes/${c.id}`)} aria-label={`Ver detalle de ${c.name}`}><ChevronRight size={14} /></button>
+                      <button className="btn btn-sm btn-ghost" onClick={() => router.push(`/${lang}/clientes/${c.id}`)} aria-label={`Ver detalle de ${c.name}`}><ChevronRight size={14} /></button>
                     </div>
                   </td>
                 </tr>

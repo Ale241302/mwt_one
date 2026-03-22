@@ -15,10 +15,10 @@ from .enums_exp import (
 class Expediente(TimestampMixin):
     expediente_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     legal_entity = models.ForeignKey(LegalEntity, on_delete=models.PROTECT, related_name='expedientes_emitidos', help_text='Entidad emisora')
-    brand = models.ForeignKey('brands.Brand', on_delete=models.PROTECT, null=True, blank=True)
+    brand = models.ForeignKey('brands.Brand', on_delete=models.PROTECT, null=True, blank=True, db_index=True)
     destination = models.CharField(max_length=10, choices=[('CR', 'Costa Rica'), ('USA', 'United States')], default='CR')
-    client = models.ForeignKey(LegalEntity, on_delete=models.PROTECT, related_name='expedientes_como_cliente', help_text='Cliente')
-    status = models.CharField(max_length=20, choices=ExpedienteStatus.choices, default=ExpedienteStatus.REGISTRO)
+    client = models.ForeignKey(LegalEntity, on_delete=models.PROTECT, related_name='expedientes_como_cliente', help_text='Cliente', db_index=True)
+    status = models.CharField(max_length=20, choices=ExpedienteStatus.choices, default=ExpedienteStatus.REGISTRO, db_index=True)
     is_blocked = models.BooleanField(default=False)
     blocked_reason = models.TextField(blank=True, null=True)
     blocked_at = models.DateTimeField(blank=True, null=True)
@@ -43,7 +43,7 @@ class Expediente(TimestampMixin):
         help_text='Target node (triggers transfer suggestion on close)'
     )
     external_fiscal_refs = models.JSONField(
-        default=dict, blank=True,
+        default=list, blank=True,
         help_text='DANFE, DU-E, etc. (H5)'
     )
     aforo_type = models.CharField(
@@ -51,6 +51,10 @@ class Expediente(TimestampMixin):
         blank=True, null=True, help_text='H9'
     )
     aforo_date = models.DateField(blank=True, null=True, help_text='H9')
+    snapshot_commercial = models.JSONField(
+        default=dict, blank=True,
+        help_text='Immutable snapshot of pricing, incoterms, payment terms, and agreements (S14-05)'
+    )
 
     class Meta:
         verbose_name = 'Expediente'
@@ -141,16 +145,16 @@ class CostLine(AppendOnlyModel):
         default=CostLineVisibility.INTERNAL,
         help_text='internal=CEO-only, client=visible to client'
     )
-    category = models.CharField(
+    cost_category = models.CharField(
         max_length=20, choices=CostCategory.choices,
         default=CostCategory.LANDED_COST, help_text='H2'
     )
-    behavior = models.CharField(
-        max_length=20, choices=CostBehavior.choices,
-        default=CostBehavior.VARIABLE_PER_UNIT, help_text='H3'
+    cost_behavior = models.CharField(
+        max_length=25, choices=CostBehavior.choices,
+        blank=True, null=True, help_text='H3'
     )
     exchange_rate = models.DecimalField(
-        max_digits=12, decimal_places=4,
+        max_digits=12, decimal_places=6,
         blank=True, null=True, help_text='H8'
     )
     amount_base_currency = models.DecimalField(

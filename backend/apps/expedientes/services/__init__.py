@@ -1,6 +1,8 @@
+import uuid
 import logging
+from django.utils import timezone
 from django.db import transaction
-from apps.expedientes.models import Expediente, ArtifactInstance
+from apps.expedientes.models import Expediente, ArtifactInstance, EventLog
 from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 from apps.expedientes.exceptions import CommandValidationError
 
@@ -14,12 +16,13 @@ from .commands_transito import handle_c12
 from .commands_destino import handle_c13, handle_c14, handle_c22
 from .financial import handle_c15, handle_c21
 from .exceptions import handle_c16, handle_c17, handle_c18
-from .corrections import handle_c19, handle_c20, supersede_artifact, void_artifact
-from .logistics import handle_c23, handle_c24, handle_c30
+from .corrections import handle_c19, handle_c20, supersede_artifact, void_artifact, register_compensation
+from .logistics import handle_c23, handle_c24, handle_c30, add_shipment_update
 from .queries import (
-    can_execute_command, get_available_commands, get_costs,
+    get_available_commands, get_costs,
     get_costs_summary, get_invoice_suggestion, get_invoice,
-    calculate_financial_comparison
+    calculate_financial_comparison, get_logistics_suggestions,
+    get_handoff_suggestion, get_liquidation_payment_suggestion
 )
 from .reporting import generate_mirror_pdf
 
@@ -38,49 +41,102 @@ HANDLERS = {
     'C23': handle_c23, 'C24': handle_c24, 'C30': handle_c30
 }
 
-def execute_command(expediente, cmd_id, payload):
+from .state_machine import can_transition_to
+
+def can_execute_command(expediente, cmd_id, user):
+    return can_transition_to(expediente, cmd_id, user)
+
+
+def execute_command(expediente, cmd_id, payload, user):
     """
-    Modular orchestrator for command execution.
+    Main entry point for command execution.
+    Handles validation, atomic transaction, artifact creation, and status transitions.
     """
-    if cmd_id not in COMMAND_SPEC:
-        raise CommandValidationError(f"Unknown command: {cmd_id}")
+    can_exec, reason = can_execute_command(expediente, cmd_id, user)
+    if not can_exec:
+        raise Exception(reason)
 
-    cmd_config = COMMAND_SPEC[cmd_id]
-    
-    # 1. Validation (Requires Status)
-    req_status = cmd_config.get('requires_status')
-    if req_status and expediente.status != req_status:
-        raise CommandValidationError(
-            f"Command {cmd_id} requires status {req_status}. Current: {expediente.status}"
-        )
-
-    # 2. Blocked check
-    if expediente.is_blocked and cmd_id not in ['C18', 'C19', 'C20']:
-        raise CommandValidationError("Expediente is BLOCKED. Action not allowed.")
-
+    spec = COMMAND_SPEC.get(cmd_id)
     handler = HANDLERS.get(cmd_id)
     
+    events = []
+
     with transaction.atomic():
-        # Dispatch specific logic
+        # 1. Artifact creation (Optional)
+        new_artifact = None
+        if spec.get('creates_art'):
+            new_artifact = ArtifactInstance.objects.create(
+                expediente=expediente,
+                artifact_type=spec['creates_art'],
+                payload=payload.get('payload', payload),
+                status=ArtifactStatusEnum.COMPLETED
+            )
+            
+        # 2. Handler execution
         if handler:
+            # We wrap the handler to handle both (exp, payload) and (exp, payload, user) if needed
+            # For now, most handlers only need (exp, payload)
+            # But S12 goal is to standardize.
             handler(expediente, payload)
-        
-        # 3. Generic Artifact Creation
-        creates_art = cmd_config.get('creates_art')
-        if creates_art:
-            # S4 Logic: generic artifacts (not ART-11/ART-10 managed specifically)
-            if cmd_id not in ['C30', 'C22']:
-                ArtifactInstance.objects.create(
-                    expediente=expediente,
-                    artifact_type=creates_art,
-                    status=ArtifactStatusEnum.COMPLETED,
-                    payload=payload
-                )
-
-        # 4. Generic Status Transition
-        transition_to = cmd_config.get('transition_to')
-        if transition_to:
-            expediente.status = transition_to
+            
+        # 3. Status Transition
+        old_status = expediente.status
+        new_status = spec.get('transition_to')
+        if new_status and old_status != new_status:
+            expediente.status = new_status
             expediente.save()
+            
+            # Transition Event
+            ev_trans = EventLog.objects.create(
+                event_type='expediente.status_changed',
+                aggregate_type='expediente',
+                aggregate_id=expediente.expediente_id,
+                payload={'old': old_status, 'new': new_status},
+                occurred_at=timezone.now(),
+                emitted_by='SYSTEM',
+                correlation_id=uuid.uuid4()
+            )
+            events.append(ev_trans)
 
-    return expediente
+        # 4. Command Event
+        ev_cmd = EventLog.objects.create(
+            event_type=f'command.{cmd_id}',
+            aggregate_type='expediente',
+            aggregate_id=expediente.expediente_id,
+            payload={
+                'command': cmd_id,
+                'artifact_id': str(new_artifact.pk) if new_artifact else None
+            },
+            occurred_at=timezone.now(),
+            emitted_by=cmd_id,
+            correlation_id=uuid.uuid4()
+        )
+        events.append(ev_cmd)
+        
+    return expediente, events
+
+# Re-exposing symbols for Sprint 12 API
+register_oc = handle_c2
+register_proforma = handle_c3
+decide_mode = handle_c4
+confirm_sap = handle_c5
+confirm_production = handle_c6
+register_shipment = handle_c7
+register_freight_quote = handle_c8
+register_customs = handle_c9
+approve_dispatch = handle_c10
+confirm_departure = handle_c11
+confirm_arrival = handle_c12
+issue_invoice = handle_c13
+close_expediente = handle_c14
+register_cost = handle_c15
+cancel_expediente = handle_c16
+block_expediente = handle_c17
+unblock_expediente = handle_c18
+register_rectification = handle_c19
+register_void = handle_c20
+register_payment = handle_c21
+register_liquidation = handle_c22
+register_shipment_update = handle_c23
+register_generic_artifact = handle_c30
+register_compensation = register_compensation # already imported

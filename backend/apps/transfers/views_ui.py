@@ -23,14 +23,17 @@ class TransfersUIView(APIView):
         if estado and estado != 'todos':
             qs = qs.filter(status=estado)
 
-        transfers = qs[:100]
+        from core.pagination import StandardPagination
+        paginator = StandardPagination()
+        page = paginator.paginate_queryset(qs, request)
+        
         nodes = (
             Node.objects
             .select_related('legal_entity')
             .filter(status='active')
             .order_by('name')
         )
-        return Response({
-            'transfers': TransferListSerializer(transfers, many=True).data,
+        return paginator.get_paginated_response({
+            'transfers': TransferListSerializer(page, many=True).data,
             'nodes': NodeSerializer(nodes, many=True).data,
         })

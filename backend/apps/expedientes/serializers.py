@@ -41,7 +41,10 @@ class CostLineSerializer(serializers.ModelSerializer):
         model = CostLine
         fields = [
             'cost_line_id', 'cost_type', 'amount', 'currency',
-            'phase', 'description', 'created_at', 'updated_at',
+            'phase', 'description', 
+            'cost_category', 'cost_behavior', 'exchange_rate',
+            'amount_base_currency', 'base_currency',
+            'created_at', 'updated_at',
         ]
         read_only_fields = fields
 
@@ -76,6 +79,7 @@ class ExpedienteSerializer(serializers.ModelSerializer):
             'credit_clock_start_rule', 'credit_clock_started_at',
             'payment_status', 'payment_status_display',
             'payment_registered_at',
+            'external_fiscal_refs', 'aforo_type', 'aforo_date',
             'created_at', 'updated_at',
         ]
         read_only_fields = fields
@@ -107,6 +111,8 @@ class ArtifactPayloadSerializer(serializers.Serializer):
     payload = serializers.DictField(required=False, default=dict)
 
 
+from apps.expedientes.enums_exp import CostCategory, CostBehavior
+
 class RegisterCostSerializer(serializers.Serializer):
     """C15: RegisterCost — inputs."""
     cost_type = serializers.CharField(max_length=50)
@@ -114,6 +120,10 @@ class RegisterCostSerializer(serializers.Serializer):
     currency = serializers.CharField(max_length=3)
     phase = serializers.CharField(max_length=50)
     description = serializers.CharField(required=False, default='', allow_blank=True)
+    cost_category = serializers.ChoiceField(choices=CostCategory.choices, required=False, default=CostCategory.LANDED_COST)
+    cost_behavior = serializers.ChoiceField(choices=CostBehavior.choices, required=False, allow_null=True)
+    exchange_rate = serializers.DecimalField(max_digits=12, decimal_places=6, required=False, allow_null=True)
+    base_currency = serializers.CharField(max_length=3, required=False, default='USD')
 
 
 class RegisterPaymentSerializer(serializers.Serializer):

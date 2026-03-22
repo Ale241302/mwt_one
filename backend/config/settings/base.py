@@ -44,6 +44,12 @@ INSTALLED_APPS = [
     'apps.clientes',
     'apps.productos',
     'apps.portal',
+    'apps.inventario',
+    'apps.agreements',
+    'apps.pricing',
+    'apps.audit',
+    'apps.orders',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -197,6 +203,16 @@ REST_FRAMEWORK = {
         'user': '120/min',
     },
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'core.exception_handler.mwt_exception_handler',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'MWT ONE API',
+    'DESCRIPTION': 'MWT Logistics Management System API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # Otras configuraciones si se desea
 }
 
 SIMPLE_JWT = {
@@ -217,3 +233,13 @@ LIQUIDATION_COMMISSION_TOLERANCE_PP = 0.5 # +-0.5pp
 # --- Sprint 8 Knowledge ---
 KNOWLEDGE_SERVICE_URL = env('KNOWLEDGE_SERVICE_URL', default='http://mwt-knowledge:8001')
 KNOWLEDGE_INTERNAL_TOKEN = env('KNOWLEDGE_INTERNAL_TOKEN', default='')
+
+# --- Sprint 13 ---
+DAI_RATES = {
+    '6403.99.90': {
+        'CR': 0.14,
+        'CO': 0.15,
+        'PE': 0.10,
+    }
+}
+VIABILITY_FLETE_PCT = 0.05

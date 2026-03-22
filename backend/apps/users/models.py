@@ -57,6 +57,12 @@ class MWTUser(AbstractUser):
     whatsapp_number = models.CharField(max_length=20, null=True, blank=True)
     is_api_user     = models.BooleanField(default=False)
     is_blocked      = models.BooleanField(default=False)
+    brand           = models.ForeignKey(
+        'brands.Brand',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='assigned_users',
+    )
     created_by      = models.ForeignKey(
         'self',
         null=True, blank=True,

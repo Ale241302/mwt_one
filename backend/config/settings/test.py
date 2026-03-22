@@ -13,7 +13,16 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
 CELERY_TASK_ALWAYS_EAGER = True
+CELERY_BROKER_URL = 'memory://'
+CELERY_RESULT_BACKEND = 'cache+memory://'
+
 KNOWLEDGE_INTERNAL_TOKEN = 'test-token'
 
 class DisableMigrations(object):

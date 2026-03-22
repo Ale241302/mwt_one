@@ -105,6 +105,8 @@ export default function TransfersPage() {
         ? raw
         : Array.isArray(raw?.transfers)
         ? raw.transfers
+        : Array.isArray(raw?.results?.transfers)
+        ? raw.results.transfers
         : Array.isArray(raw?.results)
         ? raw.results
         : [];

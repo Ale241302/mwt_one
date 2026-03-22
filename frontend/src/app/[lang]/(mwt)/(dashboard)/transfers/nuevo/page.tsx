@@ -55,7 +55,13 @@ export default function NuevoTransferPage() {
         setNodesError(false);
         const res = await api.get("ui/transfers/");
         const data = res.data;
-        setNodes(Array.isArray(data.nodes) ? data.nodes : []);
+        // El backend ui/transfers/ devuelve paginado: results: { transfers, nodes }
+        const nodesList = Array.isArray(data.nodes)
+          ? data.nodes
+          : Array.isArray(data?.results?.nodes)
+          ? data.results.nodes
+          : [];
+        setNodes(nodesList);
       } catch {
         setNodesError(true);
         toast.error("No se pudieron cargar los nodos");

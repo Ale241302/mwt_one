@@ -110,20 +110,25 @@ class LogisticsSource(TextChoices):
 
 
 class CostCategory(TextChoices):
-    LANDED_COST    = 'LANDED_COST',    'Landed Cost'
-    TAX_CREDIT     = 'TAX_CREDIT',     'Tax Credit (IVA)'
-    RECOVERABLE    = 'RECOVERABLE',    'Recoverable'
-    NON_DEDUCTIBLE = 'NON_DEDUCTIBLE', 'Non-Deductible'
+    LANDED_COST    = 'landed_cost',    'Landed Cost'
+    TAX_CREDIT     = 'tax_credit',     'Tax Credit (recuperable)'
+    RECOVERABLE    = 'recoverable',    'Recoverable (otro)'
+    NON_DEDUCTIBLE = 'non_deductible', 'Non-Deductible'
 
 
 class CostBehavior(TextChoices):
-    FIXED_PER_OPERATION = 'FIXED_PER_OPERATION', 'Fixed per Operation'
-    VARIABLE_PER_UNIT   = 'VARIABLE_PER_UNIT',   'Variable per Unit'
-    VARIABLE_PER_WEIGHT = 'VARIABLE_PER_WEIGHT', 'Variable per Weight'
-    SEMI_VARIABLE       = 'SEMI_VARIABLE',       'Semi-variable'
+    FIXED_PER_OPERATION = 'fixed_per_operation', 'Fixed per Operation'
+    VARIABLE_PER_UNIT   = 'variable_per_unit',   'Variable per Unit'
+    VARIABLE_PER_WEIGHT = 'variable_per_weight', 'Variable per Weight'
+    SEMI_VARIABLE       = 'semi_variable',       'Semi-Variable'
 
 
 class AforoType(TextChoices):
-    VERDE    = 'VERDE',    'Verde (Levante Inmediato)'
-    AMARILLO = 'AMARILLO', 'Amarillo (Revisi\u00f3n Documental)'
-    ROJO     = 'ROJO',     'Rojo (Revisi\u00f3n F\u00edsica)'
+    VERDE    = 'verde',    'Verde (Levante Inmediato)'
+    AMARILLO = 'amarillo', 'Amarillo (Revisión Documental)'
+    ROJO     = 'rojo',     'Rojo (Revisión Física)'
+
+
+class ArtifactType(TextChoices):
+    CERTIFICATE_OF_ORIGIN = 'certificate_of_origin', 'Certificado de Origen'
+    DUE_EXPORT_BR = 'due_export_br', 'DU-E Exportación Brasil'

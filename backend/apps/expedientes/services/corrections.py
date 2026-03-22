@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.db import transaction
 from apps.expedientes.enums_exp import ExpedienteStatus
 from apps.expedientes.enums_artifacts import ArtifactStatusEnum
+from apps.expedientes.models import ArtifactInstance, EventLog
 
 def supersede_artifact(artifact_id, new_payload, user):
     from django.apps import apps
@@ -132,3 +133,47 @@ def handle_c19(expediente, payload):
 def handle_c20(expediente, payload):
     """Entry point for C20: Void Artifact."""
     pass
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Sprint 5: Compensation (migrated from services_sprint5.py)
+# ─────────────────────────────────────────────────────────────────────
+
+def register_compensation(expediente, payload, user):
+    """
+    S5-05 C29: RegisterCompensation — CEO-only.
+    Creates ArtifactInstance type ART-12.
+    Voidable via C20 (VoidArtifact).
+    """
+    if not user.is_superuser:
+        raise PermissionError("Only CEO can register compensation notes.")
+
+    with transaction.atomic():
+        artifact = ArtifactInstance.objects.create(
+            expediente=expediente,
+            artifact_type='ART-12',
+            payload={
+                'amount': str(payload.get('amount', 0)),
+                'currency': payload.get('currency', 'USD'),
+                'reason': payload.get('reason', ''),
+                'beneficiary': payload.get('beneficiary', ''),
+                'reference': payload.get('reference', ''),
+                'notes': payload.get('notes', ''),
+            },
+            status='completed',
+        )
+
+        EventLog.objects.create(
+            event_type='compensation.registered',
+            aggregate_type='expediente',
+            aggregate_id=expediente.expediente_id,
+            payload={
+                'artifact_id': str(artifact.artifact_id),
+                'amount': str(payload.get('amount', 0)),
+            },
+            occurred_at=timezone.now(),
+            emitted_by='C29:RegisterCompensation',
+            correlation_id=uuid.uuid4(),
+        )
+
+    return artifact
