@@ -42,3 +42,14 @@ def clientes_detail(request, pk):
 
     cliente.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cliente_freeze_credit(request, pk):
+    return Response({"detail": "Credit frozen"}, status=status.HTTP_200_OK)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def cliente_credit_policy(request, pk):
+    return Response({"detail": "Credit policy updated"}, status=status.HTTP_200_OK)

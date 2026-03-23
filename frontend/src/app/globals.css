@@ -53,6 +53,11 @@
   --border: #E2E5EA;
   --border-strong: #C8CDD5;
   --divider: #ECEEF1;
+  --surface-glass-bg: rgba(255, 255, 255, 0.7);
+  --surface-glass-border: rgba(255, 255, 255, 0.2);
+  --surface-glass-blur: blur(12px);
+  --pulse-warning: rgba(220, 38, 38, 0.3);
+  --pulse-brand: rgba(1, 58, 87, 0.2);
 
   /* C2 — Text */
   --text-primary: #013A57;
@@ -104,6 +109,9 @@
   --border: #1E3A54;
   --border-strong: #2A4D6B;
   --divider: #172E45;
+  --surface-glass-bg: rgba(15, 35, 55, 0.6);
+  --surface-glass-border: rgba(30, 58, 84, 0.2);
+  --pulse-warning: rgba(255, 107, 114, 0.3);
 
   --text-primary: #F1F5F9;
   --text-secondary: #94A3B8;

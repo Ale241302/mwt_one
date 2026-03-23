@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Layers, FileText, ShoppingCart, Box } from "lucide-react";
+import { Layers, FileText, ShoppingCart, Box, DollarSign, Settings } from "lucide-react";
+import { PricingTab } from "@/components/brand-console/PricingTab";
+import { OperationsTab } from "@/components/brand-console/OperationsTab";
 
 export default function BrandConsolePage() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -11,6 +13,8 @@ export default function BrandConsolePage() {
     { id: "agreements", label: "Agreements & Policies", icon: FileText },
     { id: "orders", label: "Orders", icon: ShoppingCart },
     { id: "catalog", label: "Catalog", icon: Box },
+    { id: "pricing", label: "Pricing", icon: DollarSign },
+    { id: "operations", label: "Operations", icon: Settings },
   ];
 
   return (
@@ -48,6 +52,8 @@ export default function BrandConsolePage() {
         {activeTab === "agreements" && <p>List of Brand-Client agreements and assortment policies.</p>}
         {activeTab === "orders" && <p>View incoming client orders and their statuses.</p>}
         {activeTab === "catalog" && <p>Product master catalog and base pricing configuration.</p>}
+        {activeTab === "pricing" && <PricingTab />}
+        {activeTab === "operations" && <OperationsTab />}
       </div>
     </div>
   );

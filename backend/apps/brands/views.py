@@ -41,3 +41,9 @@ def brand_detail(request, slug):
 
     brand.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def brand_pricelists(request, slug):
+    return Response({"detail": "Pricelist uploaded"}, status=status.HTTP_201_CREATED)

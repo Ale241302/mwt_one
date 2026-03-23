@@ -56,20 +56,32 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy to-navy-dark">
-            <div className="w-full max-w-md p-8 bg-surface rounded-2xl shadow-xl border border-border">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy to-navy-dark relative overflow-hidden">
+            {/* Ambient glassmorphism blobs */}
+            <div className="absolute top-0 left-0 w-96 h-96 bg-mint/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+            <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
+
+            <div
+                className="w-full max-w-md p-8 rounded-2xl shadow-2xl relative z-10"
+                style={{
+                    background: "var(--surface-glass-bg)",
+                    backdropFilter: "var(--surface-glass-blur)",
+                    WebkitBackdropFilter: "var(--surface-glass-blur)",
+                    border: "var(--surface-glass-border)"
+                }}
+            >
 
                 <div className="mb-8 text-center">
                     <div className="flex justify-center">
                         <Image
-                            src="/recurso-1logo_largo.png"
+                            src="/recurso-1logo_foot.png"
                             alt="MWT.ONE"
                             width={220}
                             height={60}
                             priority
                         />
                     </div>
-                    <p className="text-text-secondary mt-2">Ingresa tus credenciales para continuar</p>
+                    <p className="text-text-secondary mt-2" style={{ color: "#fff!important" }}>Ingresa tus credenciales para continuar</p>
                 </div>
 
                 {error && (

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Users2, Plus, Search, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { Users2, Plus, Search, Pencil, Trash2, ChevronRight, CreditCard } from "lucide-react";
 import api from "@/lib/api";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import FormModal from "@/components/ui/FormModal";
@@ -191,6 +191,7 @@ export default function ClientesPage() {
                   <td>
                     <div className="flex items-center gap-1">
                       <button className="btn btn-sm btn-ghost" onClick={() => openEdit(c)} aria-label={`Editar ${c.name}`}><Pencil size={14} /></button>
+                      <button className="btn btn-sm btn-ghost" onClick={() => router.push(`/${lang}/clientes/${c.id}/credito`)} title="Crédito y Riesgo" style={{ color: "var(--brand)" }}><CreditCard size={14} /></button>
                       <button className="btn btn-sm btn-ghost" onClick={() => setDeleteTarget(c)} aria-label={`Eliminar ${c.name}`} style={{ color: "var(--critical)" }}><Trash2 size={14} /></button>
                       <button className="btn btn-sm btn-ghost" onClick={() => router.push(`/${lang}/clientes/${c.id}`)} aria-label={`Ver detalle de ${c.name}`}><ChevronRight size={14} /></button>
                     </div>

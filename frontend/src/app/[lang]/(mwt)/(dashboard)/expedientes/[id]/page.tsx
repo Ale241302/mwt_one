@@ -17,6 +17,7 @@ import GateMessage from "@/components/expediente/GateMessage";
 import CostTable from "@/components/expediente/CostTable";
 import ArtifactModal from "@/components/expediente/ArtifactModal";
 import { CANONICAL_STATES, STATE_BADGE_CLASSES } from "@/constants/states";
+import { CreditBar } from "@/components/ui/CreditBar";
 
 
 interface ExpedienteBundle {
@@ -111,6 +112,7 @@ export default function ExpedienteDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'internal' | 'client'>('internal');
 
   const fetchBundle = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -236,7 +238,31 @@ export default function ExpedienteDetailPage() {
           </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Toggle CEO/Client */}
+          <div className="flex items-center gap-1 p-1 rounded-lg bg-bg-alt/50 border border-border/50">
+            <button 
+              onClick={() => setViewMode('internal')}
+              className={cn(
+                "px-3 py-1 text-xs font-medium rounded transition-all",
+                viewMode === 'internal' ? "bg-white shadow-sm text-navy" : "text-text-tertiary hover:text-text-secondary"
+              )}
+            >
+              Interna
+            </button>
+            <button 
+              onClick={() => setViewMode('client')}
+              className={cn(
+                "px-3 py-1 text-xs font-medium rounded transition-all",
+                viewMode === 'client' ? "bg-white shadow-sm text-navy" : "text-text-tertiary hover:text-text-secondary"
+              )}
+            >
+              Cliente
+            </button>
+          </div>
+
+          <div className="h-6 w-px bg-border mx-1" />
+
           {hasAction("C17") && !expediente.is_blocked && (
              <button className="btn btn-sm btn-outline text-coral border-coral/30 hover:bg-coral/5" onClick={() => setActiveModal("C17")}><Lock size={14}/> Bloquear</button>
           )}
@@ -259,6 +285,18 @@ export default function ExpedienteDetailPage() {
           </button>
         </div>
       </div>
+
+      {/* ─── Credit Indicator (Internal Only) ─── */}
+      {viewMode === 'internal' && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-500">
+           <CreditBar 
+             used={expediente.total_cost || 0} 
+             total={100000} 
+             currency="USD"
+             className="shadow-sm"
+           />
+        </div>
+      )}
 
       {/* ─── Metadata Row ─── */}
       <div className="card p-4 flex flex-wrap gap-x-8 gap-y-4 text-sm bg-white border border-border">

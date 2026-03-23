@@ -16,9 +16,9 @@ interface NavItem { label: string; href: string; icon: React.ReactNode; group: s
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard",     href: "",              icon: <LayoutDashboard size={20} />, group: "core" },
-  { label: "Mi Portal",     href: "/portal",       icon: <Building2 size={20} />,       group: "core", roles: ["CLIENT_MARLUVAS", "CLIENT_TECMATER"] },
   { label: "Expedientes",   href: "/expedientes",  icon: <FolderOpen size={20} />,      group: "core" },
   { label: "Pipeline",      href: "/pipeline",     icon: <Kanban size={20} />,          group: "core" },
+  { label: "Portal",        href: "/portal",       icon: <Building2 size={20} />,       group: "core" },
   { label: "Financiero",    href: "/financial",    icon: <PieChart size={20} />,         group: "financiero" },
   { label: "Liquidaciones", href: "/liquidaciones",icon: <Receipt size={20} />,          group: "financiero" },
   { label: "Transfers",     href: "/transfers",    icon: <ArrowLeftRight size={20} />,   group: "financiero" },

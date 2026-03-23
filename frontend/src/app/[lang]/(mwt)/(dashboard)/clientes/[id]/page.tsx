@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Users, FolderOpen, Mail, Phone, Globe, Building, CreditCard, RefreshCw, ArrowRight } from "lucide-react";
+import { ArrowLeft, Users, FolderOpen, Mail, Phone, Globe, Building, CreditCard, RefreshCw, ArrowRight, Pencil } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { STATE_BADGE_CLASSES } from "@/constants/states";
@@ -46,8 +46,8 @@ export default function ClientDetailPage() {
       // In this project, the api lib usually prefixes with /api if needed or is configured
       // Looking at other files, they use api.get("/api/clientes/") or api.get("/ui/expedientes/")
       const [clientRes, expRes] = await Promise.all([
-        api.get(`/api/clientes/${id}/`),
-        api.get(`/api/ui/expedientes/?client=${id}`)
+        api.get(`/clientes/${id}/`),
+        api.get(`/ui/expedientes/?client=${id}`)
       ]);
       setClient(clientRes.data);
       
@@ -112,7 +112,15 @@ export default function ClientDetailPage() {
         </div>
         
         <div className="flex gap-2">
-          {/* Add actions if needed, like edit or delete */}
+          <Link 
+            href={`/${lang}/clientes/${id}/credito`} 
+            className="btn btn-sm btn-brand shadow-sm font-semibold"
+          >
+            <CreditCard size={14} className="mr-2" /> Análisis de Riesgo
+          </Link>
+          <button className="btn btn-sm btn-secondary p-2" aria-label="Editar cliente">
+            <Pencil size={14} />
+          </button>
         </div>
       </div>
 

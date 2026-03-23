@@ -93,3 +93,15 @@ class CatalogView(APIView):
             })
             
         return Response(catalog)
+
+class PortalContactsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        return Response({"detail": "Contact saved"}, status=status.HTTP_201_CREATED)
+
+class PortalPreferencesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request):
+        return Response({"detail": "Preferences updated"}, status=status.HTTP_200_OK)

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Building2, Plus, Search, Pencil, Trash2, Globe, FolderOpen } from "lucide-react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 import api from "@/lib/api";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import FormModal from "@/components/ui/FormModal";
@@ -20,6 +22,8 @@ type StatusFilter = "all" | "active" | "inactive";
 const emptyForm = { name: "", code: "", is_active: true };
 
 export default function BrandsPage() {
+  const params = useParams();
+  const lang = (params?.lang as string) || "es";
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -160,11 +164,14 @@ export default function BrandsPage() {
                 <span className="flex items-center gap-1 caption"><FolderOpen size={12} /> {b.expedientes_count || 0} expedientes</span>
               </div>
               <div className="flex items-center gap-2 pt-3" style={{ borderTop: "1px solid var(--divider)" }}>
+                <Link href={`/${lang}/brands/${b.slug}`} className="btn btn-sm btn-primary-outline">
+                  <Globe size={14} /> Ver Consola
+                </Link>
                 <button className="btn btn-sm btn-ghost" onClick={() => openEdit(b)} aria-label={`Editar ${b.name}`}>
                   <Pencil size={14} /> Editar
                 </button>
                 <button className="btn btn-sm btn-danger-outline" onClick={() => setDeleteTarget(b)} aria-label={`Eliminar ${b.name}`}>
-                  <Trash2 size={14} /> Eliminar
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>

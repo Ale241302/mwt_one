@@ -34,22 +34,23 @@ interface NavItem {
 // NOTE: /usuarios y /liquidaciones fueron eliminados (rutas no implementadas — 404).
 const NAV_ITEMS: NavItem[] = [
   // Core
-  { label: "Dashboard",   href: "/dashboard",  icon: <LayoutDashboard size={20} />, group: "core" },
-  { label: "Expedientes", href: "/expedientes", icon: <FolderOpen size={20} />,      group: "core" },
-  { label: "Pipeline",    href: "/pipeline",    icon: <Kanban size={20} />,           group: "core" },
+  { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={20} />, group: "core" },
+  { label: "Expedientes", href: "/expedientes", icon: <FolderOpen size={20} />, group: "core" },
+  { label: "Pipeline", href: "/pipeline", icon: <Kanban size={20} />, group: "core" },
+  { label: "Portal", href: "/portal", icon: <Building2 size={20} />, group: "core" },
   // Financiero
-  { label: "Financiero",  href: "/dashboard/financial", icon: <PieChart size={20} />,       group: "financiero" },
-  { label: "Transfers",   href: "/transfers",   icon: <ArrowLeftRight size={20} />,   group: "financiero" },
+  { label: "Financiero", href: "/dashboard/financial", icon: <PieChart size={20} />, group: "financiero" },
+  { label: "Transfers", href: "/transfers", icon: <ArrowLeftRight size={20} />, group: "financiero" },
   // Estructura
-  { label: "Nodos",    href: "/nodos",    icon: <Network size={20} />,   group: "estructura" },
-  { label: "Clientes", href: "/clientes", icon: <Users2 size={20} />,    group: "estructura" },
-  { label: "Brands",   href: "/brands",   icon: <Building2 size={20} />, group: "estructura" },
+  { label: "Nodos", href: "/nodos", icon: <Network size={20} />, group: "estructura" },
+  { label: "Clientes", href: "/clientes", icon: <Users2 size={20} />, group: "estructura" },
+  { label: "Brands", href: "/brands", icon: <Building2 size={20} />, group: "estructura" },
   { label: "Productos", href: "/productos", icon: <Package size={20} />, group: "estructura" },
   { label: "Inventario", href: "/inventario", icon: <ClipboardList size={20} />, group: "estructura" },
 ];
 
 const GROUP_LABELS: Record<string, string> = {
-  core:       "",
+  core: "",
   financiero: "Financiero",
   estructura: "Estructura",
 };

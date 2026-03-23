@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import { STATE_LABELS, STATE_BADGE_CLASSES } from "@/constants/states";
+import { CreditBar } from "@/components/ui/CreditBar";
 
 /* ─── Types ─── */
 interface Artifact {
@@ -117,6 +118,7 @@ export default function ExpedienteDetailPage() {
   const [exp, setExp] = useState<ExpedienteDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [viewMode, setViewMode] = useState<'internal' | 'client'>('internal');
 
   const fetchData = useCallback(async () => {
     try {
@@ -186,7 +188,21 @@ export default function ExpedienteDetailPage() {
               {exp.client}{exp.brand ? ` · ${exp.brand}` : ""}
             </p>
           </div>
+          <div className="flex items-center gap-2 p-1 rounded-lg" style={{ background: "var(--bg-alt)" }}>
+             <button type="button" onClick={() => setViewMode('internal')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'internal' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>Interna</button>
+             <button type="button" onClick={() => setViewMode('client')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'client' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>Cliente</button>
+          </div>
         </div>
+
+        {viewMode === 'internal' && (
+          <div className="mb-6">
+            <CreditBar 
+              used={exp.amount || 0} 
+              total={100000} 
+              currency={exp.currency || 'USD'} 
+            />
+          </div>
+        )}
 
         {exp.is_blocked && exp.block_reason && (
           <div className="flex items-start gap-3 p-4 rounded-xl mb-4" style={{ background: "var(--critical-bg)", border: "1px solid var(--critical)", color: "var(--critical)" }}>
