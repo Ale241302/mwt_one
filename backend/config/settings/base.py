@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'apps.pricing',
     'apps.audit',
     'apps.orders',
+    'apps.suppliers',
     'drf_spectacular',
 ]
 
@@ -192,7 +193,7 @@ QR_SALT = env.str("QR_SALT", default="default-fallback-salt-do-not-use-in-prod-q
 # --- REST FRAMEWORK + JWT (Sprint 0 extendido en Sprint 8) ---
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_THROTTLE_CLASSES': [

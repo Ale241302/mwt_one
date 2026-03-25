@@ -96,8 +96,11 @@ class AskView(View):
             logger.error('knowledge service error: %s', exc)
             return JsonResponse({'detail': 'Knowledge service unavailable.'}, status=503)
 
-        answer = resp_data.get('answer', '')
+        answer = resp_data.get('answer', '').strip()
         chunks_used = resp_data.get('chunks_used', [])
+
+        if not answer:
+            answer = "No se encontraron resultados relevantes en el Knowledge Base para esta pregunta."
 
         # --- 7. Guardar ConversationLog ---
         from apps.knowledge.models import ConversationLog

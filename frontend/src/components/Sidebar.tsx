@@ -5,19 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  FolderOpen,
-  PieChart,
-  Kanban,
-  Network,
-  ArrowLeftRight,
-  Users2,
-  Building2,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  Package,
-  ClipboardList,
+  LayoutDashboard, FolderOpen, Kanban, PieChart, Receipt,
+  ArrowLeftRight, Network, Users2, Building2, Users,
+  LogOut, ChevronLeft, ChevronRight, Package, ClipboardList,
+  Truck
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -46,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Clientes", href: "/clientes", icon: <Users2 size={20} />, group: "estructura" },
   { label: "Brands", href: "/brands", icon: <Building2 size={20} />, group: "estructura" },
   { label: "Productos", href: "/productos", icon: <Package size={20} />, group: "estructura" },
+  { label: "Proveedores", href: "/suppliers", icon: <Truck size={20} />, group: "estructura" },
   { label: "Inventario", href: "/inventario", icon: <ClipboardList size={20} />, group: "estructura" },
 ];
 

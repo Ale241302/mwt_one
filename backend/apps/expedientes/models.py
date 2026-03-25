@@ -56,6 +56,21 @@ class Expediente(TimestampMixin):
         help_text='Immutable snapshot of pricing, incoterms, payment terms, and agreements (S14-05)'
     )
 
+    # S16: Credit Management
+    credit_blocked = models.BooleanField(
+        default=False,
+        help_text="Flag indicating if the expediente is currently blocked due to credit clock"
+    )
+    credit_warning = models.BooleanField(
+        default=False,
+        help_text="Warning flag for credit threshold"
+    )
+
+    # Reopen tracking (Sprint 16)
+    reopen_count = models.PositiveIntegerField(default=0, help_text="Number of times reopened")
+    reopened_at = models.DateTimeField(blank=True, null=True)
+    reopen_justification = models.TextField(blank=True, null=True)
+
     class Meta:
         verbose_name = 'Expediente'
         verbose_name_plural = 'Expedientes'

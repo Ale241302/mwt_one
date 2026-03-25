@@ -80,8 +80,8 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.base
     command: celery -A config worker -l info
-    volumes:
-      - ./backend:/app
+    # volumes:
+    #   - ./backend:/app
     depends_on:
       django:
         condition: service_healthy
@@ -97,8 +97,8 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings.base
     # S8-11: schedule hardcoded in celery.py (D-04) — no DatabaseScheduler
     command: celery -A config beat -l info
-    volumes:
-      - ./backend:/app
+    # volumes:
+    #   - ./backend:/app
     depends_on:
       django:
         condition: service_healthy

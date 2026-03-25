@@ -1,5 +1,29 @@
 from rest_framework import serializers
-from apps.clientes.models import Cliente
+from apps.clientes.models import Cliente, ClientSubsidiary
+
+
+class ClientSubsidiarySerializer(serializers.ModelSerializer):
+    """S16-03: Serializer for Subsidiary with tax_id masking."""
+    class Meta:
+        model = ClientSubsidiary
+        fields = [
+            'id', 'alias', 'name', 'country', 'legal_name',
+            'tax_id', 'address', 'email_billing', 'is_active'
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        if request and request.user:
+            is_ceo = getattr(request.user, 'role', '') == 'CEO' or request.user.is_superuser
+            if not is_ceo and data.get('tax_id'):
+                # Mask tax_id: keep first 3 and last 2, others as '*'
+                val = data['tax_id']
+                if len(val) > 5:
+                    data['tax_id'] = f"{val[:3]}{'*' * (len(val)-5)}{val[-2:]}"
+                else:
+                    data['tax_id'] = '*' * len(val)
+        return data
 
 
 class ClienteSerializer(serializers.ModelSerializer):

@@ -69,6 +69,13 @@ class ClientSubsidiary(models.Model):
     name = models.CharField(max_length=255)
     country = models.CharField(max_length=100)
     legal_entity = models.ForeignKey(LegalEntity, on_delete=models.SET_NULL, null=True, blank=True, related_name='subsidiaries')
+    
+    # S16-03: Legal Entity details for Billing
+    legal_name = models.CharField(max_length=255, blank=True, null=True)
+    tax_id = models.CharField(max_length=50, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    email_billing = models.EmailField(blank=True, null=True)
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

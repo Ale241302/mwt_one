@@ -24,3 +24,17 @@ class ArtifactMissingError(APIException):
     status_code = 409
     default_detail = 'Required artifact is missing.'
     default_code = 'artifact_missing'
+
+
+class CreditBlockedError(APIException):
+    """Credit limit exceeded or clock expired → 403 Forbidden."""
+    status_code = 403
+    default_detail = 'Credit limit exceeded.'
+    default_code = 'credit_blocked'
+
+
+class CommandError(APIException):
+    """Generic error executing command → 400 Bad Request."""
+    status_code = 400
+    default_detail = 'Error executing command.'
+    default_code = 'command_error'

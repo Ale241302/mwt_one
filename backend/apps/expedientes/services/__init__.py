@@ -7,15 +7,29 @@ from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 from apps.expedientes.exceptions import CommandValidationError
 
 from .constants import COMMAND_SPEC
-from .create import handle_c1
-create_expediente = handle_c1
-from .commands_registro import handle_c2, handle_c3, handle_c4, handle_c5
-from .commands_produccion import handle_c6
-from .commands_preparacion import handle_c7, handle_c8, handle_c9, handle_c10, handle_c11
-from .commands_transito import handle_c12
-from .commands_destino import handle_c13, handle_c14, handle_c22
-from .financial import handle_c15, handle_c21
-from .exceptions import handle_c16, handle_c17, handle_c18
+from .commands.c1 import handle_c1
+from .commands.c2 import handle_c2
+from .commands.c3 import handle_c3
+from .commands.c4 import handle_c4
+from .commands.c5 import handle_c5
+from .commands.c6 import handle_c6
+from .commands.c7 import handle_c7
+from .commands.c8 import handle_c8
+from .commands.c9 import handle_c9
+from .commands.c10 import handle_c10
+from .commands.c11 import handle_c11
+from .commands.c12 import handle_c12
+from .commands.c13 import handle_c13
+from .commands.c14 import handle_c14
+from .commands.c15 import handle_c15
+from .commands.c16 import handle_c16
+from .commands.c_cancel import handle_cancel
+from .commands.c_reopen import handle_reopen
+
+# Keep original imports for others
+from .commands_destino import handle_c22
+from .financial import handle_c21
+from .exceptions import handle_c17, handle_c18
 from .corrections import handle_c19, handle_c20, supersede_artifact, void_artifact, register_compensation
 from .logistics import handle_c23, handle_c24, handle_c30, add_shipment_update
 from .queries import (
@@ -26,17 +40,27 @@ from .queries import (
 )
 from .reporting import generate_mirror_pdf
 
+create_expediente = handle_c1
+
 logger = logging.getLogger(__name__)
 
 # Registry of handlers
 HANDLERS = {
+    'C1': handle_c1,
     'C2': handle_c2, 'C3': handle_c3, 'C4': handle_c4, 'C5': handle_c5,
     'C6': handle_c6,
     'C7': handle_c7, 'C8': handle_c8, 'C9': handle_c9, 'C10': handle_c10, 'C11': handle_c11,
     'C12': handle_c12,
-    'C13': handle_c13, 'C14': handle_c14, 'C22': handle_c22,
-    'C15': handle_c15, 'C21': handle_c21,
-    'C16': handle_c16, 'C17': handle_c17, 'C18': handle_c18,
+    'C13': handle_c13, 'C14': handle_c14,
+    'C15': handle_c15,
+    'C16': handle_c16,
+    'CANCEL': handle_cancel,
+    'REOPEN': handle_reopen,
+    
+    # Restoring original others
+    'C22': handle_c22,
+    'C21': handle_c21,
+    'C17': handle_c17, 'C18': handle_c18,
     'C19': handle_c19, 'C20': handle_c20,
     'C23': handle_c23, 'C24': handle_c24, 'C30': handle_c30
 }

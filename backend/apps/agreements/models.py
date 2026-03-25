@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import RangeOperators, DateTimeRangeField
@@ -24,6 +25,10 @@ class BrandClientAgreement(TimestampMixin, CommercialFilterMixin):
     
     valid_daterange = DateTimeRangeField(null=True, blank=True)
     status = models.CharField(max_length=20, default='draft')
+
+    # S16-04: Pricing Defaults
+    standard_cost = models.DecimalField(max_digits=12, decimal_places=4, default=0)
+    commission = models.DecimalField(max_digits=12, decimal_places=4, default=0)
 
     class Meta:
         db_table = 'agreements_brandclientagreement'
@@ -135,9 +140,75 @@ class CreditPolicy(TimestampMixin):
 class CreditExposure(TimestampMixin):
     policy = models.ForeignKey(CreditPolicy, on_delete=models.CASCADE, related_name='exposures')
     current_exposure = models.DecimalField(max_digits=14, decimal_places=2, default=0)
-    
+    reserved_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+
     class Meta:
         db_table = 'agreements_creditexposure'
+
+    @classmethod
+    def calculate(cls, brand, subject_type, subject_id):
+        policy = CreditPolicy.objects.filter(
+            brand=brand, 
+            subject_type=subject_type, 
+            subject_id=subject_id,
+            status='active'
+        ).first()
+        if not policy:
+            return None
+        exposure, _ = cls.objects.get_or_create(policy=policy)
+        return exposure
+
+    def reserve(self, amount):
+        if self.current_exposure + self.reserved_amount + amount > self.policy.max_amount:
+            return False, "Exceeds credit limit"
+        self.reserved_amount += amount
+        self.save()
+        return True, "Credit reserved"
+
+    def release(self, amount):
+        """S16-03: Releases reserved credit."""
+        self.reserved_amount = max(0, self.reserved_amount - amount)
+        self.save()
+        return True, f"Released {amount}"
+
+    def is_clock_expired(self, expediente):
+        """S16-02: Logic to determine if 90-day clock is expired."""
+        if not expediente.credit_clock_started_at:
+            return False
+        from django.utils import timezone
+        delta = timezone.now() - expediente.credit_clock_started_at
+        return delta.days >= 90
+
+class CreditOverride(TimestampMixin):
+    """S16-01B: CEO authorization to bypass credit block per command.
+
+    One override = one command = one authorization.
+    unique_together ensures CEO must explicitly authorize each C1, C6, C8, C9, C14 separately.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    expediente = models.ForeignKey(
+        'expedientes.Expediente', on_delete=models.CASCADE,
+        related_name='credit_overrides'
+    )
+    brand = models.ForeignKey('brands.Brand', on_delete=models.PROTECT, null=True, blank=True)
+    command_code = models.CharField(
+        max_length=10,
+        help_text='Command authorized: C1, C6, C8, C9, C14'
+    )
+    amount_over_limit = models.DecimalField(
+        max_digits=14, decimal_places=2,
+        help_text='Amount exceeding credit limit at time of authorization'
+    )
+    authorized_by = models.ForeignKey(
+        'users.MWTUser', on_delete=models.PROTECT,
+        help_text='Must be CEO (is_superuser=True)'
+    )
+    reason = models.TextField(help_text='Minimum 10 characters')
+    authorized_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'agreements_creditoverride'
+        unique_together = ('expediente', 'command_code')
 
 class PaymentTermPricingVersion(TimestampMixin):
     SCOPE_CHOICES = [('agreement', 'Agreement'), ('brand_default', 'Brand Default')]

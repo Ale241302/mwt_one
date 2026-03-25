@@ -59,12 +59,9 @@ class LogoutView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class MeView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        get_token(request)
-        if not request.user.is_authenticated:
-            return Response({"detail": "Not authenticated"}, status=status.HTTP_403_FORBIDDEN)
         return Response({'user': UserSerializer(request.user).data})
 
 

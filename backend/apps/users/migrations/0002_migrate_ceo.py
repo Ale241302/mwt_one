@@ -1,6 +1,6 @@
 # Sprint 8 - Data migration: migrar CEO a MWTUser
 # IMPORTANTE: lista congelada — NO importar constantes del app
-from django.db import migrations
+from django.db import migrations, connection, utils
 
 CEO_PERMISSIONS = [
     'ask_knowledge_ops', 'ask_knowledge_products', 'ask_knowledge_pricing',
@@ -14,12 +14,17 @@ def migrate_ceo(apps, schema_editor):
     MWTUser = apps.get_model('users', 'MWTUser')
     UserPermission = apps.get_model('users', 'UserPermission')
 
+    # Si la tabla auth_user no existe (porque el proyecto empezó con MWTUser), salimos
+    from django.db import connection
+    if 'auth_user' not in connection.introspection.table_names():
+        return
+
     try:
         old = OldUser.objects.get(is_superuser=True)
     except OldUser.DoesNotExist:
         # No hay superuser previo, nada que migrar
         return
-    except OldUser.MultipleObjectsReturned:
+    except (OldUser.MultipleObjectsReturned, utils.ProgrammingError):
         old = OldUser.objects.filter(is_superuser=True).order_by('id').first()
 
     # Si ya existe el MWTUser con ese PK, no duplicar
