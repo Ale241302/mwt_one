@@ -26,6 +26,8 @@ urlpatterns = [
     # Sprint 8: Users & Auth
     path('api/portal/', include('apps.portal.urls')),
     path('api/agreements/', include('apps.agreements.urls')),
+    # Inventario
+    path('api/inventario/', include('apps.inventario.urls')),
     # Spectacular
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
