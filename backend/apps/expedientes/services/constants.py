@@ -55,11 +55,19 @@ COMMAND_SPEC = {
         'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
         'creates_art': 'ART-13'
     },
+    # S17-01: FIX — C11 now transitions to DESPACHO (was incorrectly going to TRANSITO)
     'C11': {
-        'name': 'Confirmar Salida Aduana (China)',
+        'name': 'Confirmar Salida Aduana (China) → DESPACHO',
         'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
-        'transition_to': enums_exp.ExpedienteStatus.TRANSITO,
+        'transition_to': enums_exp.ExpedienteStatus.DESPACHO,
         'creates_art': 'ART-09'
+    },
+    # S17-02: NEW — C11B transitions DESPACHO → TRANSITO
+    'C11B': {
+        'name': 'Confirmar Salida Despacho → TRANSITO',
+        'requires_status': enums_exp.ExpedienteStatus.DESPACHO,
+        'transition_to': enums_exp.ExpedienteStatus.TRANSITO,
+        'creates_art': None
     },
     'C12': {
         'name': 'Confirmar Arribo CR',
@@ -131,6 +139,21 @@ COMMAND_SPEC = {
         'name': 'Decidir Logística (ART-19)',
         'requires_status': None,
         'creates_art': None
+    },
+    # S17-03: REOPEN verified in COMMAND_SPEC
+    'REOPEN': {
+        'name': 'Reabrir Expediente (CEO Only)',
+        'requires_status': enums_exp.ExpedienteStatus.CANCELADO,
+        'transition_to': enums_exp.ExpedienteStatus.REGISTRO,
+        'creates_art': None,
+        'requires_ceo': True
+    },
+    'CANCEL': {
+        'name': 'Cancelar Expediente (alias)',
+        'requires_status': None,
+        'transition_to': enums_exp.ExpedienteStatus.CANCELADO,
+        'creates_art': None,
+        'requires_ceo': True
     },
     'C29': {
         'name': 'Registrar Compensación (CEO Only)',

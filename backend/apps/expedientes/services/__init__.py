@@ -26,6 +26,9 @@ from .commands.c16 import handle_c16
 from .commands.c_cancel import handle_cancel
 from .commands.c_reopen import handle_reopen
 
+# S17-02: DESPACHO -> TRANSITO handler
+from .commands_despacho import handle_c11b
+
 # Keep original imports for others
 from .commands_destino import handle_c22
 from .financial import handle_c21
@@ -50,13 +53,16 @@ HANDLERS = {
     'C2': handle_c2, 'C3': handle_c3, 'C4': handle_c4, 'C5': handle_c5,
     'C6': handle_c6,
     'C7': handle_c7, 'C8': handle_c8, 'C9': handle_c9, 'C10': handle_c10, 'C11': handle_c11,
+    # S17-02: C11B registered — DESPACHO → TRANSITO
+    'C11B': handle_c11b,
     'C12': handle_c12,
     'C13': handle_c13, 'C14': handle_c14,
     'C15': handle_c15,
     'C16': handle_c16,
     'CANCEL': handle_cancel,
+    # S17-03: REOPEN verified in HANDLERS
     'REOPEN': handle_reopen,
-    
+
     # Restoring original others
     'C22': handle_c22,
     'C21': handle_c21,
@@ -82,7 +88,7 @@ def execute_command(expediente, cmd_id, payload, user):
 
     spec = COMMAND_SPEC.get(cmd_id)
     handler = HANDLERS.get(cmd_id)
-    
+
     events = []
 
     with transaction.atomic():
@@ -95,21 +101,18 @@ def execute_command(expediente, cmd_id, payload, user):
                 payload=payload.get('payload', payload),
                 status=ArtifactStatusEnum.COMPLETED
             )
-            
+
         # 2. Handler execution
         if handler:
-            # We wrap the handler to handle both (exp, payload) and (exp, payload, user) if needed
-            # For now, most handlers only need (exp, payload)
-            # But S12 goal is to standardize.
             handler(expediente, payload)
-            
+
         # 3. Status Transition
         old_status = expediente.status
         new_status = spec.get('transition_to')
         if new_status and old_status != new_status:
             expediente.status = new_status
             expediente.save()
-            
+
             # Transition Event
             ev_trans = EventLog.objects.create(
                 event_type='expediente.status_changed',
@@ -136,7 +139,7 @@ def execute_command(expediente, cmd_id, payload, user):
             correlation_id=uuid.uuid4()
         )
         events.append(ev_cmd)
-        
+
     return expediente, events
 
 # Re-exposing symbols for Sprint 12 API
@@ -163,4 +166,4 @@ register_payment = handle_c21
 register_liquidation = handle_c22
 register_shipment_update = handle_c23
 register_generic_artifact = handle_c30
-register_compensation = register_compensation # already imported
+register_compensation = register_compensation  # already imported
