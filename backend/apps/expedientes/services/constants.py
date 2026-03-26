@@ -2,10 +2,11 @@ from apps.expedientes import enums_exp
 
 COMMAND_SPEC = {
     'C1': {
-        'name': 'Crear Expediente',
+        'name': 'Registrar Expediente',
         'requires_status': None,
         'transition_to': enums_exp.ExpedienteStatus.REGISTRO,
-        'creates_art': 'ART-01'
+        'creates_art': 'ART-01',
+        'requires_ceo': True
     },
     'C2': {
         'name': 'Registrar Proforma',
@@ -30,7 +31,7 @@ COMMAND_SPEC = {
         'creates_art': 'ART-04'
     },
     'C6': {
-        'name': 'Finalizar Producción',
+        'name': 'Registrar Producción',
         'requires_status': enums_exp.ExpedienteStatus.PRODUCCION,
         'transition_to': enums_exp.ExpedienteStatus.PREPARACION,
         'creates_art': 'ART-05'
@@ -51,15 +52,22 @@ COMMAND_SPEC = {
         'creates_art': 'ART-08'
     },
     'C10': {
-        'name': 'Cargar Otros Documentos',
+        'name': 'Aprobar Despacho',
         'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
         'creates_art': 'ART-13'
     },
     'C11': {
         'name': 'Confirmar Salida Aduana (China)',
         'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
-        'transition_to': enums_exp.ExpedienteStatus.TRANSITO,
+        'transition_to': enums_exp.ExpedienteStatus.DESPACHO,
         'creates_art': 'ART-09'
+    },
+    'C11B': {
+        'name': 'Confirmar Salida China',
+        'requires_status': [enums_exp.ExpedienteStatus.DESPACHO],
+        'transition_to': enums_exp.ExpedienteStatus.TRANSITO,
+        'creates_art': None,
+        'requires_ceo': False,
     },
     'C12': {
         'name': 'Confirmar Arribo CR',
@@ -68,15 +76,16 @@ COMMAND_SPEC = {
         'creates_art': 'ART-11'
     },
     'C13': {
-        'name': 'Registrar Factura MWT',
+        'name': 'Liquidar Expediente',
         'requires_status': enums_exp.ExpedienteStatus.EN_DESTINO,
         'creates_art': 'ART-12'
     },
     'C14': {
-        'name': 'Finalizar Expediente',
+        'name': 'Cerrar Expediente',
         'requires_status': enums_exp.ExpedienteStatus.EN_DESTINO,
         'transition_to': enums_exp.ExpedienteStatus.CERRADO,
-        'creates_art': None
+        'creates_art': None,
+        'requires_ceo': True
     },
     'C15': {
         'name': 'Registrar Gasto (Financial)',
@@ -113,6 +122,13 @@ COMMAND_SPEC = {
         'creates_art': None
     },
     'C21': {
+        'name': 'Reabrir Expediente',
+        'requires_status': [enums_exp.ExpedienteStatus.CERRADO],
+        'transition_to': enums_exp.ExpedienteStatus.EN_DESTINO,
+        'creates_art': None,
+        'requires_ceo': True
+    },
+    'C25': {
         'name': 'Registrar Pago (Financial)',
         'requires_status': None,
         'creates_art': None
@@ -147,5 +163,12 @@ COMMAND_SPEC = {
         'name': 'Add Shipment Update (Manual)',
         'requires_status': None,
         'creates_art': 'ART-05'
+    },
+    'REOPEN': {
+        'name': 'Reabrir Expediente',
+        'requires_status': [enums_exp.ExpedienteStatus.CANCELADO],
+        'transition_to': enums_exp.ExpedienteStatus.REGISTRO,
+        'requires_ceo': True,
+        'creates_art': None,
     }
 }

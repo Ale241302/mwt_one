@@ -120,7 +120,7 @@ def check_and_reserve_credit(expediente, brand, subsidiary):
     }
 
 
-def handle_c1(user, payload):
+def handle_c1(payload, user):
     """S16-01A: Registrar Expediente — command C1.
 
     Retorna dict con key 'credit_check' para transparencia en el response.

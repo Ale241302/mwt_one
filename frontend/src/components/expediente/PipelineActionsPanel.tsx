@@ -16,18 +16,21 @@ const COMMAND_ENDPOINTS: Record<string, string> = {
   'C12': 'register-delivery',
   'C13': 'close',
   'C14': 'close',
+  'C21': 'reopen',
 };
 
 const COMMAND_LABELS: Record<string, string> = {
-  'C6':  'Confirmar Producción',
+  'C2':  'Registrar Proforma',
+  'C6':  'Registrar Producción',
   'C7':  'Iniciar Preparación',
   'C8':  'Confirmar Preparación',
   'C9':  'Registrar Despacho',
-  'C10': 'Confirmar Arribo',
-  'C11': 'Registrar Nacionalización',
-  'C12': 'Registrar Entrega',
-  'C13': 'Cerrar Expediente',
+  'C10': 'Aprobar Despacho',
+  'C11B': 'Confirmar Salida China',
+  'C12': 'Confirmar Arribo CR',
+  'C13': 'Liquidar Expediente',
   'C14': 'Cerrar Expediente',
+  'C21': 'Reabrir Expediente',
 };
 
 interface PipelineActionsPanelProps {
@@ -48,8 +51,8 @@ export default function PipelineActionsPanel({
   const [confirmCmd, setConfirmCmd] = useState<string | null>(null);
   const [executing, setExecuting] = useState(false);
 
-  const TERMINAL_STATUSES = ['CANCELADO', 'CERRADO'];
-  if (TERMINAL_STATUSES.includes(status)) return null;
+  // S17-10: Solo CERRADO permite Reabrir. CANCELADO no permite acciones.
+  if (status === 'CANCELADO') return null;
 
   if (isBlocked) {
     return (
@@ -84,21 +87,32 @@ export default function PipelineActionsPanel({
   return (
     <>
       <div className="flex flex-wrap gap-3">
-        {availableActions.length > 0 ? (
-          availableActions.map(cmd => (
-            <button
-              key={cmd}
-              onClick={() => setConfirmCmd(cmd)}
-              disabled={executing}
-              className="bg-navy hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95 disabled:opacity-60"
-            >
-              {COMMAND_LABELS[cmd] || cmd}
-            </button>
-          ))
+        {status === 'CERRADO' ? (
+          <button
+            onClick={() => setConfirmCmd('C21')}
+            disabled={executing}
+            className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95 disabled:opacity-60 flex items-center gap-2"
+          >
+            Reabrir Expediente
+          </button>
         ) : (
-          <p className="text-sm text-text-tertiary">No hay acciones disponibles en el estado actual.</p>
+          availableActions.length > 0 ? (
+            availableActions.map(cmd => (
+              <button
+                key={cmd}
+                onClick={() => setConfirmCmd(cmd)}
+                disabled={executing}
+                className="bg-navy hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95 disabled:opacity-60"
+              >
+                {COMMAND_LABELS[cmd] || cmd}
+              </button>
+            ))
+          ) : (
+            <p className="text-sm text-text-tertiary">No hay acciones disponibles en el estado actual.</p>
+          )
         )}
       </div>
+      ...
 
       {/* Confirmation Modal */}
       {confirmCmd && (

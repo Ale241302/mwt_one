@@ -4,7 +4,7 @@ from django.utils import timezone
 from apps.expedientes.exceptions import CommandError
 
 
-def handle_reopen(expediente, payload):
+def handle_reopen(expediente, payload, env=None):
     """S16-03: Reapertura con restricciones: máximo 1 vez y requiere justificación."""
     if expediente.reopen_count >= 1:
         raise CommandError("El expediente ya ha sido reabierto una vez. No se permiten más reaperturas.")

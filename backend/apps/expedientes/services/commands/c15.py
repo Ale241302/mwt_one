@@ -1,7 +1,7 @@
 from decimal import Decimal
 from apps.expedientes.models import CostLine
 
-def handle_c15(expediente, payload):
+def handle_c15(expediente, payload, env=None):
     # Registrar Gasto (Financial)
     cost = CostLine(
         expediente=expediente,

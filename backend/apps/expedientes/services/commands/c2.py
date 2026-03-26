@@ -3,7 +3,7 @@ from apps.productos.models import ProductMaster
 from apps.agreements.models import BrandClientAgreement, PartyType
 from django.utils import timezone
 
-def handle_c2(expediente, payload):
+def handle_c2(expediente, payload, env=None):
     """Registrar Proforma (ART-02) with commercial defaults (S16-04)."""
     items = payload.get('items', [])
     

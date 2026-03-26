@@ -3,7 +3,7 @@ from apps.expedientes.enums_exp import ExpedienteStatus
 from apps.agreements.models import CreditExposure
 
 
-def handle_cancel(expediente, payload):
+def handle_cancel(expediente, payload, env=None):
     """S16-03: Cancelación total con liberación de crédito."""
     # Si estaba ABIERTO, liberamos el crédito reservado
     if expediente.status == ExpedienteStatus.ABIERTO:

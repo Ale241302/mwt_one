@@ -4,7 +4,7 @@ from apps.expedientes.exceptions import ArtifactMissingError, CreditBlockedError
 from ..helpers import _has_artifact, _check_credit_gate
 
 
-def handle_c6(expediente, payload):
+def handle_c6(expediente, payload, env=None):
     """Finalizar Producción (ART-05): confirma que la producción fue completada.
 
     Gate: ART-02 (Proforma) + ART-03 (Purchase Order) requeridos.

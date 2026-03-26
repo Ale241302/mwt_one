@@ -2,7 +2,7 @@ from apps.expedientes.exceptions import ArtifactMissingError, CreditBlockedError
 from ..helpers import _has_artifact, _check_credit_gate
 
 
-def handle_c8(expediente, payload):
+def handle_c8(expediente, payload, env=None):
     """Cargar Factura Comercial (ART-07): registra la factura comercial del proveedor.
 
     Gate: ART-06 (Packing List) requerido.

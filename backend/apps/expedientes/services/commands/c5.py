@@ -3,7 +3,7 @@ from apps.expedientes.exceptions import ArtifactMissingError
 from ..helpers import _has_artifact
 from ..pricing import assign_agreement_defaults
 
-def handle_c5(expediente, payload):
+def handle_c5(expediente, payload, env=None):
     # Confirmar Registro
     if not _has_artifact(expediente, 'ART-02'):
         raise ArtifactMissingError("C5 requires ART-02 (Proforma).")

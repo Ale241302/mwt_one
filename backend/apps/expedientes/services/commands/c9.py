@@ -10,7 +10,7 @@ def trigger_credit_clock(expediente):
         expediente.save(update_fields=['credit_clock_started_at'])
 
 
-def handle_c9(expediente, payload):
+def handle_c9(expediente, payload, env=None):
     """Cargar Certificado de Origen (ART-08): registra el certificado de origen.
 
     Gate: ART-07 (Factura Comercial) requerido.

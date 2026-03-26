@@ -4,7 +4,7 @@ from apps.expedientes.exceptions import ArtifactMissingError, CreditBlockedError
 from ..helpers import _get_rule_count, _check_credit_gate
 
 
-def handle_c14(expediente, payload):
+def handle_c14(expediente, payload, env=None):
     """EmitirFactura / Finalizar Expediente (CERRADO).
 
     Gate: Todos los artefactos requeridos completados.

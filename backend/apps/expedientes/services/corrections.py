@@ -126,11 +126,11 @@ def void_artifact(artifact_id, user):
         except ArtifactInstance.DoesNotExist:
             raise Exception("Artifact not found")
 
-def handle_c19(expediente, payload):
+def handle_c19(expediente, payload, env=None):
     """Entry point for C19: Supersede Artifact."""
     pass
 
-def handle_c20(expediente, payload):
+def handle_c20(expediente, payload, env=None):
     """Entry point for C20: Void Artifact."""
     pass
 

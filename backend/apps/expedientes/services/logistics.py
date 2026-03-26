@@ -5,7 +5,7 @@ from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 from apps.expedientes.models import ArtifactInstance
 from apps.expedientes.exceptions import CommandValidationError, ArtifactMissingError
 
-def handle_c23(expediente, payload):
+def handle_c23(expediente, payload, env=None):
     # Agregar Opción Logística (ART-19)
     # Check if ART-19 already exists and is pending
     art19 = expediente.artifacts.filter(artifact_type='ART-19', status='pending').first()
@@ -30,7 +30,7 @@ def handle_c23(expediente, payload):
     art19.payload['options'] = options
     art19.save(update_fields=['payload'])
 
-def handle_c24(expediente, payload):
+def handle_c24(expediente, payload, env=None):
     # Decidir Logística (ART-19)
     art19 = expediente.artifacts.filter(artifact_type='ART-19', status='pending').first()
     if not art19:
@@ -41,7 +41,7 @@ def handle_c24(expediente, payload):
     art19.status = ArtifactStatusEnum.COMPLETED
     art19.save(update_fields=['payload', 'status'])
 
-def handle_c30(expediente, payload):
+def handle_c30(expediente, payload, env=None):
     # Materializar Logística (C30)
     # This usually creates ART-11 (Arribo) or similar?
     # In services.py it was just a mock logic for now

@@ -52,7 +52,7 @@ def pre_check_viability(expediente, mode, fob_mwt, fob_cliente, qty):
         }
     return None
 
-def handle_c4(expediente, payload):
+def handle_c4(expediente, payload, env=None):
     # Decidir Modo Import/Comision
     mode = payload.get('mode')
     if mode not in ['IMPORT', 'COMISION', 'FULL']:

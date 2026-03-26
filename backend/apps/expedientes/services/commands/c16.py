@@ -9,7 +9,7 @@ from apps.expedientes.enums_exp import ExpedienteStatus
 from apps.expedientes.exceptions import CommandError
 
 
-def handle_c16(expediente, payload):
+def handle_c16(expediente, payload, env=None):
     """C16: Cierre definitivo del expediente.
 
     - Verifica que el expediente esté en estado CERRADO (C14 ya ejecutado).

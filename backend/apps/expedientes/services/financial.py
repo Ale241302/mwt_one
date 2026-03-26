@@ -2,7 +2,7 @@ from decimal import Decimal
 from apps.expedientes.models import PaymentLine, CostLine
 from .helpers import _update_payment_status
 
-def handle_c15(expediente, payload):
+def handle_c15(expediente, payload, env=None):
     # Registrar Gasto (Financial)
     cost = CostLine(
         expediente=expediente,
@@ -29,7 +29,7 @@ def handle_c15(expediente, payload):
 
     cost.save()
 
-def handle_c21(expediente, payload):
+def handle_c21(expediente, payload, env=None):
     # Registrar Pago (Financial)
     # This was a complex logic in services.py 420:
     PaymentLine.objects.create(

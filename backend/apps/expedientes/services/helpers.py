@@ -47,3 +47,20 @@ def _update_payment_status(expediente):
         expediente.payment_status = 'partial'
     # ... more complex logic from services.py if needed
     expediente.save(update_fields=['payment_status'])
+
+def _trigger_credit_clock(expediente, event_name):
+    """S16-01: Triggers the credit clock if the event matches the brand/mode rules."""
+    if expediente.credit_clock_started_at:
+        return False # Already started
+
+    from apps.agreements.models import CreditClockRule
+    rule = CreditClockRule.objects.filter(
+        brand=expediente.brand,
+        freight_mode=expediente.freight_mode or 'SEA'
+    ).first()
+    
+    if rule and rule.start_event == event_name:
+        expediente.credit_clock_started_at = timezone.now()
+        expediente.save(update_fields=['credit_clock_started_at'])
+        return True
+    return False

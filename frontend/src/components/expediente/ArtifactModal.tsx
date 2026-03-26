@@ -22,7 +22,8 @@ const COMMAND_META: Record<string, { label: string; endpoint: string; icon: Reac
   C8:  { label: "Cotización Flete",          endpoint: "register-freight-quote", icon: <DollarSign size={18}/>, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
   C9:  { label: "Registrar Aduana",          endpoint: "register-customs",       icon: <FileText size={18}/>,   color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
   C10: { label: "Aprobar Despacho",          endpoint: "approve-dispatch",       icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C11: { label: "Confirmar Salida",          endpoint: "confirm-departure",      icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
+  C11: { label: "Confirmar Salida (MWT)",          endpoint: "confirm-departure-mwt",      icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
+  C11B: { label: "Confirmar Salida (China)",     endpoint: "confirm-departure-china",    icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
   C12: { label: "Confirmar Llegada",         endpoint: "confirm-arrival",        icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
   C13: { label: "Emitir Factura MWT",        endpoint: "issue-invoice",          icon: <Receipt size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
   C14: { label: "Cerrar Expediente",         endpoint: "close",                  icon: <Lock size={18}/>,       color: "var(--brand-primary)", bgClass: "bg-slate-600 border-slate-600", textClass: "text-slate-600" },
@@ -73,7 +74,8 @@ function CommandForm({ commandKey, form, setForm }: { commandKey: string; form: 
     case "C8": return <div className="space-y-3">{inp("Monto flete (USD)", "freight_amount", "number", "0")}{inp("Proveedor", "provider")}</div>;
     case "C9": return <div className="space-y-3">{inp("Agencia aduanal", "customs_agency")}{inp("Número declaración", "declaration_number")}</div>;
     case "C10": return <div className="space-y-3">{inp("Observaciones", "notes")}</div>;
-    case "C11": return <div className="space-y-3">{inp("Fecha salida", "departure_date", "date")}{inp("Notas", "notes")}</div>;
+    case "C11": return <div className="space-y-3">{inp("Fecha salida MWT", "departure_date", "date")}{inp("Notas", "notes")}</div>;
+    case "C11B": return <div className="space-y-3">{inp("Fecha salida China", "departure_date", "date")}{inp("Notas", "notes")}</div>;
     case "C12": return <div className="space-y-3">{inp("Fecha llegada", "arrival_date", "date")}{inp("Notas", "notes")}</div>;
     case "C13": return <div className="space-y-3">{inp("Número factura", "invoice_number", "text", "INV-001")}{inp("Monto cliente (USD)", "total_client_view", "number", "0")}</div>;
     case "C14": return <div className="space-y-3">{inp("Razón de cierre", "reason")}</div>;

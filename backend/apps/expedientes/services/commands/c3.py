@@ -2,7 +2,7 @@ from apps.expedientes.exceptions import CommandValidationError
 from apps.agreements.models import BrandClientAgreement, PartyType
 from django.utils import timezone
 
-def handle_c3(expediente, payload):
+def handle_c3(expediente, payload, env=None):
     """Registrar Orden de Compra (ART-03) with commercial defaults (S16-04)."""
     items = payload.get('items', [])
     

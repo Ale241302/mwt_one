@@ -8,7 +8,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, RefreshCw, AlertTriangle, Lock,
-  Play, CheckCircle, Clock, XCircle, ArrowRight
+  Play, CheckCircle, Clock, XCircle, ArrowRight, Truck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
@@ -208,6 +208,9 @@ export default function ExpedienteDetailPage() {
   const gateCommand = GATE_ACTIONS[currentState];
   const canAdvance = !!(missingReqs.length === 0 && gateCommand && hasAction(gateCommand));
 
+  const hasArt06 = bundle.artifacts.some(a => a.artifact_type === 'ART-06' && a.status === 'completed');
+  const showC11B = currentState === 'DESPACHO' && hasArt06 && hasAction('C11B');
+
   return (
     <div className="space-y-6">
       {/* ─── Top bar ─── */}
@@ -369,6 +372,15 @@ export default function ExpedienteDetailPage() {
               onClick={() => setActiveModal(gateCommand)}
             >
               Avanzar a la siguiente fase <ArrowRight size={16} />
+            </button>
+          )}
+
+          {showC11B && (
+            <button 
+              className="w-full btn btn-outline border-blue-600 text-blue-700 flex items-center justify-center gap-2 py-3 shadow-sm hover:bg-blue-50 mt-4"
+              onClick={() => setActiveModal("C11B")}
+            >
+              <Truck size={18} /> Confirmar Salida (China)
             </button>
           )}
           

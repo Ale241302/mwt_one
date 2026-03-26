@@ -179,12 +179,23 @@ class CreditExposure(TimestampMixin):
         delta = timezone.now() - expediente.credit_clock_started_at
         return delta.days >= 90
 
-class CreditOverride(TimestampMixin):
-    """S16-01B: CEO authorization to bypass credit block per command.
+class CreditClockRule(TimestampMixin):
+    """S16-01: Rule to determine when the credit clock starts for a brand/mode."""
+    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE, related_name='credit_clock_rules')
+    freight_mode = models.CharField(max_length=20) # e.g. SEA, AIR, LAND
+    start_event = models.CharField(max_length=20, choices=[
+        ('on_departure', 'On Departure (China)'),
+        ('on_arrival', 'On Arrival (Destination)'),
+        ('on_invoice', 'On Invoice'),
+        ('on_arrival_mwt', 'On Arrival (MWT)')
+    ])
 
-    One override = one command = one authorization.
-    unique_together ensures CEO must explicitly authorize each C1, C6, C8, C9, C14 separately.
-    """
+    class Meta:
+        db_table = 'agreements_creditclockrule'
+        unique_together = ('brand', 'freight_mode')
+
+class CreditOverride(TimestampMixin):
+    """S16-01B: CEO authorization to bypass credit block per command."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     expediente = models.ForeignKey(
         'expedientes.Expediente', on_delete=models.CASCADE,

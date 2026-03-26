@@ -10,10 +10,11 @@ interface KanbanCardProps {
   amount: number;
   currency: string;
   daysInStatus: number;
+  isBlocked?: boolean;
   onClick?: () => void;
 }
 
-export function KanbanCard({ refId, client, status, amount, currency, daysInStatus, onClick }: KanbanCardProps) {
+export function KanbanCard({ refId, client, status, amount, currency, daysInStatus, isBlocked = false, onClick }: KanbanCardProps) {
   const isStalled = daysInStatus > 3;
 
   return (
@@ -22,12 +23,17 @@ export function KanbanCard({ refId, client, status, amount, currency, daysInStat
       className="p-4 rounded-xl cursor-pointer transition-all hover:shadow-md"
       style={{ 
         background: "var(--surface)", 
-        border: `1px solid ${isStalled ? 'var(--warning)' : 'var(--border)'}`,
+        border: `1px solid ${isBlocked ? 'var(--critical)' : (isStalled ? 'var(--warning)' : 'var(--border)')}`,
         boxShadow: "var(--shadow-sm)"
       }}
     >
       <div className="flex justify-between items-start mb-3">
-        <span className="font-mono text-sm font-medium" style={{ color: "var(--text-secondary)" }}>{refId}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-sm font-medium" style={{ color: "var(--text-secondary)" }}>{refId}</span>
+          {isBlocked && (
+            <AlertTriangle className="text-critical w-4 h-4 animate-pulse" />
+          )}
+        </div>
         <span className={`badge ${STATE_BADGE_CLASSES[status] || 'badge-info'}`}>
           {STATE_LABELS[status as keyof typeof STATE_LABELS] || status}
         </span>
