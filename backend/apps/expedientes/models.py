@@ -71,6 +71,190 @@ class Expediente(TimestampMixin):
     reopened_at = models.DateTimeField(blank=True, null=True)
     reopen_justification = models.TextField(blank=True, null=True)
 
+    # === S17-08: GENERALES ===
+    purchase_order_number = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='N\u00famero de orden de compra del cliente'
+    )
+    operado_por = models.CharField(
+        max_length=20,
+        choices=[('CLIENTE', 'Cliente'), ('MWT', 'Muito Work Limitada')],
+        null=True, blank=True,
+        help_text='Qui\u00e9n opera log\u00edsticamente este expediente'
+    )
+    url_orden_compra = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='URL del documento de orden de compra'
+    )
+
+    # === S17-08: REGISTRO ===
+    ref_number = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='N\u00famero de referencia interna del expediente'
+    )
+    credit_days_client = models.IntegerField(
+        null=True, blank=True,
+        help_text='D\u00edas de cr\u00e9dito acordados con el cliente'
+    )
+    credit_days_mwt = models.IntegerField(
+        null=True, blank=True,
+        help_text='D\u00edas de cr\u00e9dito acordados con MWT'
+    )
+    credit_limit_client = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text='Snapshot del l\u00edmite de cr\u00e9dito del cliente (DEC-EXP-03) al momento de creaci\u00f3n'
+    )
+    credit_limit_mwt = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text='Snapshot del l\u00edmite de cr\u00e9dito MWT (DEC-EXP-03) al momento de creaci\u00f3n'
+    )
+    order_value = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text='Valor total del pedido en moneda del expediente'
+    )
+
+    # === S17-08: PRODUCCION ===
+    factory_order_number = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='N\u00famero de orden en sistema del fabricante (DEC-EXP-01). Campo flat para queries r\u00e1pidos; detalle en FactoryOrder.'
+    )
+    proforma_client_number = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='N\u00famero de proforma emitida al cliente'
+    )
+    proforma_mwt_number = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='N\u00famero de proforma emitida a MWT'
+    )
+    fabrication_start_date = models.DateField(
+        null=True, blank=True,
+        help_text='Fecha de inicio de fabricaci\u00f3n'
+    )
+    fabrication_end_date = models.DateField(
+        null=True, blank=True,
+        help_text='Fecha de fin de fabricaci\u00f3n'
+    )
+    url_proforma_cliente = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='URL del documento de proforma del cliente'
+    )
+    url_proforma_muito_work = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='URL del documento de proforma MWT'
+    )
+    master_expediente = models.ForeignKey(
+        'self', null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='merged_followers',
+        help_text='Expediente master cuando \u00e9ste fue fusionado (DEC-EXP-02). El merge lo decide el CEO manualmente en Sprint 18.'
+    )
+
+    # === S17-08: PREPARACION ===
+    shipping_method = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='M\u00e9todo de env\u00edo (a\u00e9reo, mar\u00edtimo, terrestre, courier)'
+    )
+    incoterms = models.CharField(
+        max_length=20, null=True, blank=True,
+        help_text='T\u00e9rmino incoterm acordado (EXW, FOB, CIF, DDP...)'
+    )
+    cargo_manager = models.CharField(
+        max_length=20,
+        choices=[('CLIENTE', 'Cliente'), ('FABRICA', 'F\u00e1brica')],
+        null=True, blank=True,
+        help_text='Qui\u00e9n gestiona la carga y env\u00edo'
+    )
+    shipping_value = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text='Valor del flete de env\u00edo'
+    )
+    payment_mode_shipping = models.CharField(
+        max_length=20,
+        choices=[('PREPAGO', 'Prepago'), ('CONTRAENTREGA', 'Contraentrega')],
+        null=True, blank=True,
+        help_text='Modalidad de pago del flete'
+    )
+    url_list_empaque = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='URL del documento lista de empaque'
+    )
+    url_cotizacion_envio = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='URL de la cotizaci\u00f3n de env\u00edo'
+    )
+
+    # === S17-08: DESPACHO ===
+    airline_or_shipping_company = models.CharField(
+        max_length=200, null=True, blank=True,
+        help_text='Nombre de la aerol\u00ednea o naviera utilizada'
+    )
+    awb_bl_number = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='N\u00famero Air Waybill (a\u00e9reo) o Bill of Lading (mar\u00edtimo)'
+    )
+    origin_location = models.CharField(
+        max_length=200, null=True, blank=True,
+        help_text='Puerto o aeropuerto de origen del env\u00edo'
+    )
+    arrival_location = models.CharField(
+        max_length=200, null=True, blank=True,
+        help_text='Puerto o aeropuerto de llegada del env\u00edo'
+    )
+    shipment_date = models.DateField(
+        null=True, blank=True,
+        help_text='Fecha efectiva de despacho / embarque'
+    )
+    payment_date_dispatch = models.DateField(
+        null=True, blank=True,
+        help_text='Fecha en que se realiza el pago en el estado DESPACHO'
+    )
+    invoice_client_number = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='N\u00famero de factura emitida al cliente'
+    )
+    invoice_mwt_number = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='N\u00famero de factura interna MWT'
+    )
+    dispatch_additional_info = models.TextField(
+        null=True, blank=True,
+        help_text='Informaci\u00f3n adicional libre sobre el despacho'
+    )
+    url_certificado_origen = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='URL del certificado de origen'
+    )
+    url_factura_cliente = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='URL de la factura del cliente'
+    )
+    url_factura_muito_work = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='URL de la factura interna MWT'
+    )
+    url_awb_bl = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='URL del AWB o BL escaneado'
+    )
+    tracking_url = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='Link clicable de tracking (DHL, FedEx, naviera, etc.)'
+    )
+
+    # === S17-08: TRANSITO ===
+    intermediate_airport_or_port = models.CharField(
+        max_length=200, null=True, blank=True,
+        help_text='Aeropuerto o puerto de escala intermedia'
+    )
+    transit_arrival_date = models.DateField(
+        null=True, blank=True,
+        help_text='Fecha estimada o real de llegada en tr\u00e1nsito'
+    )
+    url_packing_list_detallado = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='URL del packing list detallado para aduana'
+    )
+
     class Meta:
         verbose_name = 'Expediente'
         verbose_name_plural = 'Expedientes'
@@ -78,6 +262,167 @@ class Expediente(TimestampMixin):
 
     def __str__(self):
         return f'EXP-{str(self.expediente_id)[:8]}'
+
+
+# === S17-09: ExpedienteProductLine ===
+class ExpedienteProductLine(models.Model):
+    """Line item linking an Expediente to a ProductMaster SKU."""
+    expediente = models.ForeignKey(
+        Expediente, on_delete=models.CASCADE, related_name='product_lines'
+    )
+    product = models.ForeignKey(
+        'productos.ProductMaster',
+        on_delete=models.PROTECT,
+        related_name='expediente_lines',
+        help_text='SKU from ProductMaster — never free text'
+    )
+    quantity = models.PositiveIntegerField(
+        help_text='Cantidad original pedida'
+    )
+    unit_price = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        help_text='Precio unitario editable por expediente. Inicializado desde resolve_client_price() si disponible.'
+    )
+    price_source = models.CharField(
+        max_length=30,
+        default='manual',
+        choices=[
+            ('pricelist', 'Lista de precios activa'),
+            ('manual', 'Ingresado manualmente'),
+            ('override', 'Override por expediente'),
+        ],
+        help_text='Origen del precio: lista activa, manual, u override CEO'
+    )
+    # Modification tracking — separate from originals
+    quantity_modified = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Cantidad modificada post-creaci\u00f3n (si aplica)'
+    )
+    unit_price_modified = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text='Precio modificado post-creaci\u00f3n (si aplica)'
+    )
+    modification_reason = models.CharField(
+        max_length=200, null=True, blank=True,
+        help_text='Raz\u00f3n del cambio de cantidad o precio'
+    )
+    # Traceability for line separation
+    separated_to_expediente = models.ForeignKey(
+        Expediente,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='received_lines',
+        help_text='Expediente destino si esta l\u00ednea fue separada (split)'
+    )
+    factory_order = models.ForeignKey(
+        'FactoryOrder',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='product_lines',
+        help_text='Orden de f\u00e1brica a la que pertenece esta l\u00ednea'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'Expediente Product Line'
+        verbose_name_plural = 'Expediente Product Lines'
+
+    def __str__(self):
+        return f'{self.expediente} — {self.product} x{self.quantity}'
+
+
+# === S17-10: FactoryOrder ===
+class FactoryOrder(models.Model):
+    """
+    Relational model for factory orders linked to an Expediente.
+    Sync rule: when the FIRST FactoryOrder is created for an expediente,
+    copy order_number to expediente.factory_order_number.
+    Orchestration point: save() override — NO signals, NO view delegation.
+    """
+    expediente = models.ForeignKey(
+        Expediente, on_delete=models.CASCADE, related_name='factory_orders'
+    )
+    order_number = models.CharField(
+        max_length=100,
+        help_text='N\u00famero en sistema del fabricante (SAP para Marluvas, otro para otros)'
+    )
+    proforma_client_number = models.CharField(max_length=100, null=True, blank=True)
+    proforma_mwt_number = models.CharField(max_length=100, null=True, blank=True)
+    purchase_number = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='N\u00famero de orden de compra al fabricante'
+    )
+    url_proforma_client = models.URLField(max_length=500, null=True, blank=True)
+    url_proforma_mwt = models.URLField(max_length=500, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'Factory Order'
+        verbose_name_plural = 'Factory Orders'
+
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        super().save(*args, **kwargs)
+        # Sync flat field on expediente when FIRST factory order is created
+        if is_new and not self.expediente.factory_order_number:
+            self.expediente.factory_order_number = self.order_number
+            self.expediente.save(update_fields=['factory_order_number'])
+
+    def __str__(self):
+        return f'FO-{self.order_number} → {self.expediente}'
+
+
+# === S17-11: ExpedientePago ===
+class ExpedientePago(models.Model):
+    """
+    Payment record for an Expediente.
+    Clean model — no signals, no save() integration with PaymentLine.
+    Integration with PaymentLine via transaction.atomic() in View (Sprint 18).
+    """
+    expediente = models.ForeignKey(
+        Expediente, on_delete=models.CASCADE, related_name='pagos'
+    )
+    tipo_pago = models.CharField(
+        max_length=20,
+        choices=[('COMPLETO', 'Pago Completo'), ('PARCIAL', 'Pago Parcial')],
+        help_text='Tipo de pago registrado'
+    )
+    metodo_pago = models.CharField(
+        max_length=30,
+        choices=[
+            ('TRANSFERENCIA', 'Transferencia Bancaria'),
+            ('NOTA_CREDITO', 'Nota de Cr\u00e9dito'),
+        ],
+        help_text='M\u00e9todo de pago utilizado'
+    )
+    payment_date = models.DateField(
+        help_text='Fecha efectiva del pago'
+    )
+    amount_paid = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        help_text='Monto pagado en la moneda del expediente'
+    )
+    additional_info = models.TextField(
+        null=True, blank=True,
+        help_text='Informaci\u00f3n adicional libre sobre el pago'
+    )
+    url_comprobante = models.URLField(
+        max_length=500, null=True, blank=True,
+        help_text='URL del comprobante de pago (transfer\u00encia, nota de cr\u00e9dito, etc.)'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-payment_date']
+        verbose_name = 'Expediente Pago'
+        verbose_name_plural = 'Expediente Pagos'
+
+    def __str__(self):
+        return f'Pago {self.tipo_pago} {self.amount_paid} — {self.expediente}'
 
 
 class ArtifactInstance(TimestampMixin):
