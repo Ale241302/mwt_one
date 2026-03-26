@@ -2,6 +2,7 @@
 Sprint 1-5 – URL Configuration for /api/expedientes/
 Ref: LOTE_SM_SPRINT1 Item 7
 Sprint 12: Unified Command Dispatching
+Sprint 17: Portal endpoints added (S17-04)
 """
 from django.urls import path
 from apps.expedientes.views import (
@@ -16,6 +17,12 @@ from apps.expedientes.views import (
     MirrorPDFView,
     FinancialSummaryView, DocumentsListView,
     CEOOverrideView,
+)
+# S17-04: Portal views
+from apps.expedientes.views_portal import (
+    PortalExpedienteListView,
+    PortalExpedienteDetailView,
+    PortalExpedienteArtifactsView,
 )
 
 app_name = 'expedientes'
@@ -66,6 +73,9 @@ urlpatterns = [
     path('<uuid:pk>/register-compensation/', CommandDispatchView.as_view(), {'cmd_id': 'C29'}, name='register-compensation'),
     path('<uuid:pk>/add-shipment-update/', CommandDispatchView.as_view(), {'cmd_id': 'C36'}, name='add-shipment-update'),
 
+    # ── S17-03: REOPEN ──
+    path('<uuid:pk>/reopen/', CommandDispatchView.as_view(), {'cmd_id': 'REOPEN'}, name='reopen'),
+
     # ── Read endpoints ──
     path('<uuid:pk>/costs/', CostsListView.as_view(), name='costs'),
     path('<uuid:pk>/costs/summary/', CostsSummaryView.as_view(), name='costs-summary'),
@@ -83,4 +93,9 @@ urlpatterns = [
 
     # S14-15: CEO Override
     path('<uuid:pk>/ceo-override/', CEOOverrideView.as_view(), name='ceo-override'),
+
+    # ── S17-04: Portal endpoints (tenant-scoped, no CEO fields) ──
+    path('portal/', PortalExpedienteListView.as_view(), name='portal-list'),
+    path('portal/<uuid:pk>/', PortalExpedienteDetailView.as_view(), name='portal-detail'),
+    path('portal/<uuid:pk>/artifacts/', PortalExpedienteArtifactsView.as_view(), name='portal-artifacts'),
 ]

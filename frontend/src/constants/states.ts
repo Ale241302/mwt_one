@@ -1,54 +1,39 @@
-/* Canonical States — Sprint 9.1
-   Source of truth: ENT_OPS_STATE_MACHINE v1.2.2
-   Fix S9.1-02: UTF-8 real en strings españoles (tildes y eñes)
-   Exports adicionales: PIPELINE_STATES, STATE_BADGE_CLASSES, STATE_LABELS */
-
+/**
+ * S17-02: DESPACHO added to CANONICAL_STATES and STATE_BADGE_CLASSES
+ * Single source of truth for expediente states used across the frontend.
+ */
 export const CANONICAL_STATES = [
-  "REGISTRO", "PRODUCCION", "PREPARACION", "DESPACHO",
-  "TRANSITO", "EN_DESTINO", "CERRADO", "CANCELADO",
+  'REGISTRO',
+  'PRODUCCION',
+  'PREPARACION',
+  'DESPACHO',
+  'TRANSITO',
+  'EN_DESTINO',
+  'CERRADO',
+  'CANCELADO',
 ] as const;
 
-export type CanonicalState = (typeof CANONICAL_STATES)[number];
-
-export const STATE_LABELS: Record<string, string> = {
-  REGISTRO: "Registro",
-  PRODUCCION: "Producción",
-  PREPARACION: "Preparación",
-  DESPACHO: "Despacho",
-  TRANSITO: "Tránsito",
-  EN_DESTINO: "En destino",
-  CERRADO: "Cerrado",
-  CANCELADO: "Cancelado",
-};
+export type ExpedienteStatus = typeof CANONICAL_STATES[number];
 
 export const STATE_BADGE_CLASSES: Record<string, string> = {
-  REGISTRO: "badge-info",
-  PRODUCCION: "badge-warning",
-  PREPARACION: "badge-warning",
-  DESPACHO: "badge-info",
-  TRANSITO: "badge-info",
-  EN_DESTINO: "badge-success",
-  CERRADO: "badge-success",
-  CANCELADO: "badge-critical",
+  REGISTRO:    'bg-blue-50 text-blue-700 border border-blue-200',
+  PRODUCCION:  'bg-amber-50 text-amber-700 border border-amber-200',
+  PREPARACION: 'bg-orange-50 text-orange-700 border border-orange-200',
+  DESPACHO:    'bg-purple-50 text-purple-700 border border-purple-200',
+  TRANSITO:    'bg-sky-50 text-sky-700 border border-sky-200',
+  EN_DESTINO:  'bg-teal-50 text-teal-700 border border-teal-200',
+  CERRADO:     'bg-green-50 text-green-700 border border-green-200',
+  CANCELADO:   'bg-red-50 text-red-700 border border-red-200',
 };
 
-export const PIPELINE_STATES = CANONICAL_STATES.filter(
-  (s) => s !== "CERRADO" && s !== "CANCELADO"
-);
-
-export const TERMINAL_STATES = ["CERRADO", "CANCELADO"] as const;
-export const CANCELLABLE_STATES = ["REGISTRO", "PRODUCCION", "PREPARACION"] as const;
-export const COST_PHASES = CANONICAL_STATES.filter(s => !TERMINAL_STATES.includes(s as any));
-export const TIMELINE_STEPS = ["REGISTRO", "PRODUCCION", "PREPARACION", "DESPACHO", "TRANSITO", "EN_DESTINO", "CERRADO"] as const;
-
-
-// Estados lineales del timeline (sin CANCELADO — va como badge lateral)
-export const TIMELINE_STATES_CANONICAL = [
-  { id: "REGISTRO", label: "Registro" },
-  { id: "PRODUCCION", label: "Producción" },
-  { id: "PREPARACION", label: "Preparación" },
-  { id: "DESPACHO", label: "Despacho" },
-  { id: "TRANSITO", label: "Tránsito" },
-  { id: "EN_DESTINO", label: "En destino" },
-  { id: "CERRADO", label: "Cerrado" },
-] as const;
+/** Gate message label per state — what needs to be done to advance */
+export const GATE_LABELS: Record<string, string> = {
+  REGISTRO:    'Completar documentos de registro para avanzar a Producción',
+  PRODUCCION:  'Finalizar producción para avanzar a Preparación',
+  PREPARACION: 'Completar documentos de preparación para avanzar a Despacho',
+  DESPACHO:    'Confirmar salida de aduana China para avanzar a Tránsito',
+  TRANSITO:    'Confirmar arribo para avanzar a En Destino',
+  EN_DESTINO:  'Registrar factura MWT y saldo pagado para cerrar el expediente',
+  CERRADO:     '',
+  CANCELADO:   '',
+};
