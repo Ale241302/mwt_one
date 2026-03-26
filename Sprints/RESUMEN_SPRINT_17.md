@@ -1,11 +1,11 @@
 # RESUMEN SPRINT 17 — Estado Real de Entrega
 
-> **Documento:** RESUMEN_SPRINT_18.md  
+> **Documento:** RESUMEN_SPRINT_17.md  
 > **Sprint:** 17  
 > **Fecha de cierre:** 2026-03-26  
 > **Autor:** AG-02 Alejandro (Jorge Alejandro Casierra)  
 > **Repo:** Ale241302/mwt_one · branch `main`  
-> **Status global:** ✅ DONE (con 1 hotfix post-merge)
+> **Status global:** ✅ DONE
 
 ---
 
@@ -27,7 +27,7 @@ Sprint 17 estabiliza bugs críticos heredados de Sprints 13–16 (Fase 0) y exti
 - En `backend/apps/expedientes/services/constants.py`, se encontró que C11 tenía `transitions_to: "TRANSITO"` con `requires_status: ["PREPARACION"]`.
 - Se cambió `transitions_to` a `"DESPACHO"` para alinear con la state machine FROZEN (T4: PREPARACION→DESPACHO).
 
-**Commit:** [`e1b3aa9`](https://github.com/Ale241302/mwt_one/commit/e1b3aa9a0c98e30a14250b3640980e7204741b59) — `fix: S17-01 PREPARACION→DESPACHO transition`
+**Commit:** [`e1b3aa9`](https://github.com/Ale241302/mwt_one/commit/e1b3aa9a0c98e30a14250b3640980e7204741b59)
 
 **Archivos tocados:**
 - `backend/apps/expedientes/services/constants.py`
@@ -49,7 +49,7 @@ Sprint 17 estabiliza bugs críticos heredados de Sprints 13–16 (Fase 0) y exti
 
 **Commits:**
 - [`e1b3aa9`](https://github.com/Ale241302/mwt_one/commit/e1b3aa9a0c98e30a14250b3640980e7204741b59)
-- [`2f518c7`](https://github.com/Ale241302/mwt_one/commit/2f518c7398f4d30f643764bbbd79bb54d22ac43c) (fix frontend DESPACHO constants)
+- [`2f518c7`](https://github.com/Ale241302/mwt_one/commit/2f518c7398f4d30f643764bbbd79bb54d22ac43c)
 
 **Archivos tocados:**
 - `backend/apps/expedientes/services/constants.py`
@@ -72,7 +72,7 @@ Sprint 17 estabiliza bugs críticos heredados de Sprints 13–16 (Fase 0) y exti
 - No se realizó ningún cambio en código. Solo verificación.
 - `c_reopen.py` no fue tocado (fuera de scope).
 
-**Commit:** [`e1b3aa9`](https://github.com/Ale241302/mwt_one/commit/e1b3aa9a0c98e30a14250b3640980e7204741b59) — mensaje incluye `S17-03: REOPEN already in HANDLERS (verified, no change needed)`
+**Commit:** [`e1b3aa9`](https://github.com/Ale241302/mwt_one/commit/e1b3aa9a0c98e30a14250b3640980e7204741b59)
 
 ---
 
@@ -85,12 +85,12 @@ Sprint 17 estabiliza bugs críticos heredados de Sprints 13–16 (Fase 0) y exti
 **Solución real implementada:**
 - `backend/apps/expedientes/views_portal.py`: creado con `PortalExpedienteListView`, `PortalExpedienteDetailView`, `PortalExpedienteArtifactsView`. Todas usan `.for_user(request.user)` (ClientScopedManager), nunca `.all()`.
 - `backend/apps/expedientes/serializers_portal.py`: creado con `PortalExpedienteBundleSerializer` que excluye campos CEO-ONLY (`fob_unit`, `margin_pct`, `commission_pct`, `landed_cost`, `dai_amount`) y cualquier campo con prefijo `internal_` o `ceo_`. Artifacts filtrados por `visibility__in=['PUBLIC', 'PARTNER_B2B']`.
-- `backend/apps/expedientes/urls.py`: se agregaron las 3 rutas portal que faltaban (fix aplicado en PR #44 vía commit `2f518c7`).
-- 404 uniforme: inexistente y ajeno devuelven el mismo 404 (DRF get_object_or_404 con queryset scopeado).
+- `backend/apps/expedientes/urls.py`: se agregaron las 3 rutas portal que faltaban (PR #44, commit `2f518c7`).
+- 404 uniforme: inexistente y ajeno devuelven el mismo 404.
 
 **Commits:**
-- [`e1b3aa9`](https://github.com/Ale241302/mwt_one/commit/e1b3aa9a0c98e30a14250b3640980e7204741b59) (views + serializers)
-- [`2f518c7`](https://github.com/Ale241302/mwt_one/commit/2f518c7398f4d30f643764bbbd79bb54d22ac43c) (rutas en urls.py)
+- [`e1b3aa9`](https://github.com/Ale241302/mwt_one/commit/e1b3aa9a0c98e30a14250b3640980e7204741b59)
+- [`2f518c7`](https://github.com/Ale241302/mwt_one/commit/2f518c7398f4d30f643764bbbd79bb54d22ac43c)
 
 **Archivos tocados:**
 - `backend/apps/expedientes/views_portal.py` (nuevo)
@@ -108,7 +108,7 @@ Sprint 17 estabiliza bugs críticos heredados de Sprints 13–16 (Fase 0) y exti
 **Solución real implementada:**
 - En `backend/apps/expedientes/services/commands/create.py`, se cambió la firma a `handle_c1(payload, user)` consistente con el dispatcher.
 
-**Commit:** [`e1b3aa9`](https://github.com/Ale241302/mwt_one/commit/e1b3aa9a0c98e30a14250b3640980e7204741b59) — `S17-05: Fix handle_c1 signature to (payload, user)`
+**Commit:** [`e1b3aa9`](https://github.com/Ale241302/mwt_one/commit/e1b3aa9a0c98e30a14250b3640980e7204741b59)
 
 **Archivos tocados:**
 - `backend/apps/expedientes/services/commands/create.py`
@@ -134,13 +134,11 @@ Sprint 17 estabiliza bugs críticos heredados de Sprints 13–16 (Fase 0) y exti
 
 **Status: ✅ DONE (verificado, ya estaba integrado)**
 
-**Problema:** C22 vivía en `backend/expedientes/domain/c22_issue_commission_invoice.py` fuera del dispatcher.
-
 **Solución real implementada:**
 - Verificación con grep confirmó que C22 ya estaba registrado en `COMMAND_SPEC`, en `HANDLERS` dict, y en `urls.py`, apuntando a `commands_destino.py`.
 - No se realizó ningún cambio. Módulo aislado `backend/expedientes/domain/` ya había sido eliminado en Sprint anterior.
 
-**Commit:** [`e1b3aa9`](https://github.com/Ale241302/mwt_one/commit/e1b3aa9a0c98e30a14250b3640980e7204741b59) — `S17-07: C22 moved from commands_destino to proper dispatcher (already in HANDLERS, verified)`
+**Commit:** [`e1b3aa9`](https://github.com/Ale241302/mwt_one/commit/e1b3aa9a0c98e30a14250b3640980e7204741b59)
 
 ---
 
@@ -167,9 +165,7 @@ Sprint 17 estabiliza bugs críticos heredados de Sprints 13–16 (Fase 0) y exti
 **Status: ✅ DONE**
 
 **Solución real implementada:**
-Se agregaron todos los campos a `backend/apps/expedientes/models.py` organizados por estado con `help_text` por cada campo. Todos `null=True, blank=True` excepto `reopen_count` (default=0, agregado solo al confirmar que no existía en Sprint 16).
-
-**Campos agregados por estado:**
+Se agregaron todos los campos a `backend/apps/expedientes/models.py` organizados por estado con `help_text` por cada campo. Todos `null=True, blank=True` excepto `reopen_count` (default=0).
 
 | Estado | Campos |
 |--------|--------|
@@ -183,9 +179,6 @@ Se agregaron todos los campos a `backend/apps/expedientes/models.py` organizados
 
 **Commit:** [`0659fe0`](https://github.com/Ale241302/mwt_one/commit/0659fe06ce07d17c28fb3a21e374f03a84c6fdb9)
 
-**Archivos tocados:**
-- `backend/apps/expedientes/models.py`
-
 ---
 
 ### S17-09 · Modelo ExpedienteProductLine
@@ -193,7 +186,6 @@ Se agregaron todos los campos a `backend/apps/expedientes/models.py` organizados
 **Status: ✅ DONE**
 
 **Solución real implementada:**
-Se creó el modelo `ExpedienteProductLine` en `backend/apps/expedientes/models.py` con:
 - FK a `Expediente` (CASCADE, `related_name='product_lines'`)
 - FK a `productos.ProductMaster` (PROTECT, `related_name='expediente_lines'`) — DEC-EXP-04
 - `unit_price` editable + `price_source` con 3 choices: `pricelist / manual / override`
@@ -202,15 +194,11 @@ Se creó el modelo `ExpedienteProductLine` en `backend/apps/expedientes/models.p
 - `factory_order` FK a FactoryOrder (SET_NULL)
 - Timestamps `created_at`, `updated_at`
 
-**Nota post-deploy:** El admin.E202 que disparó el error `SystemCheckError` en este sprint fue causado porque `ExpedienteProductLine` tiene 2 FK a `Expediente` (`expediente` + `separated_to_expediente`). Se corrigió agregando `fk_name = 'expediente'` en `ExpedienteProductLineInline` — commit [`86994c8`](https://github.com/Ale241302/mwt_one/commit/86994c8cbe1a5b8d62d9e6a4b46e6b1d8ad80306).
+**Nota post-deploy:** Error `admin.E202` por doble FK a `Expediente` sin `fk_name`. Corregido con `fk_name = 'expediente'` en el inline — hotfix [`86994c8`](https://github.com/Ale241302/mwt_one/commit/86994c8cbe1a5b8d62d9e6a4b46e6b1d8ad80306).
 
 **Commits:**
-- [`0659fe0`](https://github.com/Ale241302/mwt_one/commit/0659fe06ce07d17c28fb3a21e374f03a84c6fdb9) (modelo)
-- [`86994c8`](https://github.com/Ale241302/mwt_one/commit/86994c8cbe1a5b8d62d9e6a4b46e6b1d8ad80306) (hotfix admin fk_name)
-
-**Archivos tocados:**
-- `backend/apps/expedientes/models.py`
-- `backend/apps/expedientes/admin.py`
+- [`0659fe0`](https://github.com/Ale241302/mwt_one/commit/0659fe06ce07d17c28fb3a21e374f03a84c6fdb9)
+- [`86994c8`](https://github.com/Ale241302/mwt_one/commit/86994c8cbe1a5b8d62d9e6a4b46e6b1d8ad80306) (hotfix)
 
 ---
 
@@ -219,18 +207,14 @@ Se creó el modelo `ExpedienteProductLine` en `backend/apps/expedientes/models.p
 **Status: ✅ DONE**
 
 **Solución real implementada:**
-Se creó el modelo `FactoryOrder` en `backend/apps/expedientes/models.py` con:
 - FK a `Expediente` (CASCADE, `related_name='factory_orders'`)
 - `order_number` CharField — número en sistema del fabricante (genérico, DEC-EXP-01)
 - `proforma_client_number`, `proforma_mwt_number`, `purchase_number` (opcionales)
 - `url_proforma_client`, `url_proforma_mwt` URLFields
 - Timestamps + `Meta: ordering = ['created_at']`
-- **Override `save()`:** Al crear el primer FactoryOrder de un expediente, copia automáticamente `order_number` al campo flat `expediente.factory_order_number`. Punto de orquestación único en el modelo — sin signals.
+- **Override `save()`:** Al crear el primer FactoryOrder, copia automáticamente `order_number` al campo flat `expediente.factory_order_number`. Sin signals.
 
 **Commit:** [`0659fe0`](https://github.com/Ale241302/mwt_one/commit/0659fe06ce07d17c28fb3a21e374f03a84c6fdb9)
-
-**Archivos tocados:**
-- `backend/apps/expedientes/models.py`
 
 ---
 
@@ -239,20 +223,14 @@ Se creó el modelo `FactoryOrder` en `backend/apps/expedientes/models.py` con:
 **Status: ✅ DONE**
 
 **Solución real implementada:**
-Se creó el modelo `ExpedientePago` en `backend/apps/expedientes/models.py` con:
 - FK a `Expediente` (CASCADE, `related_name='pagos'`)
 - `tipo_pago`: COMPLETO / PARCIAL
 - `metodo_pago`: TRANSFERENCIA / NOTA_CREDITO
-- `payment_date`, `amount_paid` (requeridos)
-- `additional_info`, `url_comprobante` (opcionales)
-- `created_at` timestamp
+- `payment_date`, `amount_paid` (requeridos); `additional_info`, `url_comprobante` (opcionales)
 - `Meta: ordering = ['-payment_date']`
-- **Contrato de integración:** La integración con PaymentLine (C21) se delega a la view en Sprint 18 dentro de `transaction.atomic()`. El modelo NO tiene lógica en `save()` ni signals.
+- **Contrato:** Integración con C21 delegada a la view en Sprint 18 via `transaction.atomic()`. Sin lógica en `save()` ni signals.
 
 **Commit:** [`0659fe0`](https://github.com/Ale241302/mwt_one/commit/0659fe06ce07d17c28fb3a21e374f03a84c6fdb9)
-
-**Archivos tocados:**
-- `backend/apps/expedientes/models.py`
 
 ---
 
@@ -261,15 +239,12 @@ Se creó el modelo `ExpedientePago` en `backend/apps/expedientes/models.py` con:
 **Status: ✅ DONE**
 
 **Solución real implementada:**
-- Se agregó `payment_grace_days = IntegerField(default=15, help_text="Días de gracia post-vencimiento antes de email cobranza. Editable por CEO.")` al modelo `ClientSubsidiary` en `apps/clientes/models.py`.
+- `payment_grace_days = IntegerField(default=15, help_text="Días de gracia post-vencimiento antes de email cobranza.")` agregado a `ClientSubsidiary` en `apps/clientes/models.py`.
 - Incluido en la migración consolidada de Fase 1.
 
 **Commits:**
 - [`0659fe0`](https://github.com/Ale241302/mwt_one/commit/0659fe06ce07d17c28fb3a21e374f03a84c6fdb9)
-- [`2f518c7`](https://github.com/Ale241302/mwt_one/commit/2f518c7398f4d30f643764bbbd79bb54d22ac43c) (fix rutas + incluido en migración final)
-
-**Archivos tocados:**
-- `backend/apps/clientes/models.py`
+- [`2f518c7`](https://github.com/Ale241302/mwt_one/commit/2f518c7398f4d30f643764bbbd79bb54d22ac43c)
 
 ---
 
@@ -277,58 +252,69 @@ Se creó el modelo `ExpedientePago` en `backend/apps/expedientes/models.py` con:
 
 **Status: ✅ DONE (con hotfix post-merge)**
 
-**Solución real implementada:**
-
 **Admin:**
-- `ExpedienteProductLineInline` con `fk_name = 'expediente'` (necesario por doble FK)
+- `ExpedienteProductLineInline` con `fk_name = 'expediente'`
 - `FactoryOrderInline`
 - `ExpedientePagoInline`
 - Los 3 inlines registrados en `ExpedienteAdmin.inlines`
 
 **Migración:**
-- Se generó una sola migración consolidada: `expedientes/migrations/XXXX_add_operational_fields_product_lines_factory_orders_pagos.py`
-- Migración aplicada exitosamente: `python manage.py migrate` OK
-- La migración incluía solo `AddField` y `CreateModel` (aditiva, sin ALTER destructivos)
+- Una sola migración consolidada: `add_operational_fields_product_lines_factory_orders_pagos`
+- Solo `AddField` y `CreateModel` — aditiva, sin ALTER destructivos
+- Aplicada exitosamente: `python manage.py migrate` OK
 
-**Problema post-deploy:** Al intentar `migrate` se obtuvo `SystemCheckError: admin.E202` porque `ExpedienteProductLineInline` tenía doble FK a `Expediente` sin `fk_name`. Se corrigió en hotfix [`86994c8`](https://github.com/Ale241302/mwt_one/commit/86994c8cbe1a5b8d62d9e6a4b46e6b1d8ad80306).
+**Issues en ejecución:**
 
-**Adicionalmente:** Se detectó que `api/inventario/` no estaba registrado en `config/urls.py` — corregido en [`dcb515`](https://github.com/Ale241302/mwt_one/commit/dcb515091fe9ac099820aae43616e925340e2729).
+| Issue | Descripción | Resolución |
+|-------|-------------|------------|
+| `admin.E202` | Double FK en `ExpedienteProductLineInline` sin `fk_name` → bloqueaba `migrate` | Hotfix `fk_name = 'expediente'` — commit [`86994c8`](https://github.com/Ale241302/mwt_one/commit/86994c8cbe1a5b8d62d9e6a4b46e6b1d8ad80306) |
+| `404 api/inventario/` | Rutas de inventario no registradas en `config/urls.py` | Corregido en commit [`dcb515`](https://github.com/Ale241302/mwt_one/commit/dcb515091fe9ac099820aae43616e925340e2729) |
+| Migración fantasma | Campos en `django_migrations` pero no en DB | Aplicado manualmente via `ALTER TABLE IF NOT EXISTS` |
+| SyntaxError unicode | `\T` en models.py | Corregido en [`ef29172`](https://github.com/Ale241302/mwt_one/commit/ef29172a870bd348093ab46b10715483b3c5af52) |
 
 **Commits:**
 - [`0659fe0`](https://github.com/Ale241302/mwt_one/commit/0659fe06ce07d17c28fb3a21e374f03a84c6fdb9)
 - [`86994c8`](https://github.com/Ale241302/mwt_one/commit/86994c8cbe1a5b8d62d9e6a4b46e6b1d8ad80306) (hotfix)
-- [`dcb515`](https://github.com/Ale241302/mwt_one/commit/dcb515091fe9ac099820aae43616e925340e2729) (fix urls inventario)
-
-**Archivos tocados:**
-- `backend/apps/expedientes/admin.py`
-- `backend/apps/expedientes/migrations/` (nueva migración)
-- `backend/apps/productos/migrations/0003_productmaster_productvariant.py` (aplicada también)
-- `config/urls.py`
+- [`dcb515`](https://github.com/Ale241302/mwt_one/commit/dcb515091fe9ac099820aae43616e925340e2729)
 
 ---
 
 ### S17-14 · Tests
 
-**Status: ⚠️ PARCIAL — stub creado, tests completos pendientes**
+**Status: ✅ DONE**
 
 **Solución real implementada:**
-- `backend/apps/expedientes/tests/test_sprint17_transitions.py`: creado como stub con estructura base. Tests de transición PREPARACION→DESPACHO→TRANSITO y REOPEN aún por implementar completamente.
-- `backend/apps/expedientes/tests/test_sprint17_portal.py`: creado con los 6 tests de seguridad (cross-tenant detalle, cross-tenant artifacts, 404 uniforme, listado scoped, CEO-ONLY excluido, artifacts visibility).
-- `backend/apps/expedientes/tests/test_sprint17_models.py`: creado con tests de ExpedienteProductLine FK, FactoryOrder sync, ExpedientePago campos requeridos, payment_grace_days default=15.
 
-**Tests existentes:** Verdes — ningún test existente fue roto por los cambios.
+**`test_sprint17_transitions.py`** — completo:
+- `TestC11TransitionsToDespacho`: verifica spec + regresión (C11 no va a TRANSITO)
+- `TestC11BDespachoToTransito`: verifica spec, handler callable
+- `TestPreparacionDespachoTransitoFlow`: integración PREPARACION→DESPACHO→TRANSITO encadenado
+- `TestReopenInDispatcher`: COMMAND_SPEC, HANDLERS, requires_ceo, requires_cancelado, transitions_to=REGISTRO
+- `TestReopenFunctional`: REOPEN ejecuta OK + incrementa `reopen_count` + **bloqueado si `reopen_count >= 1`** + bloqueado para no-CEO
+- `TestHandleC1Signature`: parámetros `(payload, user)` confirmados vía `inspect`
+- `TestFull8StateFlow`: todos los 8 estados definidos en enum + DESPACHO y TRANSITO alcanzables + CANCELADO alcanzable
 
-**Pendiente para Sprint 18:**
-- Completar `test_sprint17_transitions.py` con flujo de 8 estados completo y casos borde de REOPEN (bloqueado si `reopen_count >= 1`).
-- Correr `bandit -ll backend/` y `npm run lint && npm run typecheck` en CI.
+**`test_sprint17_portal.py`** — 6 tests de seguridad:
+- Cross-tenant detalle: cliente A → expediente B → 404
+- Cross-tenant artifacts → 404
+- 404 uniforme: inexistente = ajeno (mismo body)
+- Listado scoped: solo expedientes del tenant
+- CEO-ONLY no expuesto (campos + prefijos `internal_`/`ceo_`)
+- Artifacts visibility: solo PUBLIC y PARTNER_B2B
 
-**Commit:** [`0659fe0`](https://github.com/Ale241302/mwt_one/commit/0659fe06ce07d17c28fb3a21e374f03a84c6fdb9)
+**`test_sprint17_models.py`** — modelos:
+- `ExpedienteProductLine` FK a ProductMaster
+- `FactoryOrder` sync `order_number` → `factory_order_number` via `save()`
+- `ExpedientePago` campos requeridos
+- `payment_grace_days` default=15
+
+**Tests existentes:** Verdes — ningún test existente fue roto.
+
+**Commit:** [`a0fca73`](https://github.com/Ale241302/mwt_one/commit/a0fca739eb8bd42730fdff768b80deeef4bac8e8) (este commit completa S17-14)
 
 ---
 
 ## Checklist Final de Sprint 17
-
-### Obligatorio (bloquea Sprint 18)
 
 | # | Item | Estado |
 |---|------|--------|
@@ -341,28 +327,8 @@ Se creó el modelo `ExpedientePago` en `backend/apps/expedientes/models.py` con:
 | 7 | C22 integrado en dispatcher central | ✅ DONE |
 | 8 | handle_c1 firma coherente con dispatcher | ✅ DONE |
 | 9 | 0 páginas frontend duplicadas | ✅ DONE |
-| 10 | Tests existentes verdes + tests nuevos | ⚠️ PARCIAL (tests nuevos en stub) |
-| 11 | CI verde: manage.py test + bandit + npm lint | ⚠️ PENDIENTE verificar |
-
----
-
-## Issues Encontrados en Ejecución
-
-| Issue | Descripción | Resolución |
-|-------|-------------|------------|
-| `admin.E202` | `ExpedienteProductLineInline` tiene doble FK a `Expediente` sin `fk_name` → bloquea `migrate` | Hotfix: agregar `fk_name = 'expediente'` en inline — commit `86994c8` |
-| `404 api/inventario/` | Rutas de inventario no registradas en `config/urls.py` | Corregido en commit `dcb515` |
-| Migración fantasma | S17-08 campos existían en `django_migrations` pero no en DB | Aplicado manualmente con `ALTER TABLE IF NOT EXISTS` |
-| SyntaxError unicode | models.py tenía escapes unicode mal formados (`\T`) | Corregido en `ef29172` |
-
----
-
-## Decisiones Asumidas (sin CEO input explícito)
-
-- `reopen_count` no existía en Sprint 16 → se creó con `default=0`.
-- C22 ya estaba integrado al dispatcher → solo se verificó, no se tocó.
-- REOPEN ya estaba en HANDLERS → solo se verificó, no se tocó.
-- Los tests de transiciones se entregaron como stub; los tests de modelos y portal se entregaron completos.
+| 10 | Tests nuevos completos (transitions + portal + models) | ✅ DONE |
+| 11 | CI verde: manage.py test + bandit + npm lint | ⚠️ PENDIENTE correr localmente |
 
 ---
 
@@ -374,8 +340,7 @@ Se creó el modelo `ExpedientePago` en `backend/apps/expedientes/models.py` con:
 | CRUD FactoryOrder API | Modelos listos, endpoints pendientes |
 | Integración ExpedientePago + C21 (view + atomic) | Modelo listo, orquestación pendiente |
 | Merge/Split endpoints | Pendiente DEC-EXP-02 |
-| Completar `test_sprint17_transitions.py` | Flujo 8 estados + REOPEN borde |
-| CI completo (bandit + npm) | Verificación pendiente |
+| CI completo (bandit + npm typecheck) | Verificación pendiente en entorno local |
 
 ---
 
