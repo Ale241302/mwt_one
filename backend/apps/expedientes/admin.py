@@ -28,6 +28,7 @@ class PaymentLineInline(admin.TabularInline):
 # S17-13: New inlines for Sprint 17 models
 class ExpedienteProductLineInline(admin.TabularInline):
     model = ExpedienteProductLine
+    fk_name = 'expediente'  # fix admin.E202: two FKs to Expediente
     extra = 0
     readonly_fields = ('created_at', 'updated_at')
     show_change_link = True
