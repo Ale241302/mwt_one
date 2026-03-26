@@ -18,18 +18,20 @@ from .commands.c8 import handle_c8
 from .commands.c9 import handle_c9
 from .commands.c10 import handle_c10
 from .commands.c11 import handle_c11
-from .commands.c11b import handle_c11b
 from .commands.c12 import handle_c12
 from .commands.c13 import handle_c13
 from .commands.c14 import handle_c14
 from .commands.c15 import handle_c15
 from .commands.c16 import handle_c16
 from .commands.c_cancel import handle_cancel
-from .commands.c21 import handle_c21
+from .commands.c_reopen import handle_reopen
 
-# Restoring original others
+# S17-02: DESPACHO -> TRANSITO handler
+from .commands_despacho import handle_c11b
+
+# Keep original imports for others
 from .commands_destino import handle_c22
-from .financial import handle_c21 as handle_c21_fin
+from .financial import handle_c21
 from .exceptions import handle_c17, handle_c18
 from .corrections import handle_c19, handle_c20, supersede_artifact, void_artifact, register_compensation
 from .logistics import handle_c23, handle_c24, handle_c30, add_shipment_update
@@ -51,18 +53,19 @@ HANDLERS = {
     'C2': handle_c2, 'C3': handle_c3, 'C4': handle_c4, 'C5': handle_c5,
     'C6': handle_c6,
     'C7': handle_c7, 'C8': handle_c8, 'C9': handle_c9, 'C10': handle_c10, 'C11': handle_c11,
+    # S17-02: C11B registered — DESPACHO → TRANSITO
     'C11B': handle_c11b,
     'C12': handle_c12,
     'C13': handle_c13, 'C14': handle_c14,
     'C15': handle_c15,
     'C16': handle_c16,
     'CANCEL': handle_cancel,
+    # S17-03: REOPEN verified in HANDLERS
     'REOPEN': handle_reopen,
-    
+
     # Restoring original others
     'C22': handle_c22,
     'C21': handle_c21,
-    'C25': handle_c21_fin,
     'C17': handle_c17, 'C18': handle_c18,
     'C19': handle_c19, 'C20': handle_c20,
     'C23': handle_c23, 'C24': handle_c24, 'C30': handle_c30
@@ -85,7 +88,7 @@ def execute_command(expediente, cmd_id, payload, user):
 
     spec = COMMAND_SPEC.get(cmd_id)
     handler = HANDLERS.get(cmd_id)
-    
+
     events = []
 
     with transaction.atomic():
@@ -98,19 +101,18 @@ def execute_command(expediente, cmd_id, payload, user):
                 payload=payload.get('payload', payload),
                 status=ArtifactStatusEnum.COMPLETED
             )
-            
+
         # 2. Handler execution
         if handler:
-            env = {'user': user}
-            handler(expediente, payload, env=env)
-            
+            handler(expediente, payload)
+
         # 3. Status Transition
         old_status = expediente.status
         new_status = spec.get('transition_to')
         if new_status and old_status != new_status:
             expediente.status = new_status
             expediente.save()
-            
+
             # Transition Event
             ev_trans = EventLog.objects.create(
                 event_type='expediente.status_changed',
@@ -137,7 +139,7 @@ def execute_command(expediente, cmd_id, payload, user):
             correlation_id=uuid.uuid4()
         )
         events.append(ev_cmd)
-        
+
     return expediente, events
 
 # Re-exposing symbols for Sprint 12 API
@@ -164,4 +166,4 @@ register_payment = handle_c21
 register_liquidation = handle_c22
 register_shipment_update = handle_c23
 register_generic_artifact = handle_c30
-register_compensation = register_compensation # already imported
+register_compensation = register_compensation  # already imported
