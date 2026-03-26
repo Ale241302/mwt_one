@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.core.exceptions import ValidationError
 
+
 from apps.core.models import TimestampMixin, AppendOnlyModel, LegalEntity
 from .enums_artifacts import ArtifactStatusEnum
 from .enums_exp import (
@@ -10,6 +11,7 @@ from .enums_exp import (
     RegisteredByType, CostLineVisibility, LogisticsMode, LogisticsSource,
     CostCategory, CostBehavior, AforoType,
 )
+
 
 
 class Expediente(TimestampMixin):
@@ -74,13 +76,13 @@ class Expediente(TimestampMixin):
     # === S17-08: GENERALES ===
     purchase_order_number = models.CharField(
         max_length=100, null=True, blank=True,
-        help_text='N\u00famero de orden de compra del cliente'
+        help_text='Número de orden de compra del cliente'
     )
     operado_por = models.CharField(
         max_length=20,
         choices=[('CLIENTE', 'Cliente'), ('MWT', 'Muito Work Limitada')],
         null=True, blank=True,
-        help_text='Qui\u00e9n opera log\u00edsticamente este expediente'
+        help_text='Quién opera logísticamente este expediente'
     )
     url_orden_compra = models.URLField(
         max_length=500, null=True, blank=True,
@@ -90,23 +92,23 @@ class Expediente(TimestampMixin):
     # === S17-08: REGISTRO ===
     ref_number = models.CharField(
         max_length=100, null=True, blank=True,
-        help_text='N\u00famero de referencia interna del expediente'
+        help_text='Número de referencia interna del expediente'
     )
     credit_days_client = models.IntegerField(
         null=True, blank=True,
-        help_text='D\u00edas de cr\u00e9dito acordados con el cliente'
+        help_text='Días de crédito acordados con el cliente'
     )
     credit_days_mwt = models.IntegerField(
         null=True, blank=True,
-        help_text='D\u00edas de cr\u00e9dito acordados con MWT'
+        help_text='Días de crédito acordados con MWT'
     )
     credit_limit_client = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True,
-        help_text='Snapshot del l\u00edmite de cr\u00e9dito del cliente (DEC-EXP-03) al momento de creaci\u00f3n'
+        help_text='Snapshot del límite de crédito del cliente (DEC-EXP-03) al momento de creación'
     )
     credit_limit_mwt = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True,
-        help_text='Snapshot del l\u00edmite de cr\u00e9dito MWT (DEC-EXP-03) al momento de creaci\u00f3n'
+        help_text='Snapshot del límite de crédito MWT (DEC-EXP-03) al momento de creación'
     )
     order_value = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True,
@@ -116,23 +118,23 @@ class Expediente(TimestampMixin):
     # === S17-08: PRODUCCION ===
     factory_order_number = models.CharField(
         max_length=100, null=True, blank=True,
-        help_text='N\u00famero de orden en sistema del fabricante (DEC-EXP-01). Campo flat para queries r\u00e1pidos; detalle en FactoryOrder.'
+        help_text='Número de orden en sistema del fabricante (DEC-EXP-01). Campo flat para queries rápidos; detalle en FactoryOrder.'
     )
     proforma_client_number = models.CharField(
         max_length=100, null=True, blank=True,
-        help_text='N\u00famero de proforma emitida al cliente'
+        help_text='Número de proforma emitida al cliente'
     )
     proforma_mwt_number = models.CharField(
         max_length=100, null=True, blank=True,
-        help_text='N\u00famero de proforma emitida a MWT'
+        help_text='Número de proforma emitida a MWT'
     )
     fabrication_start_date = models.DateField(
         null=True, blank=True,
-        help_text='Fecha de inicio de fabricaci\u00f3n'
+        help_text='Fecha de inicio de fabricación'
     )
     fabrication_end_date = models.DateField(
         null=True, blank=True,
-        help_text='Fecha de fin de fabricaci\u00f3n'
+        help_text='Fecha de fin de fabricación'
     )
     url_proforma_cliente = models.URLField(
         max_length=500, null=True, blank=True,
@@ -146,27 +148,27 @@ class Expediente(TimestampMixin):
         'self', null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='merged_followers',
-        help_text='Expediente master cuando \u00e9ste fue fusionado (DEC-EXP-02). El merge lo decide el CEO manualmente en Sprint 18.'
+        help_text='Expediente master cuando éste fue fusionado (DEC-EXP-02). El merge lo decide el CEO manualmente en Sprint 18.'
     )
 
     # === S17-08: PREPARACION ===
     shipping_method = models.CharField(
         max_length=100, null=True, blank=True,
-        help_text='M\u00e9todo de env\u00edo (a\u00e9reo, mar\u00edtimo, terrestre, courier)'
+        help_text='Método de envío (aéreo, marítimo, terrestre, courier)'
     )
     incoterms = models.CharField(
         max_length=20, null=True, blank=True,
-        help_text='T\u00e9rmino incoterm acordado (EXW, FOB, CIF, DDP...)'
+        help_text='Término incoterm acordado (EXW, FOB, CIF, DDP...)'
     )
     cargo_manager = models.CharField(
         max_length=20,
-        choices=[('CLIENTE', 'Cliente'), ('FABRICA', 'F\u00e1brica')],
+        choices=[('CLIENTE', 'Cliente'), ('FABRICA', 'Fábrica')],
         null=True, blank=True,
-        help_text='Qui\u00e9n gestiona la carga y env\u00edo'
+        help_text='Quién gestiona la carga y envío'
     )
     shipping_value = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True,
-        help_text='Valor del flete de env\u00edo'
+        help_text='Valor del flete de envío'
     )
     payment_mode_shipping = models.CharField(
         max_length=20,
@@ -180,25 +182,25 @@ class Expediente(TimestampMixin):
     )
     url_cotizacion_envio = models.URLField(
         max_length=500, null=True, blank=True,
-        help_text='URL de la cotizaci\u00f3n de env\u00edo'
+        help_text='URL de la cotización de envío'
     )
 
     # === S17-08: DESPACHO ===
     airline_or_shipping_company = models.CharField(
         max_length=200, null=True, blank=True,
-        help_text='Nombre de la aerol\u00ednea o naviera utilizada'
+        help_text='Nombre de la aerolínea o naviera utilizada'
     )
     awb_bl_number = models.CharField(
         max_length=100, null=True, blank=True,
-        help_text='N\u00famero Air Waybill (a\u00e9reo) o Bill of Lading (mar\u00edtimo)'
+        help_text='Número Air Waybill (aéreo) o Bill of Lading (marítimo)'
     )
     origin_location = models.CharField(
         max_length=200, null=True, blank=True,
-        help_text='Puerto o aeropuerto de origen del env\u00edo'
+        help_text='Puerto o aeropuerto de origen del envío'
     )
     arrival_location = models.CharField(
         max_length=200, null=True, blank=True,
-        help_text='Puerto o aeropuerto de llegada del env\u00edo'
+        help_text='Puerto o aeropuerto de llegada del envío'
     )
     shipment_date = models.DateField(
         null=True, blank=True,
@@ -210,15 +212,15 @@ class Expediente(TimestampMixin):
     )
     invoice_client_number = models.CharField(
         max_length=100, null=True, blank=True,
-        help_text='N\u00famero de factura emitida al cliente'
+        help_text='Número de factura emitida al cliente'
     )
     invoice_mwt_number = models.CharField(
         max_length=100, null=True, blank=True,
-        help_text='N\u00famero de factura interna MWT'
+        help_text='Número de factura interna MWT'
     )
     dispatch_additional_info = models.TextField(
         null=True, blank=True,
-        help_text='Informaci\u00f3n adicional libre sobre el despacho'
+        help_text='Información adicional libre sobre el despacho'
     )
     url_certificado_origen = models.URLField(
         max_length=500, null=True, blank=True,
@@ -248,7 +250,7 @@ class Expediente(TimestampMixin):
     )
     transit_arrival_date = models.DateField(
         null=True, blank=True,
-        help_text='Fecha estimada o real de llegada en tr\u00e1nsito'
+        help_text='Fecha estimada o real de llegada en tránsito'
     )
     url_packing_list_detallado = models.URLField(
         max_length=500, null=True, blank=True,
@@ -296,15 +298,15 @@ class ExpedienteProductLine(models.Model):
     # Modification tracking — separate from originals
     quantity_modified = models.PositiveIntegerField(
         null=True, blank=True,
-        help_text='Cantidad modificada post-creaci\u00f3n (si aplica)'
+        help_text='Cantidad modificada post-creación (si aplica)'
     )
     unit_price_modified = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True,
-        help_text='Precio modificado post-creaci\u00f3n (si aplica)'
+        help_text='Precio modificado post-creación (si aplica)'
     )
     modification_reason = models.CharField(
         max_length=200, null=True, blank=True,
-        help_text='Raz\u00f3n del cambio de cantidad o precio'
+        help_text='Razón del cambio de cantidad o precio'
     )
     # Traceability for line separation
     separated_to_expediente = models.ForeignKey(
@@ -312,14 +314,14 @@ class ExpedienteProductLine(models.Model):
         null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='received_lines',
-        help_text='Expediente destino si esta l\u00ednea fue separada (split)'
+        help_text='Expediente destino si esta línea fue separada (split)'
     )
     factory_order = models.ForeignKey(
         'FactoryOrder',
         null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='product_lines',
-        help_text='Orden de f\u00e1brica a la que pertenece esta l\u00ednea'
+        help_text='Orden de fábrica a la que pertenece esta línea'
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -346,13 +348,13 @@ class FactoryOrder(models.Model):
     )
     order_number = models.CharField(
         max_length=100,
-        help_text='N\u00famero en sistema del fabricante (SAP para Marluvas, otro para otros)'
+        help_text='Número en sistema del fabricante (SAP para Marluvas, otro para otros)'
     )
     proforma_client_number = models.CharField(max_length=100, null=True, blank=True)
     proforma_mwt_number = models.CharField(max_length=100, null=True, blank=True)
     purchase_number = models.CharField(
         max_length=100, null=True, blank=True,
-        help_text='N\u00famero de orden de compra al fabricante'
+        help_text='Número de orden de compra al fabricante'
     )
     url_proforma_client = models.URLField(max_length=500, null=True, blank=True)
     url_proforma_mwt = models.URLField(max_length=500, null=True, blank=True)
@@ -395,9 +397,9 @@ class ExpedientePago(models.Model):
         max_length=30,
         choices=[
             ('TRANSFERENCIA', 'Transferencia Bancaria'),
-            ('NOTA_CREDITO', 'Nota de Cr\u00e9dito'),
+            ('NOTA_CREDITO', 'Nota de Crédito'),
         ],
-        help_text='M\u00e9todo de pago utilizado'
+        help_text='Método de pago utilizado'
     )
     payment_date = models.DateField(
         help_text='Fecha efectiva del pago'
@@ -408,11 +410,11 @@ class ExpedientePago(models.Model):
     )
     additional_info = models.TextField(
         null=True, blank=True,
-        help_text='Informaci\u00f3n adicional libre sobre el pago'
+        help_text='Información adicional libre sobre el pago'
     )
     url_comprobante = models.URLField(
         max_length=500, null=True, blank=True,
-        help_text='URL del comprobante de pago (transfer\u00encia, nota de cr\u00e9dito, etc.)'
+        help_text='URL del comprobante de pago (transferencia, nota de crédito, etc.)'
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -450,7 +452,7 @@ class ArtifactInstance(TimestampMixin):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'{self.artifact_type} \u2013 {self.get_status_display()}'
+        return f'{self.artifact_type} – {self.get_status_display()}'
 
 
 class EventLog(models.Model):
@@ -492,7 +494,7 @@ class CostLine(AppendOnlyModel):
         on_delete=models.PROTECT,
         null=True, blank=True,
         related_name='cost_lines',
-        help_text='XOR with expediente \u2013 use one or the other'
+        help_text='XOR with expediente – use one or the other'
     )
     cost_type = models.CharField(max_length=50)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -540,7 +542,7 @@ class PaymentLine(AppendOnlyModel):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=3, help_text='ISO 4217')
     method = models.CharField(max_length=50, help_text='transferencia, cheque, otro')
-    reference = models.CharField(max_length=100, help_text='N\u00famero de comprobante')
+    reference = models.CharField(max_length=100, help_text='Número de comprobante')
     registered_at = models.DateTimeField()
     registered_by_type = models.CharField(max_length=10, choices=RegisteredByType.choices)
     registered_by_id = models.CharField(max_length=255)
