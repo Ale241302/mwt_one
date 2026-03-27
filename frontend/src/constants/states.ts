@@ -37,3 +37,25 @@ export const GATE_LABELS: Record<string, string> = {
   CERRADO:     '',
   CANCELADO:   '',
 };
+
+/** Human-readable label per state — alias of GATE_LABELS for backward compat */
+export const STATE_LABELS: Record<string, string> = {
+  REGISTRO:    'Registro',
+  PRODUCCION:  'Producción',
+  PREPARACION: 'Preparación',
+  DESPACHO:    'Despacho',
+  TRANSITO:    'Tránsito',
+  EN_DESTINO:  'En Destino',
+  CERRADO:     'Cerrado',
+  CANCELADO:   'Cancelado',
+};
+
+/** States shown in the pipeline board view */
+export const PIPELINE_STATES: ExpedienteStatus[] = [
+  'REGISTRO',
+  'PRODUCCION',
+  'PREPARACION',
+  'DESPACHO',
+  'TRANSITO',
+  'EN_DESTINO',
+];
