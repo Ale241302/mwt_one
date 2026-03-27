@@ -1,0 +1,7 @@
+from django.apps import AppConfig
+
+
+class SizingConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'apps.sizing'
+    verbose_name = 'Sizing'
