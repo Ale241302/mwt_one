@@ -156,9 +156,19 @@ class Expediente(TimestampMixin):
         max_length=100, null=True, blank=True,
         help_text='Método de envío (aéreo, marítimo, terrestre, courier)'
     )
+    # === S18-04: Campos aditivos ===
+    credit_released = models.BooleanField(
+        default=False,
+        help_text='True cuando credit_exposure <= 0. SOLO lo setea recalculate_expediente_credit().'
+    )
+    credit_exposure = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text='Exposure calculado = total_lines - total_pagos_confirmados'
+    )
     incoterms = models.CharField(
-        max_length=20, null=True, blank=True,
-        help_text='Término incoterm acordado (EXW, FOB, CIF, DDP...)'
+        max_length=32, null=True, blank=True,
+        choices=[('EXW', 'Ex Works'), ('FOB', 'Free On Board'), ('CIF', 'Cost, Insurance and Freight'), ('DDP', 'Delivered Duty Paid')],
+        help_text='Incoterm pactado (Sprint 18)'
     )
     cargo_manager = models.CharField(
         max_length=20,
@@ -323,6 +333,28 @@ class ExpedienteProductLine(models.Model):
         related_name='product_lines',
         help_text='Orden de fábrica a la que pertenece esta línea'
     )
+    # === S18-04: Campos aditivos ===
+    brand_sku = models.ForeignKey(
+        'brands.BrandSKU', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='expediente_lines',
+        help_text="SKU específico con talla. Nullable para backward compat."
+    )
+    pricelist_used = models.ForeignKey(
+        'pricing.PriceList', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='product_lines_snapshot',
+        help_text='Snapshot de la lista de precios usada al crear la linea'
+    )
+    base_price = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        null=True, blank=True,
+        help_text='Snapshot del precio base de la lista de precios'
+    )
+    @property
+    def size_display(self):
+        if self.brand_sku and self.brand_sku.size:
+            return self.brand_sku.size
+        return '—'
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -416,6 +448,17 @@ class ExpedientePago(models.Model):
         max_length=500, null=True, blank=True,
         help_text='URL del comprobante de pago (transferencia, nota de crédito, etc.)'
     )
+    # === S18-04: Campos aditivos ===
+    credit_status = models.CharField(
+        max_length=20, null=True, blank=True,
+        choices=[
+            ('PENDING', 'Pending'),
+            ('CONFIRMED', 'Confirmed'),
+            ('REJECTED', 'Rejected'),
+        ],
+        default='PENDING',
+        help_text='Estado de confirmacion del pago para liberacion de credito'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -466,6 +509,9 @@ class EventLog(models.Model):
     processed_at = models.DateTimeField(blank=True, null=True, help_text='null until dispatcher consumes')
     retry_count = models.IntegerField(default=0)
     correlation_id = models.UUIDField()
+    # === S18-04: Campos aditivos ===
+    previous_status = models.CharField(max_length=30, null=True, blank=True)
+    new_status = models.CharField(max_length=30, null=True, blank=True)
 
     class Meta:
         verbose_name = 'Event Log'

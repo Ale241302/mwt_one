@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'apps.core',
     'apps.expedientes',
+    'apps.sizing',   # Sprint 18
     # Sprint 5
     'apps.transfers',
     'apps.liquidations',

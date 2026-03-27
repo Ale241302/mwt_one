@@ -16,6 +16,7 @@ class PriceListItem(TimestampMixin):
     price_list = models.ForeignKey(PriceList, related_name='items', on_delete=models.CASCADE)
     sku = models.CharField(max_length=50)
     price = models.DecimalField(max_digits=12, decimal_places=4)
+    moq_per_size = models.PositiveIntegerField(null=True, blank=True, help_text='MOQ por talla individual (Agent-A H4)')
 
     class Meta:
         db_table = 'pricing_pricelistitem'
