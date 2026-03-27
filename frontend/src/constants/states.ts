@@ -15,6 +15,9 @@ export const CANONICAL_STATES = [
 
 export type ExpedienteStatus = typeof CANONICAL_STATES[number];
 
+/** Alias for backward compat with components using CanonicalState */
+export type CanonicalState = ExpedienteStatus;
+
 export const STATE_BADGE_CLASSES: Record<string, string> = {
   REGISTRO:    'bg-blue-50 text-blue-700 border border-blue-200',
   PRODUCCION:  'bg-amber-50 text-amber-700 border border-amber-200',
@@ -38,7 +41,7 @@ export const GATE_LABELS: Record<string, string> = {
   CANCELADO:   '',
 };
 
-/** Human-readable label per state — alias of GATE_LABELS for backward compat */
+/** Human-readable label per state */
 export const STATE_LABELS: Record<string, string> = {
   REGISTRO:    'Registro',
   PRODUCCION:  'Producción',
@@ -50,7 +53,7 @@ export const STATE_LABELS: Record<string, string> = {
   CANCELADO:   'Cancelado',
 };
 
-/** States shown in the pipeline board view */
+/** States shown in the pipeline board view (excludes terminal states) */
 export const PIPELINE_STATES: ExpedienteStatus[] = [
   'REGISTRO',
   'PRODUCCION',
@@ -58,4 +61,15 @@ export const PIPELINE_STATES: ExpedienteStatus[] = [
   'DESPACHO',
   'TRANSITO',
   'EN_DESTINO',
+];
+
+/** Ordered steps for the timeline component (includes CERRADO, excludes CANCELADO) */
+export const TIMELINE_STEPS: CanonicalState[] = [
+  'REGISTRO',
+  'PRODUCCION',
+  'PREPARACION',
+  'DESPACHO',
+  'TRANSITO',
+  'EN_DESTINO',
+  'CERRADO',
 ];
