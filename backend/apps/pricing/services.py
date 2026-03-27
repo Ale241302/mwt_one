@@ -1,46 +1,79 @@
-from apps.pricing.models import PriceList, PriceListItem
-from apps.agreements.models import BrandClientPriceAgreement
+# Sprint 18 - T1.10: Chain-of-responsibility para resolve_client_price
+# Refactorizacion del resolver de precios a cadena de responsabilidad.
+from django.db.models import Q
 from django.utils import timezone
 
-def resolve_client_price(brand_id, party_type, party_id, sku, mode, currency, date=None):
-    if date is None:
-        date = timezone.now()
 
-    # 1. Consultar BrandClientPriceAgreement (Override)
-    agreement = BrandClientPriceAgreement.objects.filter(
-        brand_id=brand_id,
-        party_type=party_type,
-        party_id=party_id,
-        sku=sku,
-        mode=mode,
-        currency=currency,
-        status='active',
-        valid_daterange__contains=date
-    ).first()
+def resolve_from_brand_client_pricelist(product, client, brand, date):
+    """Nivel 1: lista de precios especifica por brand + client."""
+    try:
+        from apps.pricing.models import PriceList, PriceListItem
+        today = date or timezone.now().date()
+        pricelists = PriceList.objects.filter(
+            Q(valid_from__lte=today),
+            Q(valid_to__isnull=True) | Q(valid_to__gte=today),
+            brand=brand,
+            client=client,
+            is_active=True,
+        ).order_by('-valid_from')
+        for pl in pricelists:
+            item = PriceListItem.objects.filter(
+                pricelist=pl, product=product
+            ).first()
+            if item:
+                return {'price': item.unit_price, 'pricelist': pl, 'source': 'brand_client_pricelist'}
+    except Exception:
+        pass
+    return None
 
-    if agreement:
-        return {
-            'price': agreement.override_price,
-            'source': 'agreement',
-            'agreement_id': agreement.id
-        }
 
-    # 2. Consultar PriceList Base
-    price_list_item = PriceListItem.objects.filter(
-        price_list__brand_id=brand_id,
-        price_list__currency=currency,
-        price_list__is_active=True,
-        sku=sku
-    ).filter(
-        price_list__valid_from__lte=date,
-        price_list__valid_to__gte=date
-    ).first()
+def resolve_from_brand_default_pricelist(product, client, brand, date):
+    """Nivel 2: lista de precios por defecto del brand (sin client especifico)."""
+    try:
+        from apps.pricing.models import PriceList, PriceListItem
+        today = date or timezone.now().date()
+        pricelists = PriceList.objects.filter(
+            Q(valid_from__lte=today),
+            Q(valid_to__isnull=True) | Q(valid_to__gte=today),
+            brand=brand,
+            client__isnull=True,
+            is_active=True,
+        ).order_by('-valid_from')
+        for pl in pricelists:
+            item = PriceListItem.objects.filter(
+                pricelist=pl, product=product
+            ).first()
+            if item:
+                return {'price': item.unit_price, 'pricelist': pl, 'source': 'brand_default_pricelist'}
+    except Exception:
+        pass
+    return None
 
-    if price_list_item:
-        return {
-            'price': price_list_item.price,
-            'source': 'pricelist',
-            'pricelist_id': price_list_item.price_list.id
-        }
-    
+
+def resolve_from_product_master_base_price(product, client, brand, date):
+    """Nivel 3 (fallback): precio base del ProductMaster."""
+    try:
+        if hasattr(product, 'base_price') and product.base_price is not None:
+            return {'price': product.base_price, 'pricelist': None, 'source': 'product_master_base_price'}
+    except Exception:
+        pass
+    return None
+
+
+PRICE_RESOLVERS = [
+    resolve_from_brand_client_pricelist,
+    resolve_from_brand_default_pricelist,
+    resolve_from_product_master_base_price,
+]
+
+
+def resolve_client_price(product, client, brand, date=None):
+    """
+    Chain-of-responsibility: intenta cada resolver en orden.
+    Retorna el primer resultado no-None, o None si ninguno resuelve.
+    """
+    for resolver in PRICE_RESOLVERS:
+        result = resolver(product, client, brand, date)
+        if result is not None:
+            return result
     return None
