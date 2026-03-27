@@ -9,7 +9,7 @@ from core.views_logger import FrontendLoggerView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/expedientes/', include('apps.expedientes.urls', namespace='expedientes')),
-    path('api/expedientes/sprint18/', include('apps.expedientes.urls_sprint18')),   # Sprint 18
+    path('api/expedientes/', include('apps.expedientes.urls_sprint18')),   # Sprint 18
     path('api/sizing/', include('apps.sizing.urls', namespace='sizing')),         # Sprint 18
     path('api/ui/', include('apps.core.urls_ui', namespace='core-ui')),
     path('api/ui/expedientes/', include('apps.expedientes.urls_ui', namespace='expedientes-ui')),
