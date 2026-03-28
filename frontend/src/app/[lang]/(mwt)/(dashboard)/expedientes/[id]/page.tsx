@@ -1,7 +1,7 @@
 "use client";
 /**
  * S10-03 — Detalle Expediente con acordeón de artefactos.
- * Refactor del bundle view para cumplir la fase 1 de Sprint 10.
+ * S19-12 — Barrido hex: todos los colores reemplazados por CSS vars.
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -67,19 +67,13 @@ interface ExpedienteBundle {
   };
 }
 
-// STATE_BADGE_CLASSES is now imported from @/constants/states
-
-
-const CREDIT_BAND_COLORS = {
-  MINT: "bg-[#F0FAF6] text-[#0E8A6D] border-[#BBF7D0]",
-  AMBER: "bg-[#FFF7ED] text-[#B45309] border-[#FDE68A]",
-  RED: "bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]",
+// S19-12: reemplazados todos los hex por CSS vars del design system
+const CREDIT_BAND_CLASSES = {
+  MINT: "bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]",
+  AMBER: "bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning)]",
+  RED: "bg-[var(--critical-bg)] text-[var(--critical)] border-[var(--critical)]",
 };
 
-// CANONICAL_STATES is now imported from @/constants/states
-
-
-// Requisitos para avanzar de cada fase según canonical workflow
 const PHASE_REQUIREMENTS: Record<string, string[]> = {
   "REGISTRO": ["ART-01 (OC)", "ART-02 (Proforma)"],
   "PREPARACION": ["ART-03 (Decisión Modal)", "ART-07 (Cotización Flete)", "ART-08 (Aduana)"],
@@ -91,14 +85,13 @@ const PHASE_REQUIREMENTS: Record<string, string[]> = {
   "CANCELADO": []
 };
 
-// Acciones de transición (Gate actions)
 const GATE_ACTIONS: Record<string, string> = {
-  "REGISTRO": "Cerrar Registro", // CERRAR REGISTRO doesn't physically exist as command, usually auto or manual C4
-  "PREPARACION": "C10", // ApproveDispatch
-  "PRODUCCION": "C6", // ConfirmProduction
-  "DESPACHO": "C11", // ConfirmDeparture
-  "TRANSITO": "C12", // ConfirmArrival
-  "EN_DESTINO": "C14", // CloseExpediente
+  "REGISTRO": "Cerrar Registro",
+  "PREPARACION": "C10",
+  "PRODUCCION": "C6",
+  "DESPACHO": "C11",
+  "TRANSITO": "C12",
+  "EN_DESTINO": "C14",
 };
 
 export default function ExpedienteDetailPage() {
@@ -121,8 +114,6 @@ export default function ExpedienteDetailPage() {
     try {
       const res = await api.get(`/ui/expedientes/${id}/`);
       const data = res.data;
-      
-      // Sanitizar arrays para evitar .map is not a function
       if (data) {
         data.artifacts = Array.isArray(data.artifacts) ? data.artifacts : [];
         data.events = Array.isArray(data.events) ? data.events : [];
@@ -137,7 +128,6 @@ export default function ExpedienteDetailPage() {
           data.available_actions = { primary: [], secondary: [], ops: [] };
         }
       }
-      
       setBundle(data);
     } catch (e: any) {
       setError(e.message ?? "Error al cargar expediente");
@@ -152,7 +142,7 @@ export default function ExpedienteDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="text-text-secondary text-sm">Cargando expediente…</div>
+        <div className="text-[var(--text-secondary)] text-sm">Cargando expediente…</div>
       </div>
     );
   }
@@ -168,19 +158,15 @@ export default function ExpedienteDetailPage() {
   }
 
   const { expediente } = bundle;
-  const creditCls = CREDIT_BAND_COLORS[bundle.credit_clock?.band ?? "MINT"];
+  const creditCls = CREDIT_BAND_CLASSES[bundle.credit_clock?.band ?? "MINT"];
   const currentState = expediente.status === "ABIERTO" ? "REGISTRO" : expediente.status;
 
-  // Calculamos los requerimientos faltantes para el GateMessage
   const calculateMissingRequirements = () => {
     if (currentState === "CERRADO" || currentState === "CANCELADO") return [];
-    
-    // We mock missing requirements logic based on completed artifacts
     const reqs = PHASE_REQUIREMENTS[currentState] || [];
     const missing: string[] = [];
-    
     reqs.forEach(reqName => {
-      const artifactId = reqName.split(" ")[0]; // ej: "ART-01"
+      const artifactId = reqName.split(" ")[0];
       if (artifactId.startsWith("ART-")) {
         const hasCompletedArtifact = (bundle.artifacts || []).some(
           a => a.artifact_type === artifactId && a.status === "completed"
@@ -190,7 +176,6 @@ export default function ExpedienteDetailPage() {
         if (expediente.payment_status !== "PAID") missing.push(reqName);
       }
     });
-    
     return missing;
   };
 
@@ -207,7 +192,6 @@ export default function ExpedienteDetailPage() {
   const missingReqs = calculateMissingRequirements();
   const gateCommand = GATE_ACTIONS[currentState];
   const canAdvance = !!(missingReqs.length === 0 && gateCommand && hasAction(gateCommand));
-
   const hasArt06 = bundle.artifacts.some(a => a.artifact_type === 'ART-06' && a.status === 'completed');
   const showC11B = currentState === 'DESPACHO' && hasArt06 && hasAction('C11B');
 
@@ -221,18 +205,18 @@ export default function ExpedienteDetailPage() {
           </Link>
           <div>
             <div className="flex items-center gap-3 mb-1.5">
-              <h1 className="page-title leading-none">Expediente <span className="font-mono text-navy">{expediente.custom_ref}</span></h1>
+              <h1 className="page-title leading-none">Expediente <span className="font-mono text-[var(--interactive)]">{expediente.custom_ref}</span></h1>
               <span className={cn(
                 "badge text-xs font-semibold px-2.5 py-0.5",
-                STATE_BADGE_CLASSES[expediente.status] ?? "bg-bg text-text-secondary"
+                STATE_BADGE_CLASSES[expediente.status] ?? "bg-[var(--bg)] text-[var(--text-secondary)]"
               )}>
                 {expediente.status}
               </span>
               {expediente.status === 'CANCELADO' && (
-                <span className="badge badge-error flex items-center gap-1 text-[10px]"><XCircle size={10} /> CRÍTICO</span>
+                <span className="badge badge-critical flex items-center gap-1 text-[10px]"><XCircle size={10} /> CRÍTICO</span>
               )}
               {expediente.is_blocked && (
-                <span className="badge bg-[#FEF2F2] text-[#DC2626] flex items-center gap-1 text-[10px]">
+                <span className="badge badge-critical flex items-center gap-1 text-[10px]">
                   <Lock size={10} /> BLOQUEADO
                 </span>
               )}
@@ -240,43 +224,50 @@ export default function ExpedienteDetailPage() {
             <p className="page-subtitle">{expediente.client_name || "Sin Cliente"} · {expediente.brand_name || "Sin Marca"}</p>
           </div>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-3">
-          {/* Toggle CEO/Client */}
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-bg-alt/50 border border-border/50">
-            <button 
+          {/* Toggle Interna/Cliente */}
+          <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--bg-alt)] border border-[var(--border)]">
+            <button
               onClick={() => setViewMode('internal')}
               className={cn(
                 "px-3 py-1 text-xs font-medium rounded transition-all",
-                viewMode === 'internal' ? "bg-white shadow-sm text-navy" : "text-text-tertiary hover:text-text-secondary"
+                viewMode === 'internal'
+                  ? "bg-[var(--surface)] shadow-sm text-[var(--interactive)]"
+                  : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
               )}
             >
               Interna
             </button>
-            <button 
+            <button
               onClick={() => setViewMode('client')}
               className={cn(
                 "px-3 py-1 text-xs font-medium rounded transition-all",
-                viewMode === 'client' ? "bg-white shadow-sm text-navy" : "text-text-tertiary hover:text-text-secondary"
+                viewMode === 'client'
+                  ? "bg-[var(--surface)] shadow-sm text-[var(--interactive)]"
+                  : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
               )}
             >
               Cliente
             </button>
           </div>
 
-          <div className="h-6 w-px bg-border mx-1" />
+          <div className="h-6 w-px bg-[var(--border)] mx-1" />
 
           {hasAction("C17") && !expediente.is_blocked && (
-             <button className="btn btn-sm btn-outline text-coral border-coral/30 hover:bg-coral/5" onClick={() => setActiveModal("C17")}><Lock size={14}/> Bloquear</button>
+            <button className="btn btn-sm btn-danger-outline" onClick={() => setActiveModal("C17")}>
+              <Lock size={14} /> Bloquear
+            </button>
           )}
           {hasAction("C18") && expediente.is_blocked && (
-             <button className="btn btn-sm btn-outline text-success border-success/30 hover:bg-success/5" onClick={() => setActiveModal("C18")}><Lock size={14}/> Desbloquear</button>
+            <button className="btn btn-sm" style={{ color: "var(--success)", borderColor: "var(--success)", background: "transparent", border: "1px solid" }} onClick={() => setActiveModal("C18")}>
+              <Lock size={14} /> Desbloquear
+            </button>
           )}
-          {/* Default actions */}
           <button className="btn btn-sm btn-secondary" onClick={() => setActiveModal("C15")}>Costos</button>
           <button className="btn btn-sm btn-secondary" onClick={() => setActiveModal("C21")}>Pagos</button>
           {hasAction("C16") && (
-             <button className="btn btn-sm btn-outline text-coral" onClick={() => setActiveModal("C16")}>Cancelar</button>
+            <button className="btn btn-sm btn-danger-outline" onClick={() => setActiveModal("C16")}>Cancelar</button>
           )}
           <button
             className="btn btn-sm btn-ghost"
@@ -289,24 +280,24 @@ export default function ExpedienteDetailPage() {
         </div>
       </div>
 
-      {/* ─── Credit Indicator (Internal Only) ─── */}
+      {/* ─── Credit Indicator ─── */}
       {viewMode === 'internal' && (
         <div className="animate-in fade-in slide-in-from-top-2 duration-500">
-           <CreditBar 
-             used={expediente.total_cost || 0} 
-             total={100000} 
-             currency="USD"
-             className="shadow-sm"
-           />
+          <CreditBar
+            used={expediente.total_cost || 0}
+            total={100000}
+            currency="USD"
+            className="shadow-sm"
+          />
         </div>
       )}
 
       {/* ─── Metadata Row ─── */}
-      <div className="card p-4 flex flex-wrap gap-x-8 gap-y-4 text-sm bg-white border border-border">
-        <div><span className="text-text-tertiary">Modalidad:</span> <span className="font-medium text-navy ml-1">{expediente.mode || "—"}</span></div>
-        <div><span className="text-text-tertiary">Flete:</span> <span className="font-medium text-navy ml-1">{expediente.freight_mode || "—"}</span></div>
-        <div><span className="text-text-tertiary">Transporte:</span> <span className="font-medium text-navy ml-1">{expediente.transport_mode || "—"}</span></div>
-        <div><span className="text-text-tertiary">Despacho:</span> <span className="font-medium text-navy ml-1">{expediente.dispatch_mode || "—"}</span></div>
+      <div className="card p-4 flex flex-wrap gap-x-8 gap-y-4 text-sm">
+        <div><span className="text-[var(--text-tertiary)]">Modalidad:</span> <span className="font-medium text-[var(--interactive)] ml-1">{expediente.mode || "—"}</span></div>
+        <div><span className="text-[var(--text-tertiary)]">Flete:</span> <span className="font-medium text-[var(--interactive)] ml-1">{expediente.freight_mode || "—"}</span></div>
+        <div><span className="text-[var(--text-tertiary)]">Transporte:</span> <span className="font-medium text-[var(--interactive)] ml-1">{expediente.transport_mode || "—"}</span></div>
+        <div><span className="text-[var(--text-tertiary)]">Despacho:</span> <span className="font-medium text-[var(--interactive)] ml-1">{expediente.dispatch_mode || "—"}</span></div>
       </div>
 
       {/* ─── Timeline ─── */}
@@ -314,22 +305,23 @@ export default function ExpedienteDetailPage() {
         <div className="flex items-center min-w-max">
           {CANONICAL_STATES.map((state, idx) => {
             const isPast = CANONICAL_STATES.indexOf(state as any) < CANONICAL_STATES.indexOf(currentState as any);
-
             const isCurrent = state === currentState;
             return (
               <div key={state} className="flex items-center">
                 <div className={cn(
                   "flex items-center justify-center h-8 px-4 rounded-full text-xs font-semibold whitespace-nowrap transition-colors",
-                  isPast ? "bg-success text-white" : 
-                  isCurrent ? "bg-brand text-white shadow-sm" : 
-                  "bg-bg text-text-tertiary"
+                  isPast
+                    ? "bg-[var(--success)] text-[var(--text-inverse)]"
+                    : isCurrent
+                    ? "bg-[var(--interactive)] text-[var(--text-inverse)] shadow-sm"
+                    : "bg-[var(--bg)] text-[var(--text-tertiary)]"
                 )}>
                   {state}
                 </div>
                 {idx < CANONICAL_STATES.length - 1 && (
                   <div className={cn(
                     "w-8 h-0.5 mx-2 rounded",
-                    isPast ? "bg-success/50" : "bg-border"
+                    isPast ? "bg-[var(--success)]" : "bg-[var(--border)]"
                   )} />
                 )}
               </div>
@@ -341,18 +333,18 @@ export default function ExpedienteDetailPage() {
       {/* ─── KPI row ─── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card p-4">
-          <p className="caption text-text-tertiary mb-1">Estado pago</p>
+          <p className="caption text-[var(--text-tertiary)] mb-1">Estado pago</p>
           <div className="flex items-center gap-2">
             <p className="heading-sm font-semibold">{expediente.payment_status ?? "—"}</p>
-            {expediente.payment_status === "PAID" && <CheckCircle size={14} className="text-success" />}
+            {expediente.payment_status === "PAID" && <CheckCircle size={14} className="text-[var(--success)]" />}
           </div>
         </div>
         <div className="card p-4">
-          <p className="caption text-text-tertiary mb-1">Artefactos</p>
+          <p className="caption text-[var(--text-tertiary)] mb-1">Artefactos</p>
           <p className="heading-sm font-semibold">{Array.isArray(bundle.artifacts) ? bundle.artifacts.length : 0}</p>
         </div>
         <div className="card p-4">
-          <p className="caption text-text-tertiary mb-1">Costo Total</p>
+          <p className="caption text-[var(--text-tertiary)] mb-1">Costo Total</p>
           <p className="heading-sm font-semibold">${Number(expediente.total_cost || 0).toLocaleString()}</p>
         </div>
         <div className={cn("card p-4 border", creditCls)}>
@@ -361,13 +353,13 @@ export default function ExpedienteDetailPage() {
         </div>
       </div>
 
-      {/* ─── Main content: Gate Message + Accordion + Events + Costs ─── */}
+      {/* ─── Main content ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <GateMessage requiredToAdvance={missingReqs} currentState={currentState} />
-          
+
           {canAdvance && (
-            <button 
+            <button
               className="w-full btn btn-primary flex items-center justify-center gap-2 py-3 shadow-sm hover:shadow"
               onClick={() => setActiveModal(gateCommand)}
             >
@@ -376,14 +368,15 @@ export default function ExpedienteDetailPage() {
           )}
 
           {showC11B && (
-            <button 
-              className="w-full btn btn-outline border-blue-600 text-blue-700 flex items-center justify-center gap-2 py-3 shadow-sm hover:bg-blue-50 mt-4"
+            <button
+              className="w-full btn btn-secondary flex items-center justify-center gap-2 py-3 shadow-sm mt-4"
+              style={{ color: "var(--info)", borderColor: "var(--info)" }}
               onClick={() => setActiveModal("C11B")}
             >
               <Truck size={18} /> Confirmar Salida (China)
             </button>
           )}
-          
+
           <ExpedienteAccordion
             expedienteId={expediente.id}
             artifacts={(Array.isArray(bundle.artifacts) ? bundle.artifacts : []).map(a => ({
@@ -402,32 +395,36 @@ export default function ExpedienteDetailPage() {
         </div>
 
         <div>
-          <h2 className="heading-sm font-semibold mb-3 text-navy">Historial de eventos</h2>
+          <h2 className="heading-sm font-semibold mb-3 text-[var(--interactive)]">Historial de eventos</h2>
           <div className="card overflow-hidden h-[600px] flex flex-col">
             <div className="flex-1 overflow-y-auto min-h-0 relative">
-            {(!Array.isArray(bundle.events) || bundle.events.length === 0) ? (
-              <div className="p-6 text-center text-text-tertiary text-sm absolute inset-0 flex items-center justify-center">Sin eventos aún.</div>
-            ) : (
-              <div className="divide-y divide-divider">
-                {bundle.events.map((ev) => (
-                  <div key={ev.id} className="px-5 py-3.5 hover:bg-bg/50 transition-colors group">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-[10px] tracking-tight font-semibold text-navy bg-brand-accent-soft px-1.5 py-0.5 rounded border border-brand/10">
-                          {ev.event_type}
-                        </span>
-                        <span className="text-[10px] text-text-tertiary whitespace-nowrap">
-                           {ev.occurred_at ? new Date(ev.occurred_at).toLocaleDateString("es-CO", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
-                        </span>
+              {(!Array.isArray(bundle.events) || bundle.events.length === 0) ? (
+                <div className="p-6 text-center text-[var(--text-tertiary)] text-sm absolute inset-0 flex items-center justify-center">
+                  Sin eventos aún.
+                </div>
+              ) : (
+                <div className="divide-y divide-[var(--divider)]">
+                  {bundle.events.map((ev) => (
+                    <div key={ev.id} className="px-5 py-3.5 hover:bg-[var(--surface-hover)] transition-colors group">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[10px] tracking-tight font-semibold text-[var(--interactive)] bg-[var(--brand-accent-soft)] px-1.5 py-0.5 rounded border border-[var(--border)]">
+                            {ev.event_type}
+                          </span>
+                          <span className="text-[10px] text-[var(--text-tertiary)] whitespace-nowrap">
+                            {ev.occurred_at
+                              ? new Date(ev.occurred_at).toLocaleDateString("es-CO", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                              : "—"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[var(--text-secondary)] truncate pr-2" title={ev.emitted_by}>
+                          Ref: {ev.emitted_by}
+                        </p>
                       </div>
-                      <p className="text-xs text-text-secondary truncate pr-2" title={ev.emitted_by}>
-                        Ref: {ev.emitted_by}
-                      </p>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
