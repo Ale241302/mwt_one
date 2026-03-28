@@ -1,41 +1,27 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
-import { ArrowLeft, Plus, Trash2, Search } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 
 interface LegalEntityOption {
   entity_id: string;
   legal_name: string;
 }
 
-interface ProductMaster {
+interface Producto {
   id: number;
   name: string;
-}
-
-interface BrandSKU {
-  id: number;
-  sku_code: string;
-  sizing_entry_code?: string;
-  sizing_system_name?: string;
+  sku_base: string;
+  brand_name?: string;
+  description?: string;
 }
 
 interface ProductLine {
-  product_master_id: number | null;
-  product_master_name: string;
-  brand_sku_id: number | null;
+  producto_id: number | null;
   quantity: number | string;
-  unit_price: number | string;
-  // UI state
-  brandSkus: BrandSKU[];
-  loadingSkus: boolean;
-  loadingPrice: boolean;
-  pmQuery: string;
-  pmResults: ProductMaster[];
-  pmOpen: boolean;
 }
 
 const BRAND_OPTIONS = ["SKECHERS", "ON", "SPEEDO", "TOMS", "ASICS", "VIVAIA", "TECMATER"];
@@ -57,19 +43,7 @@ const DESTINATION_OPTIONS = [
 const MWT_LEGAL_ENTITY_ID = "MWT-CR";
 
 function emptyLine(): ProductLine {
-  return {
-    product_master_id: null,
-    product_master_name: "",
-    brand_sku_id: null,
-    quantity: "",
-    unit_price: "",
-    brandSkus: [],
-    loadingSkus: false,
-    loadingPrice: false,
-    pmQuery: "",
-    pmResults: [],
-    pmOpen: false,
-  };
+  return { producto_id: null, quantity: "" };
 }
 
 export default function NuevoExpedientePage() {
@@ -80,6 +54,9 @@ export default function NuevoExpedientePage() {
   const [clientsError, setClientsError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [productosLoading, setProductosLoading] = useState(true);
+
   const [form, setForm] = useState({
     client_id: "",
     brand: "",
@@ -89,16 +66,13 @@ export default function NuevoExpedientePage() {
     price_basis: "",
     destination: "CR",
     notes: "",
-    // S19-01 new fields
     purchase_order_number: "",
     operado_por: "" as "" | "CLIENTE" | "MWT",
   });
 
   const [productLines, setProductLines] = useState<ProductLine[]>([]);
 
-  // Debounce timers per row
-  const pmTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
-
+  // Cargar clientes
   useEffect(() => {
     const fetchClients = async () => {
       try {
@@ -141,81 +115,38 @@ export default function NuevoExpedientePage() {
     fetchClients();
   }, []);
 
+  // Cargar productos desde api/productos/
+  useEffect(() => {
+    const fetchProductos = async () => {
+      try {
+        setProductosLoading(true);
+        const res = await api.get("productos/?limit=500");
+        const data: Producto[] = Array.isArray(res.data)
+          ? res.data
+          : res.data?.results ?? [];
+        setProductos(data);
+      } catch {
+        toast.error("Error al cargar productos");
+      } finally {
+        setProductosLoading(false);
+      }
+    };
+    fetchProductos();
+  }, []);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement | HTMLInputElement>
   ) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // ── Product Lines helpers ──
   const addLine = () => setProductLines((prev) => [...prev, emptyLine()]);
-
   const removeLine = (idx: number) =>
     setProductLines((prev) => prev.filter((_, i) => i !== idx));
-
   const updateLine = (idx: number, patch: Partial<ProductLine>) =>
     setProductLines((prev) =>
       prev.map((l, i) => (i === idx ? { ...l, ...patch } : l))
     );
-
-  const handlePmQueryChange = (idx: number, query: string) => {
-    updateLine(idx, { pmQuery: query, pmOpen: false, pmResults: [] });
-    clearTimeout(pmTimers.current[idx]);
-    if (!query.trim()) return;
-    pmTimers.current[idx] = setTimeout(async () => {
-      try {
-        const res = await api.get(`catalog/product-masters/?search=${encodeURIComponent(query)}`);
-        const results: ProductMaster[] = Array.isArray(res.data)
-          ? res.data
-          : res.data?.results ?? [];
-        updateLine(idx, { pmResults: results, pmOpen: true });
-      } catch {
-        // silent
-      }
-    }, 300);
-  };
-
-  const selectProductMaster = async (idx: number, pm: ProductMaster) => {
-    updateLine(idx, {
-      product_master_id: pm.id,
-      product_master_name: pm.name,
-      pmQuery: pm.name,
-      pmOpen: false,
-      pmResults: [],
-      brand_sku_id: null,
-      brandSkus: [],
-      loadingSkus: true,
-    });
-    try {
-      const res = await api.get(`catalog/brand-skus/?product_master=${pm.id}`);
-      const skus: BrandSKU[] = Array.isArray(res.data)
-        ? res.data
-        : res.data?.results ?? [];
-      updateLine(idx, { brandSkus: skus, loadingSkus: false });
-    } catch {
-      updateLine(idx, { loadingSkus: false });
-    }
-  };
-
-  const handleSkuChange = async (idx: number, skuId: string) => {
-    const line = productLines[idx];
-    const id = skuId ? Number(skuId) : null;
-    updateLine(idx, { brand_sku_id: id, loadingPrice: true, unit_price: "" });
-    if (!id || !form.client_id) {
-      updateLine(idx, { loadingPrice: false });
-      return;
-    }
-    try {
-      const res = await api.get(
-        `pricing/resolve/?brand_sku_id=${id}&client_id=${encodeURIComponent(form.client_id)}`
-      );
-      const price = res.data?.price ?? res.data?.unit_price ?? "";
-      updateLine(idx, { unit_price: price, loadingPrice: false });
-    } catch {
-      // pricing/resolve 404 → leave empty, not blocking
-      updateLine(idx, { loadingPrice: false });
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,21 +174,17 @@ export default function NuevoExpedientePage() {
         price_basis: form.price_basis,
         destination: form.destination,
         ...(form.notes ? { notes: form.notes } : {}),
-        // S19-01 new fields
         ...(form.purchase_order_number ? { purchase_order_number: form.purchase_order_number } : {}),
         ...(form.operado_por ? { operado_por: form.operado_por } : {}),
       };
 
-      // Only send product_lines if rows exist and are valid
       const validLines = productLines.filter(
-        (l) => l.product_master_id && l.quantity
+        (l) => l.producto_id && l.quantity
       );
       if (validLines.length > 0) {
         payload.product_lines = validLines.map((l) => ({
-          product_master_id: l.product_master_id,
-          ...(l.brand_sku_id ? { brand_sku_id: l.brand_sku_id } : {}),
+          producto_id: l.producto_id,
           quantity: Number(l.quantity),
-          ...(l.unit_price !== "" ? { unit_price: Number(l.unit_price) } : {}),
         }));
       }
 
@@ -381,7 +308,7 @@ export default function NuevoExpedientePage() {
             </select>
           </div>
 
-          {/* S19-01 — N° Orden de Compra */}
+          {/* N° Orden de Compra */}
           <div>
             <label className={labelCls}>N° Orden de Compra <span className="text-[var(--color-text-tertiary)] font-normal">(opcional)</span></label>
             <input
@@ -394,7 +321,7 @@ export default function NuevoExpedientePage() {
             />
           </div>
 
-          {/* S19-01 — Operado por */}
+          {/* Operado por */}
           <div>
             <label className={labelCls}>Operado por <span className="text-[var(--color-text-tertiary)] font-normal">(opcional)</span></label>
             <select name="operado_por" value={form.operado_por} onChange={handleChange} className={inputCls}>
@@ -404,7 +331,7 @@ export default function NuevoExpedientePage() {
             </select>
           </div>
 
-          {/* S19-01 — Líneas de producto */}
+          {/* Líneas de producto */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className={labelCls + " mb-0"}>
@@ -413,13 +340,23 @@ export default function NuevoExpedientePage() {
               <button
                 type="button"
                 onClick={addLine}
-                className="flex items-center gap-1.5 text-xs bg-[var(--color-navy)] text-white rounded-lg px-3 py-1.5 hover:opacity-80 transition-opacity"
+                disabled={productosLoading}
+                className="flex items-center gap-1.5 text-xs bg-[var(--color-navy)] text-white rounded-lg px-3 py-1.5 hover:opacity-80 transition-opacity disabled:opacity-50"
               >
                 <Plus className="w-3.5 h-3.5" /> Agregar producto
               </button>
             </div>
 
-            {productLines.length === 0 ? (
+            {productosLoading ? (
+              <div className="flex items-center gap-2 h-10 px-3 bg-[var(--color-bg-alt)] border border-[var(--color-border)] rounded-lg">
+                <div className="w-4 h-4 border-2 border-[var(--color-navy)] border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm text-[var(--color-text-tertiary)]">Cargando productos...</span>
+              </div>
+            ) : productos.length === 0 ? (
+              <p className="text-xs text-[var(--color-text-tertiary)] italic px-1">
+                No hay productos registrados. <a href="/es/productos" className="underline hover:text-[var(--color-navy)]">Crear producto</a>.
+              </p>
+            ) : productLines.length === 0 ? (
               <p className="text-xs text-[var(--color-text-tertiary)] italic px-1">
                 Sin líneas de producto. Podés agregarlas ahora o después.
               </p>
@@ -428,10 +365,10 @@ export default function NuevoExpedientePage() {
                 {productLines.map((line, idx) => (
                   <div
                     key={idx}
-                    className="border border-[var(--color-border)] rounded-xl p-4 space-y-3 bg-[var(--color-bg-alt)]/30"
+                    className="border border-[var(--color-border)] rounded-xl p-4 bg-[var(--color-bg-alt)]/30"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-xs font-semibold text-[var(--color-text-tertiary)] mt-1">Fila {idx + 1}</span>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-xs font-semibold text-[var(--color-text-tertiary)]">Fila {idx + 1}</span>
                       <button
                         type="button"
                         onClick={() => removeLine(idx)}
@@ -441,67 +378,29 @@ export default function NuevoExpedientePage() {
                       </button>
                     </div>
 
-                    {/* ProductMaster autocomplete */}
-                    <div className="relative">
-                      <label className={labelCls}>Producto</label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
-                        <input
-                          type="text"
-                          value={line.pmQuery}
-                          onChange={(e) => handlePmQueryChange(idx, e.target.value)}
-                          placeholder="Buscar producto..."
-                          className={inputCls + " pl-8"}
-                        />
-                      </div>
-                      {line.pmOpen && line.pmResults.length > 0 && (
-                        <ul className="absolute z-20 mt-1 w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {line.pmResults.map((pm) => (
-                            <li
-                              key={pm.id}
-                              onClick={() => selectProductMaster(idx, pm)}
-                              className="px-4 py-2.5 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-alt)] cursor-pointer"
-                            >
-                              {pm.name}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-
-                    {/* BrandSKU */}
-                    <div>
-                      <label className={labelCls}>Talla (BrandSKU)</label>
-                      {line.loadingSkus ? (
-                        <div className="flex items-center gap-2 h-10 px-3 bg-[var(--color-bg-alt)] border border-[var(--color-border)] rounded-lg">
-                          <div className="w-3.5 h-3.5 border-2 border-[var(--color-navy)] border-t-transparent rounded-full animate-spin" />
-                          <span className="text-xs text-[var(--color-text-tertiary)]">Cargando tallas...</span>
-                        </div>
-                      ) : line.product_master_id && line.brandSkus.length === 0 ? (
-                        <p className="text-xs text-[var(--color-text-tertiary)] italic px-1 py-2">
-                          Sin tallas — configurar en Brand Console &gt; Tallas
-                        </p>
-                      ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                      {/* Select producto */}
+                      <div className="sm:col-span-2">
+                        <label className={labelCls}>Producto</label>
                         <select
-                          value={line.brand_sku_id ?? ""}
-                          onChange={(e) => handleSkuChange(idx, e.target.value)}
-                          disabled={!line.product_master_id}
+                          value={line.producto_id ?? ""}
+                          onChange={(e) =>
+                            updateLine(idx, {
+                              producto_id: e.target.value ? Number(e.target.value) : null,
+                            })
+                          }
                           className={inputCls}
                         >
-                          <option value="">{line.product_master_id ? "Seleccionar talla..." : "Primero elegí un producto"}</option>
-                          {line.brandSkus.map((sku) => (
-                            <option key={sku.id} value={sku.id}>
-                              {sku.sizing_system_name
-                                ? `${sku.sizing_system_name} — ${sku.sizing_entry_code ?? sku.sku_code}`
-                                : sku.sku_code}
+                          <option value="">Seleccionar producto...</option>
+                          {productos.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name}{p.sku_base ? ` — ${p.sku_base}` : ""}{p.brand_name ? ` (${p.brand_name})` : ""}
                             </option>
                           ))}
                         </select>
-                      )}
-                    </div>
+                      </div>
 
-                    {/* Quantity + Price */}
-                    <div className="grid grid-cols-2 gap-3">
+                      {/* Cantidad */}
                       <div>
                         <label className={labelCls}>Cantidad <span className="text-[var(--color-coral)]">*</span></label>
                         <input
@@ -510,23 +409,6 @@ export default function NuevoExpedientePage() {
                           value={line.quantity}
                           onChange={(e) => updateLine(idx, { quantity: e.target.value })}
                           placeholder="0"
-                          className={inputCls}
-                        />
-                      </div>
-                      <div>
-                        <label className={labelCls}>
-                          Precio unitario
-                          {line.loadingPrice && (
-                            <span className="ml-1.5 text-[var(--color-text-tertiary)] font-normal">(calculando...)</span>
-                          )}
-                        </label>
-                        <input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          value={line.unit_price}
-                          onChange={(e) => updateLine(idx, { unit_price: e.target.value })}
-                          placeholder="0.00"
                           className={inputCls}
                         />
                       </div>
