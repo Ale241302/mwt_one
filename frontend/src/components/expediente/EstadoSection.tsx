@@ -115,7 +115,7 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
       return (
         <div className={rowCls}>
           <span className={labelCls}>{label}</span>
-          <span className={valueCls}>{val !== undefined && val !== null && val !== "" ? String(val) : —"}</span>
+          <span className={valueCls}>{val !== undefined && val !== null && val !== "" ? String(val) : "—"}</span>
         </div>
       );
     }
@@ -146,7 +146,7 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
   const renderOperadorBanner = () => (
     showBanner ? (
       <div className="col-span-2 flex items-center gap-2 text-xs text-[var(--color-text-tertiary)] italic bg-[var(--color-bg-alt)] border border-[var(--color-border)] rounded-lg px-3 py-2">
-        ⚠️ Seleccionar operador para ver campos condicionados
+        &#9888;&#65039; Seleccionar operador para ver campos condicionados
       </div>
     ) : null
   );
@@ -157,8 +157,8 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
       case "REGISTRO":
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {renderField("N° Referencia", "ref_number")}
-            {renderField("N° Orden de Compra", "purchase_order_number")}
+            {renderField("N\u00b0 Referencia", "ref_number")}
+            {renderField("N\u00b0 Orden de Compra", "purchase_order_number")}
             {renderField("Cliente", "client")}
             <div className={rowCls}>
               <label className={labelCls}>Operado por</label>
@@ -172,8 +172,8 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
                 <span className={valueCls}>{(expediente.operado_por as string) ?? "—"}</span>
               )}
             </div>
-            {renderField("Días crédito", "credit_days", "number")}
-            {renderField("Límite crédito", "credit_limit", "number")}
+            {renderField("D\u00edas cr\u00e9dito", "credit_days", "number")}
+            {renderField("L\u00edmite cr\u00e9dito", "credit_limit", "number")}
             {renderField("Valor orden", "order_value", "number")}
             {renderUrlField("Orden de Compra (URL)", "url_orden_compra")}
           </div>
@@ -199,7 +199,7 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {renderField("Estado producción", "production_status")}
+              {renderField("Estado producci\u00f3n", "production_status")}
               {renderField("Notas calidad", "quality_notes")}
             </div>
             {renderOperadorBanner()}
@@ -217,7 +217,7 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {renderField("Fecha estimada producción", "estimated_production_date", "date")}
+              {renderField("Fecha estimada producci\u00f3n", "estimated_production_date", "date")}
             </div>
             {renderOperadorBanner()}
             <FactoryOrderTable
@@ -235,7 +235,6 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {renderField("Fecha despacho", "shipping_date", "date")}
-              {/* S19-11: tracking_url clicable en DESPACHO (editable) */}
               <div className={rowCls}>
                 <span className={labelCls}>Tracking URL</span>
                 {editing ? (
@@ -244,14 +243,13 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
                   <a href={String(field("tracking_url"))} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-[var(--color-navy)] hover:underline">
                     <ExternalLink className="w-3.5 h-3.5" /> {String(field("tracking_url"))}
                   </a>
-                ) : <span className={valueCls}>—</span>}
+                ) : <span className={valueCls}>{"—"}</span>}
               </div>
               {renderField("Notas despacho", "dispatch_notes")}
               {renderField("Peso (kg)", "weight_kg", "number")}
               {renderField("Bultos", "packages_count", "number")}
             </div>
             {renderOperadorBanner()}
-            {/* url_packing_list + url_bl viven en factory_orders nested (condicional operado_por) */}
             <FactoryOrderTable
               expedienteId={expediente.id}
               factoryOrders={(expediente.factory_orders as FactoryOrder[]) ?? []}
@@ -267,15 +265,14 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {renderField("Aeropuerto / Puerto intermedio", "intermediate_airport_or_port")}
-            {renderField("Fecha llegada tránsito", "transit_arrival_date", "date")}
-            {/* S19-11: tracking_url read-only en TRANSITO (carry-forward) */}
+            {renderField("Fecha llegada tr\u00e1nsito", "transit_arrival_date", "date")}
             <div className={rowCls}>
               <span className={labelCls}>Tracking URL (carry-forward)</span>
               {field("tracking_url") ? (
                 <a href={String(field("tracking_url"))} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-[var(--color-navy)] hover:underline">
                   <ExternalLink className="w-3.5 h-3.5" /> {String(field("tracking_url"))}
                 </a>
-              ) : <span className={valueCls}>—</span>}
+              ) : <span className={valueCls}>{"—"}</span>}
             </div>
             {renderUrlField("Packing List Detallado", "url_packing_list_detallado")}
           </div>
@@ -286,7 +283,7 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
       case "CANCELADO":
         return (
           <p className="text-sm text-[var(--color-text-tertiary)] italic">
-            Estado {status} — solo lectura.
+            Estado {status} &mdash; solo lectura.
           </p>
         );
 
@@ -297,7 +294,6 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Header with edit controls */}
       {!isReadOnly && (
         <div className="flex justify-end gap-2">
           {editing ? (
