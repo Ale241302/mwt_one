@@ -81,10 +81,8 @@ export default function NuevoExpedientePage() {
     operado_por: "" as "" | "CLIENTE" | "MWT",
   });
 
-  // Start with one empty row always visible
   const [productLines, setProductLines] = useState<ProductLine[]>([emptyLine()]);
 
-  // Fetch clientes
   useEffect(() => {
     api
       .get("clientes/?limit=500")
@@ -96,7 +94,6 @@ export default function NuevoExpedientePage() {
       .finally(() => setClientsLoading(false));
   }, []);
 
-  // Fetch marcas
   useEffect(() => {
     api
       .get("brands/?limit=200")
@@ -108,7 +105,6 @@ export default function NuevoExpedientePage() {
       .finally(() => setBrandsLoading(false));
   }, []);
 
-  // Fetch todos los productos
   useEffect(() => {
     api
       .get("productos/?limit=500")
@@ -120,16 +116,13 @@ export default function NuevoExpedientePage() {
       .finally(() => setProductosLoading(false));
   }, []);
 
-  // Productos filtrados seg\u00fan la marca seleccionada
   const productosFiltrados =
     form.brand
       ? productos.filter(
-          (p) =>
-            (p.brand_name ?? "").toLowerCase() === form.brand.toLowerCase()
+          (p) => (p.brand_name ?? "").toLowerCase() === form.brand.toLowerCase()
         )
       : productos;
 
-  // Al cambiar marca, reiniciar los producto_id de cada fila
   const handleChange = (
     e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement | HTMLInputElement>
   ) => {
@@ -144,7 +137,6 @@ export default function NuevoExpedientePage() {
   const removeLine = (idx: number) => {
     setProductLines((prev) => {
       const next = prev.filter((_, i) => i !== idx);
-      // Always keep at least one row
       return next.length === 0 ? [emptyLine()] : next;
     });
   };
@@ -315,7 +307,7 @@ export default function NuevoExpedientePage() {
             </select>
           </div>
 
-          {/* \u2500\u2500 L\u00cdNEAS DE PRODUCTO \u2500\u2500 */}
+          {/* L\u00cdNEAS DE PRODUCTO */}
           <div>
             <label className={labelCls + " mb-3"}>
               L\u00edneas de producto <span className="text-[var(--color-text-tertiary)] font-normal">(opcional)</span>
@@ -328,10 +320,10 @@ export default function NuevoExpedientePage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {/* Header labels */}
+                {/* Header de columnas */}
                 <div className="grid grid-cols-[1fr_120px_36px] gap-2 px-1">
                   <span className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
-                    Producto {form.brand ? `(${form.brand})` : ""}
+                    Producto
                   </span>
                   <span className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
                     Cantidad
@@ -339,10 +331,9 @@ export default function NuevoExpedientePage() {
                   <span />
                 </div>
 
-                {/* Rows */}
+                {/* Filas */}
                 {productLines.map((line, idx) => (
                   <div key={idx} className="grid grid-cols-[1fr_120px_36px] gap-2 items-center">
-                    {/* Select producto */}
                     <select
                       value={line.producto_id ?? ""}
                       onChange={(e) =>
@@ -367,7 +358,6 @@ export default function NuevoExpedientePage() {
                       ))}
                     </select>
 
-                    {/* Input cantidad */}
                     <input
                       type="number"
                       min={1}
@@ -377,7 +367,6 @@ export default function NuevoExpedientePage() {
                       className={inputCls}
                     />
 
-                    {/* Bot\u00f3n eliminar fila (X) */}
                     <button
                       type="button"
                       onClick={() => removeLine(idx)}
@@ -389,7 +378,7 @@ export default function NuevoExpedientePage() {
                   </div>
                 ))}
 
-                {/* Bot\u00f3n agregar fila (+) */}
+                {/* Bot\u00f3n agregar fila */}
                 <button
                   type="button"
                   onClick={addLine}
