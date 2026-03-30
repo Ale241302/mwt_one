@@ -1,5 +1,6 @@
 """
-Sprint 3-4 â€” UI Serializers
+Sprint 3-4 — UI Serializers
+S20-06: ExpedienteBundleSerializer ahora incluye artifact_policy calculada dinámicamente.
 """
 import datetime
 from decimal import Decimal
@@ -89,8 +90,8 @@ class DocumentSummarySerializer(serializers.Serializer):
 
 class ExpedienteBundleSerializer(serializers.Serializer):
     """
-    Complete bundle for Expediente Detail page <200ms
-    Now receives an Expediente model instance directly.
+    Complete bundle for Expediente Detail page <200ms.
+    S20-06: agrega artifact_policy calculada dinámicamente por brand + proformas.
     """
     expediente = serializers.SerializerMethodField()
     events = serializers.SerializerMethodField()
@@ -100,6 +101,8 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     documents = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
     credit_clock = serializers.SerializerMethodField()
+    # S20-06: policy de artefactos calculada dinámicamente
+    artifact_policy = serializers.SerializerMethodField()
 
     def get_expediente(self, obj):
         data = UIExpedienteListSerializer(obj).data
@@ -151,3 +154,17 @@ class ExpedienteBundleSerializer(serializers.Serializer):
                     'download_url': f"/api/documents/{art.artifact_id}/download/"
                 })
         return docs
+
+    def get_artifact_policy(self, obj):
+        """
+        S20-06: Retorna la política de artefactos resuelta dinámicamente.
+        - Sin proformas completadas → solo estado REGISTRO
+        - Con proformas → policy completa por estado mergeada por mode
+        - Siempre JSON-serializable (listas ordenadas, nunca sets)
+        """
+        from apps.expedientes.services.artifact_policy import resolve_artifact_policy
+        try:
+            return resolve_artifact_policy(obj)
+        except Exception:
+            # Nunca romper el bundle por un fallo en la policy
+            return {'REGISTRO': {'required': ['ART-01'], 'optional': [], 'gate_for_advance': ['ART-01']}}
