@@ -1,4 +1,4 @@
-"""S17-13: Admin configuration with inlines for Sprint 17 new models."""
+"""S20: Admin configuration — Sprint 20 adds proforma FK to EPL inline."""
 from django.contrib import admin
 from .models import (
     Expediente, ArtifactInstance, EventLog, CostLine, PaymentLine, LogisticsOption,
@@ -25,12 +25,21 @@ class PaymentLineInline(admin.TabularInline):
     readonly_fields = ('payment_line_id', 'created_at')
 
 
-# S17-13: New inlines for Sprint 17 models
+# S17-13 / S20-01: Inline con campo proforma visible
 class ExpedienteProductLineInline(admin.TabularInline):
     model = ExpedienteProductLine
     fk_name = 'expediente'  # fix admin.E202: two FKs to Expediente
     extra = 0
     readonly_fields = ('created_at', 'updated_at')
+    # S20-01: campo proforma visible en inline para asignación manual desde admin
+    fields = (
+        'product', 'quantity', 'unit_price', 'price_source',
+        'proforma',  # S20-01
+        'brand_sku', 'pricelist_used', 'base_price',
+        'quantity_modified', 'unit_price_modified', 'modification_reason',
+        'factory_order', 'separated_to_expediente',
+        'created_at', 'updated_at',
+    )
     show_change_link = True
 
 
@@ -111,9 +120,31 @@ class ExpedienteAdmin(admin.ModelAdmin):
 
 @admin.register(ExpedienteProductLine)
 class ExpedienteProductLineAdmin(admin.ModelAdmin):
-    list_display = ('expediente', 'product', 'quantity', 'unit_price', 'price_source', 'created_at')
+    list_display = ('expediente', 'product', 'quantity', 'unit_price', 'price_source', 'proforma', 'created_at')
     list_filter = ('price_source',)
     readonly_fields = ('created_at', 'updated_at')
+    # S20-01: proforma visible y editable desde admin de EPL
+    fieldsets = (
+        ('Datos principales', {
+            'fields': ('expediente', 'product', 'quantity', 'unit_price', 'price_source')
+        }),
+        ('S20 — Proforma', {
+            'fields': ('proforma',),
+            'description': 'S20-01: ART-02 al que pertenece esta línea. NULL = línea legacy pre-S20.'
+        }),
+        ('SKU / Precio', {
+            'fields': ('brand_sku', 'pricelist_used', 'base_price'),
+            'classes': ('collapse',)
+        }),
+        ('Modificaciones', {
+            'fields': ('quantity_modified', 'unit_price_modified', 'modification_reason'),
+            'classes': ('collapse',)
+        }),
+        ('Trazabilidad', {
+            'fields': ('factory_order', 'separated_to_expediente', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
 
 @admin.register(FactoryOrder)
