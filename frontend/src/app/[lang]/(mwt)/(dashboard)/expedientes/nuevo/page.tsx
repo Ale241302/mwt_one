@@ -408,7 +408,7 @@ export default function NuevoExpedientePage() {
             <button
               type="submit"
               disabled={submitting || clientsLoading || brandsLoading}
-              className="bg-[var(--color-navy)] hover:opacity-80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="bg-navy text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Creando...</>
