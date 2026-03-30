@@ -1,121 +1,211 @@
-"""
-S20-07 — ProformaCreateView
-POST /api/expedientes/<pk>/artifacts/proforma/
+# S20-11 — Endpoints Sprint 20: crear proforma + change mode
+# POST /api/expedientes/{id}/proformas/
+# PATCH /api/expedientes/{id}/proforma/{pf_id}/change-mode/
 
-Crea un ART-02 (Proforma) para un expediente, validando:
-- Expediente en estado REGISTRO o PREPARACION
-- mode válido para el brand (via BRAND_ALLOWED_MODES)
-- payload validado por ART02PayloadSerializer
-- Solo una proforma ACTIVE por mode por expediente (no duplicar)
-"""
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from __future__ import annotations
+
+import uuid
+
+from django.db import transaction
+from django.utils import timezone
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from apps.expedientes.models import Expediente, ArtifactInstance
-from apps.expedientes.serializers_s20 import ART02PayloadSerializer
+from apps.expedientes.models import ArtifactInstance, EventLog, Expediente
+from apps.expedientes.enums_exp import AggregateType
 from apps.expedientes.services.artifact_policy import BRAND_ALLOWED_MODES
+from apps.expedientes.services.proforma_mode import change_proforma_mode
 
-
-# Estados del expediente en que se permite crear una proforma
-ALLOWED_STATES_FOR_PROFORMA = ('REGISTRO', 'PREPARACION')
+VALID_MODES = ('mode_b', 'mode_c', 'default')
 
 
 class ProformaCreateView(APIView):
     """
-    S20-07: POST /api/expedientes/<pk>/artifacts/proforma/
+    POST /api/expedientes/{id}/proformas/
 
-    Body:
-        {
-            "mode": "mode_b" | "mode_c" | "default",
-            "operated_by": "...",       # opcional, default: muito_work_limitada
-            "proforma_number": "..."    # opcional
-        }
-
-    Respuesta 201:
-        {
-            "artifact_id": "<uuid>",
-            "artifact_type": "ART-02",
-            "status": "PENDING",
-            "mode": "mode_b",
-            "expediente_id": "<uuid>"
-        }
+    Payload: {
+        proforma_number: str,
+        mode: str,
+        operated_by: str,
+        line_ids: list[int] | null  (opcional)
+    }
     """
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
-        # 1. Obtener expediente
-        try:
-            exp = Expediente.objects.select_related('brand').get(pk=pk)
-        except Expediente.DoesNotExist:
-            return Response({'detail': 'Expediente no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data
 
-        # 2. Verificar estado del expediente
-        if exp.status not in ALLOWED_STATES_FOR_PROFORMA:
+        # ── Validación rápida de mode ANTES del lock ──────────────────────────
+        mode = data.get('mode', '')
+        if mode not in VALID_MODES:
             return Response(
-                {'detail': f'No se puede crear una proforma en estado {exp.status}. '
-                            f'Estados permitidos: {ALLOWED_STATES_FOR_PROFORMA}'},
-                status=status.HTTP_409_CONFLICT
+                {'error': f"Modo inválido: '{mode}'. Válidos: {VALID_MODES}"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 3. Validar payload con ART02PayloadSerializer
-        payload_serializer = ART02PayloadSerializer(data=request.data)
-        if not payload_serializer.is_valid():
-            return Response(payload_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        validated = payload_serializer.validated_data
-        mode = validated['mode']
-
-        # 4. Verificar que el mode es válido para el brand del expediente
-        brand_slug = ''
-        try:
-            brand_slug = exp.brand.slug
-        except Exception:
-            pass
-
-        allowed_modes = BRAND_ALLOWED_MODES.get(brand_slug, ('mode_b', 'mode_c', 'default'))
-        if mode not in allowed_modes:
+        # ── Validación estricta de line_ids ANTES del lock ────────────────────
+        raw_line_ids = data.get('line_ids', None)
+        if raw_line_ids is None:
+            line_ids = []
+        elif not isinstance(raw_line_ids, list):
             return Response(
-                {'detail': f'El mode "{mode}" no está permitido para la marca "{brand_slug}". '
-                            f'Modos permitidos: {allowed_modes}'},
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': 'line_ids debe ser una lista o null'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        else:
+            for item in raw_line_ids:
+                if isinstance(item, bool):
+                    return Response(
+                        {'error': 'line_ids no acepta booleanos'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if not isinstance(item, int):
+                    return Response(
+                        {'error': 'line_ids solo acepta enteros'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            line_ids = list(set(raw_line_ids))
+
+        with transaction.atomic():
+            # ── select_for_update en expediente (gate de status) ─────────────
+            try:
+                expediente = (
+                    Expediente.objects
+                    .select_for_update()
+                    .select_related('brand')
+                    .get(pk=pk)
+                )
+            except Expediente.DoesNotExist:
+                return Response({'error': 'Expediente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+            # Gate: solo en REGISTRO
+            if expediente.status != 'REGISTRO':
+                return Response(
+                    {'error': f"Solo se pueden crear proformas en estado REGISTRO. Estado actual: {expediente.status}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Validar mode por brand
+            brand_slug = ''
+            try:
+                brand_slug = expediente.brand.slug
+            except Exception:
+                pass
+
+            if not brand_slug or brand_slug not in BRAND_ALLOWED_MODES:
+                return Response(
+                    {'error': f"Brand '{brand_slug}' no soportada en BRAND_ALLOWED_MODES."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            allowed = BRAND_ALLOWED_MODES[brand_slug]
+            if mode not in allowed:
+                return Response(
+                    {'error': f"Modo '{mode}' no permitido para brand '{brand_slug}'. Permitidos: {list(allowed)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # ── Crear ArtifactInstance ART-02 ─────────────────────────────────
+            proforma = ArtifactInstance.objects.create(
+                expediente=expediente,
+                artifact_type='ART-02',
+                status='COMPLETED',
+                payload={
+                    'proforma_number': data.get('proforma_number', ''),
+                    'mode': mode,
+                    'operated_by': data.get('operated_by', ''),
+                },
             )
 
-        # 5. Verificar duplicado: no crear dos proformas PENDING/COMPLETED con el mismo mode
-        existing = ArtifactInstance.objects.filter(
-            expediente=exp,
-            artifact_type='ART-02',
-            status__in=['PENDING', 'COMPLETED'],
-        ).filter(payload__mode=mode).first()
+            # ── Asignar líneas con validación ─────────────────────────────────
+            assigned_count = 0
+            if line_ids:
+                from apps.expedientes.models import ExpedienteProductLine
 
-        if existing:
-            return Response(
-                {'detail': f'Ya existe una proforma activa con mode="{mode}" '
-                            f'para este expediente (artifact_id={existing.artifact_id}).'},
-                status=status.HTTP_409_CONFLICT
+                lines_qs = (
+                    ExpedienteProductLine.objects
+                    .select_for_update()
+                    .filter(id__in=line_ids, expediente=expediente)
+                )
+                found_ids = set(lines_qs.values_list('id', flat=True))
+                missing = set(line_ids) - found_ids
+                if missing:
+                    transaction.set_rollback(True)
+                    return Response(
+                        {'error': f'line_ids no encontrados en este expediente: {sorted(missing)}'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                already_assigned = list(
+                    lines_qs.exclude(proforma__isnull=True).values_list('id', flat=True)
+                )
+                if already_assigned:
+                    transaction.set_rollback(True)
+                    return Response(
+                        {'error': f'Líneas ya asignadas a otra proforma: {sorted(already_assigned)}'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                assigned_count = lines_qs.update(proforma=proforma)
+
+            # ── EventLog ──────────────────────────────────────────────────────
+            EventLog.objects.create(
+                event_type='proforma.created',
+                aggregate_type=AggregateType.EXPEDIENTE,
+                aggregate_id=expediente.expediente_id,
+                payload={
+                    'proforma_id': str(proforma.artifact_id),
+                    'mode': mode,
+                    'assigned_count': assigned_count,
+                },
+                occurred_at=timezone.now(),
+                emitted_by='S20-11:ProformaCreateView',
+                correlation_id=uuid.uuid4(),
             )
-
-        # 6. Crear el ArtifactInstance ART-02
-        artifact = ArtifactInstance.objects.create(
-            expediente=exp,
-            artifact_type='ART-02',
-            status='PENDING',
-            payload={
-                'mode': mode,
-                'operated_by': validated.get('operated_by', 'muito_work_limitada'),
-                'proforma_number': validated.get('proforma_number', ''),
-            },
-            created_by=request.user.email if request.user else 'system',
-        )
 
         return Response(
             {
-                'artifact_id': str(artifact.artifact_id),
-                'artifact_type': artifact.artifact_type,
-                'status': artifact.status,
+                'proforma_id': str(proforma.artifact_id),
                 'mode': mode,
-                'expediente_id': str(exp.expediente_id),
+                'assigned_count': assigned_count,
             },
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_201_CREATED,
         )
+
+
+class ProformaModeChangeView(APIView):
+    """
+    PATCH /api/expedientes/{id}/proforma/{pf_id}/change-mode/
+
+    Payload: { new_mode: str, confirm_void: bool }
+    """
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk, pf_id):
+        try:
+            proforma = ArtifactInstance.objects.select_related(
+                'expediente__brand'
+            ).get(
+                pk=pf_id,
+                expediente__pk=pk,
+                artifact_type='ART-02',
+            )
+        except ArtifactInstance.DoesNotExist:
+            return Response({'error': 'Proforma no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+        new_mode = request.data.get('new_mode', '')
+        confirm_void = bool(request.data.get('confirm_void', False))
+
+        try:
+            result = change_proforma_mode(
+                proforma=proforma,
+                new_mode=new_mode,
+                confirm_void=confirm_void,
+                user=request.user,
+            )
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(result, status=status.HTTP_200_OK)
