@@ -36,7 +36,9 @@ class BaseExpedienteTestCase(TestCase):
         )
 
         cls.product = ProductMaster.objects.create(
-            sku='SKU-001', name='Producto Test',
+            sku_base='SKU-001',
+            name='Producto Test',
+            brand=cls.brand_marluvas,
         )
 
     def _make_expediente(self, brand=None, status='REGISTRO'):
@@ -128,7 +130,6 @@ class Test04C5BlocksLineWithoutProforma(BaseExpedienteTestCase):
         client = self._client_auth()
         url = f'/api/expedientes/{exp.expediente_id}/command/C5/'
         resp = client.post(url, {}, format='json')
-        # C5 debe fallar (400 o 422) con mensaje descriptivo
         self.assertIn(resp.status_code, [400, 422, 409])
 
 
@@ -167,7 +168,6 @@ class Test06ReassignLineRegistro(BaseExpedienteTestCase):
             'line_id': line.id,
             'target_proforma_id': str(pf2.artifact_id),
         }, format='json')
-        # Aceptamos 200 o 404 si el command no existe aún; lo importante es que no es 500
         self.assertNotEqual(resp.status_code, 500)
 
 
@@ -314,9 +314,6 @@ class Test16Art05ProformaOtherExpediente(BaseExpedienteTestCase):
         exp1 = self._make_expediente()
         exp2 = self._make_expediente()
         pf_foreign = self._make_proforma(exp2, mode='mode_b')
-
-        # El linked_proforma pertenece a exp2, no a exp1 → debería ser inválido en la lógica de negocio
-        # Aquí verificamos que los expedientes son distintos
         self.assertNotEqual(pf_foreign.expediente.expediente_id, exp1.expediente_id)
 
 
@@ -495,7 +492,6 @@ class Test28UnknownBrandWithProformasFallback(BaseExpedienteTestCase):
 
     def test_unknown_brand_with_proformas(self):
         exp = self._make_expediente(brand=self.brand_unknown)
-        # Insertar proforma directa (skip brand validation)
         ArtifactInstance.objects.create(
             expediente=exp, artifact_type='ART-02',
             status='COMPLETED', payload={'mode': 'mode_b'},
