@@ -3,6 +3,7 @@ Sprint 1-5 – URL Configuration for /api/expedientes/
 Ref: LOTE_SM_SPRINT1 Item 7
 Sprint 12: Unified Command Dispatching
 Sprint 17: Portal endpoints added (S17-04)
+Sprint 20: S20-11 ProformaCreateView, S20-10 ProformaModeChangeView
 """
 from django.urls import path
 from apps.expedientes.views import (
@@ -23,6 +24,11 @@ from apps.expedientes.views_portal import (
     PortalExpedienteListView,
     PortalExpedienteDetailView,
     PortalExpedienteArtifactsView,
+)
+# S20-11 / S20-10
+from apps.expedientes.views_s20 import (
+    ProformaCreateView,
+    ProformaModeChangeView,
 )
 
 app_name = 'expedientes'
@@ -75,6 +81,12 @@ urlpatterns = [
 
     # ── S17-03: REOPEN ──
     path('<uuid:pk>/reopen/', CommandDispatchView.as_view(), {'cmd_id': 'REOPEN'}, name='reopen'),
+
+    # ── S20-11: Crear proforma ──
+    path('<uuid:pk>/proformas/', ProformaCreateView.as_view(), name='proforma-create'),
+
+    # ── S20-10: Cambiar modo de proforma ──
+    path('<uuid:pk>/proforma/<uuid:pf_id>/change-mode/', ProformaModeChangeView.as_view(), name='proforma-change-mode'),
 
     # ── Read endpoints ──
     path('<uuid:pk>/costs/', CostsListView.as_view(), name='costs'),
