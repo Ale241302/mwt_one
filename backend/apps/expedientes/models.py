@@ -349,6 +349,21 @@ class ExpedienteProductLine(models.Model):
         null=True, blank=True,
         help_text='Snapshot del precio base de la lista de precios'
     )
+
+    # === S20-01: FK proforma — apunta al ArtifactInstance ART-02 que agrupa esta línea ===
+    # Nullable: líneas legacy (pre-S20) quedan con proforma=NULL hasta remediation manual
+    # on_delete=SET_NULL: si se borra la proforma, la línea queda huérfana (no se elimina)
+    # related_name='proforma_lines' (NO 'lines' para evitar conflicto con expediente.lines)
+    proforma = models.ForeignKey(
+        'ArtifactInstance',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='proforma_lines',
+        limit_choices_to={'artifact_type': 'ART-02'},
+        help_text='S20-01: Proforma (ART-02) a la que pertenece esta línea. NULL en líneas legacy pre-S20.'
+    )
+
     @property
     def size_display(self):
         if self.brand_sku and self.brand_sku.size:
@@ -487,6 +502,21 @@ class ArtifactInstance(TimestampMixin):
         on_delete=models.SET_NULL,
         blank=True, null=True,
         related_name='supersedes_set',
+    )
+
+    # === S20-02: FK self-referential parent_proforma (HR-11) ===
+    # Artefactos vinculados a UNA proforma: ART-04, ART-05, ART-09, ART-10
+    # Excepciones (parent_proforma=NULL): ART-01, ART-11, ART-12 → nivel expediente
+    # on_delete=SET_NULL: si se borra la proforma padre, el hijo queda huérfano
+    parent_proforma = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='child_artifacts',
+        limit_choices_to={'artifact_type': 'ART-02'},
+        help_text='S20-02 HR-11: Proforma (ART-02) a la que pertenece este artefacto. '
+                  'Aplica a ART-04, ART-05, ART-09, ART-10. NULL para ART-01, ART-11, ART-12.'
     )
 
     class Meta:
