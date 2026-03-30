@@ -73,8 +73,8 @@ class CreateExpedienteView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        exp, event = create_expediente(request.data, request.user)
-        return _command_response(exp, [event], status_code=201)
+        exp = create_expediente(request.data, request.user)
+        return _command_response(exp, [], status_code=201)
 
 
 class CommandDispatchView(APIView):

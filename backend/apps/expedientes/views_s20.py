@@ -73,8 +73,7 @@ class ProformaCreateView(APIView):
             try:
                 expediente = (
                     Expediente.objects
-                    .select_for_update()
-                    .select_related('brand')
+                    .select_for_update(of=('self',))
                     .get(pk=pk)
                 )
             except Expediente.DoesNotExist:
@@ -126,7 +125,7 @@ class ProformaCreateView(APIView):
 
                 lines_qs = (
                     ExpedienteProductLine.objects
-                    .select_for_update()
+                    .select_for_update(of=('self',))
                     .filter(id__in=line_ids, expediente=expediente)
                 )
                 found_ids = set(lines_qs.values_list('id', flat=True))

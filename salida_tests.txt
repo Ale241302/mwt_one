@@ -1,0 +1,332 @@
+Creating test database for alias 'default' ('test_mwt')...
+Found 35 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: corsheaders, drf_spectacular, messages, portal, postgres, rest_framework, rest_framework_simplejwt, staticfiles
+  Apply all migrations: admin, agreements, audit, auth, brands, clientes, contenttypes, core, django_celery_beat, expedientes, inventario, knowledge, liquidations, orders, pricing, productos, qr, sessions, sizing, suppliers, token_blacklist, transfers, users
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying core.0001_initial... OK
+  Applying core.0002_legalentity... OK
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying users.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying expedientes.0001_initial... OK
+  Applying expedientes.0002_alter_artifactinstance_status... OK
+  Applying expedientes.0003_alter_expediente_payment_status... OK
+  Applying expedientes.0004_alter_eventlog_aggregate_type_and_more... OK
+  Applying transfers.0001_initial... OK
+  Applying expedientes.0005_sprint5_schema... OK
+  Applying expedientes.0006_alter_logisticsoption_created_at_and_more... OK
+  Applying brands.0001_initial... OK
+  Applying expedientes.0007_expediente_destination_alter_expediente_brand... OK
+  Applying expedientes.0008_legalentity_to_core... OK
+  Applying transfers.0002_retarget_legalentity_fks_to_core... OK
+  Applying expedientes.0009_retarget_legalentity_fks_to_core... OK
+  Applying expedientes.0010_alter_artifactinstance_status_and_more... OK
+  Applying expedientes.0011_costline_amount_base_currency_costline_base_currency_and_more... OK
+  Applying expedientes.0012_expediente_nodo_destino... OK
+  Applying expedientes.0013_remove_costline_behavior_remove_costline_category_and_more... OK
+  Applying expedientes.0014_expediente_snapshot_commercial... OK
+  Applying expedientes.0015_expediente_credit_blocked_expediente_credit_warning... OK
+  Applying brands.0002_brandconfigversion_catalogversion... OK
+  Applying agreements.0001_initial... OK
+  Applying agreements.0002_creditexposure_reserved_amount_creditoverride... OK
+  Applying agreements.0003_brandclientagreement_commission_and_more... OK
+  Applying audit.0001_initial... OK
+  Applying clientes.0001_initial... OK
+  Applying clientes.0002_clientgroup_clientultimateparent_clientsubsidiary_and_more... OK
+  Applying clientes.0003_clientsubsidiary_address_and_more... OK
+  Applying django_celery_beat.0001_initial... OK
+  Applying django_celery_beat.0002_auto_20161118_0346... OK
+  Applying django_celery_beat.0003_auto_20161209_0049... OK
+  Applying django_celery_beat.0004_auto_20170221_0000... OK
+  Applying django_celery_beat.0005_add_solarschedule_events_choices... OK
+  Applying django_celery_beat.0006_auto_20180322_0932... OK
+  Applying django_celery_beat.0007_auto_20180521_0826... OK
+  Applying django_celery_beat.0008_auto_20180914_1922... OK
+  Applying django_celery_beat.0006_auto_20180210_1226... OK
+  Applying django_celery_beat.0006_periodictask_priority... OK
+  Applying django_celery_beat.0009_periodictask_headers... OK
+  Applying django_celery_beat.0010_auto_20190429_0326... OK
+  Applying django_celery_beat.0011_auto_20190508_0153... OK
+  Applying django_celery_beat.0012_periodictask_expire_seconds... OK
+  Applying django_celery_beat.0013_auto_20200609_0727... OK
+  Applying django_celery_beat.0014_remove_clockedschedule_enabled... OK
+  Applying django_celery_beat.0015_edit_solarschedule_events_choices... OK
+  Applying django_celery_beat.0016_alter_crontabschedule_timezone... OK
+  Applying django_celery_beat.0017_alter_crontabschedule_month_of_year... OK
+  Applying django_celery_beat.0018_improve_crontab_helptext... OK
+  Applying django_celery_beat.0019_alter_periodictasks_options... OK
+  Applying productos.0001_initial... OK
+  Applying productos.0002_alter_producto_created_at... OK
+  Applying productos.0003_productmaster_productvariant... OK
+  Applying pricing.0001_initial... OK
+  Applying pricing.0002_pricelistitem_moq_per_size... OK
+  Applying expedientes.0016_reopen_tracking... OK
+  Applying expedientes.0017_sprint18_all... OK
+  Applying expedientes.0018_sprint18_fields... OK
+  Applying expedientes.0019_s20_proforma_fks... OK
+  Applying inventario.0001_initial... OK
+  Applying knowledge.0001_initial... OK
+  Applying knowledge.0002_alter_conversationlog_user... OK
+  Applying liquidations.0001_initial... OK
+  Applying liquidations.0002_alter_liquidation_source_file_and_more... OK
+  Applying orders.0001_initial... OK
+  Applying qr.0001_initial... OK
+  Applying sessions.0001_initial... OK
+  Applying sizing.0001_initial... OK
+  Applying sizing.0002_seed_rw_marluvas... OK
+  Applying suppliers.0001_initial... OK
+  Applying token_blacklist.0001_initial... OK
+  Applying token_blacklist.0002_outstandingtoken_jti_hex... OK
+  Applying token_blacklist.0003_auto_20171017_2007... OK
+  Applying token_blacklist.0004_auto_20171017_2013... OK
+  Applying token_blacklist.0005_remove_outstandingtoken_jti... OK
+  Applying token_blacklist.0006_auto_20171017_2113... OK
+  Applying token_blacklist.0007_auto_20171017_2214... OK
+  Applying token_blacklist.0008_migrate_to_bigautofield... OK
+  Applying token_blacklist.0010_fix_migrate_to_bigautofield... OK
+  Applying token_blacklist.0011_linearizes_history... OK
+  Applying token_blacklist.0012_alter_outstandingtoken_user... OK
+  Applying users.0002_migrate_ceo... OK
+  Applying users.0003_alter_mwtuser_groups... OK
+  Applying users.0004_mwtuser_is_blocked... OK
+  Applying users.0005_mwtuser_brand... OK
+System check identified no issues (0 silenced).
+test_create_empty (apps.expedientes.tests.test_proformas.Test01CreateExpedienteEmpty.test_create_empty) ... ok
+test_two_proformas (apps.expedientes.tests.test_proformas.Test02TwoProformasInSameExpediente.test_two_proformas) ... ok
+test_assign_lines (apps.expedientes.tests.test_proformas.Test03AssignLinesViaCreateProforma.test_assign_lines) ... ok
+test_c5_gate (apps.expedientes.tests.test_proformas.Test04C5BlocksLineWithoutProforma.test_c5_gate) ... WARNING 2026-03-30 15:23:39,404 log Bad Request: /api/expedientes/f55f7388-50e8-4852-83f1-af0fba96e493/command/C5/
+ok
+test_rana_walk_no_arts (apps.expedientes.tests.test_proformas.Test05RanaWalkPolicy.test_rana_walk_no_arts) ... ok
+test_reassign_ok (apps.expedientes.tests.test_proformas.Test06ReassignLineRegistro.test_reassign_ok) ... WARNING 2026-03-30 15:23:39,728 log Bad Request: /api/expedientes/58224b27-f661-4c90-9070-55e0878d4e25/command/C_REASSIGN_LINE/
+ok
+test_reassign_blocked_in_produccion (apps.expedientes.tests.test_proformas.Test07ReassignLineProduccion.test_reassign_blocked_in_produccion) ... WARNING 2026-03-30 15:23:39,887 log Bad Request: /api/expedientes/40c72d0c-3735-4a00-8fe1-4354e4454348/command/C_REASSIGN_LINE/
+ok
+test_zero_proformas (apps.expedientes.tests.test_proformas.Test08PolicyZeroProformas.test_zero_proformas) ... ok
+test_mixed_mode_union (apps.expedientes.tests.test_proformas.Test09PolicyMixedMode.test_mixed_mode_union) ... ok
+test_unknown_brand_fallback (apps.expedientes.tests.test_proformas.Test10PolicyUnknownBrand.test_unknown_brand_fallback) ... ok
+test_normalization (apps.expedientes.tests.test_proformas.Test11NormalizationRequiredBeatsOptional.test_normalization) ... ok
+test_gate_subset (apps.expedientes.tests.test_proformas.Test12GateSubsetOfRequired.test_gate_subset) ... ok
+test_c1_minimal (apps.expedientes.tests.test_proformas.Test13C1OnlyClientBrand.test_c1_minimal) ... ERROR 2026-03-30 15:23:40,795 log Internal Server Error: /api/expedientes/create/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/generic/base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/apps/expedientes/views.py", line 76, in post
+    exp, event = create_expediente(request.data, request.user)
+    ^^^^^^^^^^
+TypeError: cannot unpack non-iterable Expediente object
+ERROR
+test_c1_full (apps.expedientes.tests.test_proformas.Test14C1FullPayload.test_c1_full) ... ERROR 2026-03-30 15:23:40,940 log Internal Server Error: /api/expedientes/create/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/generic/base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/apps/expedientes/views.py", line 76, in post
+    exp, event = create_expediente(request.data, request.user)
+    ^^^^^^^^^^
+TypeError: cannot unpack non-iterable Expediente object
+ERROR
+test_art05_two_proformas (apps.expedientes.tests.test_proformas.Test15Art05LinkedTwoProformas.test_art05_two_proformas) ... ok
+test_art05_foreign_proforma (apps.expedientes.tests.test_proformas.Test16Art05ProformaOtherExpediente.test_art05_foreign_proforma) ... ok
+test_void_art10 (apps.expedientes.tests.test_proformas.Test17ChangeModeB2C_VoidART10.test_void_art10) ... ok
+test_mode_b_to_default_rejected (apps.expedientes.tests.test_proformas.Test18MarluvasModeB2DefaultRejected.test_mode_b_to_default_rejected) ... ok
+test_preview_no_execute (apps.expedientes.tests.test_proformas.Test19ChangeModeNoConfirmPreview.test_preview_no_execute) ... ok
+test_line_not_found (apps.expedientes.tests.test_proformas.Test20CreateProformaLineNotFound.test_line_not_found) ... WARNING 2026-03-30 15:23:41,831 log Bad Request: /api/expedientes/b4e11b9a-fa8c-4dc0-b181-1b076ca59869/proformas/
+ok
+test_line_already_assigned (apps.expedientes.tests.test_proformas.Test21CreateProformaLineAlreadyAssigned.test_line_already_assigned) ... WARNING 2026-03-30 15:23:41,985 log Bad Request: /api/expedientes/b18588ce-1f27-4876-949d-d9d414ae8f9f/proformas/
+ok
+test_dedup_lines (apps.expedientes.tests.test_proformas.Test22CreateProformaLinesDuplicateDedup.test_dedup_lines) ... ok
+test_bundle_has_policy (apps.expedientes.tests.test_proformas.Test23BundleIncludesArtifactPolicy.test_bundle_has_policy) ... ok
+test_parent_proforma_fk (apps.expedientes.tests.test_proformas.Test24ParentProformaFK.test_parent_proforma_fk) ... ok
+test_legacy_c5_fails (apps.expedientes.tests.test_proformas.Test25LegacyExpedienteC5Fails.test_legacy_c5_fails) ... WARNING 2026-03-30 15:23:42,659 log Bad Request: /api/expedientes/7ab33e33-1682-4e84-830c-03511237b08a/command/C5/
+ok
+test_mode_b_rana_walk_rejected (apps.expedientes.tests.test_proformas.Test26CreateProformaModeB_RanaWalk.test_mode_b_rana_walk_rejected) ... WARNING 2026-03-30 15:23:42,808 log Bad Request: /api/expedientes/8ac176bd-154a-4be1-b5d5-ca55136eb445/proformas/
+ok
+test_rana_walk_mode_c_rejected (apps.expedientes.tests.test_proformas.Test27ChangeModeRanaWalk_Default2ModeC.test_rana_walk_mode_c_rejected) ... ok
+test_unknown_brand_with_proformas (apps.expedientes.tests.test_proformas.Test28UnknownBrandWithProformasFallback.test_unknown_brand_with_proformas) ... ok
+test_line_ids_null (apps.expedientes.tests.test_proformas.Test29LineIdsNull.test_line_ids_null) ... ok
+test_line_ids_string (apps.expedientes.tests.test_proformas.Test30LineIdsString.test_line_ids_string) ... WARNING 2026-03-30 15:23:43,396 log Bad Request: /api/expedientes/18ad7287-8a09-429e-8387-e4d23b0196e1/proformas/
+ok
+test_void_art09 (apps.expedientes.tests.test_proformas.Test31ChangeModeC2B_VoidART09.test_void_art09) ... ok
+test_boolean_in_line_ids (apps.expedientes.tests.test_proformas.Test32LineIdsBooleanError.test_boolean_in_line_ids) ... WARNING 2026-03-30 15:23:43,701 log Bad Request: /api/expedientes/18473faf-bc18-49d0-b29f-f4f477382498/proformas/
+ok
+test_string_elements_in_line_ids (apps.expedientes.tests.test_proformas.Test33LineIdsStringElements.test_string_elements_in_line_ids) ... WARNING 2026-03-30 15:23:43,843 log Bad Request: /api/expedientes/ac9c99c8-c298-4989-8c75-88b9fc463a09/proformas/
+ok
+test_unknown_brand_rejected (apps.expedientes.tests.test_proformas.Test34CreateProformaUnknownBrand.test_unknown_brand_rejected) ... WARNING 2026-03-30 15:23:43,991 log Bad Request: /api/expedientes/f2570413-59ad-4107-af63-382e802fb785/proformas/
+ok
+test_unknown_brand_change_mode (apps.expedientes.tests.test_proformas.Test35ChangeModeUnknownBrand.test_unknown_brand_change_mode) ... ok
+
+======================================================================
+ERROR: test_c1_minimal (apps.expedientes.tests.test_proformas.Test13C1OnlyClientBrand.test_c1_minimal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/apps/expedientes/tests/test_proformas.py", line 267, in test_c1_minimal
+    resp = client.post('/api/expedientes/create/', {
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/test.py", line 295, in post
+    response = super().post(
+               ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/test.py", line 209, in post
+    return self.generic('POST', path, data, content_type, **extra)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/test.py", line 233, in generic
+    return super().generic(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/test/client.py", line 676, in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/test.py", line 285, in request
+    return super().request(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/test.py", line 237, in request
+    request = super().request(**kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/test/client.py", line 1092, in request
+    self.check_exception(response)
+  File "/usr/local/lib/python3.12/site-packages/django/test/client.py", line 805, in check_exception
+    raise exc_value
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/generic/base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/apps/expedientes/views.py", line 76, in post
+    exp, event = create_expediente(request.data, request.user)
+    ^^^^^^^^^^
+TypeError: cannot unpack non-iterable Expediente object
+
+======================================================================
+ERROR: test_c1_full (apps.expedientes.tests.test_proformas.Test14C1FullPayload.test_c1_full)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/apps/expedientes/tests/test_proformas.py", line 280, in test_c1_full
+    resp = client.post('/api/expedientes/create/', {
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/test.py", line 295, in post
+    response = super().post(
+               ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/test.py", line 209, in post
+    return self.generic('POST', path, data, content_type, **extra)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/test.py", line 233, in generic
+    return super().generic(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/test/client.py", line 676, in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/test.py", line 285, in request
+    return super().request(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/test.py", line 237, in request
+    request = super().request(**kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/test/client.py", line 1092, in request
+    self.check_exception(response)
+  File "/usr/local/lib/python3.12/site-packages/django/test/client.py", line 805, in check_exception
+    raise exc_value
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/generic/base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/apps/expedientes/views.py", line 76, in post
+    exp, event = create_expediente(request.data, request.user)
+    ^^^^^^^^^^
+TypeError: cannot unpack non-iterable Expediente object
+
+----------------------------------------------------------------------
+Ran 35 tests in 5.367s
+
+FAILED (errors=2)
+Destroying test database for alias 'default' ('test_mwt')...

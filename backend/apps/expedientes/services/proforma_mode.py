@@ -71,12 +71,12 @@ def change_proforma_mode(
         # Re-fetch con lock para leer old_mode real (no stale)
         pf_locked = (
             ArtifactInstance.objects
-            .select_for_update()
+            .select_for_update(of=('self',))
             .get(pk=proforma.pk)
         )
         exp_locked = (
             expediente.__class__.objects
-            .select_for_update()
+            .select_for_update(of=('self',))
             .get(pk=expediente.pk)
         )
 
@@ -93,7 +93,7 @@ def change_proforma_mode(
         if art_type_to_void:
             artifacts_to_void = list(
                 ArtifactInstance.objects
-                .select_for_update()
+                .select_for_update(of=('self',))
                 .filter(
                     expediente=exp_locked,
                     artifact_type=art_type_to_void,

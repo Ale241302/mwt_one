@@ -119,8 +119,8 @@ export default function NuevoExpedientePage() {
   const productosFiltrados =
     form.brand
       ? productos.filter(
-          (p) => (p.brand_name ?? "").toLowerCase() === form.brand.toLowerCase()
-        )
+        (p) => (p.brand_name ?? "").toLowerCase() === form.brand.toLowerCase()
+      )
       : productos;
 
   const handleChange = (
@@ -293,7 +293,7 @@ export default function NuevoExpedientePage() {
 
           {/* N\u00b0 Orden de Compra */}
           <div>
-            <label className={labelCls}>N\u00b0 Orden de Compra <span className="text-[var(--color-text-tertiary)] font-normal">(opcional)</span></label>
+            <label className={labelCls}>Orden de Compra <span className="text-[var(--color-text-tertiary)] font-normal">(opcional)</span></label>
             <input type="text" name="purchase_order_number" value={form.purchase_order_number} onChange={handleChange} placeholder="PO-2026-XXXX" className={inputCls} />
           </div>
 
@@ -310,7 +310,7 @@ export default function NuevoExpedientePage() {
           {/* L\u00cdNEAS DE PRODUCTO */}
           <div>
             <label className={labelCls + " mb-3"}>
-              L\u00edneas de producto <span className="text-[var(--color-text-tertiary)] font-normal">(opcional)</span>
+              Productos <span className="text-[var(--color-text-tertiary)] font-normal">(opcional)</span>
             </label>
 
             {productosLoading ? (
@@ -348,8 +348,8 @@ export default function NuevoExpedientePage() {
                         {!form.brand
                           ? "Primero seleccion\u00e1 una marca"
                           : productosFiltrados.length === 0
-                          ? "Sin productos para esta marca"
-                          : "Seleccionar producto..."}
+                            ? "Sin productos para esta marca"
+                            : "Seleccionar producto..."}
                       </option>
                       {productosFiltrados.map((p) => (
                         <option key={p.id} value={p.id}>
@@ -384,7 +384,7 @@ export default function NuevoExpedientePage() {
                   onClick={addLine}
                   className="mt-1 flex items-center gap-1.5 text-xs text-[var(--color-navy)] border border-dashed border-[var(--color-navy)]/40 rounded-lg px-3 py-2 hover:bg-[var(--color-navy)]/5 transition-colors w-full justify-center"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Agregar otra l\u00ednea
+                  <Plus className="w-3.5 h-3.5" /> Agregar otro producto
                 </button>
               </div>
             )}

@@ -265,9 +265,9 @@ class Test13C1OnlyClientBrand(BaseExpedienteTestCase):
     def test_c1_minimal(self):
         client = self._client_auth()
         resp = client.post('/api/expedientes/create/', {
-            'legal_entity_id': str(self.entity.entity_id),
-            'client_id': str(self.entity.entity_id),
-            'brand_id': str(self.brand_marluvas.id),
+            'legal_entity_id': self.entity.pk,
+            'client_id': self.entity.pk,
+            'brand_id': str(self.brand_marluvas.slug),
         }, format='json')
         self.assertIn(resp.status_code, [200, 201])
 
@@ -278,9 +278,9 @@ class Test14C1FullPayload(BaseExpedienteTestCase):
     def test_c1_full(self):
         client = self._client_auth()
         resp = client.post('/api/expedientes/create/', {
-            'legal_entity_id': str(self.entity.entity_id),
-            'client_id': str(self.entity.entity_id),
-            'brand_id': str(self.brand_marluvas.id),
+            'legal_entity_id': self.entity.pk,
+            'client_id': self.entity.pk,
+            'brand_id': str(self.brand_marluvas.slug),
             'purchase_order_number': 'OC-001',
             'ref_number': 'REF-001',
         }, format='json')
