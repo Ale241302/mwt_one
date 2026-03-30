@@ -1,4 +1,5 @@
 # Sprint 18 - T1.1: Serializers para expedientes
+# S20-06: BundleSerializer ahora incluye artifact_policy calculada dinámicamente
 from rest_framework import serializers
 from .models import (
     Expediente, ExpedienteProductLine, FactoryOrder,
@@ -51,6 +52,9 @@ class PagoSerializer(serializers.ModelSerializer):
 
 
 class BundleSerializer(serializers.ModelSerializer):
+    # S20-06: policy de artefactos calculada dinámicamente según brand y proformas del expediente
+    artifact_policy = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Expediente
         fields = [
@@ -58,8 +62,18 @@ class BundleSerializer(serializers.ModelSerializer):
             'credit_released', 'credit_exposure',
             'purchase_order_number', 'factory_order_number',
             'incoterms', 'created_at', 'updated_at',
+            'artifact_policy',  # S20-06
         ]
-        read_only_fields = ['credit_released', 'credit_exposure', 'expediente_id']
+        read_only_fields = ['credit_released', 'credit_exposure', 'expediente_id', 'artifact_policy']
+
+    def get_artifact_policy(self, obj):
+        """
+        Retorna la política de artefactos resuelta dinámicamente.
+        - Sin proformas completadas → solo estado REGISTRO
+        - Con proformas → policy completa por estado, mergeada por mode
+        """
+        from apps.expedientes.services.artifact_policy import resolve_artifact_policy
+        return resolve_artifact_policy(obj)
 
 
 class SizeSystemSerializer(serializers.Serializer):
