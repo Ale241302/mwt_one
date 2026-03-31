@@ -41,11 +41,35 @@ def handle_c24(expediente, payload, env=None):
     art19.status = ArtifactStatusEnum.COMPLETED
     art19.save(update_fields=['payload', 'status'])
 
+def handle_c8(expediente, payload, env=None):
+    # Registrar Factura Comercial (ART-07)
+    from apps.expedientes.models import ArtifactInstance
+    ArtifactInstance.objects.update_or_create(
+        expediente=expediente,
+        artifact_type='ART-07',
+        defaults={'payload': payload, 'status': 'completed'}
+    )
+    return {"message": "Factura Comercial registrada"}
+
+def handle_c9(expediente, payload, env=None):
+    # Registrar Certificado de Origen (ART-08)
+    from apps.expedientes.models import ArtifactInstance
+    ArtifactInstance.objects.update_or_create(
+        expediente=expediente,
+        artifact_type='ART-08',
+        defaults={'payload': payload, 'status': 'completed'}
+    )
+    return {"message": "Certificado de Origen registrado"}
+
 def handle_c30(expediente, payload, env=None):
-    # Materializar Logística (C30)
-    # This usually creates ART-11 (Arribo) or similar?
-    # In services.py it was just a mock logic for now
-    pass
+    # Materializar Logística (C30) -> ART-30
+    from apps.expedientes.models import ArtifactInstance
+    ArtifactInstance.objects.update_or_create(
+        expediente=expediente,
+        artifact_type='ART-30',
+        defaults={'payload': payload or {}, 'status': 'completed'}
+    )
+    return {"message": "Materialización Logística registrada"}
 
 
 # ─────────────────────────────────────────────────────────────────────

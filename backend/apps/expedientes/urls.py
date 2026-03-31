@@ -42,8 +42,8 @@ urlpatterns = [
     path('<uuid:pk>/command/<str:cmd_id>/', CommandDispatchView.as_view(), name='command-dispatch'),
 
     # ── Backward Compatibility: Map specific command URLs to Dispatcher ──
-    path('<uuid:pk>/register-oc/', CommandDispatchView.as_view(), {'cmd_id': 'C2'}, name='register-oc'),
-    path('<uuid:pk>/register-proforma/', CommandDispatchView.as_view(), {'cmd_id': 'C3'}, name='register-proforma'),
+    path('<uuid:pk>/register-oc/', CommandDispatchView.as_view(), {'cmd_id': 'C3'}, name='register-oc'),
+    path('<uuid:pk>/register-proforma/', CommandDispatchView.as_view(), {'cmd_id': 'C2'}, name='register-proforma'),
     path('<uuid:pk>/decide-mode/', CommandDispatchView.as_view(), {'cmd_id': 'C4'}, name='decide-mode'),
     path('<uuid:pk>/confirm-sap/', CommandDispatchView.as_view(), {'cmd_id': 'C5'}, name='confirm-sap'),
     path('<uuid:pk>/confirm-production/', CommandDispatchView.as_view(), {'cmd_id': 'C6'}, name='confirm-production'),
@@ -113,8 +113,8 @@ urlpatterns = [
     path('portal/<uuid:pk>/artifacts/', PortalExpedienteArtifactsView.as_view(), name='portal-artifacts'),
 
     # ── Alias /commands/ — compatibilidad con frontend Sprint 20+ ──
-    path('<uuid:pk>/commands/register-oc/', CommandDispatchView.as_view(), {'cmd_id': 'C2'}, name='commands-register-oc'),
-    path('<uuid:pk>/commands/register-proforma/', CommandDispatchView.as_view(), {'cmd_id': 'C3'}, name='commands-register-proforma'),
+    path('<uuid:pk>/commands/register-oc/', CommandDispatchView.as_view(), {'cmd_id': 'C3'}, name='commands-register-oc'),
+    path('<uuid:pk>/commands/register-proforma/', CommandDispatchView.as_view(), {'cmd_id': 'C2'}, name='commands-register-proforma'),
     path('<uuid:pk>/commands/decide-mode/', CommandDispatchView.as_view(), {'cmd_id': 'C4'}, name='commands-decide-mode'),
     path('<uuid:pk>/commands/confirm-sap/', CommandDispatchView.as_view(), {'cmd_id': 'C5'}, name='commands-confirm-sap'),
     path('<uuid:pk>/commands/confirm-production/', CommandDispatchView.as_view(), {'cmd_id': 'C6'}, name='commands-confirm-production'),

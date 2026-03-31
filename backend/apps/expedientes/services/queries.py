@@ -31,19 +31,10 @@ def calculate_financial_comparison(expediente):
     return {'actual': {}, 'estimated': {}}
 
 def can_execute_command(expediente, cmd_id, user):
-    from .constants import COMMAND_SPEC
-    if cmd_id not in COMMAND_SPEC:
-        return False
-
-    cmd_config = COMMAND_SPEC[cmd_id]
-    req_status = cmd_config.get('requires_status')
-    if req_status and expediente.status != req_status:
-        return False
-
-    # Blocked check
-    if expediente.is_blocked and cmd_id not in ['C18', 'C19', 'C20']:
-        return False
-
+    """
+    MODO LIBRE: Siempre permite ejecutar cualquier comando.
+    Ignora status, bloqueos y permisos para máxima flexibilidad de demo.
+    """
     return True
 
 def get_available_commands(expediente, user):

@@ -236,15 +236,21 @@ def resolve_artifact_policy(expediente) -> dict:
         ).values('payload')
     )
 
-    # Sin proformas → policy REGISTRO del brand o fallback genérico
+    # Sin proformas → retorna policy completa del primer mode (usualmente 'default' o 'mode_b')
     if not proformas:
         if brand_policy:
-            # Tomar el primer mode disponible para el brand (default o primero)
-            first_mode = next(iter(brand_policy))
-            registro = brand_policy[first_mode].get('REGISTRO')
-            if registro:
-                return {'REGISTRO': _as_lists(registro)}
-        return dict(GENERIC_REGISTRO)
+            # Intentar 'default' o el primer modo que exista
+            mode = 'default' if 'default' in brand_policy else next(iter(brand_policy))
+            full_policy = brand_policy[mode]
+            return {
+                state: _as_lists(rules)
+                for state, rules in full_policy.items()
+            }
+        # Si no hay brand_policy, retornar al menos el REGISTRO genérico
+        return {
+            state: _as_lists(rules)
+            for state, rules in GENERIC_REGISTRO.items()
+        }
 
     # Brand desconocida con proformas → fallback genérico
     if not brand_policy:
@@ -274,28 +280,29 @@ def resolve_artifact_policy(expediente) -> dict:
     if not merged:
         return dict(GENERIC_REGISTRO)
 
-    # Normalización post-merge
+    # Normalización post-merge: MODO LIBRE (Todo Opcional)
+    all_artifacts = set()
     for state in merged:
-        # required gana sobre optional
-        merged[state]['optional'] -= merged[state]['required']
-        # gate_for_advance siempre ⊆ required
-        merged[state]['gate_for_advance'] &= merged[state]['required']
+        all_artifacts |= merged[state]['required']
+        all_artifacts |= merged[state]['optional']
+        all_artifacts |= merged[state]['gate_for_advance']
 
-    # Convertir sets a sorted lists para determinismo JSON
+    # En modo libre, todo es opcional, nada es requerido ni gate de avance
     return {
         state: {
-            'required':         sorted(merged[state]['required']),
-            'optional':         sorted(merged[state]['optional']),
-            'gate_for_advance': sorted(merged[state]['gate_for_advance']),
+            'required':         [],
+            'optional':         sorted(list(all_artifacts)),
+            'gate_for_advance': [],
         }
         for state in merged
     }
 
 
 def _as_lists(rules: dict) -> dict:
-    """Convierte listas de una policy individual a listas ordenadas."""
+    """Modo Libre: Convierte todo a opcional."""
+    all_r = set(rules.get('required', [])) | set(rules.get('optional', [])) | set(rules.get('gate_for_advance', []))
     return {
-        'required':         sorted(rules.get('required', [])),
-        'optional':         sorted(rules.get('optional', [])),
-        'gate_for_advance': sorted(rules.get('gate_for_advance', [])),
+        'required':         [],
+        'optional':         sorted(list(all_r)),
+        'gate_for_advance': [],
     }
