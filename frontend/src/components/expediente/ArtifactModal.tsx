@@ -8,9 +8,7 @@ interface ArtifactModalProps {
   open: boolean;
   expedienteId: string;
   commandKey: string;
-  /** Si se pasa artifact, el modal abre en modo "Ver detalle" (readOnly). */
   artifact?: any;
-  /** Forzar modo solo lectura independientemente de si hay artifact. */
   readOnly?: boolean;
   onClose: () => void;
   onSuccess: () => void;
