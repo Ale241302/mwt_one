@@ -1,7 +1,8 @@
 "use client";
 /**
- * S10-03 — Detalle expediente con acordeón de artefactos y estados canónicos.
- * Renders exactly the 7 canonical states.
+ * S10-03 / S20B — Detalle expediente con acordeón de artefactos y estados canónicos.
+ * Corregido: modal conectado correctamente, "Ver detalle" y "Nuevo registro" funcionan,
+ * "Agregar Opcional" abre el modal, historial de eventos visible.
  */
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -10,40 +11,47 @@ import ArtifactRow from "./ArtifactRow";
 import ArtifactSection from "./ArtifactSection";
 import { CANONICAL_STATES } from "@/constants/states";
 import { isLegacyExpediente } from "@/utils/legacy-check";
-import { 
-  LEGACY_STATE_ARTIFACTS, 
-  LEGACY_ARTIFACT_COMMAND_MAP, 
-  LEGACY_ARTIFACT_LABELS 
+import {
+  LEGACY_STATE_ARTIFACTS,
+  LEGACY_ARTIFACT_COMMAND_MAP,
+  LEGACY_ARTIFACT_LABELS,
 } from "@/app/[lang]/(mwt)/(dashboard)/expedientes/[id]/legacy-artifacts";
 
 interface Artifact {
   artifact_type: string;
   status: string;
   created_at: string;
+  payload?: any;
 }
 
 interface ExpedienteAccordionProps {
   expedienteId: string;
-  expedienteData: any; // Full expediente data for policy context
+  expedienteData: any;
   artifacts: Artifact[];
-  availableActions: {
-    primary: any[];
-    secondary: any[];
-    ops: any[];
-  } | string[]; // Support both for safety during transition
+  availableActions:
+    | { primary: any[]; secondary: any[]; ops: any[] }
+    | string[];
   onRefresh: () => void;
   currentState: string;
   onActionClick?: (commandKey: string, artifact?: any) => void;
+  /** Si el usuario autenticado es admin/staff — habilita acciones extras */
+  isAdmin?: boolean;
 }
 
 export default function ExpedienteAccordion({
-  expedienteId, expedienteData, artifacts, availableActions, onRefresh, currentState, onActionClick
+  expedienteId,
+  expedienteData,
+  artifacts,
+  availableActions,
+  onRefresh,
+  currentState,
+  onActionClick,
+  isAdmin,
 }: ExpedienteAccordionProps) {
-  // Helper to check if a command is available
+  // ── Helpers de acciones disponibles ──────────────────────────────────────
   const hasAction = (actionId: string) => {
     if (!availableActions) return false;
     if (Array.isArray(availableActions)) return availableActions.includes(actionId);
-    
     const { primary, secondary, ops } = availableActions as any;
     return (
       (Array.isArray(primary) && primary.some((a: any) => a.id === actionId)) ||
@@ -52,41 +60,62 @@ export default function ExpedienteAccordion({
     );
   };
 
-  // Open current state by default
-  const [openPhases, setOpenPhases] = useState<Record<string, boolean>>({ [currentState]: true });
-
-  const [activeModal, setActiveModal] = useState<string | null>(null);
-
+  // ── Estado local del acordeón ─────────────────────────────────────────────
+  const [openPhases, setOpenPhases] = useState<Record<string, boolean>>({[currentState]: true});
   const toggle = (label: string) =>
     setOpenPhases((prev) => ({ ...prev, [label]: !prev[label] }));
+
+  // ── Modal interno (para cuando no se pasa onActionClick externo) ──────────
+  // activeModal = { commandKey, artifact? }
+  // artifact = undefined → modo creación
+  // artifact = objeto   → modo "Ver detalle" (readOnly)
+  const [activeModal, setActiveModal] = useState<{ commandKey: string; artifact?: any } | null>(null);
+
+  /**
+   * Manejador unificado: se llama desde ArtifactSection / ArtifactRow.
+   * - artifact = undefined → abrir en modo creación (Registrar / Nuevo registro)
+   * - artifact = objeto   → abrir en modo solo lectura (Ver detalle)
+   */
+  const handleExecute = (commandKey: string, artifact?: any) => {
+    if (onActionClick) {
+      // Propagar al padre si está definido (ej. para que el padre maneje el refetch)
+      onActionClick(commandKey, artifact);
+    } else {
+      setActiveModal({ commandKey, artifact });
+    }
+  };
 
   const isLegacy = isLegacyExpediente(expedienteData);
   const currentIdx = CANONICAL_STATES.indexOf(currentState as any);
 
-  const statesToRender = isLegacy 
-    ? CANONICAL_STATES 
+  const statesToRender = isLegacy
+    ? CANONICAL_STATES
     : CANONICAL_STATES.filter((_, idx) => idx <= currentIdx);
 
   return (
     <div className="space-y-3">
       {statesToRender.map((stateName) => {
         const stateIdx = CANONICAL_STATES.indexOf(stateName as any);
-        
-        // S20B-10: Hide FUTURE states if not legacy
+
         if (!isLegacy && stateIdx > currentIdx) return null;
 
         const isOpen = !!openPhases[stateName];
-        
-        // Legacy Rendering logic
+
+        // ── MODO LEGACY ────────────────────────────────────────────────────
         if (isLegacy) {
-          const stateArtifactTypes = Array.isArray(LEGACY_STATE_ARTIFACTS[stateName]) ? LEGACY_STATE_ARTIFACTS[stateName] : [];
+          const stateArtifactTypes = Array.isArray(LEGACY_STATE_ARTIFACTS[stateName])
+            ? LEGACY_STATE_ARTIFACTS[stateName]
+            : [];
           if (stateName === "CERRADO" && stateArtifactTypes.length === 0) return null;
 
-          const phaseArtifacts = (Array.isArray(artifacts) ? artifacts : []).filter(a => stateArtifactTypes.includes(a.artifact_type));
+          const phaseArtifacts = (Array.isArray(artifacts) ? artifacts : []).filter((a) =>
+            stateArtifactTypes.includes(a.artifact_type)
+          );
           const completedCount = phaseArtifacts.filter((a) => a.status === "completed").length;
-          
-          const commandsInState = stateArtifactTypes.map(type => LEGACY_ARTIFACT_COMMAND_MAP[type]).filter(Boolean);
-          const hasAvailable = !!(commandsInState.some(cmd => hasAction(cmd)));
+          const commandsInState = stateArtifactTypes
+            .map((type) => LEGACY_ARTIFACT_COMMAND_MAP[type])
+            .filter(Boolean);
+          const hasAvailable = commandsInState.some((cmd) => hasAction(cmd));
 
           return (
             <div key={stateName} className="card overflow-hidden">
@@ -97,7 +126,9 @@ export default function ExpedienteAccordion({
               >
                 <div className="flex items-center gap-3">
                   <span className="heading-sm font-semibold text-navy">{stateName}</span>
-                  <span className="caption text-text-tertiary">{completedCount} / {stateArtifactTypes.length} completados</span>
+                  <span className="caption text-text-tertiary">
+                    {completedCount} / {stateArtifactTypes.length} completados
+                  </span>
                   {hasAvailable && (
                     <span className="badge badge-info text-[10px]">Acción disponible</span>
                   )}
@@ -107,14 +138,17 @@ export default function ExpedienteAccordion({
 
               {isOpen && stateArtifactTypes.length > 0 && (
                 <div className="border-t border-divider divide-y divide-divider">
-                  {stateArtifactTypes.map(artType => {
+                  {stateArtifactTypes.map((artType) => {
                     const cmdKey = LEGACY_ARTIFACT_COMMAND_MAP[artType];
                     if (!cmdKey) return null;
 
-                    const latestArt = (Array.isArray(artifacts) ? artifacts : []).filter(a => a.artifact_type === artType).sort(
-                      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-                    )[0];
-                    
+                    const allOfType = (Array.isArray(artifacts) ? artifacts : [])
+                      .filter((a) => a.artifact_type === artType)
+                      .sort(
+                        (a, b) =>
+                          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                      );
+                    const latestArt = allOfType[0];
                     const isAvailable = hasAction(cmdKey);
 
                     return (
@@ -124,8 +158,10 @@ export default function ExpedienteAccordion({
                         commandKey={cmdKey}
                         label={LEGACY_ARTIFACT_LABELS[artType] ?? artType}
                         artifact={latestArt as any}
+                        allArtifacts={allOfType as any}
                         isAvailable={isAvailable}
-                        onExecute={onActionClick ?? (() => {})}
+                        onExecute={handleExecute}
+                        isAdmin={isAdmin}
                       />
                     );
                   })}
@@ -135,20 +171,23 @@ export default function ExpedienteAccordion({
           );
         }
 
-        // Modern Policy-Driven Rendering Logic
-        const policyForState = expedienteData?.artifact_policy[stateName];
+        // ── MODO MODERNO (policy-driven) ────────────────────────────────────
+        const policyForState = expedienteData?.artifact_policy?.[stateName];
+        if (!policyForState) return null;
+
         const stateArtifactTypes = [
           ...policyForState.required,
-          ...policyForState.optional
+          ...policyForState.optional,
         ];
-        
+
         if (stateArtifactTypes.length === 0 && stateName === "CERRADO") return null;
 
-        const phaseArtifacts = (Array.isArray(artifacts) ? artifacts : []).filter(a => stateArtifactTypes.includes(a.artifact_type));
-        const completedCount = phaseArtifacts.filter((a) => a.status && a.status.toUpperCase() === "COMPLETED").length;
-        // In the modern view, we don't have a direct commandsInState map. ArtifactSection determines availability.
-        // We'll trust the user has an action if there's any pending required or optional component. 
-        // For simplicity, we just won't show the generic "Acción disponible" badge on the header when using the modern view (ArtifactSection does indicating).
+        const phaseArtifacts = (Array.isArray(artifacts) ? artifacts : []).filter((a) =>
+          stateArtifactTypes.includes(a.artifact_type)
+        );
+        const completedCount = phaseArtifacts.filter(
+          (a) => a.status && a.status.toUpperCase() === "COMPLETED"
+        ).length;
 
         return (
           <div key={stateName} className="card overflow-hidden">
@@ -158,8 +197,15 @@ export default function ExpedienteAccordion({
               aria-expanded={isOpen}
             >
               <div className="flex items-center gap-3">
-                <span className="heading-sm font-semibold text-navy">{stateName} {stateIdx < currentIdx && <span className="text-success ml-2">✓</span>}</span>
-                <span className="caption text-text-tertiary">{completedCount} completados</span>
+                <span className="heading-sm font-semibold text-navy">
+                  {stateName}{" "}
+                  {stateIdx < currentIdx && (
+                    <span className="text-success ml-2">✓</span>
+                  )}
+                </span>
+                <span className="caption text-text-tertiary">
+                  {completedCount} completados
+                </span>
               </div>
               {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </button>
@@ -170,8 +216,9 @@ export default function ExpedienteAccordion({
                   policyState={policyForState}
                   artifacts={artifacts}
                   availableActions={availableActions as any}
-                  onExecute={onActionClick ?? (() => {})}
+                  onExecute={handleExecute}
                   hasAction={hasAction}
+                  isAdmin={isAdmin}
                 />
               </div>
             )}
@@ -179,13 +226,21 @@ export default function ExpedienteAccordion({
         );
       })}
 
+      {/* ── Modal unificado ──────────────────────────────────────────────── */}
       {activeModal && (
         <ArtifactModal
           open={true}
           expedienteId={expedienteId}
-          commandKey={activeModal}
+          commandKey={activeModal.commandKey}
+          artifact={activeModal.artifact}
+          // Si artifact está definido → readOnly (Ver detalle)
+          // Si artifact es undefined  → modo creación (Registrar / Nuevo registro)
+          readOnly={activeModal.artifact !== undefined}
           onClose={() => setActiveModal(null)}
-          onSuccess={onRefresh}
+          onSuccess={() => {
+            setActiveModal(null);
+            onRefresh();
+          }}
         />
       )}
     </div>
