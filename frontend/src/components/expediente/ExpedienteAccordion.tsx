@@ -1,8 +1,8 @@
 "use client";
 /**
  * S10-03 / S20B — Detalle expediente con acordeón de artefactos y estados canónicos.
- * Corregido: modal conectado correctamente, "Ver detalle" y "Nuevo registro" funcionan,
- * "Agregar Opcional" abre el modal, historial de eventos visible.
+ * Fix: el modal SIEMPRE se gestiona internamente; onActionClick solo se propaga en onSuccess.
+ * Fix: OC y cualquier registro refresca el historial correctamente al cerrar el modal.
  */
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -65,7 +65,7 @@ export default function ExpedienteAccordion({
   const toggle = (label: string) =>
     setOpenPhases((prev) => ({ ...prev, [label]: !prev[label] }));
 
-  // ── Modal interno (para cuando no se pasa onActionClick externo) ──────────
+  // ── Modal interno — SIEMPRE se gestiona aquí, independiente de onActionClick ──
   // activeModal = { commandKey, artifact? }
   // artifact = undefined → modo creación
   // artifact = objeto   → modo "Ver detalle" (readOnly)
@@ -73,15 +73,19 @@ export default function ExpedienteAccordion({
 
   /**
    * Manejador unificado: se llama desde ArtifactSection / ArtifactRow.
-   * - artifact = undefined → abrir en modo creación (Registrar / Nuevo registro)
-   * - artifact = objeto   → abrir en modo solo lectura (Ver detalle)
+   * Siempre abre el modal interno para que el formulario sea visible.
+   * onActionClick del padre se invoca SOLO en onSuccess (tras guardar).
    */
   const handleExecute = (commandKey: string, artifact?: any) => {
-    if (onActionClick) {
-      // Propagar al padre si está definido (ej. para que el padre maneje el refetch)
-      onActionClick(commandKey, artifact);
-    } else {
-      setActiveModal({ commandKey, artifact });
+    setActiveModal({ commandKey, artifact });
+  };
+
+  const handleSuccess = () => {
+    setActiveModal(null);
+    onRefresh();
+    // Notificar al padre DESPUÉS de guardar exitosamente
+    if (onActionClick && activeModal) {
+      onActionClick(activeModal.commandKey, activeModal.artifact);
     }
   };
 
@@ -226,21 +230,16 @@ export default function ExpedienteAccordion({
         );
       })}
 
-      {/* ── Modal unificado ──────────────────────────────────────────────── */}
+      {/* ── Modal unificado — siempre montado aquí ───────────────────────── */}
       {activeModal && (
         <ArtifactModal
           open={true}
           expedienteId={expedienteId}
           commandKey={activeModal.commandKey}
           artifact={activeModal.artifact}
-          // Si artifact está definido → readOnly (Ver detalle)
-          // Si artifact es undefined  → modo creación (Registrar / Nuevo registro)
           readOnly={activeModal.artifact !== undefined}
           onClose={() => setActiveModal(null)}
-          onSuccess={() => {
-            setActiveModal(null);
-            onRefresh();
-          }}
+          onSuccess={handleSuccess}
         />
       )}
     </div>
