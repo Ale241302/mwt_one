@@ -9,9 +9,10 @@ interface ArtifactRowProps {
   artifact?: {
     status: string;
     created_at: string;
+    payload?: any;
   };
   isAvailable: boolean;
-  onExecute: (cmd: string) => void;
+  onExecute: (cmd: string, artifact?: any) => void;
   blockReason?: string;
 }
 
@@ -23,8 +24,8 @@ export default function ArtifactRow({
   onExecute,
   blockReason,
 }: ArtifactRowProps) {
-  const isCompleted = artifact?.status === "completed";
-  const isPending = !artifact;
+  const isCompleted = artifact?.status === "completed" || artifact?.status === "COMPLETED";
+  const isVoided = artifact?.status === "voided" || artifact?.status === "VOIDED";
 
   return (
     <div className="flex items-center justify-between px-5 py-3 gap-4 hover:bg-bg transition-colors">
@@ -33,7 +34,7 @@ export default function ArtifactRow({
         
         {isCompleted ? (
           <CheckCircle size={14} className="text-success" />
-        ) : artifact?.status === "voided" ? (
+        ) : isVoided ? (
           <XCircle size={14} className="text-coral" />
         ) : artifact?.status === "superseded" ? (
           <AlertCircle size={14} className="text-text-tertiary" />
@@ -45,7 +46,10 @@ export default function ArtifactRow({
           <p className="text-sm font-medium text-navy truncate flex items-center gap-2">
             {label}
             {isCompleted && (
-              <span className="badge badge-success px-1.5 py-0.5 text-[10px]">COMPLETADO</span>
+              <span className="badge badge-success px-1.5 py-0.5 text-[10px]">Completado ✓</span>
+            )}
+            {isVoided && (
+              <span className="badge badge-critical px-1.5 py-0.5 text-[10px]">Anulado ❌</span>
             )}
             {blockReason && (
               <span className="badge px-1.5 py-0.5 text-[10px] bg-slate-100 text-slate-500 flex items-center gap-1" title={blockReason}>
@@ -62,10 +66,17 @@ export default function ArtifactRow({
       </div>
 
       <div className="shrink-0 flex items-center gap-2">
-        {isAvailable ? (
+        {isCompleted || isVoided ? (
+          <button
+            className="btn btn-sm btn-ghost border border-[var(--border)] text-[var(--text-secondary)]"
+            onClick={() => onExecute(commandKey, artifact)}
+          >
+            Ver detalle
+          </button>
+        ) : isAvailable ? (
           <button
             className="btn btn-sm btn-primary"
-            onClick={() => onExecute(commandKey)}
+            onClick={() => onExecute(commandKey, undefined)}
             aria-label={`Ejecutar ${commandKey}`}
           >
             <Play size={12} /> Registrar

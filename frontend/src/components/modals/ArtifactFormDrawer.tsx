@@ -5,6 +5,7 @@ import { useCRUD } from '@/hooks/useCRUD';
 import { useFormSubmit } from '@/hooks/useFormSubmit';
 import DrawerShell from '@/components/layout/DrawerShell';
 import toast from 'react-hot-toast';
+import { ARTIFACT_UI_REGISTRY } from '@/constants/artifact-ui-registry';
 
 type ArtifactType = 'ART-01' | 'ART-02' | 'ART-05' | 'ART-06' | 'ART-07' | 'ART-08';
 
@@ -26,14 +27,10 @@ interface ArtifactFormDrawerProps {
   onSuccess: () => void;
 }
 
-const ARTIFACT_LABELS: Record<ArtifactType, string> = {
-  'ART-01': 'Orden de Compra',
-  'ART-02': 'Proforma MWT',
-  'ART-05': 'AWB / BL',
-  'ART-06': 'Cotización Flete',
-  'ART-07': 'Aprobación Despacho',
-  'ART-08': 'Documentos Aduanal',
-};
+const ARTIFACT_LABELS: Record<string, string> = Object.keys(ARTIFACT_UI_REGISTRY).reduce((acc, key) => ({
+  ...acc,
+  [key]: ARTIFACT_UI_REGISTRY[key].label
+}), {});
 
 const ARTIFACT_ENDPOINTS: Record<ArtifactType, string> = {
   'ART-01': 'purchase-order',
@@ -115,7 +112,7 @@ export default function ArtifactFormDrawer({
           </div>
         )}
 
-        {/* ART-01: Orden de Compra */}
+        {/* ART-01 */}
         {artifactType === 'ART-01' && (
           <>
             <Field label="Número PO" id="po_number" required>

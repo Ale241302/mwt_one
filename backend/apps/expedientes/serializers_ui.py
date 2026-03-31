@@ -44,6 +44,7 @@ class ArtifactSummarySerializer(serializers.Serializer):
     status_display = serializers.CharField(source='get_status_display')
     created_at = serializers.DateTimeField()
     payload = serializers.JSONField()
+    parent_proforma_id = serializers.UUIDField(allow_null=True, required=False)
 
 
 class CostLineSummarySerializer(serializers.Serializer):
@@ -103,6 +104,7 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     credit_clock = serializers.SerializerMethodField()
     # S20-06: policy de artefactos calculada dinámicamente
     artifact_policy = serializers.SerializerMethodField()
+    product_lines = serializers.SerializerMethodField()
 
     def get_expediente(self, obj):
         data = UIExpedienteListSerializer(obj).data
@@ -124,6 +126,10 @@ class ExpedienteBundleSerializer(serializers.Serializer):
 
     def get_artifacts(self, obj):
         return ArtifactSummarySerializer(obj.artifacts.all(), many=True).data
+
+    def get_product_lines(self, obj):
+        from apps.expedientes.serializers import ProductLineSerializer
+        return ProductLineSerializer(obj.product_lines.all(), many=True).data
 
     def get_costs(self, obj):
         return CostLineSummarySerializer(obj.cost_lines.all(), many=True).data

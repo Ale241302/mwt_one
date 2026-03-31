@@ -9,6 +9,7 @@ import {
 import api from "@/lib/api";
 import { STATE_LABELS, STATE_BADGE_CLASSES } from "@/constants/states";
 import { CreditBar } from "@/components/ui/CreditBar";
+import { ARTIFACT_UI_REGISTRY } from "@/constants/artifact-ui-registry";
 
 /* ─── Types ─── */
 interface Artifact {
@@ -237,7 +238,7 @@ export default function ExpedienteDetailPage() {
             ["Referencia", exp.ref || "—"],
             ["Cliente", exp.client || "—"],
             ["Marca", exp.brand || "—"],
-            ["Orden de compra", exp.purchase_order || "—"],
+            [ARTIFACT_UI_REGISTRY["ART-01"].label, exp.purchase_order || "—"],
             ["Origen", exp.origin || "—"],
             ["Destino", exp.destination || "—"],
             ["Incoterm", exp.incoterm || "—"],

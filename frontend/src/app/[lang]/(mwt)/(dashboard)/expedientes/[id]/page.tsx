@@ -8,7 +8,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, RefreshCw, AlertTriangle, Lock,
-  Play, CheckCircle, Clock, XCircle, ArrowRight, Truck
+  Play, CheckCircle, Clock, XCircle, ArrowRight, Truck,
+  ChevronDown, ChevronRight, Package, Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
@@ -16,8 +17,14 @@ import ExpedienteAccordion from "@/components/expediente/ExpedienteAccordion";
 import GateMessage from "@/components/expediente/GateMessage";
 import CostTable from "@/components/expediente/CostTable";
 import ArtifactModal from "@/components/expediente/ArtifactModal";
+import ProformaSection from "@/components/expediente/ProformaSection";
+import ReassignLineModal from "@/components/expediente/ReassignLineModal";
 import { CANONICAL_STATES, STATE_BADGE_CLASSES } from "@/constants/states";
 import { CreditBar } from "@/components/ui/CreditBar";
+import { EXPEDIENTE_LEVEL_ARTIFACTS } from "@/constants/proforma-artifact-policy";
+import { ARTIFACT_UI_REGISTRY } from "@/constants/artifact-ui-registry";
+import { MODE_LABELS } from "@/constants/mode-labels";
+import CreateProformaModal from "@/components/expediente/CreateProformaModal";
 
 
 interface ExpedienteBundle {
@@ -26,6 +33,7 @@ interface ExpedienteBundle {
     custom_ref: string;
     status: string;
     brand_name: string;
+    brand_slug: string;
     client_name: string;
     mode: string;
     freight_mode: string;
@@ -39,21 +47,28 @@ interface ExpedienteBundle {
   };
   artifacts: Array<{
     id: string;
+    artifact_id?: string;
     artifact_type: string;
     status: "pending" | "completed" | "voided" | "superseded";
     created_at: string;
-    payload: Record<string, unknown>;
+    payload: Record<string, any>;
+    parent_proforma_id?: string | null;
   }>;
-  events: Array<{
+  events: Array<any>;
+  product_lines: Array<{
     id: string;
-    event_type: string;
-    occurred_at: string;
-    emitted_by: string;
-    payload: Record<string, unknown>;
+    product_name: string;
+    size: string;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+    proforma_id: string | null;
   }>;
-  costs: any[];
-  payments: any[];
-  documents: any[];
+  artifact_policy: Record<string, {
+    required: string[];
+    optional: string[];
+    gate_for_advance: string[];
+  }>;
   available_actions: {
     primary: any[];
     secondary: any[];
@@ -65,6 +80,9 @@ interface ExpedienteBundle {
     started_at: string | null;
     is_ignored: boolean;
   };
+  costs: any[];
+  payments: any[];
+  documents: any[];
 }
 
 // S19-12: reemplazados todos los hex por CSS vars del design system
@@ -74,24 +92,13 @@ const CREDIT_BAND_CLASSES = {
   RED: "bg-[var(--critical-bg)] text-[var(--critical)] border-[var(--critical)]",
 };
 
-const PHASE_REQUIREMENTS: Record<string, string[]> = {
-  "REGISTRO": ["ART-01 (OC)", "ART-02 (Proforma)"],
-  "PREPARACION": ["ART-03 (Decisión Modal)", "ART-07 (Cotización Flete)", "ART-08 (Aduana)"],
-  "PRODUCCION": ["ART-04 (SAP)", "ART-19 (Materialización Logística)"],
-  "DESPACHO": ["ART-05 (Confirmación Prod)", "ART-06 (Embarque)"],
-  "TRANSITO": ["ART-10 (Factura Comisión)"],
-  "EN_DESTINO": ["ART-09 (Factura MWT)", "Saldo Pagado (Finanzas)"],
-  "CERRADO": [],
-  "CANCELADO": []
-};
-
-const GATE_ACTIONS: Record<string, string> = {
-  "REGISTRO": "Cerrar Registro",
-  "PREPARACION": "C10",
-  "PRODUCCION": "C6",
-  "DESPACHO": "C11",
-  "TRANSITO": "C12",
-  "EN_DESTINO": "C14",
+const STATE_TO_ADVANCE_COMMAND: Record<string, string> = {
+  'REGISTRO': 'C5',
+  'PRODUCCION': 'C11B',
+  'PREPARACION': 'C10',
+  'DESPACHO': 'C11',
+  'TRANSITO': 'C12',
+  'EN_DESTINO': 'C14',
 };
 
 export default function ExpedienteDetailPage() {
@@ -104,7 +111,8 @@ export default function ExpedienteDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [activeModal, setActiveModal] = useState<{ commandKey: string; artifact?: any } | null>(null);
+  const [reassignLineId, setReassignLineId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'internal' | 'client'>('internal');
 
   const fetchBundle = useCallback(async (quiet = false) => {
@@ -161,38 +169,64 @@ export default function ExpedienteDetailPage() {
   const creditCls = CREDIT_BAND_CLASSES[bundle.credit_clock?.band ?? "MINT"];
   const currentState = expediente.status === "ABIERTO" ? "REGISTRO" : expediente.status;
 
-  const calculateMissingRequirements = () => {
-    if (currentState === "CERRADO" || currentState === "CANCELADO") return [];
-    const reqs = PHASE_REQUIREMENTS[currentState] || [];
-    const missing: string[] = [];
-    reqs.forEach(reqName => {
-      const artifactId = reqName.split(" ")[0];
-      if (artifactId.startsWith("ART-")) {
-        const hasCompletedArtifact = (bundle.artifacts || []).some(
-          a => a.artifact_type === artifactId && a.status === "completed"
-        );
-        if (!hasCompletedArtifact) missing.push(reqName);
-      } else if (reqName.includes("Saldo Pagado")) {
-        if (expediente.payment_status !== "PAID") missing.push(reqName);
-      }
-    });
-    return missing;
-  };
-
   const hasAction = (actionId: string) => {
     const actions = bundle.available_actions;
     if (!actions) return false;
+    const lowerId = actionId.toLowerCase();
     return (
-      actions.primary?.some((a: any) => a.id === actionId) ||
-      actions.secondary?.some((a: any) => a.id === actionId) ||
-      actions.ops?.some((a: any) => a.id === actionId)
+      actions.primary?.some((a: any) => a.id?.toLowerCase() === lowerId) ||
+      actions.secondary?.some((a: any) => a.id?.toLowerCase() === lowerId) ||
+      actions.ops?.some((a: any) => a.id?.toLowerCase() === lowerId)
     );
   };
 
-  const missingReqs = calculateMissingRequirements();
-  const gateCommand = GATE_ACTIONS[currentState];
-  const canAdvance = !!(missingReqs.length === 0 && gateCommand && hasAction(gateCommand));
-  const hasArt06 = bundle.artifacts.some(a => a.artifact_type === 'ART-06' && a.status === 'completed');
+  const calculateAdvanceValidation = () => {
+    if (currentState === "CERRADO" || currentState === "CANCELADO") return { canAdvance: false, errors: [] };
+    
+    // 1. Validar política de artefactos (Gate for Advance)
+    const currentPolicy = bundle.artifact_policy?.[currentState];
+    const errors: string[] = [];
+    
+    if (currentPolicy) {
+      const gateArtifacts = currentPolicy.gate_for_advance || [];
+      const completedTypes = new Set(
+        (bundle.artifacts || [])
+          .filter(a => a.status?.toUpperCase() === 'COMPLETED')
+          .map(a => a.artifact_type)
+      );
+      
+      gateArtifacts.forEach((artType: string) => {
+        if (!completedTypes.has(artType)) {
+          const label = ARTIFACT_UI_REGISTRY[artType]?.label || artType;
+          errors.push(`Falta: ${label}`);
+        }
+      });
+    }
+
+    // 2. Validaciones especiales para REGISTRO
+    if (currentState === "REGISTRO") {
+      const orphanLines = (bundle.product_lines || []).filter((l: any) => l.proforma_id === null);
+      if (orphanLines.length > 0) {
+        errors.push(`${orphanLines.length} línea(s) sin proforma`);
+      }
+      
+      const proformas = (bundle.artifacts || []).filter(
+        a => a.artifact_type === 'ART-02' && a.status?.toUpperCase() === 'COMPLETED'
+      );
+      const noMode = proformas.filter(p => !p.payload?.mode);
+      if (noMode.length > 0) {
+        errors.push(`${noMode.length} proforma(s) sin modo`);
+      }
+    }
+
+    const gateCommand = STATE_TO_ADVANCE_COMMAND[currentState];
+    const canAdvance = errors.length === 0 && !!gateCommand && hasAction(gateCommand);
+    
+    return { canAdvance, errors };
+  };
+
+  const { canAdvance, errors: advanceErrors } = calculateAdvanceValidation();
+  const hasArt06 = bundle.artifacts.some(a => a.artifact_type === 'ART-06' && a.status?.toUpperCase() === 'COMPLETED');
   const showC11B = currentState === 'DESPACHO' && hasArt06 && hasAction('C11B');
 
   return (
@@ -255,19 +289,19 @@ export default function ExpedienteDetailPage() {
           <div className="h-6 w-px bg-[var(--border)] mx-1" />
 
           {hasAction("C17") && !expediente.is_blocked && (
-            <button className="btn btn-sm btn-danger-outline" onClick={() => setActiveModal("C17")}>
+            <button className="btn btn-sm btn-danger-outline" onClick={() => setActiveModal({ commandKey: "C17" })}>
               <Lock size={14} /> Bloquear
             </button>
           )}
           {hasAction("C18") && expediente.is_blocked && (
-            <button className="btn btn-sm" style={{ color: "var(--success)", borderColor: "var(--success)", background: "transparent", border: "1px solid" }} onClick={() => setActiveModal("C18")}>
+            <button className="btn btn-sm" style={{ color: "var(--success)", borderColor: "var(--success)", background: "transparent", border: "1px solid" }} onClick={() => setActiveModal({ commandKey: "C18" })}>
               <Lock size={14} /> Desbloquear
             </button>
           )}
-          <button className="btn btn-sm btn-secondary" onClick={() => setActiveModal("C15")}>Costos</button>
-          <button className="btn btn-sm btn-secondary" onClick={() => setActiveModal("C21")}>Pagos</button>
+          <button className="btn btn-sm btn-secondary" onClick={() => setActiveModal({ commandKey: "C15" })}>Costos</button>
+          <button className="btn btn-sm btn-secondary" onClick={() => setActiveModal({ commandKey: "C21" })}>Pagos</button>
           {hasAction("C16") && (
-            <button className="btn btn-sm btn-danger-outline" onClick={() => setActiveModal("C16")}>Cancelar</button>
+            <button className="btn btn-sm btn-danger-outline" onClick={() => setActiveModal({ commandKey: "C16" })}>Cancelar</button>
           )}
           <button
             className="btn btn-sm btn-ghost"
@@ -294,7 +328,7 @@ export default function ExpedienteDetailPage() {
 
       {/* ─── Metadata Row ─── */}
       <div className="card p-4 flex flex-wrap gap-x-8 gap-y-4 text-sm">
-        <div><span className="text-[var(--text-tertiary)]">Modalidad:</span> <span className="font-medium text-[var(--interactive)] ml-1">{expediente.mode || "—"}</span></div>
+        <div><span className="text-[var(--text-tertiary)]">Modalidad:</span> <span className="font-medium text-[var(--interactive)] ml-1">{MODE_LABELS[expediente.mode] || expediente.mode || "—"}</span></div>
         <div><span className="text-[var(--text-tertiary)]">Flete:</span> <span className="font-medium text-[var(--interactive)] ml-1">{expediente.freight_mode || "—"}</span></div>
         <div><span className="text-[var(--text-tertiary)]">Transporte:</span> <span className="font-medium text-[var(--interactive)] ml-1">{expediente.transport_mode || "—"}</span></div>
         <div><span className="text-[var(--text-tertiary)]">Despacho:</span> <span className="font-medium text-[var(--interactive)] ml-1">{expediente.dispatch_mode || "—"}</span></div>
@@ -356,12 +390,30 @@ export default function ExpedienteDetailPage() {
       {/* ─── Main content ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <GateMessage requiredToAdvance={missingReqs} currentState={currentState} />
+          <GateMessage requiredToAdvance={advanceErrors} currentState={currentState} />
+
+          {!canAdvance && advanceErrors.length > 0 && (
+            <div className="card p-4 bg-amber-50 border-amber-200 mb-6 flex items-start gap-4">
+              <div className="p-2 bg-white rounded-lg shadow-sm border border-amber-100 text-amber-600">
+                <Info size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-amber-900 mb-1">Pendiente para avanzar a la siguiente fase</p>
+                <div className="flex flex-wrap gap-2">
+                  {advanceErrors.map((err, i) => (
+                    <span key={i} className="px-2 py-0.5 bg-amber-100/50 text-amber-700 text-[11px] font-medium rounded-full border border-amber-200">
+                      {err}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {canAdvance && (
             <button
-              className="w-full btn btn-primary flex items-center justify-center gap-2 py-3 shadow-sm hover:shadow"
-              onClick={() => setActiveModal(gateCommand)}
+              className="w-full btn btn-primary bg-[var(--interactive)] text-white flex items-center justify-center gap-2 py-3 shadow-md hover:shadow-lg transition-all"
+              onClick={() => setActiveModal({ commandKey: STATE_TO_ADVANCE_COMMAND[currentState]! })}
             >
               Avanzar a la siguiente fase <ArrowRight size={16} />
             </button>
@@ -369,16 +421,95 @@ export default function ExpedienteDetailPage() {
 
           {showC11B && (
             <button
-              className="w-full btn btn-secondary flex items-center justify-center gap-2 py-3 shadow-sm mt-4"
-              style={{ color: "var(--info)", borderColor: "var(--info)" }}
-              onClick={() => setActiveModal("C11B")}
+              className="w-full btn btn-secondary flex items-center justify-center gap-2 py-3 shadow-sm mt-4 text-[var(--info)] border-[var(--info)]"
+              onClick={() => setActiveModal({ commandKey: "C11B" })}
             >
               <Truck size={18} /> Confirmar Salida (China)
             </button>
           )}
 
+          {/* Seccíon de Proformas */}
+          {bundle.product_lines && bundle.product_lines.length > 0 && (
+            <section className="space-y-6 mb-8">
+              <div className="flex items-center justify-between">
+                <h2 className="heading-sm font-semibold flex items-center gap-2 text-[var(--interactive)]">
+                   <Package size={18} /> Proformas y Líneas
+                </h2>
+                {currentState === "REGISTRO" && hasAction("C3") && (
+                  <button 
+                    className="btn btn-sm btn-outline text-[var(--interactive)] border-[var(--interactive)] hover:bg-[var(--interactive)]/5 flex items-center gap-1.5"
+                    onClick={() => setActiveModal({ commandKey: "C3" })}
+                  >
+                    + Crear Proforma
+                  </button>
+                )}
+              </div>
+
+              {(() => {
+                const proformas = (bundle.artifacts || []).filter(a => a.artifact_type === 'ART-02');
+                const orphanLines = (bundle.product_lines || []).filter(l => l.proforma_id === null);
+
+                return (
+                  <>
+                    {proformas.map(pf => (
+                      <ProformaSection
+                        key={pf.id}
+                        proforma={pf}
+                        brandSlug={expediente.brand_slug}
+                        currentState={currentState}
+                        lines={(bundle.product_lines || []).filter(l => l.proforma_id === pf.id)}
+                        childArtifacts={(bundle.artifacts || []).filter(a => a.parent_proforma_id === pf.id)}
+                        availableActions={bundle.available_actions}
+                        onActionClick={(cmd, art) => setActiveModal({ commandKey: cmd, artifact: art })}
+                        hasAction={hasAction}
+                        onReassignLine={(lineId) => setReassignLineId(lineId)}
+                        isEditable={currentState === 'REGISTRO'}
+                      />
+                    ))}
+
+                    {orphanLines.length > 0 && (
+                      <div className="card border-dashed border-2 border-red-200 bg-red-50/10 overflow-hidden">
+                        <div className="px-5 py-4 flex items-center justify-between bg-red-50/20">
+                          <div className="flex items-center gap-2 text-red-700">
+                            <AlertTriangle size={16} />
+                            <span className="font-semibold text-sm">Líneas sin asignar a proforma</span>
+                          </div>
+                          <span className="text-[10px] font-bold text-red-500 uppercase px-2 py-0.5 bg-white border border-red-200 rounded">Acción Requerida</span>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-sm">
+                            <tbody className="divide-y divide-red-100">
+                              {orphanLines.map(line => (
+                                <tr key={line.id} className="hover:bg-red-50/20 transition-colors">
+                                  <td className="px-5 py-3 flex items-center gap-2">
+                                    <Package size={14} className="text-red-400" />
+                                    <span>{line.product_name}</span>
+                                  </td>
+                                  <td className="px-5 py-3 text-red-600 text-xs font-medium">Sin Proforma</td>
+                                  <td className="px-5 py-3 text-right">
+                                    <button 
+                                      className="btn btn-sm btn-ghost text-red-700 hover:bg-red-100"
+                                      onClick={() => setReassignLineId(line.id)}
+                                    >
+                                      Asignar
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </section>
+          )}
+
           <ExpedienteAccordion
             expedienteId={expediente.id}
+            expedienteData={{ ...expediente, artifacts: bundle.artifacts, artifact_policy: bundle.artifact_policy }}
             artifacts={(Array.isArray(bundle.artifacts) ? bundle.artifacts : []).map(a => ({
               artifact_id: a.id,
               artifact_type: a.artifact_type,
@@ -389,6 +520,7 @@ export default function ExpedienteDetailPage() {
             availableActions={bundle.available_actions || { primary: [], secondary: [], ops: [] }}
             onRefresh={() => fetchBundle(true)}
             currentState={currentState}
+            onActionClick={(cmd, artifact) => setActiveModal({ commandKey: cmd, artifact })}
           />
 
           <CostTable expedienteId={expediente.id} />
@@ -430,13 +562,34 @@ export default function ExpedienteDetailPage() {
         </div>
       </div>
 
-      {activeModal && (
+      {activeModal?.commandKey === "C3" ? (
+        <CreateProformaModal
+          open={true}
+          expedienteId={id}
+          brandSlug={bundle.expediente.brand_slug}
+          orphanLines={(bundle.product_lines || []).filter(l => l.proforma_id === null)}
+          onClose={() => setActiveModal(null)}
+          onRefresh={() => fetchBundle(true)}
+        />
+      ) : activeModal && (
         <ArtifactModal
           open={true}
           expedienteId={expediente.id}
-          commandKey={activeModal}
+          commandKey={activeModal.commandKey}
+          artifact={activeModal.artifact}
           onClose={() => setActiveModal(null)}
           onSuccess={() => { setActiveModal(null); fetchBundle(true); }}
+        />
+      )}
+
+      {reassignLineId && (
+        <ReassignLineModal
+          open={true}
+          expedienteId={expediente.id}
+          lineId={reassignLineId}
+          proformas={(bundle.artifacts || []).filter(a => a.artifact_type === 'ART-02')}
+          onClose={() => setReassignLineId(null)}
+          onSuccess={() => { setReassignLineId(null); fetchBundle(true); }}
         />
       )}
     </div>

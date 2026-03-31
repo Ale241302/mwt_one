@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import UrlField from "@/components/UrlField";
 import { useOperadoPor, OperadoPor } from "@/hooks/useOperadoPor";
 import FactoryOrderTable, { FactoryOrder } from "@/components/expediente/FactoryOrderTable";
+import { ARTIFACT_UI_REGISTRY } from "@/constants/artifact-ui-registry";
 
 // State machine FROZEN v1.2.2 — never add states here
 const READONLY_STATES = ["PI_SOLICITADA", "EN_DESTINO", "CERRADO", "CANCELADO"];
@@ -158,7 +159,7 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {renderField("N\u00b0 Referencia", "ref_number")}
-            {renderField("N\u00b0 Orden de Compra", "purchase_order_number")}
+            {renderField(`N\u00ba ${ARTIFACT_UI_REGISTRY["ART-01"].label}`, "purchase_order_number")}
             {renderField("Cliente", "client")}
             <div className={rowCls}>
               <label className={labelCls}>Operado por</label>
@@ -175,7 +176,7 @@ export default function EstadoSection({ expediente, onRefresh }: Props) {
             {renderField("D\u00edas cr\u00e9dito", "credit_days", "number")}
             {renderField("L\u00edmite cr\u00e9dito", "credit_limit", "number")}
             {renderField("Valor orden", "order_value", "number")}
-            {renderUrlField("Orden de Compra (URL)", "url_orden_compra")}
+            {renderUrlField(`${ARTIFACT_UI_REGISTRY["ART-01"].label} (URL)`, "url_orden_compra")}
           </div>
         );
 

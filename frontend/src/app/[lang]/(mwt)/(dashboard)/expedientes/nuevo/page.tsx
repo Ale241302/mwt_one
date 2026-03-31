@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import { ArrowLeft, Plus, X } from "lucide-react";
+import { ARTIFACT_UI_REGISTRY } from "@/constants/artifact-ui-registry";
 
 interface ClienteOption {
   id: number;
@@ -291,9 +292,9 @@ export default function NuevoExpedientePage() {
             </select>
           </div>
 
-          {/* N\u00b0 Orden de Compra */}
+          {/* N\u00ba Artifact ART-01 */}
           <div>
-            <label className={labelCls}>Orden de Compra <span className="text-[var(--color-text-tertiary)] font-normal">(opcional)</span></label>
+            <label className={labelCls}>{ARTIFACT_UI_REGISTRY["ART-01"].label} <span className="text-[var(--color-text-tertiary)] font-normal">(opcional)</span></label>
             <input type="text" name="purchase_order_number" value={form.purchase_order_number} onChange={handleChange} placeholder="PO-2026-XXXX" className={inputCls} />
           </div>
 

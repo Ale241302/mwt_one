@@ -18,7 +18,7 @@ class ProductLineSerializer(serializers.ModelSerializer):
             'quantity', 'unit_price', 'price_source',
             'pricelist_used', 'base_price',
             'quantity_modified', 'unit_price_modified', 'modification_reason',
-            'factory_order', 'created_at', 'updated_at',
+            'factory_order', 'created_at', 'updated_at', 'proforma',
         ]
         read_only_fields = ['size_display', 'pricelist_used', 'base_price']
 

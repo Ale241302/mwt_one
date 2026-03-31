@@ -8,6 +8,7 @@ interface ArtifactModalProps {
   open: boolean;
   expedienteId: string;
   commandKey: string;
+  artifact?: any;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -38,8 +39,11 @@ const COMMAND_META: Record<string, { label: string; endpoint: string; icon: Reac
 
 type FormData = Record<string, string | number | boolean>;
 
-function CommandForm({ commandKey, form, setForm }: { commandKey: string; form: FormData; setForm: (f: FormData) => void }) {
-  const set = (k: string, v: string | number | boolean) => setForm({ ...form, [k]: v });
+function CommandForm({ commandKey, form, setForm, isReadOnly }: { commandKey: string; form: FormData; setForm: (f: FormData) => void; isReadOnly?: boolean }) {
+  const set = (k: string, v: string | number | boolean) => {
+    if (isReadOnly) return;
+    setForm({ ...form, [k]: v });
+  };
   const inp = (label: string, key: string, type: string = "text", placeholder: string = "") => (
     <div key={key}>
       <label className="th-label block mb-1">{label}</label>
@@ -47,6 +51,7 @@ function CommandForm({ commandKey, form, setForm }: { commandKey: string; form: 
         type={type} className="input w-full" placeholder={placeholder}
         value={String(form[key] ?? "")}
         onChange={(e) => set(key, type === "number" ? Number(e.target.value) : e.target.value)}
+        disabled={isReadOnly}
       />
     </div>
   );
@@ -58,7 +63,7 @@ function CommandForm({ commandKey, form, setForm }: { commandKey: string; form: 
       <div className="space-y-3">
         <div>
           <label className="th-label block mb-1">Modo logístico</label>
-          <select className="input w-full" value={String(form.mode ?? "maritime")} onChange={(e) => set("mode", e.target.value)}>
+          <select className="input w-full" value={String(form.mode ?? "maritime")} onChange={(e) => set("mode", e.target.value)} disabled={isReadOnly}>
             <option value="maritime">Marítimo</option>
             <option value="air">Aéreo</option>
             <option value="land">Terrestre</option>
@@ -86,7 +91,7 @@ function CommandForm({ commandKey, form, setForm }: { commandKey: string; form: 
         {inp("Divisa", "currency", "text", "USD")}
         <div>
           <label className="th-label block mb-1">Visibilidad</label>
-          <select className="input w-full" value={String(form.visibility ?? "internal")} onChange={(e) => set("visibility", e.target.value)}>
+          <select className="input w-full" value={String(form.visibility ?? "internal")} onChange={(e) => set("visibility", e.target.value)} disabled={isReadOnly}>
             <option value="internal">Interna</option>
             <option value="client">Cliente</option>
           </select>
@@ -101,7 +106,7 @@ function CommandForm({ commandKey, form, setForm }: { commandKey: string; form: 
         {inp("Monto (USD)", "amount", "number", "0")}
         <div>
           <label className="th-label block mb-1">Método de pago</label>
-          <select className="input w-full" value={String(form.method ?? "wire")} onChange={(e) => set("method", e.target.value)}>
+          <select className="input w-full" value={String(form.method ?? "wire")} onChange={(e) => set("method", e.target.value)} disabled={isReadOnly}>
             <option value="wire">Wire transfer</option>
             <option value="check">Cheque</option>
             <option value="cash">Efectivo</option>
@@ -128,8 +133,8 @@ function CommandForm({ commandKey, form, setForm }: { commandKey: string; form: 
   }
 }
 
-export default function ArtifactModal({ open, expedienteId, commandKey, onClose, onSuccess }: ArtifactModalProps) {
-  const [form, setForm] = useState<FormData>({});
+export default function ArtifactModal({ open, expedienteId, commandKey, artifact, onClose, onSuccess }: ArtifactModalProps) {
+  const [form, setForm] = useState<FormData>(artifact?.payload || {});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -169,19 +174,23 @@ export default function ArtifactModal({ open, expedienteId, commandKey, onClose,
     </div>
   );
 
+  const isReadOnly = !!artifact;
+
   // Define footer explicitly for FormModal
   const footerContent = (
     <>
       <button className="btn btn-md btn-secondary" onClick={onClose} disabled={loading}>
-        Cancelar
+        {isReadOnly ? "Cerrar" : "Cancelar"}
       </button>
-      <button
-        className={`btn btn-md text-white ${meta.bgClass}`}
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? "Ejecutando..." : meta.label}
-      </button>
+      {!isReadOnly && (
+        <button
+          className={`btn btn-md text-white ${meta.bgClass}`}
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? "Ejecutando..." : meta.label}
+        </button>
+      )}
     </>
   );
 
@@ -202,7 +211,7 @@ export default function ArtifactModal({ open, expedienteId, commandKey, onClose,
           {error}
         </div>
       )}
-      <CommandForm commandKey={commandKey} form={form} setForm={setForm} />
+      <CommandForm commandKey={commandKey} form={form} setForm={setForm} isReadOnly={isReadOnly} />
     </FormModal>
   );
 }
