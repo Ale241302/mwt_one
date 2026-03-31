@@ -2,6 +2,7 @@
 /**
  * S10-03 — Detalle Expediente con acordeón de artefactos.
  * S19-12 — Barrido hex: todos los colores reemplazados por CSS vars.
+ * S21    — isAdmin desde bundle.is_admin (is_superuser Django) → panel admin.
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -83,9 +84,10 @@ interface ExpedienteBundle {
   costs: any[];
   payments: any[];
   documents: any[];
+  /** Viene del backend: True si el usuario autenticado es is_superuser */
+  is_admin?: boolean;
 }
 
-// S19-12: reemplazados todos los hex por CSS vars del design system
 const CREDIT_BAND_CLASSES = {
   MINT: "bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]",
   AMBER: "bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning)]",
@@ -166,6 +168,8 @@ export default function ExpedienteDetailPage() {
   }
 
   const { expediente } = bundle;
+  // is_admin viene del backend (is_superuser del usuario autenticado)
+  const isAdmin = bundle.is_admin === true;
   const creditCls = CREDIT_BAND_CLASSES[bundle.credit_clock?.band ?? "MINT"];
   const currentState = expediente.status === "ABIERTO" ? "REGISTRO" : expediente.status;
 
@@ -183,7 +187,6 @@ export default function ExpedienteDetailPage() {
   const calculateAdvanceValidation = () => {
     if (currentState === "CERRADO" || currentState === "CANCELADO") return { canAdvance: false, errors: [] };
     
-    // 1. Validar política de artefactos (Gate for Advance)
     const currentPolicy = bundle.artifact_policy?.[currentState];
     const errors: string[] = [];
     
@@ -203,7 +206,6 @@ export default function ExpedienteDetailPage() {
       });
     }
 
-    // 2. Validaciones especiales para REGISTRO
     if (currentState === "REGISTRO") {
       const orphanLines = (bundle.product_lines || []).filter((l: any) => l.proforma_id === null);
       if (orphanLines.length > 0) {
@@ -254,13 +256,18 @@ export default function ExpedienteDetailPage() {
                   <Lock size={10} /> BLOQUEADO
                 </span>
               )}
+              {/* Badge admin visible */}
+              {isAdmin && (
+                <span className="badge text-[10px] bg-amber-100 text-amber-700 border border-amber-300 px-2 py-0.5">
+                  👑 ADMIN
+                </span>
+              )}
             </div>
             <p className="page-subtitle">{expediente.client_name || "Sin Cliente"} · {expediente.brand_name || "Sin Marca"}</p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Toggle Interna/Cliente */}
           <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--bg-alt)] border border-[var(--border)]">
             <button
               onClick={() => setViewMode('internal')}
@@ -428,7 +435,6 @@ export default function ExpedienteDetailPage() {
             </button>
           )}
 
-          {/* Seccíon de Proformas */}
           {bundle.product_lines && bundle.product_lines.length > 0 && (
             <section className="space-y-6 mb-8">
               <div className="flex items-center justify-between">
@@ -521,6 +527,7 @@ export default function ExpedienteDetailPage() {
             onRefresh={() => fetchBundle(true)}
             currentState={currentState}
             onActionClick={(cmd, artifact) => setActiveModal({ commandKey: cmd, artifact })}
+            isAdmin={isAdmin}
           />
 
           <CostTable expedienteId={expediente.id} />
@@ -552,6 +559,15 @@ export default function ExpedienteDetailPage() {
                         <p className="text-xs text-[var(--text-secondary)] truncate pr-2" title={ev.emitted_by}>
                           Ref: {ev.emitted_by}
                         </p>
+                        {/* Payload del evento cuando existe */}
+                        {ev.payload && Object.keys(ev.payload).length > 0 && (
+                          <details className="mt-1">
+                            <summary className="text-[10px] text-[var(--text-tertiary)] cursor-pointer hover:text-[var(--text-secondary)]">Ver payload</summary>
+                            <pre className="mt-1 text-[9px] bg-[var(--bg-alt)] rounded p-2 overflow-x-auto text-[var(--text-tertiary)] whitespace-pre-wrap break-all">
+                              {JSON.stringify(ev.payload, null, 2)}
+                            </pre>
+                          </details>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -579,6 +595,7 @@ export default function ExpedienteDetailPage() {
           artifact={activeModal.artifact}
           onClose={() => setActiveModal(null)}
           onSuccess={() => { setActiveModal(null); fetchBundle(true); }}
+          isAdmin={isAdmin}
         />
       )}
 

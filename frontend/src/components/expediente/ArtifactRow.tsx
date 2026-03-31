@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { CheckCircle, Clock, XCircle, AlertCircle, Play, Lock, PlusCircle } from "lucide-react";
+import { CheckCircle, Clock, XCircle, AlertCircle, Play, Lock, PlusCircle, Trash2 } from "lucide-react";
 
 interface ArtifactRowProps {
   artifactType: string;
@@ -16,9 +16,12 @@ interface ArtifactRowProps {
   onExecute: (cmd: string, artifact?: any) => void;
   blockReason?: string;
   isAdmin?: boolean;
+  /** Solo admin: callback para quitar este tipo de artefacto de la policy */
+  onRemoveArtifactType?: (artifactType: string) => void;
 }
 
 export default function ArtifactRow({
+  artifactType,
   commandKey,
   label,
   artifact,
@@ -27,12 +30,20 @@ export default function ArtifactRow({
   onExecute,
   blockReason,
   isAdmin,
+  onRemoveArtifactType,
 }: ArtifactRowProps) {
   const isCompleted = artifact?.status === "completed" || artifact?.status === "COMPLETED";
   const isVoided = artifact?.status === "voided" || artifact?.status === "VOIDED";
 
-  // Historial completo de este tipo de artefacto (para mostrar debajo)
-  const history = allArtifacts ?? (artifact ? [artifact] : []);
+  // Historial completo de este tipo de artefacto ordenado por fecha desc
+  const history = allArtifacts && allArtifacts.length > 0
+    ? allArtifacts
+    : artifact
+    ? [artifact]
+    : [];
+
+  // Admin puede crear nuevo registro aunque el backend no lo marque como disponible
+  const canCreateNew = isCompleted && (isAvailable || isAdmin);
 
   return (
     <div className="flex flex-col">
@@ -77,7 +88,7 @@ export default function ArtifactRow({
         </div>
 
         <div className="shrink-0 flex items-center gap-2">
-          {/* Siempre mostrar "Ver detalle" si hay un artefacto registrado */}
+          {/* Ver detalle del registro más reciente */}
           {artifact && (
             <button
               className="btn btn-sm btn-ghost border border-[var(--border)] text-[var(--text-secondary)]"
@@ -87,8 +98,8 @@ export default function ArtifactRow({
             </button>
           )}
 
-          {/* Mostrar "Nuevo registro" cuando ya existe uno Y la acción está disponible */}
-          {isCompleted && isAvailable && (
+          {/* Nuevo registro: disponible cuando está completado y (hay acción ó es admin) */}
+          {canCreateNew && (
             <button
               className="btn btn-sm btn-primary flex items-center gap-1"
               onClick={() => onExecute(commandKey, undefined)}
@@ -98,10 +109,10 @@ export default function ArtifactRow({
             </button>
           )}
 
-          {/* Mostrar "Registrar" cuando NO hay artefacto aún */}
+          {/* Registrar por primera vez */}
           {!artifact && !isVoided && isAvailable && (
             <button
-              className="btn btn-sm btn-primary"
+              className="btn btn-sm btn-primary flex items-center gap-1"
               onClick={() => onExecute(commandKey, undefined)}
               aria-label={`Ejecutar ${commandKey}`}
             >
@@ -109,8 +120,19 @@ export default function ArtifactRow({
             </button>
           )}
 
-          {/* Registrar deshabilitado si no hay acción disponible y tampoco artefacto */}
-          {!artifact && !isVoided && !isAvailable && (
+          {/* Admin puede registrar aunque no esté disponible en el backend */}
+          {!artifact && !isVoided && !isAvailable && isAdmin && (
+            <button
+              className="btn btn-sm btn-ghost border border-dashed border-amber-400 text-amber-600 flex items-center gap-1"
+              onClick={() => onExecute(commandKey, undefined)}
+              title="Admin: forzar registro"
+            >
+              <Play size={12} /> Registrar (admin)
+            </button>
+          )}
+
+          {/* Sin acción disponible ni admin */}
+          {!artifact && !isVoided && !isAvailable && !isAdmin && (
             <button
               className="btn btn-sm btn-ghost opacity-50 cursor-not-allowed"
               disabled
@@ -118,10 +140,21 @@ export default function ArtifactRow({
               <Play size={12} /> Registrar
             </button>
           )}
+
+          {/* Admin: quitar tipo de artefacto */}
+          {isAdmin && onRemoveArtifactType && (
+            <button
+              className="btn btn-sm btn-ghost text-red-400 hover:text-red-600 hover:bg-red-50"
+              onClick={() => onRemoveArtifactType(artifactType)}
+              title="Admin: quitar artefacto de esta fase"
+            >
+              <Trash2 size={12} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Historial de registros anteriores (más de uno del mismo tipo) */}
+      {/* Historial completo cuando hay más de un registro del mismo tipo */}
       {history.length > 1 && (
         <div className="mx-5 mb-3 border border-divider rounded-lg overflow-hidden">
           <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider px-3 py-1.5 bg-bg border-b border-divider">

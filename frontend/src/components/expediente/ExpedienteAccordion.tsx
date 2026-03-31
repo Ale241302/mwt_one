@@ -1,11 +1,10 @@
 "use client";
 /**
  * S10-03 / S20B — Detalle expediente con acordeón de artefactos y estados canónicos.
- * Fix: el modal SIEMPRE se gestiona internamente; onActionClick solo se propaga en onSuccess.
- * Fix: OC y cualquier registro refresca el historial correctamente al cerrar el modal.
+ * S21   — Admin panel: avanzar/retroceder estado + agregar/quitar artefactos (solo is_superuser).
  */
 import { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronRight as ArrowRight, ArrowLeft, Plus, AlertTriangle } from "lucide-react";
 import ArtifactModal from "./ArtifactModal";
 import ArtifactRow from "./ArtifactRow";
 import ArtifactSection from "./ArtifactSection";
@@ -16,6 +15,8 @@ import {
   LEGACY_ARTIFACT_COMMAND_MAP,
   LEGACY_ARTIFACT_LABELS,
 } from "@/app/[lang]/(mwt)/(dashboard)/expedientes/[id]/legacy-artifacts";
+import api from "@/lib/api";
+import toast from "react-hot-toast";
 
 interface Artifact {
   artifact_type: string;
@@ -34,7 +35,7 @@ interface ExpedienteAccordionProps {
   onRefresh: () => void;
   currentState: string;
   onActionClick?: (commandKey: string, artifact?: any) => void;
-  /** Si el usuario autenticado es admin/staff — habilita acciones extras */
+  /** Si el usuario autenticado es is_superuser de Django */
   isAdmin?: boolean;
 }
 
@@ -65,17 +66,9 @@ export default function ExpedienteAccordion({
   const toggle = (label: string) =>
     setOpenPhases((prev) => ({ ...prev, [label]: !prev[label] }));
 
-  // ── Modal interno — SIEMPRE se gestiona aquí, independiente de onActionClick ──
-  // activeModal = { commandKey, artifact? }
-  // artifact = undefined → modo creación
-  // artifact = objeto   → modo "Ver detalle" (readOnly)
+  // ── Modal interno ─────────────────────────────────────────────────────────
   const [activeModal, setActiveModal] = useState<{ commandKey: string; artifact?: any } | null>(null);
 
-  /**
-   * Manejador unificado: se llama desde ArtifactSection / ArtifactRow.
-   * Siempre abre el modal interno para que el formulario sea visible.
-   * onActionClick del padre se invoca SOLO en onSuccess (tras guardar).
-   */
   const handleExecute = (commandKey: string, artifact?: any) => {
     setActiveModal({ commandKey, artifact });
   };
@@ -83,9 +76,67 @@ export default function ExpedienteAccordion({
   const handleSuccess = () => {
     setActiveModal(null);
     onRefresh();
-    // Notificar al padre DESPUÉS de guardar exitosamente
     if (onActionClick && activeModal) {
       onActionClick(activeModal.commandKey, activeModal.artifact);
+    }
+  };
+
+  // ── Admin: avanzar / retroceder estado ────────────────────────────────────
+  const [stateLoading, setStateLoading] = useState<"advance" | "revert" | null>(null);
+
+  const advanceState = async () => {
+    if (!window.confirm("¿Confirmas avanzar el expediente al siguiente estado?")) return;
+    setStateLoading("advance");
+    try {
+      await api.post(`/expedientes/${expedienteId}/admin/advance-state/`, {});
+      toast.success("Estado avanzado correctamente");
+      onRefresh();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail ?? "Error al avanzar estado");
+    } finally {
+      setStateLoading(null);
+    }
+  };
+
+  const revertState = async () => {
+    if (!window.confirm("¿Confirmas retroceder el expediente al estado anterior? Esta acción puede revertir artefactos.")) return;
+    setStateLoading("revert");
+    try {
+      await api.post(`/expedientes/${expedienteId}/admin/revert-state/`, {});
+      toast.success("Estado revertido correctamente");
+      onRefresh();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail ?? "Error al revertir estado");
+    } finally {
+      setStateLoading(null);
+    }
+  };
+
+  // ── Admin: agregar / quitar tipos de artefactos en el policy ──────────────
+  const addArtifactType = async (stateName: string, artifactType: string) => {
+    try {
+      await api.post(`/expedientes/${expedienteId}/admin/policy/add-artifact/`, {
+        state: stateName,
+        artifact_type: artifactType,
+      });
+      toast.success(`Artefacto ${artifactType} agregado a ${stateName}`);
+      onRefresh();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail ?? "Error al agregar artefacto");
+    }
+  };
+
+  const removeArtifactType = async (stateName: string, artifactType: string) => {
+    if (!window.confirm(`¿Quitar el artefacto ${artifactType} de la fase ${stateName}?`)) return;
+    try {
+      await api.post(`/expedientes/${expedienteId}/admin/policy/remove-artifact/`, {
+        state: stateName,
+        artifact_type: artifactType,
+      });
+      toast.success(`Artefacto ${artifactType} removido de ${stateName}`);
+      onRefresh();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail ?? "Error al remover artefacto");
     }
   };
 
@@ -98,6 +149,58 @@ export default function ExpedienteAccordion({
 
   return (
     <div className="space-y-3">
+      {/* ── Panel Admin — solo visible para is_superuser ──────────────────── */}
+      {isAdmin && (
+        <div className="card border border-amber-200 bg-amber-50/40 overflow-hidden">
+          <div className="px-5 py-3 border-b border-amber-200 flex items-center gap-2">
+            <AlertTriangle size={14} className="text-amber-600" />
+            <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">Panel Admin — Solo superusuarios</span>
+          </div>
+          <div className="px-5 py-4 flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-amber-700 font-medium">Estado actual:</span>
+              <span className="font-mono text-xs font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded">
+                {currentState}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                className="btn btn-sm flex items-center gap-1.5 border border-amber-400 text-amber-700 bg-white hover:bg-amber-50 disabled:opacity-50"
+                onClick={revertState}
+                disabled={stateLoading !== null || currentState === CANONICAL_STATES[0]}
+                title="Retroceder al estado anterior"
+              >
+                {stateLoading === "revert" ? (
+                  <span className="w-3.5 h-3.5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ArrowLeft size={13} />
+                )}
+                Retroceder
+              </button>
+              <button
+                className="btn btn-sm flex items-center gap-1.5 border border-amber-500 text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
+                onClick={advanceState}
+                disabled={
+                  stateLoading !== null ||
+                  currentState === CANONICAL_STATES[CANONICAL_STATES.length - 1]
+                }
+                title="Avanzar al siguiente estado"
+              >
+                {stateLoading === "advance" ? (
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ArrowRight size={13} />
+                )}
+                Avanzar
+              </button>
+            </div>
+          </div>
+          <p className="px-5 pb-3 text-[10px] text-amber-600 italic">
+            Los botones avanzar/retroceder llaman a endpoints de admin en el backend. Úsalos con precaución.
+          </p>
+        </div>
+      )}
+
       {statesToRender.map((stateName) => {
         const stateIdx = CANONICAL_STATES.indexOf(stateName as any);
 
@@ -117,9 +220,9 @@ export default function ExpedienteAccordion({
           );
           const completedCount = phaseArtifacts.filter((a) => a.status === "completed").length;
           const commandsInState = stateArtifactTypes
-            .map((type) => LEGACY_ARTIFACT_COMMAND_MAP[type])
+            .map((type: string) => LEGACY_ARTIFACT_COMMAND_MAP[type])
             .filter(Boolean);
-          const hasAvailable = commandsInState.some((cmd) => hasAction(cmd));
+          const hasAvailable = commandsInState.some((cmd: string) => hasAction(cmd));
 
           return (
             <div key={stateName} className="card overflow-hidden">
@@ -142,7 +245,7 @@ export default function ExpedienteAccordion({
 
               {isOpen && stateArtifactTypes.length > 0 && (
                 <div className="border-t border-divider divide-y divide-divider">
-                  {stateArtifactTypes.map((artType) => {
+                  {stateArtifactTypes.map((artType: string) => {
                     const cmdKey = LEGACY_ARTIFACT_COMMAND_MAP[artType];
                     if (!cmdKey) return null;
 
@@ -223,6 +326,16 @@ export default function ExpedienteAccordion({
                   onExecute={handleExecute}
                   hasAction={hasAction}
                   isAdmin={isAdmin}
+                  onAddArtifactType={
+                    isAdmin
+                      ? (artType) => addArtifactType(stateName, artType)
+                      : undefined
+                  }
+                  onRemoveArtifactType={
+                    isAdmin
+                      ? (artType) => removeArtifactType(stateName, artType)
+                      : undefined
+                  }
                 />
               </div>
             )}
@@ -230,7 +343,7 @@ export default function ExpedienteAccordion({
         );
       })}
 
-      {/* ── Modal unificado — siempre montado aquí ───────────────────────── */}
+      {/* ── Modal unificado ───────────────────────────────────────────────── */}
       {activeModal && (
         <ArtifactModal
           open={true}
@@ -240,6 +353,12 @@ export default function ExpedienteAccordion({
           readOnly={activeModal.artifact !== undefined}
           onClose={() => setActiveModal(null)}
           onSuccess={handleSuccess}
+          isAdmin={isAdmin}
+          onNewRecord={
+            activeModal.artifact !== undefined
+              ? () => setActiveModal({ commandKey: activeModal.commandKey, artifact: undefined })
+              : undefined
+          }
         />
       )}
     </div>
