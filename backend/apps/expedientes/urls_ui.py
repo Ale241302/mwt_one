@@ -1,13 +1,16 @@
 """
 Sprint 3-4 – UI URL Configuration for /api/ui/expedientes/
 S20-07: Agrega endpoint POST para crear proformas (ART-02)
+
+FIX-2026-03-31: Se ELIMINÓ la ruta 'dashboard/financial/' de aquí.
+Ahora vive en config/urls.py como /api/ui/dashboard/financial/
+para que el frontend la encuentre en la URL correcta.
 """
 from django.urls import path
 from apps.expedientes.views import (
     ListExpedientesView,
     ExpedienteBundleView,
     DocumentDownloadView,
-    FinancialDashboardView,
     LegalEntitiesListView,
 )
 from apps.expedientes.views_s20 import ProformaCreateView
@@ -27,7 +30,4 @@ urlpatterns = [
 
     # Legal Entities para formularios UI (e.g. Nuevo Expediente)
     path('legal-entities/', LegalEntitiesListView.as_view(), name='legal-entities'),
-
-    # S4-11: Financial Dashboard — GET /api/ui/expedientes/dashboard/financial/
-    path('dashboard/financial/', FinancialDashboardView.as_view(), name='financial-dashboard'),
 ]

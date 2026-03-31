@@ -1,6 +1,10 @@
 # S20-05 — ArtifactPolicy engine
 # Fuente única de verdad para modos permitidos y políticas de artefactos por brand.
 # NO duplicar BRAND_ALLOWED_MODES en ningún otro archivo; importar siempre desde aquí.
+#
+# FIX-2026-03-31:
+#   - brand es ForeignKey a brands.Brand (no tiene .slug). Se usa brand.name.lower().
+#   - status filter corregido de 'COMPLETED' a 'completed' (lowercase según ArtifactStatusEnum).
 
 from __future__ import annotations
 
@@ -178,6 +182,27 @@ GENERIC_REGISTRO: dict = {
 }
 
 
+def _get_brand_slug(expediente) -> str:
+    """
+    FIX-2026-03-31: brand es ForeignKey a brands.Brand.
+    Brand NO tiene .slug — se normaliza brand.name a lowercase con guion bajo.
+    Ejemplos: 'Marluvas' -> 'marluvas', 'Rana Walk' -> 'rana_walk'.
+    Si el brand no existe o falla, retorna string vacío.
+    """
+    try:
+        brand_obj = expediente.brand
+        if brand_obj is None:
+            return ''
+        # Intenta .slug si existe (por si se agrega en el futuro)
+        if hasattr(brand_obj, 'slug') and brand_obj.slug:
+            return brand_obj.slug.lower()
+        # Normalización desde .name
+        name = getattr(brand_obj, 'name', '') or ''
+        return name.lower().replace(' ', '_').replace('-', '_')
+    except Exception:
+        return ''
+
+
 # ---------------------------------------------------------------------------
 # 4. resolve_artifact_policy(expediente) → dict JSON-serializable
 # ---------------------------------------------------------------------------
@@ -192,23 +217,22 @@ def resolve_artifact_policy(expediente) -> dict:
       - required gana sobre optional
       - gate_for_advance siempre ⊆ required
     - Output siempre JSON-serializable (listas, no sets)
+
+    FIX-2026-03-31:
+    - brand_slug se obtiene via _get_brand_slug() (brand.name.lower(), no .slug)
+    - status filter usa 'completed' lowercase (ArtifactStatusEnum almacena lowercase)
     """
     from apps.expedientes.models import ArtifactInstance  # import local para evitar circular
 
-    brand_slug: str = ''
-    try:
-        brand_slug = expediente.brand.slug
-    except Exception:
-        pass
-
+    brand_slug: str = _get_brand_slug(expediente)
     brand_policy = ARTIFACT_POLICY.get(brand_slug, {})
 
-    # Proformas completadas del expediente
+    # FIX: ArtifactStatusEnum almacena 'completed' en lowercase, NO 'COMPLETED'
     proformas = list(
         ArtifactInstance.objects.filter(
             expediente=expediente,
             artifact_type='ART-02',
-            status='COMPLETED',
+            status='completed',
         ).values('payload')
     )
 

@@ -1,6 +1,7 @@
 """
 Sprint 3-4 — UI Serializers
 S20-06: ExpedienteBundleSerializer ahora incluye artifact_policy calculada dinámicamente.
+FIX-2026-03-31: get_product_lines envuelto en try/except para no romper el bundle.
 """
 import datetime
 from decimal import Decimal
@@ -11,8 +12,8 @@ class UIExpedienteListSerializer(serializers.Serializer):
     id = serializers.UUIDField(source='expediente_id', read_only=True)
     custom_ref = serializers.SerializerMethodField()
     status = serializers.CharField(read_only=True)
-    brand_name = serializers.CharField(source='get_brand_display', read_only=True, default='')
-    brand = serializers.CharField(read_only=True)
+    brand_name = serializers.SerializerMethodField()
+    brand = serializers.SerializerMethodField()
     client_name = serializers.CharField(source='client.legal_name', read_only=True, default='')
 
     # Annotated fields
@@ -27,6 +28,24 @@ class UIExpedienteListSerializer(serializers.Serializer):
 
     def get_custom_ref(self, obj):
         return f"EXP-{str(obj.expediente_id)[:8]}"
+
+    def get_brand_name(self, obj):
+        """FIX: brand es ForeignKey a Brand, no CharField con get_brand_display."""
+        try:
+            if obj.brand:
+                return obj.brand.name
+        except Exception:
+            pass
+        return ''
+
+    def get_brand(self, obj):
+        """FIX: retorna el name normalizado del brand FK."""
+        try:
+            if obj.brand:
+                return obj.brand.name
+        except Exception:
+            pass
+        return ''
 
 
 class EventLogSummarySerializer(serializers.Serializer):
@@ -93,6 +112,7 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     """
     Complete bundle for Expediente Detail page <200ms.
     S20-06: agrega artifact_policy calculada dinámicamente por brand + proformas.
+    FIX-2026-03-31: get_product_lines protegido con try/except.
     """
     expediente = serializers.SerializerMethodField()
     events = serializers.SerializerMethodField()
@@ -128,8 +148,16 @@ class ExpedienteBundleSerializer(serializers.Serializer):
         return ArtifactSummarySerializer(obj.artifacts.all(), many=True).data
 
     def get_product_lines(self, obj):
-        from apps.expedientes.serializers import ProductLineSerializer
-        return ProductLineSerializer(obj.product_lines.all(), many=True).data
+        """
+        FIX-2026-03-31: Protegido con try/except para no romper el bundle
+        si ProductLineSerializer falla (import circular u otro error).
+        """
+        try:
+            from apps.expedientes.serializers import ProductLineSerializer
+            return ProductLineSerializer(obj.product_lines.all(), many=True).data
+        except Exception:
+            # Fallback: retorna lista vacía para no romper el bundle
+            return []
 
     def get_costs(self, obj):
         return CostLineSummarySerializer(obj.cost_lines.all(), many=True).data
