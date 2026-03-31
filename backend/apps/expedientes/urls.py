@@ -4,6 +4,7 @@ Ref: LOTE_SM_SPRINT1 Item 7
 Sprint 12: Unified Command Dispatching
 Sprint 17: Portal endpoints added (S17-04)
 Sprint 20: S20-11 ProformaCreateView, S20-10 ProformaModeChangeView
+Sprint 20+: Alias /commands/ para compatibilidad con frontend
 """
 from django.urls import path
 from apps.expedientes.views import (
@@ -110,4 +111,34 @@ urlpatterns = [
     path('portal/', PortalExpedienteListView.as_view(), name='portal-list'),
     path('portal/<uuid:pk>/', PortalExpedienteDetailView.as_view(), name='portal-detail'),
     path('portal/<uuid:pk>/artifacts/', PortalExpedienteArtifactsView.as_view(), name='portal-artifacts'),
+
+    # ── Alias /commands/ — compatibilidad con frontend Sprint 20+ ──
+    path('<uuid:pk>/commands/register-oc/', CommandDispatchView.as_view(), {'cmd_id': 'C2'}, name='commands-register-oc'),
+    path('<uuid:pk>/commands/register-proforma/', CommandDispatchView.as_view(), {'cmd_id': 'C3'}, name='commands-register-proforma'),
+    path('<uuid:pk>/commands/decide-mode/', CommandDispatchView.as_view(), {'cmd_id': 'C4'}, name='commands-decide-mode'),
+    path('<uuid:pk>/commands/confirm-sap/', CommandDispatchView.as_view(), {'cmd_id': 'C5'}, name='commands-confirm-sap'),
+    path('<uuid:pk>/commands/confirm-production/', CommandDispatchView.as_view(), {'cmd_id': 'C6'}, name='commands-confirm-production'),
+    path('<uuid:pk>/commands/register-shipment/', CommandDispatchView.as_view(), {'cmd_id': 'C7'}, name='commands-register-shipment'),
+    path('<uuid:pk>/commands/register-freight-quote/', CommandDispatchView.as_view(), {'cmd_id': 'C8'}, name='commands-register-freight-quote'),
+    path('<uuid:pk>/commands/register-customs/', CommandDispatchView.as_view(), {'cmd_id': 'C9'}, name='commands-register-customs'),
+    path('<uuid:pk>/commands/approve-dispatch/', CommandDispatchView.as_view(), {'cmd_id': 'C10'}, name='commands-approve-dispatch'),
+    path('<uuid:pk>/commands/confirm-departure/', CommandDispatchView.as_view(), {'cmd_id': 'C11B'}, name='commands-confirm-departure-china'),
+    path('<uuid:pk>/commands/confirm-departure-mwt/', CommandDispatchView.as_view(), {'cmd_id': 'C11'}, name='commands-confirm-departure'),
+    path('<uuid:pk>/commands/confirm-arrival/', CommandDispatchView.as_view(), {'cmd_id': 'C12'}, name='commands-confirm-arrival'),
+    path('<uuid:pk>/commands/issue-invoice/', CommandDispatchView.as_view(), {'cmd_id': 'C13'}, name='commands-issue-invoice'),
+    path('<uuid:pk>/commands/close/', CommandDispatchView.as_view(), {'cmd_id': 'C14'}, name='commands-close'),
+    path('<uuid:pk>/commands/register-cost/', CommandDispatchView.as_view(), {'cmd_id': 'C15'}, name='commands-register-cost'),
+    path('<uuid:pk>/commands/cancel/', CommandDispatchView.as_view(), {'cmd_id': 'C16'}, name='commands-cancel'),
+    path('<uuid:pk>/commands/block/', CommandDispatchView.as_view(), {'cmd_id': 'C17'}, name='commands-block'),
+    path('<uuid:pk>/commands/unblock/', CommandDispatchView.as_view(), {'cmd_id': 'C18'}, name='commands-unblock'),
+    path('<uuid:pk>/commands/supersede-artifact/', CommandDispatchView.as_view(), {'cmd_id': 'C19'}, name='commands-supersede-artifact'),
+    path('<uuid:pk>/commands/void-artifact/', CommandDispatchView.as_view(), {'cmd_id': 'C20'}, name='commands-void-artifact'),
+    path('<uuid:pk>/commands/register-payment/', CommandDispatchView.as_view(), {'cmd_id': 'C21'}, name='commands-register-payment'),
+    path('<uuid:pk>/commands/issue-commission-invoice/', CommandDispatchView.as_view(), {'cmd_id': 'C22'}, name='commands-issue-commission-invoice'),
+    path('<uuid:pk>/commands/materialize-logistics/', CommandDispatchView.as_view(), {'cmd_id': 'C30'}, name='commands-materialize-logistics'),
+    path('<uuid:pk>/commands/add-logistics-option/', CommandDispatchView.as_view(), {'cmd_id': 'C23'}, name='commands-add-logistics-option'),
+    path('<uuid:pk>/commands/decide-logistics/', CommandDispatchView.as_view(), {'cmd_id': 'C24'}, name='commands-decide-logistics'),
+    path('<uuid:pk>/commands/register-compensation/', CommandDispatchView.as_view(), {'cmd_id': 'C29'}, name='commands-register-compensation'),
+    path('<uuid:pk>/commands/add-shipment-update/', CommandDispatchView.as_view(), {'cmd_id': 'C36'}, name='commands-add-shipment-update'),
+    path('<uuid:pk>/commands/reopen/', CommandDispatchView.as_view(), {'cmd_id': 'REOPEN'}, name='commands-reopen'),
 ]
