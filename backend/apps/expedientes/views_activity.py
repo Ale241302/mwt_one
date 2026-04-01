@@ -8,8 +8,8 @@ Endpoints:
 
 REGLAS HARD:
   - Todos llaman get_visible_events(request.user) — NUNCA duplicar permisos inline.
-  - count/ usa slice [:100] — NO .count() para evitar full-table scan.
-  - mark-seen sin filtros, sin query params, avanza al max(id) del queryset base.
+  - count/ usa el queryset filtrado por last_seen_at.
+  - mark-seen actualiza last_seen_at al occurred_at del evento más reciente.
   - payload NO se serializa.
 """
 from rest_framework.views import APIView
@@ -37,7 +37,7 @@ class ActivityFeedListView(ListAPIView):
       ?expediente=<uuid>     → filtra por expediente (aggregate_id)
       ?proforma=<uuid>       → filtra por proforma FK
       ?event_type=<str>      → filtra por event_type exacto
-      ?unread_only=true      → solo eventos id > last_seen_event_id del usuario
+      ?unread_only=true      → solo eventos occurred_at > last_seen_at del usuario
     """
     serializer_class = EventLogFeedSerializer
     permission_classes = [IsAuthenticated]
@@ -45,17 +45,17 @@ class ActivityFeedListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = get_visible_events(user).order_by('-event_id')
+        qs = get_visible_events(user).order_by('-occurred_at')
 
         # Filtro por expediente
         expediente_id = self.request.query_params.get('expediente')
         if expediente_id:
             qs = qs.filter(aggregate_id=expediente_id)
-
+        
         # Filtro por proforma
         proforma_id = self.request.query_params.get('proforma')
         if proforma_id:
-            qs = qs.filter(proforma__artifact_id=proforma_id)
+            qs = qs.filter(proforma_id=proforma_id)
 
         # Filtro por event_type
         event_type = self.request.query_params.get('event_type')
@@ -66,20 +66,18 @@ class ActivityFeedListView(ListAPIView):
         unread_only = self.request.query_params.get('unread_only', '').lower()
         if unread_only in ('true', '1', 'yes'):
             state, _ = UserNotificationState.objects.get_or_create(user=user)
-            qs = qs.filter(event_id__gt=state.last_seen_event_id)
+            if state.last_seen_at:
+                qs = qs.filter(occurred_at__gt=state.last_seen_at)
+            else:
+                # Si nunca ha visto nada, todo es unread
+                pass
 
-        return qs
+        return qs[:100]  # Limitar a los 100 más recientes por performance
 
 
 class ActivityFeedCountView(APIView):
     """
     GET /api/activity-feed/count/
-
-    Retorna:
-      { unread_count: int (cap 99), has_more: bool, last_seen_event_id: int }
-
-    REGLA: usa slice [:100] en lugar de .count() para evitar full-table scan.
-    El cap real es 99 — si hay 100 resultados se asume 'hay más de 99'.
     """
     permission_classes = [IsAuthenticated]
 
@@ -87,45 +85,42 @@ class ActivityFeedCountView(APIView):
         user = request.user
         state, _ = UserNotificationState.objects.get_or_create(user=user)
 
-        qs = get_visible_events(user).filter(event_id__gt=state.last_seen_event_id)
-        # Slice real — NO .count()
-        ids = list(qs.order_by('-event_id').values_list('event_id', flat=True)[:100])
-        n = len(ids)
+        qs = get_visible_events(user)
+        if state.last_seen_at:
+            qs = qs.filter(occurred_at__gt=state.last_seen_at)
+        
+        # Obtenemos 100 para saber si hay más de 99
+        count = qs[:100].count()
+        has_more = count > 99
+        display_count = min(count, 99)
 
         return Response({
-            'unread_count': min(n, 99),
-            'has_more': n == 100,
-            'last_seen_event_id': state.last_seen_event_id,
+            'unread_count': display_count,
+            'has_more': has_more,
+            'last_seen_at': state.last_seen_at,
         })
 
 
 class ActivityFeedMarkSeenView(APIView):
     """
     POST /api/activity-feed/mark-seen/
-
-    Sin filtros, sin query params. Avanza last_seen_event_id al max(id)
-    del queryset base del usuario (get_visible_events sin filtros).
-
-    Retorna:
-      { previous_last_seen: int, last_seen_event_id: int }
+    Actualiza last_seen_at al timestamp del evento más reciente visible.
     """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         user = request.user
-
-        # Queryset base sin filtros adicionales — avanza al max GLOBAL visible
-        base_qs = get_visible_events(user).order_by('-event_id')
-        latest = base_qs.values_list('event_id', flat=True).first()
-
+        base_qs = get_visible_events(user).order_by('-occurred_at')
+        latest_event = base_qs.first()
+        
         state, _ = UserNotificationState.objects.get_or_create(user=user)
-        previous = state.last_seen_event_id
+        previous = state.last_seen_at
 
-        if latest and latest > state.last_seen_event_id:
-            state.last_seen_event_id = latest
-            state.save(update_fields=['last_seen_event_id', 'updated_at'])
+        if latest_event:
+            state.last_seen_at = latest_event.occurred_at
+            state.save(update_fields=['last_seen_at', 'updated_at'])
 
         return Response({
             'previous_last_seen': previous,
-            'last_seen_event_id': state.last_seen_event_id,
+            'last_seen_at': state.last_seen_at,
         })

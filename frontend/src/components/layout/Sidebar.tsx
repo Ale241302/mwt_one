@@ -1,142 +1,191 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, FolderOpen, Kanban, PieChart, Receipt,
-  ArrowLeftRight, Network, Users2, Building2, Users,
-  LogOut, ChevronLeft, ChevronRight, Package, ClipboardList,
-  Truck
+  LayoutDashboard, FolderOpen, Kanban, PieChart, ArrowLeftRight, 
+  Network, Users2, Building2, Package, ClipboardList, Truck,
+  LogOut, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
-interface NavItem { label: string; href: string; icon: React.ReactNode; group: string; roles?: string[]; }
+// ── Nav item types ────────────────────────────────────────────────────────────
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  group?: string;
+  roles?: string[]; // Optional roles allowed to see this item
+}
 
+// ── All nav items ─────────────────────────────────────────────────────────────
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard",     href: "",              icon: <LayoutDashboard size={20} />, group: "core" },
-  { label: "Expedientes",   href: "/expedientes",  icon: <FolderOpen size={20} />,      group: "core" },
-  { label: "Pipeline",      href: "/pipeline",     icon: <Kanban size={20} />,          group: "core" },
-  { label: "Portal",        href: "/portal",       icon: <Building2 size={20} />,       group: "core" },
-  { label: "Financiero",    href: "/financial",    icon: <PieChart size={20} />,         group: "financiero" },
-  { label: "Liquidaciones", href: "/liquidaciones",icon: <Receipt size={20} />,          group: "financiero" },
-  { label: "Transfers",     href: "/transfers",    icon: <ArrowLeftRight size={20} />,   group: "financiero" },
-  { label: "Nodos",         href: "/nodos",        icon: <Network size={20} />,          group: "estructura" },
-  { label: "Clientes",      href: "/clientes",     icon: <Users2 size={20} />,           group: "estructura" },
-  { label: "Brands",        href: "/brands",       icon: <Building2 size={20} />,        group: "estructura" },
-  { label: "Productos",     href: "/productos",    icon: <Package size={20} />,          group: "estructura" },
-  { label: "Proveedores",   href: "/../suppliers",   icon: <Truck size={20} />,            group: "estructura" },
-  { label: "Inventario",    href: "/inventario",   icon: <ClipboardList size={20} />,    group: "estructura" },
-  { label: "Usuarios",      href: "/usuarios",     icon: <Users size={20} />,            group: "admin" },
+  // Core
+  { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={20} />, group: "core", roles: ["CEO", "AGENT", "CLIENT"] },
+  { label: "Expedientes", href: "/expedientes", icon: <FolderOpen size={20} />, group: "core", roles: ["CEO", "AGENT", "CLIENT"] },
+  { label: "Pipeline", href: "/pipeline", icon: <Kanban size={20} />, group: "core", roles: ["CEO", "AGENT"] },
+  { label: "Portal", href: "/portal", icon: <Building2 size={20} />, group: "core", roles: ["CEO", "AGENT"] },
+  // Financiero
+  { label: "Financiero", href: "/dashboard/financial", icon: <PieChart size={20} />, group: "financiero", roles: ["CEO"] },
+  { label: "Transfers", href: "/transfers", icon: <ArrowLeftRight size={20} />, group: "financiero", roles: ["CEO", "AGENT"] },
+  // Estructura
+  { label: "Nodos", href: "/nodos", icon: <Network size={20} />, group: "estructura", roles: ["CEO"] },
+  { label: "Clientes", href: "/clientes", icon: <Users2 size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
+  { label: "Brands", href: "/brands", icon: <Building2 size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
+  { label: "Productos", href: "/productos", icon: <Package size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
+  { label: "Proveedores", href: "/suppliers", icon: <Truck size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
+  { label: "Inventario", href: "/inventario", icon: <ClipboardList size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
 ];
 
 const GROUP_LABELS: Record<string, string> = {
   core: "",
   financiero: "Financiero",
   estructura: "Estructura",
-  admin: "Administración",
 };
-const GROUPS = ["core", "financiero", "estructura", "admin"];
 
-export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (open: boolean) => void }) {
+export default function Sidebar({
+  isOpen,
+  setIsOpen,
+}: {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+}) {
   const pathname = usePathname();
-  const params = useParams();
-  const { logout, user } = useAuth();
-  const lang = (params?.lang as string) || "es";
-  const basePath = `/${lang}/dashboard`;
-  const [isMobile, setIsMobile] = useState(false);
-  const [initialized, setInitialized] = useState(false);
+  const { user, logout } = useAuth();
 
-  // S9.1-05: detect breakpoint separately, only set isOpen on first mount (no loop)
+  // Auto-collapse on small screens
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 640);
-    check();
-    if (!initialized) {
-      setIsOpen(window.innerWidth >= 1024);
-      setInitialized(true);
-    }
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, [initialized, setIsOpen]);
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsOpen(false);
+      } else {
+        setIsOpen(true);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [setIsOpen]);
 
-  const isActive = (item: NavItem) => {
-    const fullHref = basePath + item.href;
-    if (item.href === "") return pathname === basePath || pathname === basePath + "/";
-    return pathname.startsWith(fullHref);
-  };
+  const groups = ["core", "financiero", "estructura"];
 
   return (
     <aside
-      className={cn("sidebar", !isOpen && "sidebar-collapsed", isMobile && isOpen && "sidebar-mobile-open")}
       aria-label="Navegación principal"
+      className={cn(
+        "fixed inset-y-0 left-0 z-50 bg-navy text-text-inverse transition-sidebar flex flex-col border-r border-navy-dark",
+        isOpen ? "w-60" : "w-16"
+      )}
     >
-      <div className="sidebar-brand">
-        <Link href={basePath} className="flex items-center gap-3">
-          <Image
-            src="/recurso-1logo_foot.png"
-            alt="MWT ONE"
-            width={120}
-            height={32}
-            style={{ height: "32px", width: "auto" }}
-            priority
-          />
-        </Link>
+      {/* ── Brand ──────────────────────────────────────────────────────── */}
+      <div className="h-header flex items-center justify-between px-4 border-b border-[rgba(255,255,255,0.06)]">
+        {isOpen && (
+          <Link href="/dashboard" className="flex items-center" aria-label="Ir al dashboard">
+            <Image
+              src="/recurso-1logo_foot.png"
+              alt="MWT.ONE"
+              width={140}
+              height={35}
+              priority
+            />
+          </Link>
+        )}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          style={{
-            marginLeft: "auto", padding: 4,
-            borderRadius: "var(--radius-md)",
-            color: "var(--nav-text)",
-            background: "none", border: "none", cursor: "pointer",
-          }}
-          aria-label={isOpen ? "Colapsar sidebar" : "Expandir sidebar"}
+          aria-label={isOpen ? "Colapsar menú" : "Expandir menú"}
+          className={cn(
+            "p-1.5 rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors",
+            !isOpen && "mx-auto"
+          )}
         >
           {isOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
         </button>
       </div>
-      <nav className="sidebar-nav">
-        {GROUPS.map((group) => {
-          const items = NAV_ITEMS.filter((i) => {
-            if (i.group !== group) return false;
-            if (i.roles && user && !i.roles.includes(user.role)) return false;
-            return true;
+
+      {/* ── Navigation ─────────────────────────────────────────────────── */}
+      <nav aria-label="Menú lateral" className="flex-1 overflow-y-auto py-4">
+        {groups.map((group) => {
+          // Filter items by group and current user role
+          const items = NAV_ITEMS.filter((item) => {
+            if (item.group !== group) return false;
+            if (!item.roles) return true; // No roles defined, visible to all
+            return user?.role && item.roles.includes(user.role);
           });
-          if (!items.length) return null;
+
+          if (items.length === 0) return null;
+
+          const label = GROUP_LABELS[group];
           return (
-            <div key={group} className={group !== "core" ? "mt-4" : ""}>
-              {GROUP_LABELS[group] && isOpen && (
-                <div className="sidebar-group-label">{GROUP_LABELS[group]}</div>
+            <div key={group}>
+              {label && (
+                <div className="px-6 pt-4 pb-1">
+                  {isOpen ? (
+                    <span className="text-[10px] font-semibold text-[rgba(255,255,255,0.28)] uppercase tracking-[0.08em]">
+                      {label}
+                    </span>
+                  ) : (
+                    <hr className="border-[rgba(255,255,255,0.1)]" />
+                  )}
+                </div>
               )}
-              {items.map((item) => {
-                const active = isActive(item);
-                return (
-                  <Link
-                    key={item.label}
-                    href={basePath + item.href}
-                    className={cn("sidebar-item", active && "sidebar-item-active")}
-                    title={!isOpen ? item.label : undefined}
-                    aria-current={active ? "page" : undefined}
-                  >
-                    <span className="flex-shrink-0">{item.icon}</span>
-                    {isOpen && <span>{item.label}</span>}
-                  </Link>
-                );
-              })}
+
+              <ul className="space-y-0.5">
+                {items.map((item) => {
+                  const isActive =
+                    item.href === "/dashboard"
+                      ? pathname === "/dashboard" || pathname === "/"
+                      : pathname.startsWith(item.href);
+
+                  return (
+                    <li key={item.label}>
+                      <Link
+                        href={item.href}
+                        aria-label={item.label}
+                        aria-current={isActive ? "page" : undefined}
+                        title={!isOpen ? item.label : undefined}
+                        className={cn(
+                          "flex items-center px-4 py-2.5 mx-2 rounded-md transition-colors",
+                          isActive
+                            ? "bg-[rgba(117,203,179,0.08)] text-mint border-l-[3px] border-mint"
+                            : "text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white border-l-[3px] border-transparent"
+                        )}
+                      >
+                        <span className={cn("flex-shrink-0", !isOpen && "mx-auto")}>
+                          {item.icon}
+                        </span>
+                        {isOpen && (
+                          <span className="ml-3 font-medium text-sm truncate">
+                            {item.label}
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           );
         })}
       </nav>
-      <div style={{ padding: "var(--space-2)", marginTop: "auto" }}>
+
+      {/* ── Footer / Logout ─────────────────────────────────────────────── */}
+      <div className="p-4 border-t border-[rgba(255,255,255,0.06)]">
         <button
           onClick={logout}
-          className="sidebar-item"
-          style={{ width: "100%", border: "none", background: "none", cursor: "pointer" }}
           aria-label="Cerrar sesión"
+          title={!isOpen ? "Cerrar sesión" : undefined}
+          className={cn(
+            "flex items-center w-full px-4 py-2 rounded-md text-[rgba(255,255,255,0.6)] hover:bg-coral-soft hover:text-coral transition-colors border-l-[3px] border-transparent",
+            !isOpen && "justify-center px-0"
+          )}
         >
-          <LogOut size={20} />
-          {isOpen && <span>Cerrar sesión</span>}
+          <LogOut size={20} className="flex-shrink-0" />
+          {isOpen && (
+            <span className="ml-3 font-medium text-sm text-left">Cerrar sesión</span>
+          )}
         </button>
       </div>
     </aside>

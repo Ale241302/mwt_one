@@ -184,6 +184,6 @@ class EventLogAdmin(admin.ModelAdmin):
 # === S21-02: UserNotificationState admin ===
 @admin.register(UserNotificationState)
 class UserNotificationStateAdmin(admin.ModelAdmin):
-    list_display = ('user', 'last_seen_event_id', 'updated_at')
+    list_display = ('user', 'last_seen_at', 'updated_at')
     search_fields = ('user__username', 'user__email')
     readonly_fields = ('updated_at',)

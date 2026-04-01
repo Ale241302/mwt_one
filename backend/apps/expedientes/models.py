@@ -558,7 +558,6 @@ class EventLog(models.Model):
 class UserNotificationState(models.Model):
     """
     High-water mark por usuario para calcular eventos no leídos.
-    Creado automáticamente (get_or_create) en el primer acceso al feed.
     """
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -566,9 +565,9 @@ class UserNotificationState(models.Model):
         related_name='notification_state',
         primary_key=True,
     )
-    last_seen_event_id = models.BigIntegerField(
-        default=0,
-        help_text='ID del último EventLog visto. 0 = nunca visto. Avanza al max(id) del queryset base al llamar mark-seen.'
+    last_seen_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text='Timestamp del último EventLog visto. NULL = nunca visto. Se actualiza en mark-seen.'
     )
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -577,7 +576,7 @@ class UserNotificationState(models.Model):
         verbose_name_plural = 'User Notification States'
 
     def __str__(self):
-        return f'NotifState({self.user}) — last_seen={self.last_seen_event_id}'
+        return f'NotifState({self.user}) — last_seen={self.last_seen_at}'
 
 
 class CostLine(AppendOnlyModel):

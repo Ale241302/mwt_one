@@ -11,7 +11,7 @@ Cubre:
   Test 24:     Backward compat (EventLog sin campos S21 → no explota)
 """
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.test import TestCase
 from django.utils import timezone
 from django.contrib.auth import get_user_model
@@ -80,9 +80,7 @@ class TestEventLogCamposS21(TestCase):
 
     def test_03_create_proforma_tiene_proforma_fk(self):
         """T3: create_proforma → proforma FK poblado, action_source='create_proforma'."""
-        from apps.expedientes.models import ArtifactInstance, Expediente
         # Solo creamos si hay una forma de crear Expediente minimal
-        # Este test verifica la estructura del campo, sin Expediente real
         ev = make_event(action_source='create_proforma')
         self.assertEqual(ev.action_source, 'create_proforma')
         self.assertIsNone(ev.proforma)  # sin proforma real en unit test
@@ -124,40 +122,40 @@ class TestEventLogCamposS21(TestCase):
 
 class TestUserNotificationState(TestCase):
 
-    def test_07_primera_visita_get_or_create_last_seen_zero(self):
-        """T7: Primera visita → get_or_create da last_seen_event_id=0."""
+    def test_07_primera_visita_get_or_create_last_seen_none(self):
+        """T7: Primera visita → get_or_create da last_seen_at=None."""
         user = make_user('user_nuevo')
         state, created = UserNotificationState.objects.get_or_create(user=user)
         self.assertTrue(created)
-        self.assertEqual(state.last_seen_event_id, 0)
+        self.assertIsNone(state.last_seen_at)
 
     def test_08_mark_seen_retorna_campos_correctos(self):
-        """T8: POST mark-seen → response tiene previous_last_seen + last_seen_event_id."""
+        """T8: POST mark-seen → response tiene previous_last_seen + last_seen_at."""
         user = make_user('user_markseen')
         client = APIClient()
         client.force_authenticate(user=user)
         response = client.post('/api/activity-feed/mark-seen/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('previous_last_seen', response.data)
-        self.assertIn('last_seen_event_id', response.data)
-        self.assertNotIn('marked', response.data)  # T14 tambien
+        self.assertIn('last_seen_at', response.data)
 
     def test_09_segundo_mark_seen_last_seen_avanza(self):
         """T9: Segundo mark-seen con nuevos eventos → last_seen avanza."""
         user = make_user('user_avanza')
         # Estado inicial
-        state = UserNotificationState.objects.create(user=user, last_seen_event_id=0)
+        state = UserNotificationState.objects.create(user=user, last_seen_at=None)
         # Crear un evento visible para el usuario
-        make_event(user=user, action_source='C1')
+        ev = make_event(user=user, action_source='C1')
 
         client = APIClient()
         client.force_authenticate(user=user)
         response = client.post('/api/activity-feed/mark-seen/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['previous_last_seen'], 0)
-        # last_seen_event_id debe haber avanzado
+        self.assertIsNone(response.data['previous_last_seen'])
+        
+        # last_seen_at debe haber avanzado
         state.refresh_from_db()
-        self.assertGreater(state.last_seen_event_id, 0)
+        self.assertIsNotNone(state.last_seen_at)
 
 
 # ---------------------------------------------------------------------------
@@ -202,14 +200,14 @@ class TestActivityFeedEndpoints(TestCase):
             self.assertEqual(item['event_type'], 'test.alpha')
 
     def test_13_get_feed_unread_only(self):
-        """T13: GET feed ?unread_only=true → solo id > last_seen."""
-        state = UserNotificationState.objects.create(
-            user=self.ceo, last_seen_event_id=0
-        )
+        """T13: GET feed ?unread_only=true → solo eventos > last_seen_at."""
         ev1 = make_event(action_source='C1')
-        state.last_seen_event_id = ev1.pk
-        state.save()
+        # last_seen_at = ev1
+        state = UserNotificationState.objects.create(
+            user=self.ceo, last_seen_at=ev1.occurred_at
+        )
         ev2 = make_event(action_source='C2')  # este si es unread
+        
         response = self.client.get('/api/activity-feed/?unread_only=true')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = [item['event_id'] for item in response.data['results']]
@@ -222,13 +220,14 @@ class TestActivityFeedEndpoints(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotIn('marked', response.data)
 
-    def test_15_mark_seen_avanza_al_max_global(self):
-        """T15: mark-seen avanza al max GLOBAL, no al max filtrado."""
+    def test_15_mark_seen_avanza_al_max_visible(self):
+        """T15: mark-seen avanza al max visible."""
         ev_max = make_event(action_source='C99')
         response = self.client.post('/api/activity-feed/mark-seen/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         state = UserNotificationState.objects.get(user=self.ceo)
-        self.assertGreaterEqual(state.last_seen_event_id, ev_max.pk)
+        # En el modelo nuevo, guardamos el timestamp del evento mas reciente
+        self.assertEqual(state.last_seen_at, ev_max.occurred_at)
 
 
 # ---------------------------------------------------------------------------
@@ -239,7 +238,6 @@ class TestActivityFeedPermisos(TestCase):
 
     def test_16_client_solo_ve_su_subsidiaria(self):
         """T16: CLIENT_* → solo ve sus expedientes."""
-        from unittest.mock import patch
         client_user = make_user('client1', role='CLIENT')
         # Simular client_subsidiary
         client_user.client_subsidiary = 'SUB-A'
@@ -319,16 +317,17 @@ class TestActivityFeedCount(TestCase):
 
     def test_21_count_unread_correcto(self):
         """T21: GET count → unread_count correcto."""
-        UserNotificationState.objects.create(user=self.ceo, last_seen_event_id=0)
+        UserNotificationState.objects.create(user=self.ceo, last_seen_at=None)
         make_event(action_source='C1')
         make_event(action_source='C2')
         response = self.client.get('/api/activity-feed/count/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # unread_count debe ser >= 2
         self.assertGreaterEqual(response.data['unread_count'], 2)
 
     def test_22_count_150_eventos_cap_99(self):
         """T22: 150 eventos no leídos → unread_count=99, has_more=True."""
-        UserNotificationState.objects.create(user=self.ceo, last_seen_event_id=0)
+        UserNotificationState.objects.create(user=self.ceo, last_seen_at=None)
         for _ in range(150):
             make_event(action_source='C1')
         response = self.client.get('/api/activity-feed/count/')
@@ -338,9 +337,9 @@ class TestActivityFeedCount(TestCase):
 
     def test_23_count_cero_sin_has_more(self):
         """T23: 0 eventos no leídos → unread_count=0, has_more=False."""
-        # Avanzar last_seen a un valor muy alto
+        # Avanzar last_seen a un valor futuro
         UserNotificationState.objects.create(
-            user=self.ceo, last_seen_event_id=999999999
+            user=self.ceo, last_seen_at=timezone.now() + timedelta(days=1)
         )
         response = self.client.get('/api/activity-feed/count/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)

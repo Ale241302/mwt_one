@@ -42,4 +42,6 @@ urlpatterns = [
     # ANTES estaban mal montados bajo /api/ui/expedientes/dashboard/financial/
     path('api/ui/dashboard/financial/', FinancialDashboardView.as_view(), name='ui-dashboard-financial'),
     path('api/ui/dashboard/', FinancialDashboardView.as_view(), name='ui-dashboard'),
+    # S21: Activity Feed endpoints
+    path('api/', include('apps.expedientes.urls_activity')),
 ]
