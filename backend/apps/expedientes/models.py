@@ -1,4 +1,5 @@
 import uuid
+from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
 
@@ -268,8 +269,6 @@ class Expediente(TimestampMixin):
     )
 
     # === S21: Custom Artifact Policy — overrides per-expediente ===
-    # Admin puede agregar/quitar artefactos de la política base para este expediente.
-    # Estructura: { "STATE": { "add": ["ART-XX"], "remove": ["ART-YY"] } }
     custom_artifact_policy = models.JSONField(
         default=dict,
         blank=True,
@@ -318,7 +317,6 @@ class ExpedienteProductLine(models.Model):
         ],
         help_text='Origen del precio: lista activa, manual, u override CEO'
     )
-    # Modification tracking — separate from originals
     quantity_modified = models.PositiveIntegerField(
         null=True, blank=True,
         help_text='Cantidad modificada post-creación (si aplica)'
@@ -331,7 +329,6 @@ class ExpedienteProductLine(models.Model):
         max_length=200, null=True, blank=True,
         help_text='Razón del cambio de cantidad o precio'
     )
-    # Traceability for line separation
     separated_to_expediente = models.ForeignKey(
         Expediente,
         null=True, blank=True,
@@ -362,11 +359,6 @@ class ExpedienteProductLine(models.Model):
         null=True, blank=True,
         help_text='Snapshot del precio base de la lista de precios'
     )
-
-    # === S20-01: FK proforma — apunta al ArtifactInstance ART-02 que agrupa esta línea ===
-    # Nullable: líneas legacy (pre-S20) quedan con proforma=NULL hasta remediation manual
-    # on_delete=SET_NULL: si se borra la proforma, la línea queda huérfana (no se elimina)
-    # related_name='proforma_lines' (NO 'lines' para evitar conflicto con expediente.lines)
     proforma = models.ForeignKey(
         'ArtifactInstance',
         null=True,
@@ -397,18 +389,12 @@ class ExpedienteProductLine(models.Model):
 
 # === S17-10: FactoryOrder ===
 class FactoryOrder(models.Model):
-    """
-    Relational model for factory orders linked to an Expediente.
-    Sync rule: when the FIRST FactoryOrder is created for an expediente,
-    copy order_number to expediente.factory_order_number.
-    Orchestration point: save() override — NO signals, NO view delegation.
-    """
     expediente = models.ForeignKey(
         Expediente, on_delete=models.CASCADE, related_name='factory_orders'
     )
     order_number = models.CharField(
         max_length=100,
-        help_text='Número en sistema del fabricante (SAP para Marluvas, otro para otros)'
+        help_text='Número en sistema del fabricante'
     )
     proforma_client_number = models.CharField(max_length=100, null=True, blank=True)
     proforma_mwt_number = models.CharField(max_length=100, null=True, blank=True)
@@ -429,7 +415,6 @@ class FactoryOrder(models.Model):
     def save(self, *args, **kwargs):
         is_new = self._state.adding
         super().save(*args, **kwargs)
-        # Sync flat field on expediente when FIRST factory order is created
         if is_new and not self.expediente.factory_order_number:
             self.expediente.factory_order_number = self.order_number
             self.expediente.save(update_fields=['factory_order_number'])
@@ -440,18 +425,12 @@ class FactoryOrder(models.Model):
 
 # === S17-11: ExpedientePago ===
 class ExpedientePago(models.Model):
-    """
-    Payment record for an Expediente.
-    Clean model — no signals, no save() integration with PaymentLine.
-    Integration with PaymentLine via transaction.atomic() in View (Sprint 18).
-    """
     expediente = models.ForeignKey(
         Expediente, on_delete=models.CASCADE, related_name='pagos'
     )
     tipo_pago = models.CharField(
         max_length=20,
         choices=[('COMPLETO', 'Pago Completo'), ('PARCIAL', 'Pago Parcial')],
-        help_text='Tipo de pago registrado'
     )
     metodo_pago = models.CharField(
         max_length=30,
@@ -459,24 +438,11 @@ class ExpedientePago(models.Model):
             ('TRANSFERENCIA', 'Transferencia Bancaria'),
             ('NOTA_CREDITO', 'Nota de Crédito'),
         ],
-        help_text='Método de pago utilizado'
     )
-    payment_date = models.DateField(
-        help_text='Fecha efectiva del pago'
-    )
-    amount_paid = models.DecimalField(
-        max_digits=12, decimal_places=2,
-        help_text='Monto pagado en la moneda del expediente'
-    )
-    additional_info = models.TextField(
-        null=True, blank=True,
-        help_text='Información adicional libre sobre el pago'
-    )
-    url_comprobante = models.URLField(
-        max_length=500, null=True, blank=True,
-        help_text='URL del comprobante de pago (transferencia, nota de crédito, etc.)'
-    )
-    # === S18-04: Campos aditivos ===
+    payment_date = models.DateField()
+    amount_paid = models.DecimalField(max_digits=12, decimal_places=2)
+    additional_info = models.TextField(null=True, blank=True)
+    url_comprobante = models.URLField(max_length=500, null=True, blank=True)
     credit_status = models.CharField(
         max_length=20, null=True, blank=True,
         choices=[
@@ -485,7 +451,6 @@ class ExpedientePago(models.Model):
             ('REJECTED', 'Rejected'),
         ],
         default='PENDING',
-        help_text='Estado de confirmacion del pago para liberacion de credito'
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -516,11 +481,6 @@ class ArtifactInstance(TimestampMixin):
         blank=True, null=True,
         related_name='supersedes_set',
     )
-
-    # === S20-02: FK self-referential parent_proforma (HR-11) ===
-    # Artefactos vinculados a UNA proforma: ART-04, ART-05, ART-09, ART-10
-    # Excepciones (parent_proforma=NULL): ART-01, ART-11, ART-12 → nivel expediente
-    # on_delete=SET_NULL: si se borra la proforma padre, el hijo queda huérfano
     parent_proforma = models.ForeignKey(
         'self',
         null=True,
@@ -528,8 +488,7 @@ class ArtifactInstance(TimestampMixin):
         on_delete=models.SET_NULL,
         related_name='child_artifacts',
         limit_choices_to={'artifact_type': 'ART-02'},
-        help_text='S20-02 HR-11: Proforma (ART-02) a la que pertenece este artefacto. '
-                  'Aplica a ART-04, ART-05, ART-09, ART-10. NULL para ART-01, ART-11, ART-12.'
+        help_text='S20-02 HR-11: Proforma (ART-02) a la que pertenece este artefacto.'
     )
 
     class Meta:
@@ -541,6 +500,7 @@ class ArtifactInstance(TimestampMixin):
         return f'{self.artifact_type} – {self.get_status_display()}'
 
 
+# === S21-01: EventLog extendido con 5 campos nuevos ===
 class EventLog(models.Model):
     event_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     event_type = models.CharField(max_length=100, help_text='e.g. "expediente.state_changed"')
@@ -556,6 +516,27 @@ class EventLog(models.Model):
     previous_status = models.CharField(max_length=30, null=True, blank=True)
     new_status = models.CharField(max_length=30, null=True, blank=True)
 
+    # === S21-01: 5 campos nuevos — todos null=True (backward compat absoluto) ===
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='event_logs',
+        help_text='S21: Usuario que disparó el evento. NULL para eventos de sistema/Celery.'
+    )
+    proforma = models.ForeignKey(
+        'ArtifactInstance',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        limit_choices_to={'artifact_type': 'ART-02'},
+        related_name='event_logs',
+        help_text='S21: Proforma (ART-02) relacionada con el evento. NULL si no aplica.'
+    )
+    action_source = models.CharField(
+        max_length=32, null=True, blank=True,
+        help_text='S21: Origen del comando. Contrato cerrado: C1..C22, create_proforma, reassign_line, change_mode, patch_{estado}, system_*.'
+    )
+
     class Meta:
         verbose_name = 'Event Log'
         verbose_name_plural = 'Event Logs'
@@ -564,10 +545,39 @@ class EventLog(models.Model):
             models.Index(fields=['aggregate_type', 'aggregate_id'], name='idx_eventlog_aggregate'),
             models.Index(fields=['processed_at'], name='idx_eventlog_processed'),
             models.Index(fields=['correlation_id'], name='idx_eventlog_correlation'),
+            # S21-01: índices de feed
+            models.Index(fields=['aggregate_id', '-event_id'], name='idx_eventlog_exp_id_desc'),
+            models.Index(fields=['proforma', '-event_id'], name='idx_eventlog_pf_id_desc'),
         ]
 
     def __str__(self):
         return f'{self.event_type} @ {self.occurred_at}'
+
+
+# === S21-02: Modelo UserNotificationState ===
+class UserNotificationState(models.Model):
+    """
+    High-water mark por usuario para calcular eventos no leídos.
+    Creado automáticamente (get_or_create) en el primer acceso al feed.
+    """
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notification_state',
+        primary_key=True,
+    )
+    last_seen_event_id = models.BigIntegerField(
+        default=0,
+        help_text='ID del último EventLog visto. 0 = nunca visto. Avanza al max(id) del queryset base al llamar mark-seen.'
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'User Notification State'
+        verbose_name_plural = 'User Notification States'
+
+    def __str__(self):
+        return f'NotifState({self.user}) — last_seen={self.last_seen_event_id}'
 
 
 class CostLine(AppendOnlyModel):
@@ -594,27 +604,24 @@ class CostLine(AppendOnlyModel):
         max_length=10,
         choices=CostLineVisibility.choices,
         default=CostLineVisibility.INTERNAL,
-        help_text='internal=CEO-only, client=visible to client'
     )
     cost_category = models.CharField(
         max_length=20, choices=CostCategory.choices,
-        default=CostCategory.LANDED_COST, help_text='H2'
+        default=CostCategory.LANDED_COST,
     )
     cost_behavior = models.CharField(
         max_length=25, choices=CostBehavior.choices,
-        blank=True, null=True, help_text='H3'
+        blank=True, null=True,
     )
     exchange_rate = models.DecimalField(
         max_digits=12, decimal_places=6,
-        blank=True, null=True, help_text='H8'
+        blank=True, null=True,
     )
     amount_base_currency = models.DecimalField(
         max_digits=12, decimal_places=2,
-        blank=True, null=True, help_text='H8 (USD)'
+        blank=True, null=True,
     )
-    base_currency = models.CharField(
-        max_length=3, default='USD', help_text='H8'
-    )
+    base_currency = models.CharField(max_length=3, default='USD')
 
     class Meta:
         verbose_name = 'Cost Line'
@@ -630,8 +637,8 @@ class PaymentLine(AppendOnlyModel):
     expediente = models.ForeignKey(Expediente, on_delete=models.PROTECT, related_name='payment_lines')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=3, help_text='ISO 4217')
-    method = models.CharField(max_length=50, help_text='transferencia, cheque, otro')
-    reference = models.CharField(max_length=100, help_text='Número de comprobante')
+    method = models.CharField(max_length=50)
+    reference = models.CharField(max_length=100)
     registered_at = models.DateTimeField()
     registered_by_type = models.CharField(max_length=10, choices=RegisteredByType.choices)
     registered_by_id = models.CharField(max_length=255)

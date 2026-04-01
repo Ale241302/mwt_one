@@ -1,8 +1,9 @@
-"""S20: Admin configuration — Sprint 20 adds proforma FK to EPL inline."""
+"""S21: Admin configuration — agrega UserNotificationState y EventLog con campos S21."""
 from django.contrib import admin
 from .models import (
     Expediente, ArtifactInstance, EventLog, CostLine, PaymentLine, LogisticsOption,
     ExpedienteProductLine, FactoryOrder, ExpedientePago,
+    UserNotificationState,  # S21-02
 )
 
 
@@ -25,16 +26,14 @@ class PaymentLineInline(admin.TabularInline):
     readonly_fields = ('payment_line_id', 'created_at')
 
 
-# S17-13 / S20-01: Inline con campo proforma visible
 class ExpedienteProductLineInline(admin.TabularInline):
     model = ExpedienteProductLine
-    fk_name = 'expediente'  # fix admin.E202: two FKs to Expediente
+    fk_name = 'expediente'
     extra = 0
     readonly_fields = ('created_at', 'updated_at')
-    # S20-01: campo proforma visible en inline para asignación manual desde admin
     fields = (
         'product', 'quantity', 'unit_price', 'price_source',
-        'proforma',  # S20-01
+        'proforma',
         'brand_sku', 'pricelist_used', 'base_price',
         'quantity_modified', 'unit_price_modified', 'modification_reason',
         'factory_order', 'separated_to_expediente',
@@ -67,7 +66,6 @@ class ExpedienteAdmin(admin.ModelAdmin):
         ArtifactInstanceInline,
         CostLineInline,
         PaymentLineInline,
-        # S17-13: New inlines
         ExpedienteProductLineInline,
         FactoryOrderInline,
         ExpedientePagoInline,
@@ -123,7 +121,6 @@ class ExpedienteProductLineAdmin(admin.ModelAdmin):
     list_display = ('expediente', 'product', 'quantity', 'unit_price', 'price_source', 'proforma', 'created_at')
     list_filter = ('price_source',)
     readonly_fields = ('created_at', 'updated_at')
-    # S20-01: proforma visible y editable desde admin de EPL
     fieldsets = (
         ('Datos principales', {
             'fields': ('expediente', 'product', 'quantity', 'unit_price', 'price_source')
@@ -158,3 +155,35 @@ class ExpedientePagoAdmin(admin.ModelAdmin):
     list_display = ('expediente', 'tipo_pago', 'metodo_pago', 'amount_paid', 'payment_date', 'created_at')
     list_filter = ('tipo_pago', 'metodo_pago')
     readonly_fields = ('created_at',)
+
+
+# === S21-02: EventLog admin extendido con campos S21 ===
+@admin.register(EventLog)
+class EventLogAdmin(admin.ModelAdmin):
+    list_display = (
+        'event_type', 'action_source', 'user', 'previous_status', 'new_status',
+        'aggregate_id', 'occurred_at',
+    )
+    list_filter = ('event_type', 'action_source', 'previous_status', 'new_status')
+    search_fields = ('event_type', 'action_source', 'aggregate_id')
+    readonly_fields = ('event_id', 'correlation_id', 'occurred_at', 'processed_at')
+    fieldsets = (
+        ('Core', {
+            'fields': ('event_id', 'event_type', 'aggregate_type', 'aggregate_id', 'correlation_id')
+        }),
+        ('S21 — Trazabilidad', {
+            'fields': ('user', 'proforma', 'action_source', 'previous_status', 'new_status'),
+        }),
+        ('Meta', {
+            'fields': ('occurred_at', 'processed_at', 'retry_count', 'emitted_by'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+# === S21-02: UserNotificationState admin ===
+@admin.register(UserNotificationState)
+class UserNotificationStateAdmin(admin.ModelAdmin):
+    list_display = ('user', 'last_seen_event_id', 'updated_at')
+    search_fields = ('user__username', 'user__email')
+    readonly_fields = ('updated_at',)
