@@ -8,7 +8,7 @@ Endpoints:
 
 REGLAS HARD:
   - Todos llaman get_visible_events(request.user) — NUNCA duplicar permisos inline.
-  - count/ usa el queryset filtrado por last_seen_at.
+  - count/ usa slice materializado, NO .count() sobre un queryset con slice.
   - mark-seen actualiza last_seen_at al occurred_at del evento más reciente.
   - payload NO se serializa.
 """
@@ -34,7 +34,7 @@ class ActivityFeedListView(ListAPIView):
     GET /api/activity-feed/
 
     Filtros opcionales (query params):
-      ?expediente=<uuid>     → filtra por expediente (aggregate_id)
+      ?expediente=<uuid>     → filtra por expediente FK
       ?proforma=<uuid>       → filtra por proforma FK
       ?event_type=<str>      → filtra por event_type exacto
       ?unread_only=true      → solo eventos occurred_at > last_seen_at del usuario
@@ -45,13 +45,16 @@ class ActivityFeedListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        # BUG-FIX 1: NO hacer slice aquí — DRF necesita llamar .count() y
+        # .filter() sobre este queryset para la paginación. Un slice evaluado
+        # ya no soporta esas operaciones.
         qs = get_visible_events(user).order_by('-occurred_at')
 
         # Filtro por expediente
         expediente_id = self.request.query_params.get('expediente')
         if expediente_id:
-            qs = qs.filter(aggregate_id=expediente_id)
-        
+            qs = qs.filter(expediente_id=expediente_id)
+
         # Filtro por proforma
         proforma_id = self.request.query_params.get('proforma')
         if proforma_id:
@@ -68,11 +71,9 @@ class ActivityFeedListView(ListAPIView):
             state, _ = UserNotificationState.objects.get_or_create(user=user)
             if state.last_seen_at:
                 qs = qs.filter(occurred_at__gt=state.last_seen_at)
-            else:
-                # Si nunca ha visto nada, todo es unread
-                pass
+            # Si last_seen_at es NULL todo es unread → no aplicar filtro adicional
 
-        return qs[:100]  # Limitar a los 100 más recientes por performance
+        return qs
 
 
 class ActivityFeedCountView(APIView):
@@ -88,11 +89,13 @@ class ActivityFeedCountView(APIView):
         qs = get_visible_events(user)
         if state.last_seen_at:
             qs = qs.filter(occurred_at__gt=state.last_seen_at)
-        
-        # Obtenemos 100 para saber si hay más de 99
-        count = qs[:100].count()
-        has_more = count > 99
-        display_count = min(count, 99)
+
+        # BUG-FIX 2: Un queryset con slice (qs[:100]) no soporta .count() en Django
+        # → materializar la lista con len() para evitar TypeError.
+        ids = list(qs.order_by('-occurred_at').values_list('event_id', flat=True)[:100])
+        count = len(ids)
+        has_more = count >= 100
+        display_count = 99 if has_more else count
 
         return Response({
             'unread_count': display_count,
@@ -112,7 +115,7 @@ class ActivityFeedMarkSeenView(APIView):
         user = request.user
         base_qs = get_visible_events(user).order_by('-occurred_at')
         latest_event = base_qs.first()
-        
+
         state, _ = UserNotificationState.objects.get_or_create(user=user)
         previous = state.last_seen_at
 
