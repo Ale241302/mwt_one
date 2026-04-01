@@ -8,7 +8,9 @@ import { ChevronDown, ChevronRight, ChevronRight as ArrowRight, ArrowLeft, Plus,
 import ArtifactModal from "./ArtifactModal";
 import ArtifactRow from "./ArtifactRow";
 import ArtifactSection from "./ArtifactSection";
-import { CANONICAL_STATES } from "@/constants/states";
+import AddArtifactModal from "./AddArtifactModal";
+import { ARTIFACT_UI_REGISTRY } from "@/constants/artifact-ui-registry";
+import { CANONICAL_STATES, TIMELINE_STEPS } from "@/constants/states";
 import { isLegacyExpediente } from "@/utils/legacy-check";
 import {
   LEGACY_STATE_ARTIFACTS,
@@ -69,6 +71,10 @@ export default function ExpedienteAccordion({
   // ── Modal interno ─────────────────────────────────────────────────────────
   const [activeModal, setActiveModal] = useState<{ commandKey: string; artifact?: any } | null>(null);
 
+  // Admin: state to know which phase is currently adding an artifact via modal
+  const [addArtifactToState, setAddArtifactToState] = useState<string | null>(null);
+
+
   const handleExecute = (commandKey: string, artifact?: any) => {
     setActiveModal({ commandKey, artifact });
   };
@@ -76,9 +82,6 @@ export default function ExpedienteAccordion({
   const handleSuccess = () => {
     setActiveModal(null);
     onRefresh();
-    if (onActionClick && activeModal) {
-      onActionClick(activeModal.commandKey, activeModal.artifact);
-    }
   };
 
   // ── Admin: avanzar / retroceder estado ────────────────────────────────────
@@ -114,13 +117,21 @@ export default function ExpedienteAccordion({
 
   // ── Admin: agregar / quitar tipos de artefactos en el policy ──────────────
   const addArtifactType = async (stateName: string, artifactType: string) => {
+    const reg = ARTIFACT_UI_REGISTRY[artifactType];
     try {
       await api.post(`/expedientes/${expedienteId}/admin/policy/add-artifact/`, {
         state: stateName,
         artifact_type: artifactType,
       });
       toast.success(`Artefacto ${artifactType} agregado a ${stateName}`);
-      onRefresh();
+      
+      // Refresh local data first
+      await onRefresh();
+      
+      // Immediately open the registration modal for the new type
+      if (reg) {
+        handleExecute(reg.command);
+      }
     } catch (err: any) {
       toast.error(err?.response?.data?.detail ?? "Error al agregar artefacto");
     }
@@ -143,9 +154,13 @@ export default function ExpedienteAccordion({
   const isLegacy = isLegacyExpediente(expedienteData);
   const currentIdx = CANONICAL_STATES.indexOf(currentState as any);
 
-  const statesToRender = isLegacy
-    ? CANONICAL_STATES
-    : CANONICAL_STATES.filter((_, idx) => idx <= currentIdx);
+  // Modern expedientes: show ALL states (so artifacts are always visible even for past states)
+  // Mostrar solo los estados del timeline (excluye CANCELADO por defecto)
+  // Pero si el estado actual es CANCELADO, lo incluimos para que sea visible.
+  const statesToRender = currentState === "CANCELADO" 
+    ? CANONICAL_STATES 
+    : TIMELINE_STEPS;
+
 
   return (
     <div className="space-y-3">
@@ -204,8 +219,6 @@ export default function ExpedienteAccordion({
       {statesToRender.map((stateName) => {
         const stateIdx = CANONICAL_STATES.indexOf(stateName as any);
 
-        if (!isLegacy && stateIdx > currentIdx) return null;
-
         const isOpen = !!openPhases[stateName];
 
         // ── MODO LEGACY ────────────────────────────────────────────────────
@@ -225,7 +238,7 @@ export default function ExpedienteAccordion({
           const hasAvailable = commandsInState.some((cmd: string) => hasAction(cmd));
 
           return (
-            <div key={stateName} className="card overflow-hidden">
+            <div key={stateName} className="card">
               <button
                 className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg transition-colors"
                 onClick={() => toggle(stateName)}
@@ -328,7 +341,7 @@ export default function ExpedienteAccordion({
                   isAdmin={isAdmin}
                   onAddArtifactType={
                     isAdmin
-                      ? (artType) => addArtifactType(stateName, artType)
+                      ? () => setAddArtifactToState(stateName)
                       : undefined
                   }
                   onRemoveArtifactType={
@@ -343,7 +356,6 @@ export default function ExpedienteAccordion({
         );
       })}
 
-      {/* ── Modal unificado ───────────────────────────────────────────────── */}
       {activeModal && (
         <ArtifactModal
           open={true}
@@ -354,6 +366,14 @@ export default function ExpedienteAccordion({
           onClose={() => setActiveModal(null)}
           onSuccess={handleSuccess}
           isAdmin={isAdmin}
+          allArtifacts={
+            // Pass all artifacts of the same type so the History tab works
+            activeModal.artifact
+              ? (Array.isArray(artifacts) ? artifacts : []).filter(
+                  (a: any) => a.artifact_type === activeModal.artifact.artifact_type
+                )
+              : []
+          }
           onNewRecord={
             activeModal.artifact !== undefined
               ? () => setActiveModal({ commandKey: activeModal.commandKey, artifact: undefined })
@@ -361,6 +381,22 @@ export default function ExpedienteAccordion({
           }
         />
       )}
+
+      {/* Admin: Modal de selección de artefacto */}
+      {isAdmin && (
+        <AddArtifactModal
+          open={!!addArtifactToState}
+          onClose={() => setAddArtifactToState(null)}
+          artifacts={artifacts || []}
+          onSelect={(artType) => {
+            if (addArtifactToState) {
+              addArtifactType(addArtifactToState, artType);
+              setAddArtifactToState(null);
+            }
+          }}
+        />
+      )}
+
     </div>
   );
 }

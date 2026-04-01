@@ -267,6 +267,19 @@ class Expediente(TimestampMixin):
         help_text='URL del packing list detallado para aduana'
     )
 
+    # === S21: Custom Artifact Policy — overrides per-expediente ===
+    # Admin puede agregar/quitar artefactos de la política base para este expediente.
+    # Estructura: { "STATE": { "add": ["ART-XX"], "remove": ["ART-YY"] } }
+    custom_artifact_policy = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text=(
+            'S21: Overrides de política de artefactos específicos de este expediente. '
+            'Estructura: {"ESTADO": {"add": ["ART-XX"], "remove": ["ART-YY"]}}. '
+            'Solo modificable por superusers vía Admin Panel.'
+        )
+    )
+
     class Meta:
         verbose_name = 'Expediente'
         verbose_name_plural = 'Expedientes'

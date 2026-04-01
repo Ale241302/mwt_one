@@ -578,7 +578,7 @@ export default function ExpedienteDetailPage() {
         </div>
       </div>
 
-      {activeModal?.commandKey === "C3" ? (
+      {activeModal?.commandKey === "C2" ? (
         <CreateProformaModal
           open={true}
           expedienteId={id}

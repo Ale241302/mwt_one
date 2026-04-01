@@ -9,80 +9,76 @@ COMMAND_SPEC = {
     },
     'C2': {
         'name': 'Registrar Proforma',
-        'requires_status': enums_exp.ExpedienteStatus.REGISTRO,
+        'requires_status': None,
         'creates_art': 'ART-02'
     },
     'C3': {
         'name': 'Registrar Orden de Compra',
-        'requires_status': enums_exp.ExpedienteStatus.REGISTRO,
-        'creates_art': 'ART-03'
+        'requires_status': None,
+        'creates_art': 'ART-01'
     },
     'C4': {
-        'name': 'Decidir Modo Import/Comision',
-        'requires_status': enums_exp.ExpedienteStatus.REGISTRO,
-        'creates_art': None,
+        'name': 'Decisión Modal (CEO)',
+        'requires_status': None,
+        'creates_art': 'ART-03',
         'requires_ceo': True
     },
     'C5': {
-        'name': 'Confirmar Registro',
-        'requires_status': enums_exp.ExpedienteStatus.REGISTRO,
+        'name': 'Confirmar Registro → PRODUCCION',
+        'requires_status': None,
         'transition_to': enums_exp.ExpedienteStatus.PRODUCCION,
         'creates_art': 'ART-04'
     },
     'C6': {
-        'name': 'Finalizar Producción',
-        'requires_status': enums_exp.ExpedienteStatus.PRODUCCION,
-        'transition_to': enums_exp.ExpedienteStatus.PREPARACION,
-        'creates_art': 'ART-05'
-    },
-    'C7': {
-        'name': 'Cargar Packing List',
-        'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
+        'name': 'Confirmación Producción',
+        'requires_status': None,
         'creates_art': 'ART-06'
     },
-    'C8': {
-        'name': 'Cargar Factura Comercial',
-        'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
-        'creates_art': 'ART-07'
+    'C7': {
+        'name': 'Registrar Embarque',
+        'requires_status': None,
+        'creates_art': 'ART-05'
     },
-    'C9': {
-        'name': 'Cargar Certificado de Origen',
-        'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
+    'C8': {
+        'name': 'Cotización Flete',
+        'requires_status': None,
         'creates_art': 'ART-08'
     },
-    'C10': {
-        'name': 'Cargar Otros Documentos',
-        'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
-        'creates_art': 'ART-13'
-    },
-    # S17-01: FIX — C11 now transitions to DESPACHO (was incorrectly going to TRANSITO)
-    'C11': {
-        'name': 'Confirmar Salida Aduana (China) → DESPACHO',
-        'requires_status': enums_exp.ExpedienteStatus.PREPARACION,
-        'transition_to': enums_exp.ExpedienteStatus.DESPACHO,
+    'C9': {
+        'name': 'Despacho Aduanal',
+        'requires_status': None,
         'creates_art': 'ART-09'
     },
-    # S17-02: NEW — C11B transitions DESPACHO → TRANSITO
+    'C10': {
+        'name': 'Aprobar Despacho',
+        'requires_status': None,
+        'creates_art': 'ART-07'
+    },
+    'C11': {
+        'name': 'BL Registrado',
+        'requires_status': None,
+        'creates_art': 'ART-10'
+    },
     'C11B': {
         'name': 'Confirmar Salida Despacho → TRANSITO',
-        'requires_status': enums_exp.ExpedienteStatus.DESPACHO,
+        'requires_status': None,
         'transition_to': enums_exp.ExpedienteStatus.TRANSITO,
         'creates_art': None
     },
     'C12': {
-        'name': 'Confirmar Arribo CR',
-        'requires_status': enums_exp.ExpedienteStatus.TRANSITO,
+        'name': 'Confirmar Arribo CR → EN_DESTINO',
+        'requires_status': None,
         'transition_to': enums_exp.ExpedienteStatus.EN_DESTINO,
         'creates_art': 'ART-11'
     },
     'C13': {
-        'name': 'Registrar Factura MWT',
-        'requires_status': enums_exp.ExpedienteStatus.EN_DESTINO,
-        'creates_art': 'ART-12'
+        'name': 'Factura MWT',
+        'requires_status': None,
+        'creates_art': 'ART-13'
     },
     'C14': {
-        'name': 'Finalizar Expediente',
-        'requires_status': enums_exp.ExpedienteStatus.EN_DESTINO,
+        'name': 'Finalizar Expediente → CERRADO',
+        'requires_status': None,
         'transition_to': enums_exp.ExpedienteStatus.CERRADO,
         'creates_art': None
     },
@@ -95,7 +91,7 @@ COMMAND_SPEC = {
         'name': 'Cancelar Expediente',
         'requires_status': None,
         'transition_to': enums_exp.ExpedienteStatus.CANCELADO,
-        'creates_art': None,
+        'creates_art': 'ART-16',
         'requires_ceo': True
     },
     'C17': {

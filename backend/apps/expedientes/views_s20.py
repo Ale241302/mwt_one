@@ -118,6 +118,51 @@ class ProformaCreateView(APIView):
                 },
             )
 
+            # ── NEW: Create lines from product catalog (new_lines) ────────────
+            new_lines_data = data.get('new_lines', [])
+            if new_lines_data:
+                from apps.expedientes.models import ExpedienteProductLine
+                from apps.productos.models import ProductMaster, Producto
+                
+                for line_data in new_lines_data:
+                    raw_product_id = line_data.get('product_id')
+                    quantity = int(line_data.get('quantity', 1))
+                    unit_price = float(line_data.get('unit_price', 0))
+                    
+                    target_product_master = None
+                    
+                    # 1. Try direct lookup in ProductMaster
+                    try:
+                        target_product_master = ProductMaster.objects.get(pk=raw_product_id)
+                    except (ProductMaster.DoesNotExist, ValueError, TypeError):
+                        # 2. Try lookup in Producto and then find Master by sku_base
+                        try:
+                            producto_obj = Producto.objects.get(pk=raw_product_id)
+                            target_product_master = ProductMaster.objects.filter(sku_base=producto_obj.sku_base).first()
+                            
+                            # 3. If no Master exists for this SKU, create one on the fly to satisfy FK
+                            if not target_product_master:
+                                target_product_master = ProductMaster.objects.create(
+                                    sku_base=producto_obj.sku_base,
+                                    name=producto_obj.name,
+                                    brand=producto_obj.brand,
+                                    category=producto_obj.category,
+                                    description=producto_obj.description
+                                )
+                        except (Producto.DoesNotExist, ValueError, TypeError):
+                            # Fallback if both fail (unlikely given frontend source)
+                            continue
+
+                    if target_product_master:
+                        ExpedienteProductLine.objects.create(
+                            expediente=expediente,
+                            product=target_product_master,
+                            quantity=quantity,
+                            unit_price=unit_price,
+                            proforma=proforma,
+                            price_source='manual'
+                        )
+
             # ── Asignar líneas con validación ─────────────────────────────────
             assigned_count = 0
             if line_ids:
@@ -158,6 +203,7 @@ class ProformaCreateView(APIView):
                     'proforma_id': str(proforma.artifact_id),
                     'mode': mode,
                     'assigned_count': assigned_count,
+                    'new_lines_count': len(new_lines_data),
                 },
                 occurred_at=timezone.now(),
                 emitted_by='S20-11:ProformaCreateView',

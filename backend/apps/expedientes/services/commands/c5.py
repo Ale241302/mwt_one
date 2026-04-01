@@ -1,27 +1,27 @@
 from django.utils import timezone
-from apps.expedientes.exceptions import ArtifactMissingError
-from ..helpers import _has_artifact
-from ..pricing import assign_agreement_defaults
+
 
 def handle_c5(expediente, payload, env=None):
-    # Confirmar Registro
-    if not _has_artifact(expediente, 'ART-02'):
-        raise ArtifactMissingError("C5 requires ART-02 (Proforma).")
-    if not _has_artifact(expediente, 'ART-03'):
-        raise ArtifactMissingError("C5 requires ART-03 (Purchase Order).")
-        
+    """Confirmar SAP (C5) — sin gate de artefactos, permite SAP en cualquier momento."""
+    sap_number = payload.get('sap_number', '')
+
     # S14-05: Save immutable snapshot of commercial terms
     now = timezone.now()
     expediente.snapshot_commercial = {
         'snapshot_date': now.isoformat(),
+        'sap_number': sap_number,
         'pricing_mode': expediente.mode,
         'freight_mode': expediente.freight_mode,
         'transport_mode': expediente.transport_mode,
         'dispatch_mode': expediente.dispatch_mode,
-        'credit_clock_start_rule': expediente.credit_clock_start_rule,
+        'credit_clock_start_rule': getattr(expediente, 'credit_clock_start_rule', None),
     }
-    
-    # S16-04: Automatic Pricing assignment
-    assign_agreement_defaults(expediente)
-    
+
+    # S16-04: Assign agreement defaults (optional — skip silently if field not present)
+    try:
+        from ..pricing import assign_agreement_defaults
+        assign_agreement_defaults(expediente)
+    except (AttributeError, Exception):
+        pass  # subsidiary_id or agreement lookup not available — non-blocking
+
     expediente.save(update_fields=['snapshot_commercial'])

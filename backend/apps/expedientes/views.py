@@ -244,6 +244,8 @@ class ExpedienteBundleView(APIView):
              'payload': e.payload}
             for e in events
         ]
+        # S21: Expose is_admin so frontend can show the Admin Panel
+        result['is_admin'] = request.user.is_superuser
 
         return Response(result)
 

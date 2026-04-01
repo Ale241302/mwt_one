@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { FileText, Package, Truck, DollarSign, CreditCard, XCircle, Lock, Unlock, Receipt, PlusCircle } from "lucide-react";
+import { FileText, Package, Truck, DollarSign, CreditCard, XCircle, Lock, Unlock, Receipt, PlusCircle, History, ChevronRight } from "lucide-react";
 import api from "@/lib/api";
 import FormModal from "@/components/ui/FormModal";
 
@@ -16,30 +16,32 @@ interface ArtifactModalProps {
   isAdmin?: boolean;
   /** Callback para abrir un nuevo formulario vacío desde el readOnly */
   onNewRecord?: () => void;
+  /** Lista completa de todos los registros previos de este mismo tipo */
+  allArtifacts?: any[];
 }
 
 const COMMAND_META: Record<string, { label: string; endpoint: string; icon: React.ReactNode; color: string; bgClass: string; textClass: string }> = {
-  C2:  { label: "Registrar OC",             endpoint: "register-oc",              icon: <FileText size={18}/>,   color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700",            textClass: "text-blue-700" },
-  C3:  { label: "Registrar Proforma",        endpoint: "register-proforma",        icon: <FileText size={18}/>,   color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600",       textClass: "text-purple-600" },
-  C4:  { label: "Decidir Modo",              endpoint: "decide-mode",              icon: <Package size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700",         textClass: "text-amber-700" },
-  C5:  { label: "Confirmar SAP",             endpoint: "confirm-sap",              icon: <Package size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C6:  { label: "Confirmar Producción",      endpoint: "confirm-production",       icon: <Package size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C7:  { label: "Registrar Embarque",        endpoint: "register-shipment",        icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700",            textClass: "text-blue-700" },
-  C8:  { label: "Cotización Flete",          endpoint: "register-freight-quote",   icon: <DollarSign size={18}/>, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700",         textClass: "text-amber-700" },
-  C9:  { label: "Registrar Aduana",          endpoint: "register-customs",         icon: <FileText size={18}/>,   color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600",       textClass: "text-purple-600" },
-  C10: { label: "Aprobar Despacho",          endpoint: "approve-dispatch",         icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C11: { label: "Confirmar Salida (MWT)",    endpoint: "confirm-departure-mwt",    icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700",            textClass: "text-blue-700" },
-  C11B:{ label: "Confirmar Salida (China)",  endpoint: "confirm-departure-china",  icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700",            textClass: "text-blue-700" },
-  C12: { label: "Confirmar Llegada",         endpoint: "confirm-arrival",          icon: <Truck size={18}/>,      color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C13: { label: "Emitir Factura MWT",        endpoint: "issue-invoice",            icon: <Receipt size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C14: { label: "Cerrar Expediente",         endpoint: "close",                    icon: <Lock size={18}/>,       color: "var(--brand-primary)", bgClass: "bg-slate-600 border-slate-600",         textClass: "text-slate-600" },
-  C15: { label: "Registrar Costo",           endpoint: "register-cost",            icon: <DollarSign size={18}/>, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700",         textClass: "text-amber-700" },
-  C16: { label: "Cancelar Expediente",       endpoint: "cancel",                   icon: <XCircle size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600",             textClass: "text-red-600" },
-  C17: { label: "Bloquear Expediente",       endpoint: "block",                    icon: <Lock size={18}/>,       color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600",             textClass: "text-red-600" },
-  C18: { label: "Desbloquear Expediente",    endpoint: "unblock",                  icon: <Unlock size={18}/>,     color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C21: { label: "Registrar Pago",            endpoint: "register-payment",         icon: <CreditCard size={18}/>, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C22: { label: "Emitir Factura Comisión",   endpoint: "issue-commission-invoice", icon: <Receipt size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600",       textClass: "text-purple-600" },
-  C30: { label: "Materializar Logística",    endpoint: "materialize-logistics",    icon: <Package size={18}/>,    color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700",         textClass: "text-amber-700" },
+  C3: { label: "Registrar OC", endpoint: "register-oc", icon: <FileText size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
+  C2: { label: "Registrar Proforma", endpoint: "register-proforma", icon: <FileText size={18} />, color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
+  C4: { label: "Decidir Modo", endpoint: "decide-mode", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
+  C5: { label: "Confirmar SAP", endpoint: "confirm-sap", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
+  C6: { label: "Confirmar Producción", endpoint: "confirm-production", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C7: { label: "Registrar Embarque", endpoint: "register-shipment", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
+  C8: { label: "Cotización Flete", endpoint: "register-freight-quote", icon: <DollarSign size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
+  C9: { label: "Registrar Aduana", endpoint: "register-customs", icon: <FileText size={18} />, color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
+  C10: { label: "Aprobar Despacho", endpoint: "approve-dispatch", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C11: { label: "Confirmar Salida (MWT)", endpoint: "confirm-departure-mwt", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
+  C11B: { label: "Confirmar Salida (China)", endpoint: "confirm-departure-china", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
+  C12: { label: "Confirmar Llegada", endpoint: "confirm-arrival", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C13: { label: "Emitir Factura MWT", endpoint: "issue-invoice", icon: <Receipt size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C14: { label: "Cerrar Expediente", endpoint: "close", icon: <Lock size={18} />, color: "var(--brand-primary)", bgClass: "bg-slate-600 border-slate-600", textClass: "text-slate-600" },
+  C15: { label: "Registrar Costo", endpoint: "register-cost", icon: <DollarSign size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
+  C16: { label: "Cancelar Expediente", endpoint: "cancel", icon: <XCircle size={18} />, color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600", textClass: "text-red-600" },
+  C17: { label: "Bloquear Expediente", endpoint: "block", icon: <Lock size={18} />, color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600", textClass: "text-red-600" },
+  C18: { label: "Desbloquear Expediente", endpoint: "unblock", icon: <Unlock size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C21: { label: "Registrar Pago", endpoint: "register-payment", icon: <CreditCard size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C22: { label: "Emitir Factura Comisión", endpoint: "issue-commission-invoice", icon: <Receipt size={18} />, color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
+  C30: { label: "Materializar Logística", endpoint: "materialize-logistics", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
 };
 
 type FormData = Record<string, string | number | boolean>;
@@ -74,9 +76,9 @@ function CommandForm({
   );
 
   switch (commandKey) {
-    case "C2":  return <div className="space-y-3">{inp("Número OC", "oc_number", "text", "OC-2024-001")}{inp("Notas", "notes")}</div>;
-    case "C3":  return <div className="space-y-3">{inp("Número proforma", "proforma_number", "text", "PRF-001")}{inp("Monto (USD)", "amount", "number", "0")}</div>;
-    case "C4":  return (
+    case "C3": return <div className="space-y-3">{inp("Número OC", "oc_number", "text", "OC-2024-001")}{inp("Notas", "notes")}</div>;
+    case "C2": return <div className="space-y-3">{inp("Número proforma", "proforma_number", "text", "PRF-001")}{inp("Monto (USD)", "amount", "number", "0")}</div>;
+    case "C4": return (
       <div className="space-y-3">
         <div>
           <label className="th-label block mb-1">Modo logístico</label>
@@ -88,14 +90,14 @@ function CommandForm({
         </div>
       </div>
     );
-    case "C5":  return <div className="space-y-3">{inp("Número SAP", "sap_number", "text", "SAP-00001")}</div>;
-    case "C6":  return <div className="space-y-3">{inp("Notas de producción", "notes")}</div>;
-    case "C7":  return <div className="space-y-3">{inp("Número BL", "bl_number", "text", "MSCUXXX")}{inp("Transportista", "carrier")}{inp("Puerto origen", "origin_port")}{inp("Puerto destino", "destination_port")}</div>;
-    case "C8":  return <div className="space-y-3">{inp("Monto flete (USD)", "freight_amount", "number", "0")}{inp("Proveedor", "provider")}</div>;
-    case "C9":  return <div className="space-y-3">{inp("Agencia aduanal", "customs_agency")}{inp("Número declaración", "declaration_number")}</div>;
+    case "C5": return <div className="space-y-3">{inp("Número SAP", "sap_number", "text", "SAP-00001")}</div>;
+    case "C6": return <div className="space-y-3">{inp("Notas de producción", "notes")}</div>;
+    case "C7": return <div className="space-y-3">{inp("Número BL", "bl_number", "text", "MSCUXXX")}{inp("Transportista", "carrier")}{inp("Puerto origen", "origin_port")}{inp("Puerto destino", "destination_port")}</div>;
+    case "C8": return <div className="space-y-3">{inp("Monto flete (USD)", "freight_amount", "number", "0")}{inp("Proveedor", "provider")}</div>;
+    case "C9": return <div className="space-y-3">{inp("Agencia aduanal", "customs_agency")}{inp("Número declaración", "declaration_number")}</div>;
     case "C10": return <div className="space-y-3">{inp("Observaciones", "notes")}</div>;
     case "C11": return <div className="space-y-3">{inp("Fecha salida MWT", "departure_date", "date")}{inp("Notas", "notes")}</div>;
-    case "C11B":return <div className="space-y-3">{inp("Fecha salida China", "departure_date", "date")}{inp("Notas", "notes")}</div>;
+    case "C11B": return <div className="space-y-3">{inp("Fecha salida China", "departure_date", "date")}{inp("Notas", "notes")}</div>;
     case "C12": return <div className="space-y-3">{inp("Fecha llegada", "arrival_date", "date")}{inp("Notas", "notes")}</div>;
     case "C13": return <div className="space-y-3">{inp("Número factura", "invoice_number", "text", "INV-001")}{inp("Monto cliente (USD)", "total_client_view", "number", "0")}</div>;
     case "C14": return <div className="space-y-3">{inp("Razón de cierre", "reason")}</div>;
@@ -158,9 +160,11 @@ export default function ArtifactModal({
   onSuccess,
   isAdmin,
   onNewRecord,
+  allArtifacts,
 }: ArtifactModalProps) {
   const isReadOnly = readOnlyProp === true || (!!artifact && readOnlyProp !== false);
 
+  const [activeTab, setActiveTab] = useState<"form" | "history">("form");
   const [form, setForm] = useState<FormData>(artifact?.payload || {});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -168,6 +172,11 @@ export default function ArtifactModal({
   const meta = COMMAND_META[commandKey];
 
   if (!open || !meta) return null;
+
+  // History entries, newest first, excluding the currently viewed artifact
+  const historyEntries = (allArtifacts || []).filter(
+    (a) => !artifact || a !== artifact
+  );
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -182,8 +191,8 @@ export default function ArtifactModal({
       setError(
         errData
           ? Object.entries(errData)
-              .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
-              .join(" | ")
+            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
+            .join(" | ")
           : "Error al ejecutar el comando."
       );
     } finally {
@@ -195,9 +204,12 @@ export default function ArtifactModal({
     ? `Detalle — ${meta.label} (${commandKey})`
     : `${meta.label} (${commandKey})`;
 
+  // Tab bar: only show when there are history entries
+  const showTabs = isReadOnly && historyEntries.length > 0;
+
   const footerContent = (
     <div className="flex items-center justify-between w-full gap-2">
-      <div>
+      <div className="flex items-center gap-2">
         {/* En modo readOnly: botón "Nuevo registro" para crear uno adicional */}
         {isReadOnly && onNewRecord && (
           <button
@@ -234,25 +246,100 @@ export default function ArtifactModal({
       footer={footerContent}
       size="sm"
     >
-      {isReadOnly && (
-        <div className="mb-4 px-3 py-2 rounded-lg bg-bg border border-divider text-xs text-text-tertiary">
-          Registro en solo lectura.
-          {onNewRecord
-            ? " Usa el botón \"Nuevo registro\" para agregar uno adicional."
-            : " Usa \"Nuevo registro\" en el artefacto para actualizarlo."}
+      {/* Tab Navigation */}
+      {showTabs && (
+        <div className="flex gap-1 mb-4 border-b border-divider">
+          <button
+            onClick={() => setActiveTab("form")}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "form"
+              ? "border-b-2 border-primary text-primary"
+              : "text-text-tertiary hover:text-text"
+              }`}
+          >
+            Registro actual
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`px-4 py-2 text-sm font-medium flex items-center gap-1 transition-colors ${activeTab === "history"
+              ? "border-b-2 border-primary text-primary"
+              : "text-text-tertiary hover:text-text"
+              }`}
+          >
+            <History size={13} />
+            Historial
+            <span className="ml-1 text-[10px] bg-slate-100 text-slate-600 rounded-full px-1.5">
+              {historyEntries.length}
+            </span>
+          </button>
         </div>
       )}
-      {error && (
-        <div className="p-3 mb-4 rounded-lg bg-coral-soft/20 border border-coral/30 text-sm text-coral">
-          {error}
+
+      {activeTab === "history" ? (
+        /* History Tab */
+        <div className="space-y-2">
+          {historyEntries.length === 0 ? (
+            <p className="text-sm text-text-tertiary py-4 text-center">
+              No hay registros previos.
+            </p>
+          ) : (
+            historyEntries.map((h, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between p-3 rounded-lg border border-divider hover:bg-bg transition-colors cursor-pointer"
+                onClick={() => {
+                  setActiveTab("form");
+                  setForm(h.payload || {});
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-text-tertiary text-[11px]">{i + 1}.</span>
+                  <span
+                    className={`badge text-[10px] px-1.5 py-0.5 ${h.status === "COMPLETED" || h.status === "completed"
+                      ? "badge-success"
+                      : h.status === "VOIDED" || h.status === "voided"
+                        ? "badge-critical"
+                        : "badge-info"
+                      }`}
+                  >
+                    {h.status}
+                  </span>
+                  <span className="text-text-tertiary text-[11px]">
+                    {new Date(h.created_at).toLocaleDateString("es-CO", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+                <ChevronRight size={14} className="text-text-tertiary" />
+              </div>
+            ))
+          )}
         </div>
+      ) : (
+        /* Form Tab (default) */
+        <>
+          {isReadOnly && (
+            <div className="mb-4 px-3 py-2 rounded-lg bg-bg border border-divider text-xs text-text-tertiary">
+              Registro en solo lectura.
+              {onNewRecord
+                ? ' Usa el botón "Nuevo registro" para agregar uno adicional.'
+                : ' Usa "Nuevo registro" en el artefacto para actualizarlo.'}
+            </div>
+          )}
+          {error && (
+            <div className="p-3 mb-4 rounded-lg bg-coral-soft/20 border border-coral/30 text-sm text-coral">
+              {error}
+            </div>
+          )}
+          <CommandForm
+            commandKey={commandKey}
+            form={form}
+            setForm={setForm}
+            isReadOnly={isReadOnly}
+          />
+        </>
       )}
-      <CommandForm
-        commandKey={commandKey}
-        form={form}
-        setForm={setForm}
-        isReadOnly={isReadOnly}
-      />
     </FormModal>
   );
 }

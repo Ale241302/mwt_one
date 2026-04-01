@@ -5,6 +5,7 @@ Sprint 12: Unified Command Dispatching
 Sprint 17: Portal endpoints added (S17-04)
 Sprint 20: S20-11 ProformaCreateView, S20-10 ProformaModeChangeView
 Sprint 20+: Alias /commands/ para compatibilidad con frontend
+Sprint 21 (S21): Admin advance/revert state + add/remove artifact policy
 """
 from django.urls import path
 from apps.expedientes.views import (
@@ -30,6 +31,13 @@ from apps.expedientes.views_portal import (
 from apps.expedientes.views_s20 import (
     ProformaCreateView,
     ProformaModeChangeView,
+)
+# S21: Admin views (state navigation + policy management)
+from apps.expedientes.views_admin import (
+    AdvanceStateView,
+    RevertStateView,
+    AddArtifactToPolicyView,
+    RemoveArtifactFromPolicyView,
 )
 
 app_name = 'expedientes'
@@ -106,6 +114,14 @@ urlpatterns = [
 
     # S14-15: CEO Override
     path('<uuid:pk>/ceo-override/', CEOOverrideView.as_view(), name='ceo-override'),
+
+    # ── S21: Admin — Navegación de Estado ──
+    path('<uuid:pk>/admin/advance-state/', AdvanceStateView.as_view(), name='admin-advance-state'),
+    path('<uuid:pk>/admin/revert-state/', RevertStateView.as_view(), name='admin-revert-state'),
+
+    # ── S21: Admin — Política de Artefactos ──
+    path('<uuid:pk>/admin/policy/add-artifact/', AddArtifactToPolicyView.as_view(), name='admin-policy-add-artifact'),
+    path('<uuid:pk>/admin/policy/remove-artifact/', RemoveArtifactFromPolicyView.as_view(), name='admin-policy-remove-artifact'),
 
     # ── S17-04: Portal endpoints (tenant-scoped, no CEO fields) ──
     path('portal/', PortalExpedienteListView.as_view(), name='portal-list'),
