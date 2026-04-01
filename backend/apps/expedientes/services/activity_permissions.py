@@ -29,7 +29,12 @@ def get_visible_events(user, base_qs=None):
     from apps.expedientes.models import EventLog
 
     qs = base_qs if base_qs is not None else EventLog.objects.all()
-    qs = qs.select_related('expediente', 'proforma', 'user')
+    # BUG-FIX 3: NO incluir 'expediente' en select_related.
+    # EventLog.expediente es FK nullable añadida en S21-01; los registros
+    # legacy (pre-S21) tienen expediente_id=NULL y select_related sobre ellos
+    # puede lanzar RelatedObjectDoesNotExist en accesos posteriores.
+    # El serializer accede a expediente_id directamente (campo escalar), no al objeto.
+    qs = qs.select_related('user', 'proforma')
 
     user_role = getattr(user, 'role', None)
 
