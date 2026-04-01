@@ -431,7 +431,8 @@ class FinancialDashboardView(APIView):
         )
         total_invoiced = Decimal('0')
         for art in invoiced_artifacts:
-            total_invoiced += _safe_decimal(art.payload.get('total_client_view'))
+            payload = getattr(art, 'payload', {}) or {}
+            total_invoiced += _safe_decimal(payload.get('total_client_view'))
 
         total_paid = PaymentLine.objects.filter(
             expediente__in=active_expedientes
@@ -455,7 +456,8 @@ class FinancialDashboardView(APIView):
                 expediente__in=active_expedientes,
             )
             for art in brand_arts:
-                brand_invoiced += _safe_decimal(art.payload.get('total_client_view'))
+                payload = getattr(art, 'payload', {}) or {}
+                brand_invoiced += _safe_decimal(payload.get('total_client_view'))
             brand_breakdown.append({
                 'brand': b['brand'] or 'Sin marca',
                 'count': b['count'],

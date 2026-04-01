@@ -42,10 +42,10 @@ def get_visible_events(user, base_qs=None):
     if user_role == 'CEO' or user.is_superuser:
         return qs
 
-    # CLIENT_*: tiene client_subsidiary → filtrar por subsidiaria y excluir eventos CEO-only
-    if getattr(user, 'client_subsidiary', None):
+    # CLIENT_*: tiene legal_entity → filtrar por cliente y excluir eventos CEO-only
+    if user.role.startswith('CLIENT') and user.legal_entity:
         return qs.filter(
-            expediente__client_subsidiary=user.client_subsidiary
+            expediente__client=user.legal_entity
         ).exclude(event_type__in=CEO_ONLY_EVENT_TYPES)
 
     # AGENT_* y cualquier otro rol: solo expedientes donde el agente ha disparado algún evento

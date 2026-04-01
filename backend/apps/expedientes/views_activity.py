@@ -69,7 +69,7 @@ class ActivityFeedListView(ListAPIView):
         unread_only = self.request.query_params.get('unread_only', '').lower()
         if unread_only in ('true', '1', 'yes'):
             state, _ = UserNotificationState.objects.get_or_create(user=user)
-            if state.last_seen_at:
+            if state and state.last_seen_at:
                 qs = qs.filter(occurred_at__gt=state.last_seen_at)
             # Si last_seen_at es NULL todo es unread → no aplicar filtro adicional
 
@@ -87,7 +87,7 @@ class ActivityFeedCountView(APIView):
         state, _ = UserNotificationState.objects.get_or_create(user=user)
 
         qs = get_visible_events(user)
-        if state.last_seen_at:
+        if state and state.last_seen_at:
             qs = qs.filter(occurred_at__gt=state.last_seen_at)
 
         # BUG-FIX 2: Un queryset con slice (qs[:100]) no soporta .count() en Django
@@ -117,9 +117,9 @@ class ActivityFeedMarkSeenView(APIView):
         latest_event = base_qs.first()
 
         state, _ = UserNotificationState.objects.get_or_create(user=user)
-        previous = state.last_seen_at
+        previous = state.last_seen_at if state else None
 
-        if latest_event:
+        if latest_event and state:
             state.last_seen_at = latest_event.occurred_at
             state.save(update_fields=['last_seen_at', 'updated_at'])
 
