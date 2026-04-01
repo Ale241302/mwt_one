@@ -529,8 +529,15 @@ class EventLog(models.Model):
         null=True, blank=True,
         on_delete=models.SET_NULL,
         limit_choices_to={'artifact_type': 'ART-02'},
-        related_name='event_logs',
+        related_name='event_logs_proforma',
         help_text='S21: Proforma (ART-02) relacionada con el evento. NULL si no aplica.'
+    )
+    expediente = models.ForeignKey(
+        'Expediente',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='event_logs',
+        help_text='S21: Expediente relacionado con el evento.'
     )
     action_source = models.CharField(
         max_length=32, null=True, blank=True,

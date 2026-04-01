@@ -397,6 +397,18 @@ class MirrorPDFView(APIView):
 # SPRINT 4 S4-11: Dashboard Financial Endpoints
 # ═══════════════════════════════════════════════════════════════════
 
+def _safe_decimal(value):
+    try:
+        if value is None:
+            return Decimal('0')
+        # Clean potential commas or formatting
+        clean_val = str(value).replace(',', '').strip()
+        if not clean_val or clean_val.lower() == 'none':
+            return Decimal('0')
+        return Decimal(clean_val)
+    except:
+        return Decimal('0')
+
 class FinancialDashboardView(APIView):
     """GET /api/ui/dashboard/financial/"""
     permission_classes = [IsAuthenticated]
@@ -419,7 +431,7 @@ class FinancialDashboardView(APIView):
         )
         total_invoiced = Decimal('0')
         for art in invoiced_artifacts:
-            total_invoiced += Decimal(str(art.payload.get('total_client_view', 0)))
+            total_invoiced += _safe_decimal(art.payload.get('total_client_view'))
 
         total_paid = PaymentLine.objects.filter(
             expediente__in=active_expedientes
@@ -443,7 +455,7 @@ class FinancialDashboardView(APIView):
                 expediente__in=active_expedientes,
             )
             for art in brand_arts:
-                brand_invoiced += Decimal(str(art.payload.get('total_client_view', 0)))
+                brand_invoiced += _safe_decimal(art.payload.get('total_client_view'))
             brand_breakdown.append({
                 'brand': b['brand'] or 'Sin marca',
                 'count': b['count'],
