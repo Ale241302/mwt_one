@@ -7,6 +7,7 @@ import api from "@/lib/api";
 import { useParams } from "next/navigation";
 import { StateBadge } from "@/components/ui/StateBadge";
 import { StateTimelinePortal } from "@/components/portal/StateTimelinePortal";
+import { PortalCatalogTab } from "@/components/portal/PortalCatalogTab";
 
 interface Expediente {
   expediente_id: string;
@@ -25,13 +26,13 @@ export default function PortalPage() {
   const [search, setSearch] = useState("");
 
   const TABS = [
-    { id: "dashboard", label: "General", icon: LayoutDashboard },
-    { id: "catalog", label: "Catálogo", icon: Store },
-    { id: "cart", label: "Carrito", icon: ShoppingBag },
-    { id: "active-orders", label: "Pedidos Activos", icon: Activity },
-    { id: "history", label: "Historial", icon: History },
-    { id: "financials", label: "Finanzas", icon: DollarSign },
-    { id: "settings", label: "Perfil", icon: Settings },
+    { id: "dashboard",     label: "General",       icon: LayoutDashboard },
+    { id: "catalog",       label: "Catálogo",       icon: Store },
+    { id: "cart",          label: "Carrito",        icon: ShoppingBag },
+    { id: "active-orders", label: "Pedidos Activos",icon: Activity },
+    { id: "history",       label: "Historial",      icon: History },
+    { id: "financials",    label: "Finanzas",       icon: DollarSign },
+    { id: "settings",      label: "Perfil",         icon: Settings },
   ];
 
   const fetchData = useCallback(async () => {
@@ -46,8 +47,8 @@ export default function PortalPage() {
     }
   }, []);
 
-  useEffect(() => { 
-    if (activeTab === "active-orders") fetchData(); 
+  useEffect(() => {
+    if (activeTab === "active-orders") fetchData();
     else setLoading(false);
   }, [activeTab, fetchData]);
 
@@ -88,57 +89,60 @@ export default function PortalPage() {
 
       <div className="tab-content py-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
         {activeTab === "dashboard" && (
-           <div className="space-y-6">
-              <div className="card p-6 bg-gradient-to-r from-brand to-brand-accent text-white border-none relative overflow-hidden">
-                <div className="relative z-10">
-                  <h3 className="text-xl font-bold mb-2">¡Bienvenido de nuevo!</h3>
-                  <p className="opacity-90 max-w-md text-sm mb-6">Completa tu perfil y descubre todas las herramientas que tenemos para potenciar tu negocio.</p>
-                  <Link 
-                    href={`/${lang}/portal/onboarding`}
-                    className="btn btn-md bg-white text-brand hover:bg-white/90 border-none px-6"
-                  >
-                    Abrir Asistente de Configuración <ArrowRight size={16} className="ml-2" />
-                  </Link>
-                </div>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+          <div className="space-y-6">
+            <div className="card p-6 bg-gradient-to-r from-brand to-brand-accent text-white border-none relative overflow-hidden">
+              <div className="relative z-10">
+                <h3 className="text-xl font-bold mb-2">¡Bienvenido de nuevo!</h3>
+                <p className="opacity-90 max-w-md text-sm mb-6">Completa tu perfil y descubre todas las herramientas que tenemos para potenciar tu negocio.</p>
+                <Link
+                  href={`/${lang}/portal/onboarding`}
+                  className="btn btn-md bg-white text-brand hover:bg-white/90 border-none px-6"
+                >
+                  Abrir Asistente de Configuración <ArrowRight size={16} className="ml-2" />
+                </Link>
               </div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+            </div>
 
-              <StateTimelinePortal currentStatus="OPERACION" />
+            <StateTimelinePortal currentStatus="OPERACION" />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="card p-5">
-                  <h3 className="heading-sm mb-2 text-text-tertiary uppercase text-[10px]">Crédito Disponible</h3>
-                  <p className="text-2xl font-bold text-navy">$45,000 <span className="text-xs font-normal text-text-tertiary">USD</span></p>
-                </div>
-                <div className="card p-5">
-                  <h3 className="heading-sm mb-2 text-text-tertiary uppercase text-[10px]">Expedientes en Tránsito</h3>
-                  <p className="text-2xl font-bold text-navy">12</p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="card p-5">
+                <h3 className="heading-sm mb-2 text-text-tertiary uppercase text-[10px]">Crédito Disponible</h3>
+                <p className="text-2xl font-bold text-navy">$45,000 <span className="text-xs font-normal text-text-tertiary">USD</span></p>
               </div>
-           </div>
+              <div className="card p-5">
+                <h3 className="heading-sm mb-2 text-text-tertiary uppercase text-[10px]">Expedientes en Tránsito</h3>
+                <p className="text-2xl font-bold text-navy">12</p>
+              </div>
+            </div>
+          </div>
         )}
+
+        {/* S22-18 — PortalCatalogTab: precio post-descuento + MOQ. NUNCA expone source/base_price */}
+        {activeTab === "catalog" && <PortalCatalogTab />}
 
         {activeTab === "active-orders" && (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-2">
-               <div className="relative w-72">
-                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
-                 <input
-                   type="text"
-                   placeholder="Buscar ID..."
-                   value={search}
-                   onChange={(e) => setSearch(e.target.value)}
-                   className="input pl-9 text-xs"
-                 />
-               </div>
+              <div className="relative w-72">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                <input
+                  type="text"
+                  placeholder="Buscar ID..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="input pl-9 text-xs"
+                />
+              </div>
             </div>
 
             {loading ? (
               <div className="empty-state py-12">Cargando expedientes...</div>
             ) : filtered.length === 0 ? (
               <div className="card p-12 text-center text-text-tertiary">
-                 <Activity size={40} className="mx-auto mb-3 opacity-20" />
-                 <p className="text-sm">No se encontraron expedientes activos.</p>
+                <Activity size={40} className="mx-auto mb-3 opacity-20" />
+                <p className="text-sm">No se encontraron expedientes activos.</p>
               </div>
             ) : (
               <div className="card shadow-sm overflow-hidden border-border/60">
@@ -164,7 +168,7 @@ export default function PortalPage() {
                           {new Date(e.updated_at).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-4 text-right">
-                          <Link 
+                          <Link
                             href={`/${lang}/expedientes/${e.expediente_id}`}
                             className="btn btn-sm btn-ghost text-brand text-xs font-semibold"
                           >
@@ -180,11 +184,11 @@ export default function PortalPage() {
           </div>
         )}
 
-        {["catalog", "cart", "history", "financials", "settings"].includes(activeTab) && (
-           <div className="card p-12 text-center text-text-tertiary">
-             <Store size={40} className="mx-auto mb-3 opacity-20" />
-             <p className="text-sm">Módulo en desarrollo para la siguiente fase.</p>
-           </div>
+        {["cart", "history", "financials", "settings"].includes(activeTab) && (
+          <div className="card p-12 text-center text-text-tertiary">
+            <Store size={40} className="mx-auto mb-3 opacity-20" />
+            <p className="text-sm">Módulo en desarrollo para la siguiente fase.</p>
+          </div>
         )}
       </div>
     </div>

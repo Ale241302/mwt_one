@@ -8,6 +8,7 @@ import { PricingTab } from "@/components/brand-console/PricingTab";
 import { OperationsTab } from "@/components/brand-console/OperationsTab";
 import { PaymentTermsTab } from "@/components/brand-console/PaymentTermsTab";
 import { AssignmentsTab } from "@/components/brand-console/AssignmentsTab";
+import { CatalogTab } from "@/components/brand-console/CatalogTab";
 
 export default function BrandDetailPage() {
   const params = useParams();
@@ -80,12 +81,8 @@ export default function BrandDetailPage() {
              <p className="text-sm">Consulta pedidos entrantes y su estado de procesamiento.</p>
            </div>
         )}
-        {activeTab === "catalog" && (
-           <div className="card p-8 text-center text-text-tertiary">
-             <Box size={40} className="mx-auto mb-3 opacity-20" />
-             <p className="text-sm">Catálogo maestro de productos y configuración base de precios.</p>
-           </div>
-        )}
+        {/* S22-15 — CatalogTab con precio base, MOQ y tallas */}
+        {activeTab === "catalog"       && <CatalogTab />}
         {activeTab === "pricing"       && <PricingTab />}
         {activeTab === "operations"    && <OperationsTab />}
         {activeTab === "payment-terms" && <PaymentTermsTab />}
