@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Layers, FileText, ShoppingCart, Box, DollarSign, Settings, ArrowLeft } from "lucide-react";
+import { Layers, FileText, ShoppingCart, Box, DollarSign, Settings, CreditCard, Link2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { PricingTab } from "@/components/brand-console/PricingTab";
 import { OperationsTab } from "@/components/brand-console/OperationsTab";
+import { PaymentTermsTab } from "@/components/brand-console/PaymentTermsTab";
+import { AssignmentsTab } from "@/components/brand-console/AssignmentsTab";
 
 export default function BrandDetailPage() {
   const params = useParams();
@@ -14,12 +16,16 @@ export default function BrandDetailPage() {
   const [activeTab, setActiveTab] = useState("overview");
 
   const TABS = [
-    { id: "overview", label: "Resumen", icon: Layers },
-    { id: "agreements", label: "Acuerdos y Políticas", icon: FileText },
-    { id: "orders", label: "Pedidos", icon: ShoppingCart },
-    { id: "catalog", label: "Catálogo", icon: Box },
-    { id: "pricing", label: "Precios", icon: DollarSign },
-    { id: "operations", label: "Operaciones", icon: Settings },
+    { id: "overview",      label: "Resumen",            icon: Layers },
+    { id: "agreements",    label: "Acuerdos y Políticas", icon: FileText },
+    { id: "orders",        label: "Pedidos",             icon: ShoppingCart },
+    { id: "catalog",       label: "Catálogo",            icon: Box },
+    { id: "pricing",       label: "Precios",             icon: DollarSign },
+    { id: "operations",    label: "Operaciones",         icon: Settings },
+    // S22-16
+    { id: "payment-terms", label: "Términos de Pago",    icon: CreditCard },
+    // S22-17
+    { id: "assignments",   label: "Assignments",         icon: Link2 },
   ];
 
   return (
@@ -80,8 +86,10 @@ export default function BrandDetailPage() {
              <p className="text-sm">Catálogo maestro de productos y configuración base de precios.</p>
            </div>
         )}
-        {activeTab === "pricing" && <PricingTab />}
-        {activeTab === "operations" && <OperationsTab />}
+        {activeTab === "pricing"       && <PricingTab />}
+        {activeTab === "operations"    && <OperationsTab />}
+        {activeTab === "payment-terms" && <PaymentTermsTab />}
+        {activeTab === "assignments"   && <AssignmentsTab />}
       </div>
     </div>
   );
