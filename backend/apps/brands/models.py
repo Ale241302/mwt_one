@@ -11,6 +11,14 @@ class Brand(TimestampMixin):
     name = models.CharField(max_length=255)
     brand_type = models.CharField(max_length=20, choices=BrandType.choices, default=BrandType.CLIENT)
     is_active = models.BooleanField(default=True)
+    # S22-04: Alerta de margen mínimo. Solo activa si tiene valor (nullable).
+    min_margin_alert_pct = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Porcentaje mínimo de margen. Si el CPA cacheado cae por debajo, se genera una alerta.',
+    )
 
     def __str__(self):
         return self.name
