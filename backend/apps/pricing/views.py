@@ -5,11 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count, Q
-from apps.pricing.serializers import (
-    BulkAssignmentSerializer, PricingPortalSerializer, PricingInternalSerializer,
-    PriceListVersionSerializer, PriceListGradeItemSerializer,
-    EarlyPaymentPolicySerializer, ClientProductAssignmentSerializer
-)
+from rest_framework.decorators import action
 
 
 
@@ -407,8 +403,11 @@ class PriceListVersionViewSet(viewsets.ReadOnlyModelViewSet):
     GET /api/pricing/pricelists/
     Listar y recuperar versiones de pricelist por marca.
     """
-    serializer_class = PriceListVersionSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        from apps.pricing.serializers import PriceListVersionSerializer
+        return PriceListVersionSerializer
 
     def get_queryset(self):
         from apps.pricing.models import PriceListVersion
@@ -420,10 +419,11 @@ class PriceListVersionViewSet(viewsets.ReadOnlyModelViewSet):
             qs = qs.filter(brand_id=brand_id)
         return qs
 
-    from rest_framework.decorators import action
     @action(detail=True, methods=['get'])
     def items(self, request, pk=None):
         from apps.pricing.models import PriceListGradeItem
+        from apps.pricing.serializers import PriceListGradeItemSerializer
+        items = PriceListGradeItem.objects.filter(pricelist_version_id=pk)
         items = PriceListGradeItem.objects.filter(pricelist_version_id=pk)
         serializer = PriceListGradeItemSerializer(items, many=True)
         return Response(serializer.data)
@@ -438,8 +438,11 @@ class EarlyPaymentPolicyViewSet(viewsets.ModelViewSet):
     """
     CRUD /api/pricing/early-payment-policies/
     """
-    serializer_class = EarlyPaymentPolicySerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        from apps.pricing.serializers import EarlyPaymentPolicySerializer
+        return EarlyPaymentPolicySerializer
 
     def get_queryset(self):
         from apps.pricing.models import EarlyPaymentPolicy
@@ -459,8 +462,11 @@ class ClientAssignmentViewSet(viewsets.ReadOnlyModelViewSet):
     """
     GET /api/pricing/client-assignments/
     """
-    serializer_class = ClientProductAssignmentSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        from apps.pricing.serializers import ClientProductAssignmentSerializer
+        return ClientProductAssignmentSerializer
 
     def get_queryset(self):
         from apps.pricing.models import ClientProductAssignment
