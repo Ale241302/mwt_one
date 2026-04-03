@@ -5,6 +5,8 @@ from apps.pricing.views import (
     ResolvePriceView,
     ActivatePriceListView,
     ValidateMOQView,
+    PriceListUploadView,
+    PriceListConfirmView,
 )
 
 urlpatterns = [
@@ -31,5 +33,17 @@ urlpatterns = [
         'validate-moq/',
         ValidateMOQView.as_view(),
         name='pricing-validate-moq',
+    ),
+    # S22-11: Upload pricelist CSV/Excel (preview, sin crear versión)
+    path(
+        'pricelists/upload/',
+        PriceListUploadView.as_view(),
+        name='pricing-pricelist-upload',
+    ),
+    # S22-12: Confirmar upload → crear PriceListVersion + GradeItems
+    path(
+        'pricelists/confirm/',
+        PriceListConfirmView.as_view(),
+        name='pricing-pricelist-confirm',
     ),
 ]
