@@ -1,6 +1,7 @@
 # Sprint 22 - S22-08: Serializers para Bulk Assignment y pricing resolve
 from rest_framework import serializers
-from apps.pricing.models import ClientProductAssignment
+
+
 
 
 class BulkAssignmentSerializer(serializers.Serializer):

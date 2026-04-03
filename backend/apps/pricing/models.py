@@ -182,12 +182,12 @@ class EarlyPaymentPolicy(TimestampMixin):
     client_subsidiary = models.ForeignKey(
         'clientes.ClientSubsidiary',
         on_delete=models.CASCADE,
-        related_name='early_payment_policies',
+        related_name='early_payment_policies_client',
     )
     brand = models.ForeignKey(
         'brands.Brand',
         on_delete=models.PROTECT,
-        related_name='early_payment_policies',
+        related_name='early_payment_policies_brand',
     )
     base_payment_days = models.PositiveIntegerField(default=90)
     base_commission_pct = models.DecimalField(max_digits=5, decimal_places=2, default='10.00')

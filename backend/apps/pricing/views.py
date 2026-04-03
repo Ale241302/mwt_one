@@ -5,9 +5,12 @@ from rest_framework.response import Response
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count, Q
-from apps.pricing.models import (
-    PriceListVersion, PriceListGradeItem, ClientProductAssignment, EarlyPaymentPolicy
+from apps.pricing.serializers import (
+    BulkAssignmentSerializer, PricingPortalSerializer, PricingInternalSerializer,
+    PriceListVersionSerializer, PriceListGradeItemSerializer,
+    EarlyPaymentPolicySerializer, ClientProductAssignmentSerializer
 )
+
 
 
 # -------------------------------------------------------------------
@@ -404,16 +407,14 @@ class PriceListVersionViewSet(viewsets.ReadOnlyModelViewSet):
     GET /api/pricing/pricelists/
     Listar y recuperar versiones de pricelist por marca.
     """
-    from apps.pricing.serializers import PriceListVersionSerializer
-    
-    queryset = PriceListVersion.objects.all().select_related('uploaded_by').annotate(
-        items_count=Count('grade_items')
-    ).order_by('-created_at')
     serializer_class = PriceListVersionSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        from apps.pricing.models import PriceListVersion
+        qs = PriceListVersion.objects.all().select_related('uploaded_by').annotate(
+            items_count=Count('grade_items')
+        ).order_by('-created_at')
         brand_id = self.request.query_params.get('brand_id')
         if brand_id:
             qs = qs.filter(brand_id=brand_id)
@@ -422,10 +423,11 @@ class PriceListVersionViewSet(viewsets.ReadOnlyModelViewSet):
     from rest_framework.decorators import action
     @action(detail=True, methods=['get'])
     def items(self, request, pk=None):
-        from apps.pricing.serializers import PriceListGradeItemSerializer
+        from apps.pricing.models import PriceListGradeItem
         items = PriceListGradeItem.objects.filter(pricelist_version_id=pk)
         serializer = PriceListGradeItemSerializer(items, many=True)
         return Response(serializer.data)
+
 
 
 # -------------------------------------------------------------------
@@ -436,18 +438,17 @@ class EarlyPaymentPolicyViewSet(viewsets.ModelViewSet):
     """
     CRUD /api/pricing/early-payment-policies/
     """
-    from apps.pricing.serializers import EarlyPaymentPolicySerializer
-    
-    queryset = EarlyPaymentPolicy.objects.all().prefetch_related('tiers')
-    permission_classes = [IsAuthenticated]
     serializer_class = EarlyPaymentPolicySerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        from apps.pricing.models import EarlyPaymentPolicy
+        qs = EarlyPaymentPolicy.objects.all().prefetch_related('tiers')
         brand_id = self.request.query_params.get('brand_id')
         if brand_id:
             qs = qs.filter(brand_id=brand_id)
         return qs
+
 
 
 # -------------------------------------------------------------------
@@ -458,20 +459,19 @@ class ClientAssignmentViewSet(viewsets.ReadOnlyModelViewSet):
     """
     GET /api/pricing/client-assignments/
     """
-    from apps.pricing.serializers import ClientProductAssignmentSerializer
-    
-    queryset = ClientProductAssignment.objects.all().select_related(
-        'client_subsidiary', 'brand_sku', 'brand_sku__product'
-    )
-    permission_classes = [IsAuthenticated]
     serializer_class = ClientProductAssignmentSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        from apps.pricing.models import ClientProductAssignment
+        qs = ClientProductAssignment.objects.all().select_related(
+            'client_subsidiary', 'brand_sku', 'brand_sku__product'
+        )
         brand_id = self.request.query_params.get('brand_id')
         if brand_id:
             qs = qs.filter(brand_sku__brand_id=brand_id)
         return qs
+
 
 
 # -------------------------------------------------------------------
