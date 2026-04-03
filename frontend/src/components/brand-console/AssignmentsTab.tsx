@@ -1,69 +1,61 @@
 // S22-17 — Tab 9: Assignments — CPAs por cliente con bulk assign y stale indicator
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RefreshCw, AlertCircle, Package, Plus } from 'lucide-react';
 import { BulkAssignModal } from '@/components/assignments/BulkAssignModal';
-
-interface ClientProductAssignment {
-  id: number;
-  client_subsidiary_name: string;
-  brand_sku_code: string;
-  brand_sku_description: string;
-  cached_client_price: string;
-  cached_base_price: string;
-  cached_at: string;
-  is_active: boolean;
-  is_stale: boolean; // cached_at > 7 días
-}
-
-// Mock — reemplazar con GET /api/pricing/client-assignments/?brand=:slug
-const MOCK_ASSIGNMENTS: ClientProductAssignment[] = [
-  {
-    id: 1, client_subsidiary_name: 'Almacenes XYZ - Bogotá',
-    brand_sku_code: 'MRL-0001-G1', brand_sku_description: 'Bota Seguridad Composite G1',
-    cached_client_price: '27.00', cached_base_price: '28.50',
-    cached_at: '2026-04-02T10:00:00Z', is_active: true, is_stale: false,
-  },
-  {
-    id: 2, client_subsidiary_name: 'Almacenes XYZ - Bogotá',
-    brand_sku_code: 'MRL-0002-G2', brand_sku_description: 'Bota Seguridad Steel G2',
-    cached_client_price: '29.45', cached_base_price: '31.00',
-    cached_at: '2026-03-20T08:00:00Z', is_active: true, is_stale: true,
-  },
-  {
-    id: 3, client_subsidiary_name: 'Distribuidora ABC - Medellín',
-    brand_sku_code: 'MRL-0001-G1', brand_sku_description: 'Bota Seguridad Composite G1',
-    cached_client_price: '27.50', cached_base_price: '28.50',
-    cached_at: '2026-04-01T14:00:00Z', is_active: true, is_stale: false,
-  },
-];
+import { getClientAssignments, ClientProductAssignment } from '@/api/pricing';
 
 export function AssignmentsTab() {
-  const [assignments, setAssignments] = useState<ClientProductAssignment[]>(MOCK_ASSIGNMENTS);
+  const [assignments, setAssignments] = useState<ClientProductAssignment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showBulkAssign, setShowBulkAssign] = useState(false);
   const [recalculating, setRecalculating] = useState<number | null>(null);
   const [filterStale, setFilterStale] = useState(false);
 
-  const staleCount = assignments.filter((a) => a.is_stale).length;
-  const displayed = filterStale ? assignments.filter((a) => a.is_stale) : assignments;
+  const brandId = 1; // Marluvas
+
+  const fetchAssignments = async () => {
+    setLoading(true);
+    try {
+      const data = await getClientAssignments(brandId);
+      setAssignments(data);
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAssignments();
+  }, [brandId]);
 
   const handleRecalculate = async (id: number) => {
     setRecalculating(id);
-    // TODO: POST /api/pricing/client-assignments/:id/recalculate/
-    await new Promise((r) => setTimeout(r, 800));
-    setAssignments((prev) =>
-      prev.map((a) =>
-        a.id === id ? { ...a, cached_at: new Date().toISOString(), is_stale: false } : a
-      )
-    );
-    setRecalculating(null);
+    try {
+      // TODO: Implementar endpoint unitario de recalculate si es necesario, 
+      // o usar el bulk recalculate por brand. Por ahora simulamos actualización.
+      await new Promise((r) => setTimeout(r, 800));
+      await fetchAssignments();
+    } catch (error) {
+      console.error("Error recalculating:", error);
+    } finally {
+      setRecalculating(null);
+    }
   };
 
-  const handleBulkAssignCreated = (count: number) => {
-    // TODO: refetch lista real
+  const handleBulkAssignCreated = () => {
+    fetchAssignments();
     setShowBulkAssign(false);
   };
+
+  const staleCount = assignments.filter((a) => a.is_stale).length;
+  const displayed = filterStale ? assignments.filter((a) => a.is_stale) : assignments;
+
+  if (loading) {
+    return <div className="p-10 text-center text-text-tertiary animate-pulse text-xs">Cargando assignments...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -121,7 +113,7 @@ export function AssignmentsTab() {
                 <td className="text-right font-mono font-semibold">${a.cached_client_price}</td>
                 <td className="text-right font-mono text-text-secondary">${a.cached_base_price}</td>
                 <td className="text-text-tertiary">
-                  {new Date(a.cached_at).toLocaleDateString('es-CO')}
+                  {a.cached_at ? new Date(a.cached_at).toLocaleDateString('es-CO') : 'Nunca'}
                   {a.is_stale && (
                     <span className="ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-amber-100 text-amber-700 px-1.5 py-0.5 text-[10px] font-semibold">
                       <AlertCircle size={9} /> stale

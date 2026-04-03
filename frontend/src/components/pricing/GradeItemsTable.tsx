@@ -2,7 +2,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Package } from 'lucide-react';
+import api from '@/lib/api';
 
 interface GradeItem {
   id: number;
@@ -10,7 +11,6 @@ interface GradeItem {
   grade_label: string;
   unit_price_usd: string;
   moq_total: number;
-  available_sizes: string[];
   size_multipliers: Record<string, number>;
   tip_type: string | null;
   ncm: string | null;
@@ -20,97 +20,83 @@ interface Props {
   versionId: number;
 }
 
-// Mock — reemplazar con GET /api/pricing/pricelists/{id}/items/
-const MOCK_ITEMS: GradeItem[] = [
-  {
-    id: 1, reference_code: 'MRL-0001', grade_label: 'G1 (33-38)',
-    unit_price_usd: '28.50', moq_total: 12,
-    available_sizes: ['33/34','35/36','37/38'],
-    size_multipliers: { '33/34': 2, '35/36': 4, '37/38': 6 },
-    tip_type: 'Composite', ncm: '6402.99.90',
-  },
-  {
-    id: 2, reference_code: 'MRL-0002', grade_label: 'G2 (39-44)',
-    unit_price_usd: '31.00', moq_total: 12,
-    available_sizes: ['39/40','41/42','43/44'],
-    size_multipliers: { '39/40': 4, '41/42': 4, '43/44': 4 },
-    tip_type: 'Steel', ncm: '6402.99.90',
-  },
-  {
-    id: 3, reference_code: 'MRL-0003', grade_label: 'G3 (45-48)',
-    unit_price_usd: '34.75', moq_total: 6,
-    available_sizes: ['45/46','47/48'],
-    size_multipliers: { '45/46': 4, '47/48': 2 },
-    tip_type: 'Composite', ncm: '6402.99.90',
-  },
-];
-
 export function GradeItemsTable({ versionId }: Props) {
   const [items, setItems] = useState<GradeItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    // TODO: fetch real `/api/pricing/pricelists/${versionId}/items/`
-    setTimeout(() => {
-      setItems(MOCK_ITEMS);
-      setLoading(false);
-    }, 600);
+    const fetchItems = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get<GradeItem[]>(`pricing/pricelists/${versionId}/items/`);
+        setItems(res.data);
+      } catch (error) {
+        console.error("Error fetching grade items:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchItems();
   }, [versionId]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-8 text-text-tertiary text-xs">
-        <Loader2 size={14} className="animate-spin" /> Cargando ítems...
+      <div className="flex items-center justify-center gap-2 py-8 text-text-tertiary text-xs bg-bg-alt/10 rounded-lg">
+        <Loader2 size={14} className="animate-spin" /> Cargando ítems de la versión...
       </div>
     );
   }
 
   if (items.length === 0) {
-    return <p className="text-xs text-text-tertiary text-center py-6">Sin ítems en esta versión.</p>;
+    return (
+      <div className="text-center py-10 bg-bg-alt/10 rounded-lg">
+        <Package size={24} className="mx-auto mb-2 opacity-20" />
+        <p className="text-xs text-text-tertiary">Sin ítems cargados en esta versión.</p>
+      </div>
+    );
   }
 
   // Colectar todas las tallas únicas para las columnas
   const allSizes = Array.from(
-    new Set(items.flatMap((i) => i.available_sizes))
-  );
+    new Set(items.flatMap((i) => Object.keys(i.size_multipliers)))
+  ).sort();
 
   return (
-    <div className="overflow-x-auto">
-      <table className="text-xs w-full">
+    <div className="overflow-x-auto border border-border/60 rounded-lg shadow-sm">
+      <table className="text-[11px] w-full bg-white">
         <thead>
-          <tr className="bg-[var(--bg-alt)]">
-            <th className="text-left px-4 py-2">Referencia</th>
-            <th className="text-left px-4 py-2">Grade</th>
-            <th className="text-right px-4 py-2">Precio USD</th>
-            <th className="text-right px-4 py-2">MOQ</th>
+          <tr className="bg-bg-alt/40 font-bold border-b border-border">
+            <th className="text-left px-4 py-2 uppercase tracking-wider text-text-secondary">Referencia</th>
+            <th className="text-left px-4 py-2 uppercase tracking-wider text-text-secondary">Grade</th>
+            <th className="text-right px-4 py-2 uppercase tracking-wider text-text-secondary">Precio USD</th>
+            <th className="text-right px-4 py-2 uppercase tracking-wider text-text-secondary">MOQ</th>
             {allSizes.map((s) => (
-              <th key={s} className="text-center px-3 py-2 text-text-tertiary">{s}</th>
+              <th key={s} className="text-center px-2 py-2 text-text-tertiary font-mono">{s}</th>
             ))}
-            <th className="text-left px-4 py-2">Bico</th>
-            <th className="text-left px-4 py-2">NCM</th>
+            <th className="text-left px-4 py-2 uppercase tracking-wider text-text-secondary">Bico</th>
+            <th className="text-left px-4 py-2 uppercase tracking-wider text-text-secondary">NCM</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-border">
           {items.map((item) => (
-            <tr key={item.id} className="border-t border-border hover:bg-[var(--bg-alt)]/50 transition-colors">
-              <td className="px-4 py-2 font-mono font-medium">{item.reference_code}</td>
-              <td className="px-4 py-2">{item.grade_label}</td>
-              <td className="px-4 py-2 text-right font-mono">${item.unit_price_usd}</td>
-              <td className="px-4 py-2 text-right font-mono">{item.moq_total}</td>
+            <tr key={item.id} className="hover:bg-brand/[0.02] transition-colors">
+              <td className="px-4 py-2 font-mono font-semibold text-navy">{item.reference_code}</td>
+              <td className="px-4 py-2 text-text-secondary">{item.grade_label}</td>
+              <td className="px-4 py-2 text-right font-mono font-bold text-brand">${item.unit_price_usd}</td>
+              <td className="px-4 py-2 text-right font-mono text-navy">{item.moq_total}</td>
               {allSizes.map((s) => (
-                <td key={s} className="px-3 py-2 text-center">
+                <td key={s} className="px-2 py-2 text-center">
                   {item.size_multipliers[s] != null ? (
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-brand/10 text-brand font-mono font-semibold">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-brand/5 text-brand font-mono font-bold border border-brand/10">
                       {item.size_multipliers[s]}
                     </span>
                   ) : (
-                    <span className="text-text-tertiary">—</span>
+                    <span className="text-text-tertiary opacity-30">—</span>
                   )}
                 </td>
               ))}
-              <td className="px-4 py-2 text-text-secondary">{item.tip_type ?? '—'}</td>
-              <td className="px-4 py-2 font-mono text-text-secondary">{item.ncm ?? '—'}</td>
+              <td className="px-4 py-2 text-[10px] uppercase font-medium">{item.tip_type ?? '—'}</td>
+              <td className="px-4 py-2 font-mono text-text-tertiary">{item.ncm ?? '—'}</td>
             </tr>
           ))}
         </tbody>

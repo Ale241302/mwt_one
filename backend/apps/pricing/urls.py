@@ -7,7 +7,17 @@ from apps.pricing.views import (
     ValidateMOQView,
     PriceListUploadView,
     PriceListConfirmView,
+    PriceListVersionViewSet,
+    EarlyPaymentPolicyViewSet,
+    ClientAssignmentViewSet,
+    CatalogBrandSKUView,
 )
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'pricelists', PriceListVersionViewSet, basename='pricelist-version')
+router.register(r'early-payment-policies', EarlyPaymentPolicyViewSet, basename='early-payment-policy')
+router.register(r'client-assignments', ClientAssignmentViewSet, basename='client-assignment')
 
 urlpatterns = [
     # S22-08: Bulk assignment
@@ -46,4 +56,12 @@ urlpatterns = [
         PriceListConfirmView.as_view(),
         name='pricing-pricelist-confirm',
     ),
+    # S22-15: Catalog Enrichment (Brand Console)
+    path(
+        'catalog/brand-skus/',
+        CatalogBrandSKUView.as_view(),
+        name='pricing-catalog-brand-skus',
+    ),
+    # Router endpoints (pricelists list, policies, assignments)
+    path('', include(router.urls)),
 ]

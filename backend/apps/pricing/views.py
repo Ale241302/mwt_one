@@ -2,8 +2,9 @@
 # Sprint 22 - S22-11/12: Upload y Confirm de PriceListVersion
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Count
 
 
 # -------------------------------------------------------------------
@@ -389,3 +390,128 @@ class PriceListConfirmView(APIView):
             'is_active': version.is_active,
             'warnings': confirm_warnings,
         }, status=status.HTTP_201_CREATED)
+
+
+# -------------------------------------------------------------------
+# S22-01: Listar versiones (Brand Console)
+# -------------------------------------------------------------------
+
+class PriceListVersionViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    GET /api/pricing/pricelists/
+    Listar y recuperar versiones de pricelist por marca.
+    """
+    from apps.pricing.models import PriceListVersion
+    from apps.pricing.serializers import PriceListVersionSerializer
+    
+    queryset = PriceListVersion.objects.all().select_related('uploaded_by').annotate(
+        items_count=Count('items')
+    ).order_by('-created_at')
+    serializer_class = PriceListVersionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        brand_id = self.request.query_params.get('brand_id')
+        if brand_id:
+            qs = qs.filter(brand_id=brand_id)
+        return qs
+
+    from rest_framework.decorators import action
+    @action(detail=True, methods=['get'])
+    def items(self, request, pk=None):
+        from apps.pricing.models import PriceListGradeItem
+        from apps.pricing.serializers import PriceListGradeItemSerializer
+        items = PriceListGradeItem.objects.filter(pricelist_version_id=pk)
+        serializer = PriceListGradeItemSerializer(items, many=True)
+        return Response(serializer.data)
+
+
+# -------------------------------------------------------------------
+# S22-16: Payment Terms (EarlyPaymentPolicy)
+# -------------------------------------------------------------------
+
+class EarlyPaymentPolicyViewSet(viewsets.ModelViewSet):
+    """
+    CRUD /api/pricing/early-payment-policies/
+    """
+    from apps.pricing.serializers import EarlyPaymentPolicySerializer
+    
+    queryset = EarlyPaymentPolicy.objects.all().prefetch_related('tiers')
+    permission_classes = [IsAuthenticated]
+    serializer_class = EarlyPaymentPolicySerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        brand_id = self.request.query_params.get('brand_id')
+        if brand_id:
+            qs = qs.filter(brand_id=brand_id)
+        return qs
+
+
+# -------------------------------------------------------------------
+# S22-17: Assignments (CPA)
+# -------------------------------------------------------------------
+
+class ClientAssignmentViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    GET /api/pricing/client-assignments/
+    """
+    from apps.pricing.serializers import ClientProductAssignmentSerializer
+    
+    queryset = ClientProductAssignment.objects.all().select_related(
+        'client_subsidiary', 'brand_sku', 'brand_sku__product'
+    )
+    permission_classes = [IsAuthenticated]
+    serializer_class = ClientProductAssignmentSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        brand_id = self.request.query_params.get('brand_id')
+        if brand_id:
+            qs = qs.filter(brand_sku__brand_id=brand_id)
+        return qs
+
+
+# -------------------------------------------------------------------
+# S22-15: Catalog Enrichment (Brand Console)
+# -------------------------------------------------------------------
+
+class CatalogBrandSKUView(APIView):
+    """
+    GET /api/pricing/catalog/brand-skus/?brand_id=X
+    Retorna lista de BrandSKUs con el precio resuelto inyectado.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from apps.brands.models import BrandSKU
+        from apps.pricing.services import resolve_client_price
+        
+        brand_id = request.query_params.get('brand_id')
+        if not brand_id:
+            return Response({'detail': 'brand_id es requerido'}, status=400)
+
+        skus = BrandSKU.objects.filter(brand_id=brand_id, is_active=True).select_related('product')
+        
+        results = []
+        for sku in skus:
+            # Resolvemos el precio (sin cliente ni subsidiaria, para ver el base de la marca)
+            res = resolve_client_price(
+                product=sku.product,
+                client=None,
+                brand=sku.brand,
+                brand_sku_id=sku.id,
+                client_subsidiary_id=None
+            )
+            
+            results.append({
+                'id': sku.id,
+                'sku_code': sku.sku_code,
+                'reference_code': sku.reference_code,
+                'description': sku.product.name,
+                'is_active': sku.is_active,
+                'price_resolved': res
+            })
+
+        return Response(results)

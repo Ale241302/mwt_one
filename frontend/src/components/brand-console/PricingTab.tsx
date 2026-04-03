@@ -1,91 +1,66 @@
 // S22-14 — Tab 5 Pricing: flujo PriceListVersion (Upload → Preview → Confirm → Activar/Extinguir)
 "use client";
 
-import React, { useState } from 'react';
-import { Upload, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Zap, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Upload, CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
 import { PriceListVersionCard } from '@/components/pricing/PriceListVersionCard';
 import { UploadPreviewModal } from '@/components/pricing/UploadPreviewModal';
 import { GradeItemsTable } from '@/components/pricing/GradeItemsTable';
-
-export interface PriceListVersion {
-  id: number;
-  version_label: string;
-  is_active: boolean;
-  activated_at: string | null;
-  deactivated_at: string | null;
-  deactivation_reason: 'manual' | 'price_decrease' | 'superseded' | null;
-  uploaded_by: string;
-  notes: string;
-  items_count: number;
-}
-
-// Mock data — reemplazar con llamada real a /api/pricing/pricelists/
-const MOCK_VERSIONS: PriceListVersion[] = [
-  {
-    id: 3,
-    version_label: 'Marluvas Q2-2026',
-    is_active: true,
-    activated_at: '2026-04-01T10:00:00Z',
-    deactivated_at: null,
-    deactivation_reason: null,
-    uploaded_by: 'admin@mwt.com',
-    notes: 'Actualización trimestral con nuevos grades',
-    items_count: 142,
-  },
-  {
-    id: 2,
-    version_label: 'Marluvas Q1-2026',
-    is_active: false,
-    activated_at: '2026-01-05T08:00:00Z',
-    deactivated_at: '2026-04-01T10:00:00Z',
-    deactivation_reason: 'superseded',
-    uploaded_by: 'admin@mwt.com',
-    notes: '',
-    items_count: 138,
-  },
-  {
-    id: 1,
-    version_label: 'Marluvas Legacy 2025',
-    is_active: false,
-    activated_at: '2025-06-01T00:00:00Z',
-    deactivated_at: '2026-01-05T08:00:00Z',
-    deactivation_reason: 'superseded',
-    uploaded_by: 'ceo@mwt.com',
-    notes: 'Versión original migrada de Excel',
-    items_count: 115,
-  },
-];
+import { getPriceListVersions, activatePriceList, PriceListVersion } from '@/api/pricing';
+import { useParams } from 'next/navigation';
 
 export function PricingTab() {
-  const [versions, setVersions] = useState<PriceListVersion[]>(MOCK_VERSIONS);
+  const [versions, setVersions] = useState<PriceListVersion[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [activating, setActivating] = useState<number | null>(null);
+  
+  // En un entorno real, el brand_id vendría del contexto de la consola del brand
+  // Por ahora hardcodeamos 1 (Marluvas) o lo inferimos si estuviera en la URL
+  const brandId = 1; 
+
+  const fetchVersions = async () => {
+    setLoading(true);
+    try {
+      const data = await getPriceListVersions(brandId);
+      setVersions(data);
+    } catch (error) {
+      console.error("Error fetching versions:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVersions();
+  }, [brandId]);
 
   const handleActivate = async (versionId: number, force = false) => {
     setActivating(versionId);
-    // TODO: llamar POST /api/pricing/pricelists/{id}/activate/?force=true/false
-    await new Promise((r) => setTimeout(r, 900));
-    setVersions((prev) =>
-      prev.map((v) => ({
-        ...v,
-        is_active: v.id === versionId,
-        deactivated_at: v.is_active && v.id !== versionId ? new Date().toISOString() : v.deactivated_at,
-        deactivation_reason: v.is_active && v.id !== versionId ? 'superseded' : v.deactivation_reason,
-        activated_at: v.id === versionId ? new Date().toISOString() : v.activated_at,
-      }))
-    );
-    setActivating(null);
+    try {
+      await activatePriceList(versionId, force);
+      await fetchVersions(); // Refetch para ver cambios de estado y fechas
+    } catch (error) {
+      console.error("Error activating version:", error);
+      alert("Error al activar: " + (error as any).response?.data?.detail || "Error desconocido");
+    } finally {
+      setActivating(null);
+    }
   };
 
-  const handleUploadConfirm = (newVersion: PriceListVersion) => {
-    setVersions((prev) => [newVersion, ...prev]);
+  const handleUploadConfirm = () => {
+    fetchVersions();
     setShowUpload(false);
   };
 
   const activeVersions = versions.filter((v) => v.is_active);
-  const pendingVersions = versions.filter((v) => !v.is_active && !v.deactivated_at);
-  const historicVersions = versions.filter((v) => !v.is_active && v.deactivated_at);
+  const pendingVersions = versions.filter((v) => !v.is_active && !v.activated_at);
+  const historicVersions = versions.filter((v) => !v.is_active && v.activated_at);
+
+  if (loading) {
+    return <div className="p-10 text-center text-text-tertiary animate-pulse text-xs">Cargando versiones...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -185,6 +160,7 @@ export function PricingTab() {
       {/* Upload modal */}
       {showUpload && (
         <UploadPreviewModal
+          brandId={brandId}
           onClose={() => setShowUpload(false)}
           onConfirm={handleUploadConfirm}
         />

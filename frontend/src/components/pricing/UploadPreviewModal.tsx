@@ -3,7 +3,8 @@
 
 import React, { useRef, useState } from 'react';
 import { X, Upload, CheckCircle, AlertTriangle, FileText } from 'lucide-react';
-import type { PriceListVersion } from '@/components/brand-console/PricingTab';
+import type { PriceListVersion } from '@/api/pricing';
+import api from '@/lib/api';
 
 interface PreviewLine {
   reference_code: string;
@@ -22,11 +23,12 @@ interface UploadPreviewResponse {
 }
 
 interface Props {
+  brandId: number;
   onClose: () => void;
   onConfirm: (version: PriceListVersion) => void;
 }
 
-export function UploadPreviewModal({ onClose, onConfirm }: Props) {
+export function UploadPreviewModal({ brandId, onClose, onConfirm }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [versionLabel, setVersionLabel] = useState('');
@@ -49,54 +51,53 @@ export function UploadPreviewModal({ onClose, onConfirm }: Props) {
     }
     setUploading(true);
     setError(null);
-    // TODO: reemplazar mock con llamada real a POST /api/pricing/pricelists/upload/
-    await new Promise((r) => setTimeout(r, 1200));
-    const mockPreview: UploadPreviewResponse = {
-      valid_lines: 142,
-      warnings: ['Referencia MRL-0045: sin NCM asignado', 'Referencia MRL-0091: talla 47/48 sin multiplicador'],
-      errors: [],
-      preview: [
-        { reference_code: 'MRL-0001', unit_price_usd: '28.50', grade_label: 'G1 (33-38)', moq_total: 12, available_sizes: ['33/34','35/36','37/38'] },
-        { reference_code: 'MRL-0002', unit_price_usd: '31.00', grade_label: 'G2 (39-44)', moq_total: 12, available_sizes: ['39/40','41/42','43/44'] },
-        { reference_code: 'MRL-0003', unit_price_usd: '34.75', grade_label: 'G3 (45-48)', moq_total: 6,  available_sizes: ['45/46','47/48'] },
-        { reference_code: 'MRL-0004', unit_price_usd: '29.20', grade_label: 'G1 (33-38)', moq_total: 12, available_sizes: ['33/34','35/36','37/38'] },
-        { reference_code: 'MRL-0005', unit_price_usd: '32.10', grade_label: 'G2 (39-44)', moq_total: 12, available_sizes: ['39/40','41/42','43/44'] },
-      ],
-      session_id: 'sess_abc123',
-    };
-    setPreview(mockPreview);
-    setStep('preview');
-    setUploading(false);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('brand_id', String(brandId));
+
+    try {
+      const res = await api.post<UploadPreviewResponse>('pricing/pricelists/upload/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setPreview(res.data);
+      setStep('preview');
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Error al procesar el archivo. Revisa el formato.');
+      console.error(err);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleConfirm = async () => {
     if (!preview) return;
     setStep('confirming');
-    // TODO: llamar POST /api/pricing/pricelists/confirm/ con session_id
-    await new Promise((r) => setTimeout(r, 900));
-    const newVersion: PriceListVersion = {
-      id: Date.now(),
-      version_label: versionLabel,
-      is_active: false,
-      activated_at: null,
-      deactivated_at: null,
-      deactivation_reason: null,
-      uploaded_by: 'usuario@mwt.com',
-      notes,
-      items_count: preview.valid_lines,
-    };
-    onConfirm(newVersion);
+    
+    try {
+      const res = await api.post('pricing/pricelists/confirm/', {
+        session_id: preview.session_id,
+        brand_id: brandId,
+        version_label: versionLabel,
+        notes: notes
+      });
+      // El backend retorna la nueva versión creada
+      onConfirm(res.data as any);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Error al confirmar la versión.');
+      setStep('preview');
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 text-left">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="heading-lg">
+          <h2 className="text-lg font-bold text-navy">
             {step === 'upload' && 'Subir nueva pricelist'}
-            {step === 'preview' && 'Vista previa antes de confirmar'}
-            {step === 'confirming' && 'Creando versión...'}
+            {step === 'preview' && 'Vista previa'}
+            {step === 'confirming' && 'Confirmando...'}
           </h2>
           <button onClick={onClose} className="btn btn-ghost btn-sm p-2"><X size={16} /></button>
         </div>
@@ -106,7 +107,7 @@ export function UploadPreviewModal({ onClose, onConfirm }: Props) {
           {step === 'upload' && (
             <>
               <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1.5">Nombre de versión *</label>
+                <label className="block text-xs font-semibold text-text-secondary mb-1.5 uppercase tracking-wider">Nombre de versión *</label>
                 <input
                   type="text"
                   value={versionLabel}
@@ -116,7 +117,7 @@ export function UploadPreviewModal({ onClose, onConfirm }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1.5">Notas (opcional)</label>
+                <label className="block text-xs font-semibold text-text-secondary mb-1.5 uppercase tracking-wider">Notas (opcional)</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -125,78 +126,72 @@ export function UploadPreviewModal({ onClose, onConfirm }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1.5">Archivo CSV o Excel *</label>
+                <label className="block text-xs font-semibold text-text-secondary mb-1.5 uppercase tracking-wider">Archivo CSV o Excel *</label>
                 <div
                   onClick={() => fileRef.current?.click()}
                   className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-brand/50 hover:bg-brand/5 transition-all"
                 >
                   <FileText size={28} className="mx-auto mb-2 text-text-tertiary" />
                   {file ? (
-                    <p className="text-sm font-medium text-text-primary">{file.name}</p>
+                    <p className="text-sm font-medium text-navy">{file.name}</p>
                   ) : (
-                    <p className="text-sm text-text-tertiary">Haz clic para seleccionar CSV o .xlsx</p>
+                    <p className="text-sm text-text-tertiary">Seleccionar archivo (.csv, .xlsx)</p>
                   )}
                   <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileChange} className="hidden" />
                 </div>
               </div>
-              {error && (
-                <p className="text-xs text-red-600 flex items-center gap-1">
-                  <AlertTriangle size={12} /> {error}
-                </p>
-              )}
             </>
           )}
 
           {(step === 'preview' || step === 'confirming') && preview && (
             <>
-              {/* Stats */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-center">
+                <div className="rounded-lg bg-emerald-50 border border-emerald-100 p-3 text-center">
                   <p className="text-lg font-bold text-emerald-700">{preview.valid_lines}</p>
-                  <p className="text-xs text-emerald-600">Líneas válidas</p>
+                  <p className="text-[10px] text-emerald-600 uppercase font-semibold">Válidas</p>
                 </div>
-                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-center">
+                <div className="rounded-lg bg-amber-50 border border-amber-100 p-3 text-center">
                   <p className="text-lg font-bold text-amber-700">{preview.warnings.length}</p>
-                  <p className="text-xs text-amber-600">Warnings</p>
+                  <p className="text-[10px] text-amber-600 uppercase font-semibold">Warnings</p>
                 </div>
-                <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-center">
+                <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-center">
                   <p className="text-lg font-bold text-red-700">{preview.errors.length}</p>
-                  <p className="text-xs text-red-600">Errores</p>
+                  <p className="text-[10px] text-red-600 uppercase font-semibold">Errores</p>
                 </div>
               </div>
 
-              {/* Warnings */}
               {preview.warnings.length > 0 && (
-                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 space-y-1">
-                  <p className="text-xs font-semibold text-amber-700">Warnings ({preview.warnings.length})</p>
-                  {preview.warnings.map((w, i) => (
-                    <p key={i} className="text-xs text-amber-700">• {w}</p>
-                  ))}
+                <div className="rounded-lg bg-amber-50 border border-amber-100 p-3">
+                  <p className="text-[11px] font-bold text-amber-800 uppercase mb-1">Warnings</p>
+                  <div className="max-h-20 overflow-y-auto space-y-1">
+                    {preview.warnings.map((w, i) => (
+                      <p key={i} className="text-[11px] text-amber-700 leading-tight">• {w}</p>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {/* Preview table */}
               <div>
-                <p className="text-xs font-medium text-text-secondary mb-2">Primeras 5 líneas:</p>
-                <div className="table-container rounded-lg overflow-hidden">
-                  <table className="text-xs">
-                    <thead>
+                <p className="text-[11px] font-bold text-text-secondary uppercase mb-2">Vista previa (primeras 5):</p>
+                <div className="table-container rounded-lg overflow-hidden border border-border">
+                  <table className="text-[11px]">
+                    <thead className="bg-bg-alt/40 font-bold">
                       <tr>
-                        <th>Referencia</th>
-                        <th>Precio USD</th>
-                        <th>Grade</th>
-                        <th>MOQ</th>
-                        <th>Tallas</th>
+                        <th className="px-3 py-2">REF</th>
+                        <th className="px-3 py-2">PRECIO</th>
+                        <th className="px-3 py-2">GRADE</th>
+                        <th className="px-3 py-2">MOQ</th>
+                        <th className="px-3 py-2">TALLAS</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-border">
                       {preview.preview.map((row) => (
                         <tr key={row.reference_code}>
-                          <td className="font-mono">{row.reference_code}</td>
-                          <td className="font-mono">${row.unit_price_usd}</td>
-                          <td>{row.grade_label}</td>
-                          <td>{row.moq_total}</td>
-                          <td className="text-text-tertiary">{row.available_sizes.join(', ')}</td>
+                          <td className="px-3 py-2 font-mono text-navy font-semibold">{row.reference_code}</td>
+                          <td className="px-3 py-2 font-mono text-brand font-bold">${row.unit_price_usd}</td>
+                          <td className="px-3 py-2">{row.grade_label}</td>
+                          <td className="px-3 py-2">{row.moq_total}</td>
+                          <td className="px-3 py-2 text-text-tertiary truncate max-w-[150px]">{row.available_sizes.join(', ')}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -205,34 +200,41 @@ export function UploadPreviewModal({ onClose, onConfirm }: Props) {
               </div>
             </>
           )}
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-start gap-2">
+               <AlertTriangle size={14} className="text-red-600 mt-0.5 shrink-0" />
+               <p className="text-xs text-red-700">{error}</p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-bg-alt/10">
           {step === 'upload' && (
             <>
               <button onClick={onClose} className="btn btn-secondary btn-sm">Cancelar</button>
-              <button onClick={handleUpload} disabled={uploading} className="btn btn-primary btn-sm flex items-center gap-2 disabled:opacity-60">
+              <button onClick={handleUpload} disabled={uploading} className="btn btn-primary btn-sm flex items-center gap-2">
                 <Upload size={13} />
-                {uploading ? 'Subiendo...' : 'Subir y previsualizar'}
+                {uploading ? 'Procesando...' : 'Previsualizar'}
               </button>
             </>
           )}
           {step === 'preview' && (
             <>
-              <button onClick={() => setStep('upload')} className="btn btn-secondary btn-sm">← Volver</button>
+              <button onClick={() => setStep('upload')} className="btn btn-ghost btn-sm text-xs font-semibold">← Volver</button>
               <button
                 onClick={handleConfirm}
                 disabled={preview?.errors.length ? preview.errors.length > 0 : false}
-                className="btn btn-primary btn-sm flex items-center gap-2 disabled:opacity-60"
+                className="btn btn-primary btn-sm flex items-center gap-2"
               >
                 <CheckCircle size={13} />
-                Confirmar y crear versión
+                Confirmar
               </button>
             </>
           )}
           {step === 'confirming' && (
-            <button disabled className="btn btn-primary btn-sm opacity-60">Creando versión...</button>
+             <button disabled className="btn btn-primary btn-sm opacity-60">Creando...</button>
           )}
         </div>
       </div>

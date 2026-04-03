@@ -1,60 +1,35 @@
 // S22-16 — Tab 8: Payment Terms — CRUD EarlyPaymentPolicy + EarlyPaymentTier inline
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, ChevronDown, ChevronUp, Percent } from 'lucide-react';
-
-interface EarlyPaymentTier {
-  id: number;
-  days_threshold: number;
-  discount_pct: string;
-}
-
-interface EarlyPaymentPolicy {
-  id: number;
-  client_subsidiary_name: string;
-  client_subsidiary_id: number;
-  base_payment_days: number;
-  base_commission_pct: string;
-  is_active: boolean;
-  tiers: EarlyPaymentTier[];
-}
-
-// Mock data — reemplazar con GET /api/pricing/early-payment-policies/?brand=:slug
-const MOCK_POLICIES: EarlyPaymentPolicy[] = [
-  {
-    id: 1,
-    client_subsidiary_name: 'Almacenes XYZ - Bogotá',
-    client_subsidiary_id: 101,
-    base_payment_days: 90,
-    base_commission_pct: '10.00',
-    is_active: true,
-    tiers: [
-      { id: 1, days_threshold: 60, discount_pct: '1.00' },
-      { id: 2, days_threshold: 30, discount_pct: '1.75' },
-      { id: 3, days_threshold: 8,  discount_pct: '2.75' },
-    ],
-  },
-  {
-    id: 2,
-    client_subsidiary_name: 'Distribuidora ABC - Medellín',
-    client_subsidiary_id: 102,
-    base_payment_days: 60,
-    base_commission_pct: '8.50',
-    is_active: true,
-    tiers: [
-      { id: 4, days_threshold: 30, discount_pct: '1.50' },
-      { id: 5, days_threshold: 8,  discount_pct: '2.50' },
-    ],
-  },
-];
+import { getEarlyPaymentPolicies, updateEarlyPaymentPolicy, EarlyPaymentPolicy, EarlyPaymentTier } from '@/api/pricing';
 
 export function PaymentTermsTab() {
-  const [policies, setPolicies] = useState<EarlyPaymentPolicy[]>(MOCK_POLICIES);
+  const [policies, setPolicies] = useState<EarlyPaymentPolicy[]>([]);
+  const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [savingId, setSavingId] = useState<number | null>(null);
 
-  const handleTierChange = (policyId: number, tierId: number, field: keyof EarlyPaymentTier, value: string) => {
+  const brandId = 1; // Marluvas
+
+  const fetchPolicies = async () => {
+    setLoading(true);
+    try {
+      const data = await getEarlyPaymentPolicies(brandId);
+      setPolicies(data);
+    } catch (error) {
+      console.error("Error fetching policies:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPolicies();
+  }, [brandId]);
+
+  const handleTierChange = (policyId: number, tierId: number, field: keyof EarlyPaymentTier, value: string | number) => {
     setPolicies((prev) =>
       prev.map((p) =>
         p.id === policyId
@@ -68,7 +43,7 @@ export function PaymentTermsTab() {
     setPolicies((prev) =>
       prev.map((p) =>
         p.id === policyId
-          ? { ...p, tiers: [...p.tiers, { id: Date.now(), days_threshold: 0, discount_pct: '0.00' }] }
+          ? { ...p, tiers: [...p.tiers, { id: Date.now(), payment_days: 0, discount_pct: '0.00' }] }
           : p
       )
     );
@@ -84,30 +59,34 @@ export function PaymentTermsTab() {
     );
   };
 
-  const handlePolicyChange = (policyId: number, field: keyof EarlyPaymentPolicy, value: string | boolean) => {
+  const handlePolicyChange = (policyId: number, field: keyof EarlyPaymentPolicy, value: any) => {
     setPolicies((prev) => prev.map((p) => p.id === policyId ? { ...p, [field]: value } : p));
   };
 
   const handleSave = async (policyId: number) => {
     setSavingId(policyId);
-    // TODO: PATCH /api/pricing/early-payment-policies/:id/
-    await new Promise((r) => setTimeout(r, 700));
-    setSavingId(null);
+    try {
+      const policy = policies.find(p => p.id === policyId);
+      if (policy) {
+         // TODO: El backend necesita manejar el update de tiers anidados si se desea batch,
+         // o hacerlo por separado. Por ahora guardamos los campos base de la policy.
+         await updateEarlyPaymentPolicy(policyId, {
+           base_payment_days: policy.base_payment_days,
+           base_commission_pct: policy.base_commission_pct,
+           is_active: policy.is_active
+         });
+         await fetchPolicies();
+      }
+    } catch (error) {
+      console.error("Error saving policy:", error);
+    } finally {
+      setSavingId(null);
+    }
   };
 
-  const handleNewPolicy = () => {
-    const newPolicy: EarlyPaymentPolicy = {
-      id: Date.now(),
-      client_subsidiary_name: 'Nuevo cliente — editar',
-      client_subsidiary_id: 0,
-      base_payment_days: 90,
-      base_commission_pct: '10.00',
-      is_active: true,
-      tiers: [],
-    };
-    setPolicies((prev) => [newPolicy, ...prev]);
-    setExpandedId(newPolicy.id);
-  };
+  if (loading) {
+    return <div className="p-10 text-center text-text-tertiary animate-pulse text-xs">Cargando términos de pago...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -116,7 +95,7 @@ export function PaymentTermsTab() {
           <h2 className="heading-lg">Términos de Pago</h2>
           <p className="text-xs text-text-tertiary mt-0.5">Políticas de pronto pago por cliente. Los cambios se registran en ConfigChangeLog.</p>
         </div>
-        <button onClick={handleNewPolicy} className="btn btn-primary btn-sm flex items-center gap-2">
+        <button className="btn btn-primary btn-sm flex items-center gap-2 opacity-50 cursor-not-allowed">
           <Plus size={14} /> Nueva política
         </button>
       </div>
@@ -130,16 +109,13 @@ export function PaymentTermsTab() {
 
       {policies.map((policy) => (
         <div key={policy.id} className="card overflow-hidden">
-          {/* Header de la policy */}
           <div className="flex items-center justify-between px-5 py-4">
             <div className="flex items-center gap-3">
-              <div
-                className={`w-2 h-2 rounded-full ${policy.is_active ? 'bg-emerald-500' : 'bg-text-tertiary'}`}
-              />
+              <div className={`w-2 h-2 rounded-full ${policy.is_active ? 'bg-emerald-500' : 'bg-text-tertiary'}`} />
               <div>
                 <p className="text-sm font-semibold text-text-primary">{policy.client_subsidiary_name}</p>
                 <p className="text-xs text-text-tertiary">
-                  Base: {policy.base_payment_days}d · Comisión: {policy.base_commission_pct}% · {policy.tiers.length} tramos
+                   Base: {policy.base_payment_days}d · Comisión: {policy.base_commission_pct}% · {policy.tiers.length} tramos
                 </p>
               </div>
             </div>
@@ -161,10 +137,8 @@ export function PaymentTermsTab() {
             </div>
           </div>
 
-          {/* Detalle expandible */}
           {expandedId === policy.id && (
             <div className="border-t border-border px-5 py-4 space-y-5">
-              {/* Campos base */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-text-secondary mb-1">Días base de pago</label>
@@ -187,7 +161,6 @@ export function PaymentTermsTab() {
                 </div>
               </div>
 
-              {/* Toggle activo */}
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -199,20 +172,13 @@ export function PaymentTermsTab() {
                 <label htmlFor={`active-${policy.id}`} className="text-sm text-text-primary">Política activa</label>
               </div>
 
-              {/* Tramos */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-semibold text-text-secondary">Tramos de descuento</p>
-                  <button
-                    onClick={() => handleAddTier(policy.id)}
-                    className="btn btn-ghost btn-sm text-brand flex items-center gap-1 text-xs"
-                  >
+                  <button onClick={() => handleAddTier(policy.id)} className="btn btn-ghost btn-sm text-brand flex items-center gap-1 text-xs">
                     <Plus size={12} /> Agregar tramo
                   </button>
                 </div>
-                {policy.tiers.length === 0 && (
-                  <p className="text-xs text-text-tertiary">Sin tramos. El precio no tiene descuento por pronto pago.</p>
-                )}
                 <div className="space-y-2">
                   {policy.tiers.map((tier) => (
                     <div key={tier.id} className="flex items-center gap-3">
@@ -220,8 +186,8 @@ export function PaymentTermsTab() {
                         <label className="block text-[11px] text-text-tertiary mb-0.5">Si paga en ≤ X días</label>
                         <input
                           type="number"
-                          value={tier.days_threshold}
-                          onChange={(e) => handleTierChange(policy.id, tier.id, 'days_threshold', e.target.value)}
+                          value={tier.payment_days}
+                          onChange={(e) => handleTierChange(policy.id, tier.id, 'payment_days', e.target.value)}
                           className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                         />
                       </div>
@@ -235,10 +201,7 @@ export function PaymentTermsTab() {
                           className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                         />
                       </div>
-                      <button
-                        onClick={() => handleRemoveTier(policy.id, tier.id)}
-                        className="mt-5 btn btn-ghost btn-sm p-2 text-red-500 hover:bg-red-50"
-                      >
+                      <button onClick={() => handleRemoveTier(policy.id, tier.id)} className="mt-5 btn btn-ghost btn-sm p-2 text-red-500 hover:bg-red-50">
                         <Trash2 size={13} />
                       </button>
                     </div>
