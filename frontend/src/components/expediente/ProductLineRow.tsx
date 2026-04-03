@@ -74,7 +74,7 @@ export function ProductLineRow({
     });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brandSkuId, clientSubsidiaryId, paymentDays]);
+  }, [brandSkuId, clientSubsidiaryId, paymentDays, onChange, value.producto_id]);
 
   const isManual = resolved?.source === 'manual' || !resolved;
   const hasMoqWarning = resolved?.grade_moq != null && Number(value.quantity) > 0 && Number(value.quantity) < resolved.grade_moq;

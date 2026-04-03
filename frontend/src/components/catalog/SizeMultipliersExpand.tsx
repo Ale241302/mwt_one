@@ -5,11 +5,12 @@ import React from 'react';
 
 interface Props {
   sizeMultipliers: Record<string, number>;
-  moqTotal: number;
-  gradePriceUsd: string | null;
+  moqTotal?: number;
+  gradePriceUsd?: string | null;
+  gradeLabel?: string | null;
 }
 
-export function SizeMultipliersExpand({ sizeMultipliers, moqTotal, gradePriceUsd }: Props) {
+export function SizeMultipliersExpand({ sizeMultipliers, moqTotal, gradePriceUsd, gradeLabel }: Props) {
   const entries = Object.entries(sizeMultipliers);
 
   if (entries.length === 0) {
@@ -24,8 +25,8 @@ export function SizeMultipliersExpand({ sizeMultipliers, moqTotal, gradePriceUsd
     <div className="px-6 py-4 bg-[var(--bg-alt)] border-t border-border">
       <div className="flex items-center gap-6 mb-3">
         <div className="text-xs">
-          <span className="text-text-tertiary">MOQ Grade:</span>{' '}
-          <span className="font-mono font-semibold text-text-primary">{moqTotal}</span>
+          <span className="text-text-tertiary">{gradeLabel || 'Grade'}:</span>{' '}
+          <span className="font-mono font-semibold text-text-primary">MOQ {moqTotal}</span>
         </div>
         {gradePriceUsd && (
           <div className="text-xs">
@@ -41,7 +42,7 @@ export function SizeMultipliersExpand({ sizeMultipliers, moqTotal, gradePriceUsd
             className="flex flex-col items-center rounded-lg border border-border bg-white px-3 py-2 min-w-[56px]"
           >
             <span className="text-xs text-text-tertiary font-medium">{size}</span>
-            <span className="text-sm font-bold font-mono text-brand mt-0.5">{multiplier}</span>
+            <span className="text-sm font-bold font-mono text-mint mt-0.5">{multiplier}</span>
             <span className="text-[10px] text-text-tertiary">pares</span>
           </div>
         ))}

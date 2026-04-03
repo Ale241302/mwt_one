@@ -20,7 +20,7 @@ export function PricingTab() {
   // Por ahora hardcodeamos 1 (Marluvas) o lo inferimos si estuviera en la URL
   const brandId = 1; 
 
-  const fetchVersions = async () => {
+  const fetchVersions = React.useCallback(async () => {
     setLoading(true);
     try {
       const data = await getPriceListVersions(brandId);
@@ -30,11 +30,11 @@ export function PricingTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [brandId]);
 
   useEffect(() => {
     fetchVersions();
-  }, [brandId]);
+  }, [fetchVersions]);
 
   const handleActivate = async (versionId: number, force = false) => {
     setActivating(versionId);

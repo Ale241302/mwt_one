@@ -1,5 +1,5 @@
 # Sprint 22 - URLs del pricing engine
-from django.urls import path
+from django.urls import path, include
 from apps.pricing.views import (
     BulkAssignmentView,
     ResolvePriceView,

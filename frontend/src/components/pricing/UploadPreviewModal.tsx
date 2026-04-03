@@ -113,7 +113,7 @@ export function UploadPreviewModal({ brandId, onClose, onConfirm }: Props) {
                   value={versionLabel}
                   onChange={(e) => setVersionLabel(e.target.value)}
                   placeholder="Ej: Marluvas Q2-2026"
-                  className="w-full border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                  className="w-full border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
                 />
               </div>
               <div>
@@ -122,14 +122,14 @@ export function UploadPreviewModal({ brandId, onClose, onConfirm }: Props) {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={2}
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy/30 resize-none"
                 />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-text-secondary mb-1.5 uppercase tracking-wider">Archivo CSV o Excel *</label>
                 <div
                   onClick={() => fileRef.current?.click()}
-                  className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-brand/50 hover:bg-brand/5 transition-all"
+                  className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-navy/50 hover:bg-navy/5 transition-all"
                 >
                   <FileText size={28} className="mx-auto mb-2 text-text-tertiary" />
                   {file ? (
@@ -188,7 +188,7 @@ export function UploadPreviewModal({ brandId, onClose, onConfirm }: Props) {
                       {preview.preview.map((row) => (
                         <tr key={row.reference_code}>
                           <td className="px-3 py-2 font-mono text-navy font-semibold">{row.reference_code}</td>
-                          <td className="px-3 py-2 font-mono text-brand font-bold">${row.unit_price_usd}</td>
+                          <td className="px-3 py-2 font-mono text-mint font-bold">${row.unit_price_usd}</td>
                           <td className="px-3 py-2">{row.grade_label}</td>
                           <td className="px-3 py-2">{row.moq_total}</td>
                           <td className="px-3 py-2 text-text-tertiary truncate max-w-[150px]">{row.available_sizes.join(', ')}</td>

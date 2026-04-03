@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 from apps.core.models import TimestampMixin
 
 
@@ -54,7 +55,7 @@ class PriceListVersion(TimestampMixin):
     # NO file_url - usar storage_key
     storage_key = models.CharField(max_length=500, blank=True, default='')
     uploaded_by = models.ForeignKey(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='uploaded_pricelists',

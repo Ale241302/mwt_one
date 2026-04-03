@@ -2,7 +2,7 @@
 "use client";
 
 import React from 'react';
-import { ChevronDown, ChevronUp, Zap, Ban, Clock, CheckCircle, User } from 'lucide-react';
+import { ChevronDown, ChevronUp, Zap, Ban, Clock, CheckCircle, User, Box } from 'lucide-react';
 import type { PriceListVersion } from '@/api/pricing';
 
 const DEACTIVATION_LABELS: Record<string, string> = {
@@ -73,7 +73,7 @@ export function PriceListVersionCard({
               <span className="tabular-nums">{new Date(version.created_at).toLocaleDateString('es-CO')}</span>
             </div>
             {version.notes && (
-              <p className="text-[10px] text-text-secondary mt-1.5 italic line-clamp-1 border-l-2 border-brand/20 pl-2">{version.notes}</p>
+              <p className="text-[10px] text-text-secondary mt-1.5 italic line-clamp-1 border-l-2 border-navy/20 pl-2">{version.notes}</p>
             )}
           </div>
         </div>

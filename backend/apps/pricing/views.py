@@ -4,7 +4,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Count
+from django.db.models import Count, Q
+from apps.pricing.models import (
+    PriceListVersion, PriceListGradeItem, ClientProductAssignment, EarlyPaymentPolicy
+)
 
 
 # -------------------------------------------------------------------
@@ -401,11 +404,10 @@ class PriceListVersionViewSet(viewsets.ReadOnlyModelViewSet):
     GET /api/pricing/pricelists/
     Listar y recuperar versiones de pricelist por marca.
     """
-    from apps.pricing.models import PriceListVersion
     from apps.pricing.serializers import PriceListVersionSerializer
     
     queryset = PriceListVersion.objects.all().select_related('uploaded_by').annotate(
-        items_count=Count('items')
+        items_count=Count('grade_items')
     ).order_by('-created_at')
     serializer_class = PriceListVersionSerializer
     permission_classes = [IsAuthenticated]
@@ -420,7 +422,6 @@ class PriceListVersionViewSet(viewsets.ReadOnlyModelViewSet):
     from rest_framework.decorators import action
     @action(detail=True, methods=['get'])
     def items(self, request, pk=None):
-        from apps.pricing.models import PriceListGradeItem
         from apps.pricing.serializers import PriceListGradeItemSerializer
         items = PriceListGradeItem.objects.filter(pricelist_version_id=pk)
         serializer = PriceListGradeItemSerializer(items, many=True)

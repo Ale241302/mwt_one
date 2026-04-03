@@ -15,7 +15,7 @@ export function AssignmentsTab() {
 
   const brandId = 1; // Marluvas
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = React.useCallback(async () => {
     setLoading(true);
     try {
       const data = await getClientAssignments(brandId);
@@ -25,11 +25,11 @@ export function AssignmentsTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [brandId]);
 
   useEffect(() => {
     fetchAssignments();
-  }, [brandId]);
+  }, [fetchAssignments]);
 
   const handleRecalculate = async (id: number) => {
     setRecalculating(id);

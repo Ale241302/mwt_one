@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('pricing', '0003_pricelistversion_pricelistgradeitem'),
         ('brands', '0002_brandconfigversion_catalogversion'),
-        ('clients', '0001_initial'),
+        ('clientes', '0001_initial'),
     ]
 
     operations = [
@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('client_subsidiary', models.ForeignKey(
                     on_delete=django.db.models.deletion.CASCADE,
                     related_name='product_assignments',
-                    to='clients.clientsubsidiary',
+                    to='clientes.clientsubsidiary',
                 )),
                 ('brand_sku', models.ForeignKey(
                     on_delete=django.db.models.deletion.PROTECT,

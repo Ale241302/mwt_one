@@ -79,15 +79,15 @@ export function GradeItemsTable({ versionId }: Props) {
         </thead>
         <tbody className="divide-y divide-border">
           {items.map((item) => (
-            <tr key={item.id} className="hover:bg-brand/[0.02] transition-colors">
+            <tr key={item.id} className="hover:bg-navy/[0.02] transition-colors">
               <td className="px-4 py-2 font-mono font-semibold text-navy">{item.reference_code}</td>
               <td className="px-4 py-2 text-text-secondary">{item.grade_label}</td>
-              <td className="px-4 py-2 text-right font-mono font-bold text-brand">${item.unit_price_usd}</td>
+              <td className="px-4 py-2 text-right font-mono font-bold text-mint">${item.unit_price_usd}</td>
               <td className="px-4 py-2 text-right font-mono text-navy">{item.moq_total}</td>
               {allSizes.map((s) => (
                 <td key={s} className="px-2 py-2 text-center">
                   {item.size_multipliers[s] != null ? (
-                    <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-brand/5 text-brand font-mono font-bold border border-brand/10">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-mint/5 text-mint font-mono font-bold border border-mint/10">
                       {item.size_multipliers[s]}
                     </span>
                   ) : (

@@ -69,7 +69,7 @@ export function CatalogTab() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [api]);
 
   useEffect(() => { fetchCatalog(); }, [fetchCatalog]);
 
@@ -181,7 +181,7 @@ export function CatalogTab() {
               {/* Group Header */}
               <button
                 onClick={() => toggleProduct(group.product_key)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-brand/[0.02] transition-colors text-left"
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-navy/[0.02] transition-colors text-left"
               >
                 <span className="text-text-tertiary">
                   {isOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
@@ -237,7 +237,7 @@ export function CatalogTab() {
                           <>
                             <tr
                               key={sku.id}
-                              className="hover:bg-brand/[0.02] transition-colors"
+                              className="hover:bg-navy/[0.02] transition-colors"
                             >
                               <td className="px-4 py-3 font-mono text-xs text-navy">{sku.reference_code}</td>
                               <td className="px-4 py-3 text-xs text-text-secondary max-w-[200px] truncate">
@@ -271,7 +271,7 @@ export function CatalogTab() {
                                 {hasSizes ? (
                                   <button
                                     onClick={() => toggleSizes(sku.id)}
-                                    className="flex items-center gap-1 text-xs text-brand hover:underline"
+                                    className="flex items-center gap-1 text-xs text-mint hover:underline"
                                   >
                                     {isSizeOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                                     {Object.keys(pr!.size_multipliers!).length} tallas
@@ -295,11 +295,12 @@ export function CatalogTab() {
                             {isSizeOpen && hasSizes && (
                               <tr key={`${sku.id}-sizes`}>
                                 <td colSpan={7} className="px-4 py-0 bg-bg-alt/30">
-                                  <SizeMultipliersExpand
-                                    sizeMultipliers={pr!.size_multipliers!}
-                                    gradeLabel={pr?.grade_label || undefined}
-                                    moqTotal={pr?.grade_moq || undefined}
-                                  />
+                                    <SizeMultipliersExpand
+                                      sizeMultipliers={pr?.size_multipliers || {}}
+                                      gradeLabel={pr?.grade_label}
+                                      moqTotal={pr?.grade_moq || undefined}
+                                      gradePriceUsd={pr?.price}
+                                    />
                                 </td>
                               </tr>
                             )}

@@ -13,7 +13,7 @@ export function PaymentTermsTab() {
 
   const brandId = 1; // Marluvas
 
-  const fetchPolicies = async () => {
+  const fetchPolicies = React.useCallback(async () => {
     setLoading(true);
     try {
       const data = await getEarlyPaymentPolicies(brandId);
@@ -23,11 +23,11 @@ export function PaymentTermsTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [brandId]);
 
   useEffect(() => {
     fetchPolicies();
-  }, [brandId]);
+  }, [fetchPolicies]);
 
   const handleTierChange = (policyId: number, tierId: number, field: keyof EarlyPaymentTier, value: string | number) => {
     setPolicies((prev) =>
