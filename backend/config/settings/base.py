@@ -11,7 +11,14 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='change-me-in-production')
 DEBUG = env.bool('DJANGO_DEBUG', default=False)
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', 'consola.mwt.one', 'mwt.one', 'go.ranawalk.com'])
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=[
+    '127.0.0.1',
+    'localhost',
+    'consola.mwt.one',
+    'mwt.one',
+    'go.ranawalk.com',
+    'django',        # nombre del servicio Docker interno (Nginx → django:8000)
+])
 
 # --- Sprint 8: Custom user model ---
 AUTH_USER_MODEL = 'users.MWTUser'
