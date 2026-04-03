@@ -44,4 +44,6 @@ urlpatterns = [
     path('api/ui/dashboard/', FinancialDashboardView.as_view(), name='ui-dashboard'),
     # S21: Activity Feed endpoints
     path('api/', include('apps.expedientes.urls_activity')),
+    # S22: Pricing endpoints
+    path('api/pricing/', include('apps.pricing.urls')),
 ]
