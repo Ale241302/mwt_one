@@ -1,1 +1,226 @@
-ZnJvbSBkamFuZ28uZGIgaW1wb3J0IG1vZGVscwpmcm9tIGRqYW5nby51dGlscy50cmFuc2xhdGlvbiBpbXBvcnQgZ2V0dGV4dF9sYXp5IGFzIF8KZnJvbSBhcHBzLmNvcmUubW9kZWxzIGltcG9ydCBUaW1lc3RhbXBNaXhpbgoKCiMgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiMgTW9kZWxvcyBleGlzdGVudGVzIChTMTQpIC0gTk8gTU9ESUZJQ0FSCiMgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgpjbGFzcyBQcmljZUxpc3QoVGltZXN0YW1wTWl4aW4pOgogICAgYnJhbmQgPSBtb2RlbHMuRm9yZWlnbktleSgnYnJhbmRzLkJyYW5kJywgb25fZGVsZXRlPW1vZGVscy5DQVNDQURFKQogICAgbmFtZSA9IG1vZGVscy5DaGFyRmllbGQobWF4X2xlbmd0aD0xMDApCiAgICBjdXJyZW5jeSA9IG1vZGVscy5DaGFyRmllbGQobWF4X2xlbmd0aD0zLCBkZWZhdWx0PSdVU0QnKQogICAgdmFsaWRfZnJvbSA9IG1vZGVscy5EYXRlVGltZUZpZWxkKG51bGw9VHJ1ZSwgYmxhbms9VHJ1ZSkKICAgIHZhbGlkX3RvID0gbW9kZWxzLkRhdGVUaW1lRmllbGQobnVsbD1UcnVlLCBibGFuaz1UcnVlKQogICAgaXNfYWN0aXZlID0gbW9kZWxzLkJvb2xlYW5GaWVsZChkZWZhdWx0PVRydWUpCgogICAgY2xhc3MgTWV0YToKICAgICAgICBkYl90YWJsZSA9ICdwcmljaW5nX3ByaWNlbGlzdCcKCgpjbGFzcyBQcmljZUxpc3RJdGVtKFRpbWVzdGFtcE1peGluKToKICAgIHByaWNlX2xpc3QgPSBtb2RlbHMuRm9yZWlnbktleShQcmljZUxpc3QsIHJlbGF0ZWRfbmFtZT0naXRlbXMnLCBvbl9kZWxldGU9bW9kZWxzLkNBU0NBREUpCiAgICBza3UgPSBtb2RlbHMuQ2hhckZpZWxkKG1heF9sZW5ndGg9NTApCiAgICBwcmljZSA9IG1vZGVscy5EZWNpbWFsRmllbGQobWF4X2RpZ2l0cz0xMiwgZGVjaW1hbF9wbGFjZXM9NCkKICAgIG1vcV9wZXJfc2l6ZSA9IG1vZGVscy5Qb3NpdGl2ZUludGVnZXJGaWVsZChudWxsPVRydWUsIGJsYW5rPVRydWUsIGhlbHBfdGV4dD0nTU9RIHBvciB0YWxsYSBpbmRpdmlkdWFsIChBZ2VudC1BIEg0KScpCgogICAgY2xhc3MgTWV0YToKICAgICAgICBkYl90YWJsZSA9ICdwcmljaW5nX3ByaWNlbGlzdGl0ZW0nCiAgICAgICAgdW5pcXVlX3RvZ2V0aGVyID0gKCdwcmljZV9saXN0JywgJ3NrdScpCgoKIyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KIyBTMjItMDE6IFByaWNlTGlzdFZlcnNpb24gKyBQcmljZUxpc3RHcmFkZUl0ZW0KIyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCmNsYXNzIERlYWN0aXZhdGlvblJlYXNvbihtb2RlbHMuVGV4dENob2ljZXMpOgogICAgTUFOVUFMID0gJ21hbnVhbCcsIF8oJ01hbnVhbCcpCiAgICBQUklDRV9ERUNSRUFTRSA9ICdwcmljZV9kZWNyZWFzZScsIF8oJ1ByaWNlIERlY3JlYXNlJykKICAgIFNVUEVSU0Veruq9ICdzdXBlcnNlZGVkJywgXygnU3VwZXJzZWRlZCcpCgoKY2xhc3MgUHJpY2VMaXN0VmVyc2lvbihUaW1lc3RhbXBNaXhpbik6CiAgICAiIiIKICAgIFZlcnNpw7NuIGRlIHByaWNlbGlzdCBwb3IgYnJhbmQuIE4gdmVyc2lvbmVzIHB1ZWRlbiBlc3RhciBhY3RpdmFzCiAgICBzaW11bHTDoW5lYW1lbnRlIChub3JtYSBTMjIgU2VjY2nDs24gMi4xKS4KICAgICIiIgogICAgYnJhbmQgPSBtb2RlbHMuRm9yZWlnbktleSgKICAgICAgICAnYnJhbmRzLkJyYW5kJywKICAgICAgICBvbl9kZWxldGU9bW9kZWxzLlBST1RFQ1QsCiAgICAgICAgcmVsYXRlZF9uYW1lPSdwcmljZWxpc3RfdmVyc2lvbnMnLAogICAgKQogICAgdmVyc2lvbl9sYWJlbCA9IG1vZGVscy5DaGFyRmllbGQobWF4X2xlbmd0aD0xMDApCiAgICAjIE5PIGZpbGVfdXJsIC0gdXNhciBzdG9yYWdlX2tleQogICAgc3RvcmFnZV9rZXkgPSBtb2RlbHMuQ2hhckZpZWxkKG1heF9sZW5ndGg9NTAwLCBibGFuaz1UcnVlLCBkZWZhdWx0PScnKQogICAgdXBsb2FkZWRfYnkgPSBtb2RlbHMuRm9yZWlnbktleSgKICAgICAgICAnYXV0aC5Vc2VyJywKICAgICAgICBudWxsPVRydWUsIGJsYW5rPVRydWUsCiAgICAgICAgb25fZGVsZXRlPW1vZGVscy5TRVRfTlVMTCwKICAgICAgICByZWxhdGVkX25hbWU9J3VwbG9hZGVkX3ByaWNlbGlzdHMnLAogICAgKQogICAgaXNfYWN0aXZlID0gbW9kZWxzLkJvb2xlYW5GaWVsZChkZWZhdWx0PUZhbHNlKQogICAgYWN0aXZhdGVkX2F0ID0gbW9kZWxzLkRhdGVUaW1lRmllbGQobnVsbD1UcnVlLCBibGFuaz1UcnVlKQogICAgZGVhY3RpdmF0ZWRfYXQgPSBtb2RlbHMuRGF0ZVRpbWVGaWVsZChudWxsPVRydWUsIGJsYW5rPVRydWUpCiAgICBkZWFjdGl2YXRpb25fcmVhc29uID0gbW9kZWxzLkNoYXJGaWVsZCgKICAgICAgICBtYXhfbGVuZ3RoPTIwLAogICAgICAgIGNob2ljZXM9RGVhY3RpdmF0aW9uUmVhc29uLmNob2ljZXMsCiAgICAgICAgbnVsbD1UcnVlLCBibGFuaz1UcnVlLAogICAgKQogICAgbm90ZXMgPSBtb2RlbHMuVGV4dEZpZWxkKGJsYW5rPVRydWUsIGRlZmF1bHQ9JycpCgogICAgY2xhc3MgTWV0YToKICAgICAgICBkYl90YWJsZSA9ICdwcmljaW5nX3ByaWNlbGlzdHZlcnNpb24nCiAgICAgICAgb3JkZXJpbmcgPSBbJy1jcmVhdGVkX2F0J10KCiAgICBkZWYgX19zdHJfXyhzZWxmKToKICAgICAgICByZXR1cm4gZiJ7c2VsZi5icmFuZF9pZH0gdiB7c2VsZi52ZXJzaW9uX2xhYmVsfSAoeydhY3RpdmUnIGlmIHNlbGYuaXNfYWN0aXZlIGVsc2UgJ2luYWN0aXZlJ30pIgoKCmNsYXNzIFByaWNlTGlzdEdyYWRlSXRlbShUaW1lc3RhbXBNaXhpbik6CiAgICAiIiIKICAgIEl0ZW0gZGUgcHJpY2VsaXN0IGNvbiBlc3RydWN0dXJhIHJlYWwgTWFybHV2YXM6CiAgICBwcmVjaW8gKyBHcmFkZSAocmFuZ28gZGUgdGFsbGFzKSArIHNpemVfbXVsdGlwbGllcnMgSlNPTi4KICAgICIiIgogICAgcHJpY2VsaXN0X3ZlcnNpb24gPSBtb2RlbHMuRm9yZWlnbktleSgKICAgICAgICBQcmljZUxpc3RWZXJzaW9uLAogICAgICAgIG9uX2RlbGV0ZT1tb2RlbHMuQ0FTQ0FERSwKICAgICAgICByZWxhdGVkX25hbWU9J2dyYWRlX2l0ZW1zJywKICAgICkKICAgIHJlZmVyZW5jZV9jb2RlID0gbW9kZWxzLkNoYXJGaWVsZChtYXhfbGVuZ3RoPTEwMCkKICAgIGJyYW5kX3NrdSA9IG1vZGVscy5Gb3JlaWduS2V5KAogICAgICAgICdicmFuZHMuQnJhbmRTS1UnLAogICAgICAgIG51bGw9VHJ1ZSwgYmxhbms9VHJ1ZSwKICAgICAgICBvbl9kZWxldGU9bW9kZWxzLlNFVF9OVUxMLAogICAgICAgIHJlbGF0ZWRfbmFtZT0ncHJpY2VsaXN0X2dyYWRlX2l0ZW1zJywKICAgICkKICAgICMgTWV0YWRhdGEgTWFybHV2YXMKICAgIHRpcF90eXBlID0gbW9kZWxzLkNoYXJGaWVsZChtYXhfbGVuZ3RoPTUwLCBibGFuaz1UcnVlLCBkZWZhdWx0PScnKQogICAgaW5zb2xlX3R5cGUgPSBtb2RlbHMuQ2hhckZpZWxkKG1heF9sZW5ndGg9NTAsIGJsYW5rPVRydWUsIGRlZmF1bHQ9JycpCiAgICBuY20gPSBtb2RlbHMuQ2hhckZpZWxkKG1heF9sZW5ndGg9MjAsIGJsYW5rPVRydWUsIGRlZmF1bHQ9JycpCiAgICBjYV9udW1iZXIgPSBtb2RlbHMuQ2hhckZpZWxkKG1heF9sZW5ndGg9NTAsIGJsYW5rPVRydWUsIGRlZmF1bHQ9JycpCiAgICBmYWN0b3J5X2NvZGUgPSBtb2RlbHMuQ2hhckZpZWxkKG1heF9sZW5ndGg9NTAsIGJsYW5rPVRydWUsIGRlZmF1bHQ9JycpCiAgICBmYWN0b3J5X2NlbnRlciA9IG1vZGVscy5DaGFyRmllbGQobWF4X2xlbmd0aD01MCwgYmxhbms9VHJ1ZSwgZGVmYXVsdD0nJykKICAgICMgUHJlY2lvIHkgR3JhZGUKICAgIHVuaXRfcHJpY2VfdXNkID0gbW9kZWxzLkRlY2ltYWxGaWVsZChtYXhfZGlnaXRzPTEyLCBkZWNpbWFsX3BsYWNlcz00KQogICAgZ3JhZGVfbGFiZWwgPSBtb2RlbHMuQ2hhckZpZWxkKG1heF9sZW5ndGg9NTAsIGJsYW5rPVRydWUsIGRlZmF1bHQ9JycpCiAgICAjIERpY3QgdGFsbGEg4oaSIG11bHRpcGxpY2Fkb3IgTU9RIChlai4gezMzOiAxLCA0MTogIDIsIC4uLn0pCiAgICBzaXplX211bHRpcGxpZXJzID0gbW9kZWxzLkpTT05GaWVsZChkZWZhdWx0PWRpY3QsIGJsYW5rPVRydWUpCgogICAgY2xhc3MgTWV0YToKICAgICAgICBkYl90YWJsZSA9ICdwcmljaW5nX3ByaWNlbGlzdGdyYWRlaXRlbScKICAgICAgICB1bmlxdWVfdG9nZXRoZXIgPSAoJ3ByaWNlbGlzdF92ZXJzaW9uJywgJ3JlZmVyZW5jZV9jb2RlJykKCiAgICBkZWYgX19zdHJfXyhzZWxmKToKICAgICAgICByZXR1cm4gZiJ7c2VsZi5yZWZlcmVuY2VfY29kZX0gKHtzZWxmLmdyYWRlX2xhYmVsfSkiCgogICAgQHByb3BlcnR5CiAgICBkZWYgbW9xX3RvdGFsKHNlbGYpOgogICAgICAgICIiIlN1bWEgZGUgdG9kb3MgbG9zIG11bHRpcGxpY2Fkb3JlcyBkZWwgZ3JhZGUuIiIiCiAgICAgICAgaWYgbm90IHNlbGYuc2l6ZV9tdWx0aXBsaWVyczoKICAgICAgICAgICAgcmV0dXJuIDAKICAgICAgICByZXR1cm4gc3VtKHNlbGYuc2l6ZV9tdWx0aXBsaWVycy52YWx1ZXMoKSkKCiAgICBAcHJvcGVydHkKICAgIGRlZiBhdmFpbGFibGVfc2l6ZXMoc2VsZik6CiAgICAgICAgIiIiTGlzdGEgZGUgdGFsbGFzIGRpc3BvbmlibGVzIGVuIGVsIGdyYWRlLiIiIgogICAgICAgIGlmIG5vdCBzZWxmLnNpemVfbXVsdGlwbGllcnM6CiAgICAgICAgICAgIHJldHVybiBbXQogICAgICAgIHJldHVybiBsaXN0KHNlbGYuc2l6ZV9tdWx0aXBsaWVycy5rZXlzKCkpCgoKIyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KIyBTMjItMDI6IENsaWVudFByb2R1Y3RBc3NpZ25tZW50IChDUEEpCiMgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgpjbGFzcyBDbGllbnRQcm9kdWN0QXNzaWdubWVudChUaW1lc3RhbXBNaXhpbik6CiAgICAiIiIKICAgIEFzaWduYWNpw7NuIHBlcm1hbmVudGUgZGUgdW4gcHJvZHVjdG8gYSB1biBjbGllbnRlIGNvbiBwcmVjaW8gY2FjaGVhZG8uCiAgICBQYXNvIDAgZGVsIHdhdGVyZmFsbCBkZSByZXNvbHVjacOzbiBkZSBwcmVjaW8uCiAgICBTaW4gdmFsaWRfZnJvbS92YWxpZF90byBlbiBNVlAgLSBzb2xvIGlzX2FjdGl2ZSB0b2dnbGUuCiAgICAiIiIKICAgIGNsaWVudF9zdWJzaWRpYXJ5ID0gbW9kZWxzLkZvcmVpZ25LZXkoCiAgICAgICAgJ2NsaWVudHMuQ2xpZW50U3Vic2lkaWFyeScsCiAgICAgICAgb25fZGVsZXRlPW1vZGVscy5DQVNDQURFLAogICAgICAgIHJlbGF0ZWRfbmFtZT0ncHJvZHVjdF9hc3NpZ25tZW50cycsCiAgICApCiAgICBicmFuZF9za3UgPSBtb2RlbHMuRm9yZWlnbktleSgKICAgICAgICAnYnJhbmRzLkJyYW5kU0tVJywKICAgICAgICBvbl9kZWxldGU9bW9kZWxzLlBST1RFQ1QsCiAgICAgICAgcmVsYXRlZF9uYW1lPSdjbGllbnRfYXNzaWdubWVudHMnLAogICAgKQogICAgY2FjaGVkX2NsaWVudF9wcmljZSA9IG1vZGVscy5EZWNpbWFsRmllbGQobWF4X2RpZ2l0cz0xMiwgZGVjaW1hbF9wbGFjZXM9NCwgbnVsbD1UcnVlLCBibGFuaz1UcnVlKQogICAgY2FjaGVkX2Jhc2VfcHJpY2UgPSBtb2RlbHMuRGVjaW1hbEZpZWxkKG1heF9kaWdpdHM9MTIsIGRlY2ltYWxfcGxhY2VzPTQsIG51bGw9VHJ1ZSwgYmxhbms9VHJ1ZSkKICAgIGNhY2hlZF9wcmljZWxpc3RfdmVyc2lvbiA9IG1vZGVscy5Gb3JlaWduS2V5KAogICAgICAgIFByaWNlTGlzdFZlcnNpb24sCiAgICAgICAgbnVsbD1UcnVlLCBibGFuaz1UcnVlLAogICAgICAgIG9uX2RlbGV0ZT1tb2RlbHMuU0VUX05VTEwsCiAgICAgICAgcmVsYXRlZF9uYW1lPSdhc3NpZ25tZW50c19jYWNoZWQnLAogICAgKQogICAgY2FjaGVkX2F0ID0gbW9kZWxzLkRhdGVUaW1lRmllbGQobnVsbD1UcnVlLCBibGFuaz1UcnVlKQogICAgaXNfYWN0aXZlID0gbW9kZWxzLkJvb2xlYW5GaWVsZChkZWZhdWx0PVRydWUpCgogICAgY2xhc3MgTWV0YToKICAgICAgICBkYl90YWJsZSA9ICdwcmljaW5nX2NsaWVudHByb2R1Y3Rhc3NpZ25tZW50JwogICAgICAgIHVuaXF1ZV90b2dldGhlciA9ICgnY2xpZW50X3N1YnNpZGlhcnknLCAnYnJhbmRfc2t1JykKCiAgICBkZWYgX19zdHJfXyhzZWxmKToKICAgICAgICByZXR1cm4gZiJDUEEge3NlbGYuY2xpZW50X3N1YnNpZGlhcnlfaWR9IC0ge3NlbGYuYnJhbmRfc2t1X2lkfSIKCgojIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQojIFMyMi0wMzogRWFybHlQYXltZW50UG9saWN5ICsgRWFybHlQYXltZW50VGllcgojIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKY2xhc3MgRWFybHlQYXltZW50UG9saWN5KFRpbWVzdGFtcE1peGluKToKICAgICIiIgogICAgUG9sw610aWNhIGRlIGRlc2N1ZW50byBwb3IgcHJvbnRvIHBhZ28gcG9yIGNsaWVudGUgeCBicmFuZC4KICAgIE11dGFibGUgcG9yIGV4Y2VwY2nDs24gZXhwbMOtY2l0YSBhIFMxNC1DNS4KICAgIENhbWJpb3Mgc2UgcmVnaXN0cmFuIGVuIENvbmZpZ0NoYW5nZUxvZyB2w61hIHNpZ25hbCBwb3N0X3NhdmUuCiAgICAiIiIKICAgIGNsaWVudF9zdWJzaWRpYXJ5ID0gbW9kZWxzLkZvcmVpZ25LZXkoCiAgICAgICAgJ2NsaWVudHMuQ2xpZW50U3Vic2lkaWFyeScsCiAgICAgICAgb25fZGVsZXRlPW1vZGVscy5DQVNDQURFLAogICAgICAgIHJlbGF0ZWRfbmFtZT0nZWFybHlfcGF5bWVudF9wb2xpY2llcycsCiAgICApCiAgICBicmFuZCA9IG1vZGVscy5Gb3JlaWduS2V5KAogICAgICAgICdicmFuZHMuQnJhbmQnLAogICAgICAgIG9uX2RlbGV0ZT1tb2RlbHMuUFJPVEVDVCwKICAgICAgICByZWxhdGVkX25hbWU9J2Vhcmx5X3BheW1lbnRfcG9saWNpZXMnLAogICAgKQogICAgYmFzZV9wYXltZW50X2RheXMgPSBtb2RlbHMuUG9zaXRpdmVJbnRlZ2VyRmllbGQoZGVmYXVsdD05MCkKICAgIGJhc2VfY29tbWlzc2lvbl9wY3QgPSBtb2RlbHMuRGVjaW1hbEZpZWxkKG1heF9kaWdpdHM9NSwgZGVjaW1hbF9wbGFjZXM9MiwgZGVmYXVsdD0nMTAuMDAnKQogICAgaXNfYWN0aXZlID0gbW9kZWxzLkJvb2xlYW5GaWVsZChkZWZhdWx0PVRydWUpCgogICAgY2xhc3MgTWV0YToKICAgICAgICBkYl90YWJsZSA9ICdwcmljaW5nX2Vhcmx5cGF5bWVudHBvbGljeScKICAgICAgICB1bmlxdWVfdG9nZXRoZXIgPSAoJ2NsaWVudF9zdWJzaWRpYXJ5JywgJ2JyYW5kJykKCiAgICBkZWYgX19zdHJfXyhzZWxmKToKICAgICAgICByZXR1cm4gZiJFYXJseVBheW1lbnRQb2xpY3kge3NlbGYuY2xpZW50X3N1YnNpZGlhcnlfaWR9IC0ge3NlbGYuYnJhbmRfaWR9IgoKCmNsYXNzIEVhcmx5UGF5bWVudFRpZXIoVGltZXN0YW1wTWl4aW4pOgogICAgIiIiCiAgICBUcmFtb3MgZGUgZGVzY3VlbnRvIHBvciBwcm9udG8gcGFnby4KICAgIEVqZW1wbG86IDYwZCDihpIgLTElLCAzMGQg4oaSIC0xLjc1JSwgOGQg4oaSIC0yLjc1JQogICAgIiIiCiAgICBwb2xpY3kgPSBtb2RlbHMuRm9yZWlnbktleSgKICAgICAgICBFYXJseVBheW1lbnRQb2xpY3ksCiAgICAgICAgb25fZGVsZXRlPW1vZGVscy5DQVNDQURFLAogICAgICAgIHJlbGF0ZWRfbmFtZT0ndGllcnMnLAogICAgKQogICAgcGF5bWVudF9kYXlzID0gbW9kZWxzLlBvc2l0aXZlSW50ZWdlckZpZWxkKGhlbHBfdGV4dD0nUGFnbyBlbiBYIGTDrWFzIG8gbWVub3MnKQogICAgZGlzY291bnRfcGN0ID0gbW9kZWxzLkRlY2ltYWxGaWVsZCgKICAgICAgICBtYXhfZGlnaXRzPTUsCiAgICAgICAgZGVjaW1hbF9wbGFjZXM9MiwKICAgICAgICBoZWxwX3RleHQ9J1ZhbG9yIHBvc2l0aXZvIC0gc2UgYXBsaWNhIGNvbW8gZGVzY3VlbnRvLiBFai4gMS43NSA9IC0xLjc1JScsCiAgICApCgogICAgY2xhc3MgTWV0YToKICAgICAgICBkYl90YWJsZSA9ICdwcmljaW5nX2Vhcmx5cGF5bWVudHRpZXInCiAgICAgICAgdW5pcXVlX3RvZ2V0aGVyID0gKCdwb2xpY3knLCAncGF5bWVudF9kYXlzJykKICAgICAgICBvcmRlcmluZyA9IFsnLXBheW1lbnRfZGF5cyddCgogICAgZGVmIF9fc3RyX18oc2VsZik6CiAgICAgICAgcmV0dXJuIGYie3NlbGYucGF5bWVudF9kYXlzfWQg4oaSIC17c2VsZi5kaXNjb3VudF9wY3R9JSIK
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from apps.core.models import TimestampMixin
+
+
+# -------------------------------------------------------------------
+# Modelos existentes (S14) - NO MODIFICAR
+# -------------------------------------------------------------------
+
+class PriceList(TimestampMixin):
+    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    currency = models.CharField(max_length=3, default='USD')
+    valid_from = models.DateTimeField(null=True, blank=True)
+    valid_to = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'pricing_pricelist'
+
+
+class PriceListItem(TimestampMixin):
+    price_list = models.ForeignKey(PriceList, related_name='items', on_delete=models.CASCADE)
+    sku = models.CharField(max_length=50)
+    price = models.DecimalField(max_digits=12, decimal_places=4)
+    moq_per_size = models.PositiveIntegerField(null=True, blank=True, help_text='MOQ por talla individual (Agent-A H4)')
+
+    class Meta:
+        db_table = 'pricing_pricelistitem'
+        unique_together = ('price_list', 'sku')
+
+
+# -------------------------------------------------------------------
+# S22-01: PriceListVersion + PriceListGradeItem
+# -------------------------------------------------------------------
+
+class DeactivationReason(models.TextChoices):
+    MANUAL = 'manual', _('Manual')
+    PRICE_DECREASE = 'price_decrease', _('Price Decrease')
+    SUPERSEDED = 'superseded', _('Superseded')
+
+
+class PriceListVersion(TimestampMixin):
+    """
+    Versión de pricelist por brand. N versiones pueden estar activas
+    simultáneamente (norma S22 Sección 2.1).
+    """
+    brand = models.ForeignKey(
+        'brands.Brand',
+        on_delete=models.PROTECT,
+        related_name='pricelist_versions',
+    )
+    version_label = models.CharField(max_length=100)
+    # NO file_url - usar storage_key
+    storage_key = models.CharField(max_length=500, blank=True, default='')
+    uploaded_by = models.ForeignKey(
+        'auth.User',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='uploaded_pricelists',
+    )
+    is_active = models.BooleanField(default=False)
+    activated_at = models.DateTimeField(null=True, blank=True)
+    deactivated_at = models.DateTimeField(null=True, blank=True)
+    deactivation_reason = models.CharField(
+        max_length=20,
+        choices=DeactivationReason.choices,
+        null=True, blank=True,
+    )
+    notes = models.TextField(blank=True, default='')
+
+    class Meta:
+        db_table = 'pricing_pricelistversion'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.brand_id} v {self.version_label} ({'active' if self.is_active else 'inactive'})"
+
+
+class PriceListGradeItem(TimestampMixin):
+    """
+    Item de pricelist con estructura real Marluvas:
+    precio + Grade (rango de tallas) + size_multipliers JSON.
+    """
+    pricelist_version = models.ForeignKey(
+        PriceListVersion,
+        on_delete=models.CASCADE,
+        related_name='grade_items',
+    )
+    reference_code = models.CharField(max_length=100)
+    brand_sku = models.ForeignKey(
+        'brands.BrandSKU',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='pricelist_grade_items',
+    )
+    # Metadata Marluvas
+    tip_type = models.CharField(max_length=50, blank=True, default='')
+    insole_type = models.CharField(max_length=50, blank=True, default='')
+    ncm = models.CharField(max_length=20, blank=True, default='')
+    ca_number = models.CharField(max_length=50, blank=True, default='')
+    factory_code = models.CharField(max_length=50, blank=True, default='')
+    factory_center = models.CharField(max_length=50, blank=True, default='')
+    # Precio y Grade
+    unit_price_usd = models.DecimalField(max_digits=12, decimal_places=4)
+    grade_label = models.CharField(max_length=50, blank=True, default='')
+    # Dict talla → multiplicador MOQ (ej. {33: 1, 41:  2, ...})
+    size_multipliers = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        db_table = 'pricing_pricelistgradeitem'
+        unique_together = ('pricelist_version', 'reference_code')
+
+    def __str__(self):
+        return f"{self.reference_code} ({self.grade_label})"
+
+    @property
+    def moq_total(self):
+        """Suma de todos los multiplicadores del grade."""
+        if not self.size_multipliers:
+            return 0
+        return sum(self.size_multipliers.values())
+
+    @property
+    def available_sizes(self):
+        """Lista de tallas disponibles en el grade."""
+        if not self.size_multipliers:
+            return []
+        return list(self.size_multipliers.keys())
+
+
+# -------------------------------------------------------------------
+# S22-02: ClientProductAssignment (CPA)
+# -------------------------------------------------------------------
+
+class ClientProductAssignment(TimestampMixin):
+    """
+    Asignación permanente de un producto a un cliente con precio cacheado.
+    Paso 0 del waterfall de resolución de precio.
+    Sin valid_from/valid_to en MVP - solo is_active toggle.
+    """
+    client_subsidiary = models.ForeignKey(
+        'clientes.ClientSubsidiary',
+        on_delete=models.CASCADE,
+        related_name='product_assignments',
+    )
+    brand_sku = models.ForeignKey(
+        'brands.BrandSKU',
+        on_delete=models.PROTECT,
+        related_name='client_assignments',
+    )
+    cached_client_price = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True)
+    cached_base_price = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True)
+    cached_pricelist_version = models.ForeignKey(
+        PriceListVersion,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='assignments_cached',
+    )
+    cached_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'pricing_clientproductassignment'
+        unique_together = ('client_subsidiary', 'brand_sku')
+
+    def __str__(self):
+        return f"CPA {self.client_subsidiary_id} - {self.brand_sku_id}"
+
+
+# -------------------------------------------------------------------
+# S22-03: EarlyPaymentPolicy + EarlyPaymentTier
+# -------------------------------------------------------------------
+
+class EarlyPaymentPolicy(TimestampMixin):
+    """
+    Política de descuento por pronto pago por cliente x brand.
+    Mutable por excepción explícita a S14-C5.
+    Cambios se registran en ConfigChangeLog vía signal post_save.
+    """
+    client_subsidiary = models.ForeignKey(
+        'clientes.ClientSubsidiary',
+        on_delete=models.CASCADE,
+        related_name='early_payment_policies',
+    )
+    brand = models.ForeignKey(
+        'brands.Brand',
+        on_delete=models.PROTECT,
+        related_name='early_payment_policies',
+    )
+    base_payment_days = models.PositiveIntegerField(default=90)
+    base_commission_pct = models.DecimalField(max_digits=5, decimal_places=2, default='10.00')
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'pricing_earlypaymentpolicy'
+        unique_together = ('client_subsidiary', 'brand')
+
+    def __str__(self):
+        return f"EarlyPaymentPolicy {self.client_subsidiary_id} - {self.brand_id}"
+
+
+class EarlyPaymentTier(TimestampMixin):
+    """
+    Tramos de descuento por pronto pago.
+    Ejemplo: 60d → -1%, 30d → -1.75%, 8d → -2.75%
+    """
+    policy = models.ForeignKey(
+        EarlyPaymentPolicy,
+        on_delete=models.CASCADE,
+        related_name='tiers',
+    )
+    payment_days = models.PositiveIntegerField(help_text='Pago en X días o menos')
+    discount_pct = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        help_text='Valor positivo - se aplica como descuento. Ej. 1.75 = -1.75%',
+    )
+
+    class Meta:
+        db_table = 'pricing_earlypaymenttier'
+        unique_together = ('policy', 'payment_days')
+        ordering = ['-payment_days']
+
+    def __str__(self):
+        return f"{self.payment_days}d → -{self.discount_pct}%"
