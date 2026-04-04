@@ -20,6 +20,10 @@ ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=[
     'django',        # nombre del servicio Docker interno (Nginx → django:8000)
 ])
 
+# --- Sprint 502: Proxy Handshake ---
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
 # --- Sprint 8: Custom user model ---
 AUTH_USER_MODEL = 'users.MWTUser'
 
