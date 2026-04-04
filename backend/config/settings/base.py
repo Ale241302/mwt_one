@@ -191,14 +191,27 @@ CSRF_TRUSTED_ORIGINS = [
     'http://187.77.218.102:8000',
     'http://localhost:3000',
     'http://localhost:8080',
-    'http://187.77.218.102:8080',
     'http://consola.mwt.one:8080',
     'https://consola.mwt.one',
     'https://mwt.one',
+    'https://www.mwt.one',
     'https://go.ranawalk.com',
     'http://go.ranawalk.com',
 ]
+
+# --- CORS ---
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    'https://consola.mwt.one',
+    'https://mwt.one',
+    'https://www.mwt.one',
+    'https://go.ranawalk.com',
+    'http://go.ranawalk.com',
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://187.77.218.102:8080',
+    'http://187.77.218.102:8000',
+]
 
 QR_SALT = env.str("QR_SALT", default="default-fallback-salt-do-not-use-in-prod-qwertyui")
 
