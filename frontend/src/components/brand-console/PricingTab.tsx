@@ -7,17 +7,19 @@ import { PriceListVersionCard } from '@/components/pricing/PriceListVersionCard'
 import { UploadPreviewModal } from '@/components/pricing/UploadPreviewModal';
 import { GradeItemsTable } from '@/components/pricing/GradeItemsTable';
 import { getPriceListVersions, activatePriceList, PriceListVersion } from '@/api/pricing';
-import { useParams } from 'next/navigation';
 
-export function PricingTab({ brandId }: { brandId: number }) {
+export function PricingTab({ brandId }: { brandId?: number }) {
   const [versions, setVersions] = useState<PriceListVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [activating, setActivating] = useState<number | null>(null);
-  
 
   const fetchVersions = React.useCallback(async () => {
+    if (!brandId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const data = await getPriceListVersions(brandId);
@@ -37,7 +39,7 @@ export function PricingTab({ brandId }: { brandId: number }) {
     setActivating(versionId);
     try {
       await activatePriceList(versionId, force);
-      await fetchVersions(); // Refetch para ver cambios de estado y fechas
+      await fetchVersions();
     } catch (error) {
       console.error("Error activating version:", error);
       alert("Error al activar: " + (error as any).response?.data?.detail || "Error desconocido");
@@ -51,6 +53,14 @@ export function PricingTab({ brandId }: { brandId: number }) {
     setShowUpload(false);
   };
 
+  if (!brandId) {
+    return (
+      <div className="card p-12 text-center text-text-tertiary">
+        <p className="text-sm">No se ha seleccionado una marca.</p>
+      </div>
+    );
+  }
+
   const activeVersions = versions.filter((v) => v.is_active);
   const pendingVersions = versions.filter((v) => !v.is_active && !v.activated_at);
   const historicVersions = versions.filter((v) => !v.is_active && v.activated_at);
@@ -61,7 +71,6 @@ export function PricingTab({ brandId }: { brandId: number }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="heading-lg">Pricelists</h2>
@@ -76,7 +85,6 @@ export function PricingTab({ brandId }: { brandId: number }) {
         </button>
       </div>
 
-      {/* Alerta versiones activas */}
       {activeVersions.length > 1 && (
         <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-800">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" />
@@ -86,7 +94,6 @@ export function PricingTab({ brandId }: { brandId: number }) {
         </div>
       )}
 
-      {/* Versiones activas */}
       {activeVersions.length > 0 && (
         <section>
           <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -109,7 +116,6 @@ export function PricingTab({ brandId }: { brandId: number }) {
         </section>
       )}
 
-      {/* Versiones pendientes (subidas, no activadas) */}
       {pendingVersions.length > 0 && (
         <section>
           <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -132,7 +138,6 @@ export function PricingTab({ brandId }: { brandId: number }) {
         </section>
       )}
 
-      {/* Historial */}
       {historicVersions.length > 0 && (
         <section>
           <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -154,7 +159,6 @@ export function PricingTab({ brandId }: { brandId: number }) {
         </section>
       )}
 
-      {/* Upload modal */}
       {showUpload && (
         <UploadPreviewModal
           brandId={brandId}

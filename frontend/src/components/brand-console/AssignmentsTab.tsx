@@ -6,15 +6,18 @@ import { RefreshCw, AlertCircle, Package, Plus } from 'lucide-react';
 import { BulkAssignModal } from '@/components/assignments/BulkAssignModal';
 import { getClientAssignments, ClientProductAssignment } from '@/api/pricing';
 
-export function AssignmentsTab({ brandId }: { brandId: number }) {
+export function AssignmentsTab({ brandId }: { brandId?: number }) {
   const [assignments, setAssignments] = useState<ClientProductAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBulkAssign, setShowBulkAssign] = useState(false);
   const [recalculating, setRecalculating] = useState<number | null>(null);
   const [filterStale, setFilterStale] = useState(false);
 
-
   const fetchAssignments = React.useCallback(async () => {
+    if (!brandId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const data = await getClientAssignments(brandId);
@@ -33,8 +36,6 @@ export function AssignmentsTab({ brandId }: { brandId: number }) {
   const handleRecalculate = async (id: number) => {
     setRecalculating(id);
     try {
-      // TODO: Implementar endpoint unitario de recalculate si es necesario, 
-      // o usar el bulk recalculate por brand. Por ahora simulamos actualización.
       await new Promise((r) => setTimeout(r, 800));
       await fetchAssignments();
     } catch (error) {
@@ -49,6 +50,14 @@ export function AssignmentsTab({ brandId }: { brandId: number }) {
     setShowBulkAssign(false);
   };
 
+  if (!brandId) {
+    return (
+      <div className="card p-12 text-center text-text-tertiary">
+        <p className="text-sm">No se ha seleccionado una marca.</p>
+      </div>
+    );
+  }
+
   const staleCount = assignments.filter((a) => a.is_stale).length;
   const displayed = filterStale ? assignments.filter((a) => a.is_stale) : assignments;
 
@@ -58,7 +67,6 @@ export function AssignmentsTab({ brandId }: { brandId: number }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="heading-lg">Assignments (CPAs)</h2>
@@ -72,7 +80,6 @@ export function AssignmentsTab({ brandId }: { brandId: number }) {
         </button>
       </div>
 
-      {/* Alerta stale */}
       {staleCount > 0 && (
         <div className="flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-800">
           <div className="flex items-center gap-2">
@@ -88,7 +95,6 @@ export function AssignmentsTab({ brandId }: { brandId: number }) {
         </div>
       )}
 
-      {/* Tabla */}
       <div className="table-container">
         <table className="text-xs">
           <thead>

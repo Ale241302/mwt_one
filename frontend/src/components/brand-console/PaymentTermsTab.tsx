@@ -5,14 +5,17 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, ChevronDown, ChevronUp, Percent } from 'lucide-react';
 import { getEarlyPaymentPolicies, updateEarlyPaymentPolicy, EarlyPaymentPolicy, EarlyPaymentTier } from '@/api/pricing';
 
-export function PaymentTermsTab({ brandId }: { brandId: number }) {
+export function PaymentTermsTab({ brandId }: { brandId?: number }) {
   const [policies, setPolicies] = useState<EarlyPaymentPolicy[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [savingId, setSavingId] = useState<number | null>(null);
 
-
   const fetchPolicies = React.useCallback(async () => {
+    if (!brandId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const data = await getEarlyPaymentPolicies(brandId);
@@ -67,14 +70,12 @@ export function PaymentTermsTab({ brandId }: { brandId: number }) {
     try {
       const policy = policies.find(p => p.id === policyId);
       if (policy) {
-         // TODO: El backend necesita manejar el update de tiers anidados si se desea batch,
-         // o hacerlo por separado. Por ahora guardamos los campos base de la policy.
-         await updateEarlyPaymentPolicy(policyId, {
-           base_payment_days: policy.base_payment_days,
-           base_commission_pct: policy.base_commission_pct,
-           is_active: policy.is_active
-         });
-         await fetchPolicies();
+        await updateEarlyPaymentPolicy(policyId, {
+          base_payment_days: policy.base_payment_days,
+          base_commission_pct: policy.base_commission_pct,
+          is_active: policy.is_active
+        });
+        await fetchPolicies();
       }
     } catch (error) {
       console.error("Error saving policy:", error);
@@ -82,6 +83,14 @@ export function PaymentTermsTab({ brandId }: { brandId: number }) {
       setSavingId(null);
     }
   };
+
+  if (!brandId) {
+    return (
+      <div className="card p-12 text-center text-text-tertiary">
+        <p className="text-sm">No se ha seleccionado una marca.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div className="p-10 text-center text-text-tertiary animate-pulse text-xs">Cargando términos de pago...</div>;
@@ -114,7 +123,7 @@ export function PaymentTermsTab({ brandId }: { brandId: number }) {
               <div>
                 <p className="text-sm font-semibold text-text-primary">{policy.client_subsidiary_name}</p>
                 <p className="text-xs text-text-tertiary">
-                   Base: {policy.base_payment_days}d · Comisión: {policy.base_commission_pct}% · {policy.tiers.length} tramos
+                  Base: {policy.base_payment_days}d · Comisión: {policy.base_commission_pct}% · {policy.tiers.length} tramos
                 </p>
               </div>
             </div>
