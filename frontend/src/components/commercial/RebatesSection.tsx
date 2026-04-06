@@ -7,6 +7,12 @@ import api from "@/lib/api";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface RebateProgram {
   id: string;
   name: string;
@@ -18,8 +24,7 @@ interface RebateProgram {
   rebate_value: string;
   calculation_base: string | null;
   threshold_type: string;
-  threshold_amount: string | null;
-  threshold_units: number | null;
+  threshold_value: string | null;
   is_active: boolean;
 }
 
@@ -48,8 +53,7 @@ const EMPTY_PROGRAM = {
   rebate_value: "",
   calculation_base: "",
   threshold_type: "amount",
-  threshold_amount: "",
-  threshold_units: "",
+  threshold_value: "",
   is_active: true,
 };
 
@@ -66,6 +70,7 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; cl
 export function RebatesSection() {
   const [programs, setPrograms]       = useState<RebateProgram[]>([]);
   const [ledgers, setLedgers]         = useState<RebateLedger[]>([]);
+  const [brands, setBrands]           = useState<Brand[]>([]);
   const [loading, setLoading]         = useState(true);
   const [filter, setFilter]           = useState("");
   const [showForm, setShowForm]       = useState(false);
@@ -80,12 +85,14 @@ export function RebatesSection() {
     setLoading(true);
     setError(null);
     try {
-      const [pRes, lRes] = await Promise.all([
+      const [pRes, lRes, bRes] = await Promise.all([
         api.get("/commercial/rebate-programs/"),
         api.get("/commercial/rebate-ledgers/"),
+        api.get("/brands/"),
       ]);
       setPrograms(pRes.data?.results ?? pRes.data ?? []);
       setLedgers(lRes.data?.results ?? lRes.data ?? []);
+      setBrands(bRes.data?.results ?? bRes.data ?? []);
     } catch (e: any) {
       setError(e?.response?.data?.detail ?? "Error cargando datos.");
     } finally {
@@ -107,19 +114,18 @@ export function RebatesSection() {
     setError(null);
     try {
       const payload: Record<string, any> = {
-        name:            form.name,
-        brand:           form.brand,
-        period_type:     form.period_type,
-        valid_from:      form.valid_from,
-        valid_to:        form.valid_to || null,
-        rebate_type:     form.rebate_type,
-        rebate_value:    form.rebate_value,
+        name:             form.name,
+        brand:            form.brand,
+        period_type:      form.period_type,
+        valid_from:       form.valid_from,
+        valid_to:         form.valid_to || null,
+        rebate_type:      form.rebate_type,
+        rebate_value:     form.rebate_value,
         calculation_base: form.calculation_base || null,
-        threshold_type:  form.threshold_type,
-        is_active:       form.is_active,
+        threshold_type:   form.threshold_type,
+        threshold_value:  form.threshold_type !== "none" ? (form.threshold_value || null) : null,
+        is_active:        form.is_active,
       };
-      if (form.threshold_type === "amount") payload.threshold_amount = form.threshold_amount || null;
-      if (form.threshold_type === "units")  payload.threshold_units  = form.threshold_units  || null;
       await api.post("/commercial/rebate-programs/", payload);
       setShowForm(false);
       setForm({ ...EMPTY_PROGRAM });
@@ -193,17 +199,20 @@ export function RebatesSection() {
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-text-tertiary uppercase">Brand UUID *</label>
-              <input required className="input text-xs font-mono" placeholder="uuid de la marca" value={form.brand}
-                onChange={e => setForm(f => ({ ...f, brand: e.target.value }))} />
+              <label className="text-[10px] font-semibold text-text-tertiary uppercase">Marca *</label>
+              <select required className="input text-xs" value={form.brand}
+                onChange={e => setForm(f => ({ ...f, brand: e.target.value }))}>
+                <option value="">— Seleccionar marca —</option>
+                {brands.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-semibold text-text-tertiary uppercase">Período</label>
               <select className="input text-xs" value={form.period_type}
                 onChange={e => setForm(f => ({ ...f, period_type: e.target.value }))}>
-                <option value="monthly">Monthly</option>
                 <option value="quarterly">Quarterly</option>
-                <option value="semi_annual">Semi-Annual</option>
                 <option value="annual">Annual</option>
               </select>
             </div>
@@ -248,18 +257,18 @@ export function RebatesSection() {
                 <option value="none">None</option>
               </select>
             </div>
-            {form.threshold_type === "amount" && (
+            {form.threshold_type !== "none" && (
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-text-tertiary uppercase">Threshold Monto</label>
-                <input type="number" step="0.01" className="input text-xs" value={form.threshold_amount}
-                  onChange={e => setForm(f => ({ ...f, threshold_amount: e.target.value }))} />
-              </div>
-            )}
-            {form.threshold_type === "units" && (
-              <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-text-tertiary uppercase">Threshold Unidades</label>
-                <input type="number" step="1" className="input text-xs" value={form.threshold_units}
-                  onChange={e => setForm(f => ({ ...f, threshold_units: e.target.value }))} />
+                <label className="text-[10px] font-semibold text-text-tertiary uppercase">
+                  Threshold {form.threshold_type === "units" ? "Unidades" : "Monto"}
+                </label>
+                <input
+                  type="number"
+                  step={form.threshold_type === "units" ? "1" : "0.01"}
+                  className="input text-xs"
+                  value={form.threshold_value}
+                  onChange={e => setForm(f => ({ ...f, threshold_value: e.target.value }))}
+                />
               </div>
             )}
           </div>
@@ -310,7 +319,7 @@ export function RebatesSection() {
                     {p.rebate_type === "percentage" ? `${p.rebate_value}%` : `$${p.rebate_value}`}
                   </td>
                   <td className="px-4 py-3 text-text-secondary capitalize">
-                    {p.threshold_type === "none" ? "—" : p.threshold_type}
+                    {p.threshold_type === "none" ? "—" : `${p.threshold_type}: ${p.threshold_value ?? "—"}`}
                   </td>
                   <td className="px-4 py-3 text-text-tertiary">
                     {p.valid_from}{p.valid_to ? ` → ${p.valid_to}` : " →"}
