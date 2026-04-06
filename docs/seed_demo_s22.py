@@ -426,7 +426,7 @@ if HAS_S22:
         ("35 ao 40", Decimal("27.80"), {"35":1,"36":1,"37":1,"38":1,"39":1,"40":1}),
         ("41 ao 44", Decimal("29.20"), {"41":1,"42":1,"43":1,"44":1}),
     ]:
-        PriceListGradeItem.objects.get_or_create(
+        PriceListGradeItem.objects.update_or_create(
             pricelist_version=plv,
             grade_label=grade_label,
             defaults=dict(unit_price_usd=price, size_multipliers=multipliers)
