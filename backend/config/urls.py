@@ -31,6 +31,8 @@ urlpatterns = [
     path('api/agreements/', include('apps.agreements.urls')),
     # Inventario
     path('api/inventario/', include('apps.inventario.urls')),
+    # Sprint 23: Commercial layer (rebates, commissions, artifact policy)
+    path('api/commercial/', include('apps.commercial.urls')),
     # Spectacular
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
@@ -39,7 +41,6 @@ urlpatterns = [
         path('', FrontendLoggerView.as_view()),
     ], 'logs'))),
     # FIX: Dashboard endpoints directamente en /api/ui/dashboard/ (el frontend los llama aqui)
-    # ANTES estaban mal montados bajo /api/ui/expedientes/dashboard/financial/
     path('api/ui/dashboard/financial/', FinancialDashboardView.as_view(), name='ui-dashboard-financial'),
     path('api/ui/dashboard/', FinancialDashboardView.as_view(), name='ui-dashboard'),
     # S21: Activity Feed endpoints
