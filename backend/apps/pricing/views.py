@@ -502,18 +502,25 @@ class CatalogBrandSKUView(APIView):
     def get(self, request):
         from apps.brands.models import BrandSKU
         from apps.pricing.services import resolve_client_price
+        from apps.productos.models import ProductMaster
         
         brand_id = request.query_params.get('brand_id')
         if not brand_id:
             return Response({'detail': 'brand_id es requerido'}, status=400)
 
-        skus = BrandSKU.objects.filter(brand_id=brand_id, is_active=True).select_related('product')
+        skus = BrandSKU.objects.filter(brand_id=brand_id).select_related('brand')
+        
+        product_keys = set(s.product_key for s in skus)
+        products_by_key = {
+            p.sku_base: p for p in ProductMaster.objects.filter(brand=brand_id, sku_base__in=product_keys)
+        }
         
         results = []
         for sku in skus:
             # Resolvemos el precio (sin cliente ni subsidiaria, para ver el base de la marca)
+            product = products_by_key.get(sku.product_key)
             res = resolve_client_price(
-                product=sku.product,
+                product=product,
                 client=None,
                 brand=sku.brand,
                 brand_sku_id=sku.id,
@@ -523,9 +530,9 @@ class CatalogBrandSKUView(APIView):
             results.append({
                 'id': sku.id,
                 'sku_code': sku.sku_code,
-                'reference_code': sku.reference_code,
-                'description': sku.product.name,
-                'is_active': sku.is_active,
+                'reference_code': getattr(sku, 'reference_code', sku.sku_code),
+                'description': product.name if product else f"Producto {sku.product_key}",
+                'is_active': getattr(sku, 'is_active', True),
                 'price_resolved': res
             })
 
