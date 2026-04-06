@@ -38,7 +38,7 @@ interface GroupedProduct {
   skus: BrandSKU[];
 }
 
-export function CatalogTab({ brandId }: { brandId: number }) {
+export function CatalogTab({ brandId }: { brandId?: number }) {
   const [products, setProducts] = useState<GroupedProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -47,6 +47,11 @@ export function CatalogTab({ brandId }: { brandId: number }) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchCatalog = useCallback(async () => {
+    if (!brandId) {
+      setLoading(false);
+      setError("No se ha seleccionado una marca.");
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -69,9 +74,9 @@ export function CatalogTab({ brandId }: { brandId: number }) {
     } finally {
       setLoading(false);
     }
-  }, [api, brandId]);
+  }, [brandId]);
 
-  useEffect(() => { if (brandId) fetchCatalog(); }, [fetchCatalog, brandId]);
+  useEffect(() => { fetchCatalog(); }, [fetchCatalog]);
 
   const toggleProduct = (key: string) => {
     setExpanded((prev) => {
