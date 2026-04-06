@@ -116,9 +116,9 @@ def _map_columns(df):
 
     df = df.rename(columns=rename_map)
 
-    # Verificar columnas requeridas
-    required = ['reference_code', 'unit_price_usd']
-    missing = [r for r in required if r not in df.columns]
+    # Verificar columnas requeridas (ahora deshabilitado según solicitud)
+    required = []
+    missing = []
     return df, detected_size_cols, missing
 
 
