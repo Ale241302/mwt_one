@@ -25,7 +25,7 @@ class EventLog(TimestampMixin):
         settings.AUTH_USER_MODEL,
         null=True, blank=True,
         on_delete=models.SET_NULL,
-        related_name='event_logs',
+        related_name='audit_event_logs',
     )
     payload = models.JSONField(default=dict)
     # FK genérica para referenciar cualquier objeto
