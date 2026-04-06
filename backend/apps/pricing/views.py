@@ -203,12 +203,10 @@ class PriceListUploadView(APIView):
     }
     """
     permission_classes = [IsAuthenticated]
-    parser_classes = None  # usa los defaults DRF (multipart + json)
 
     def post(self, request):
         from apps.pricing.parsers import parse_marluvas_pricelist
-        from rest_framework.parsers import MultiPartParser
-
+        
         file = request.FILES.get('file')
         brand_id = request.data.get('brand_id')
 
@@ -220,14 +218,6 @@ class PriceListUploadView(APIView):
         if not brand_id:
             return Response(
                 {'detail': 'Campo "brand_id" requerido.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            brand_id = int(brand_id)
-        except (ValueError, TypeError):
-            return Response(
-                {'detail': 'brand_id debe ser un entero.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
