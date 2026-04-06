@@ -43,7 +43,7 @@ class RebateResult:
 @dataclass
 class AccrualResult:
     ledger_id: str
-    proforma_id: str
+    factory_order_id: str
     qualifying_amount: Decimal
     qualifying_units: int
     accrued_amount: Decimal
@@ -149,20 +149,20 @@ def _build_rebate_result(assignment, scope_level: str) -> RebateResult:
 def calculate_rebate_accrual(
     *,
     ledger_id: str,
-    proforma_id: str,
-    proforma_lines: list[dict],
-    proforma_date: date,
+    factory_order_id: str,
+    factory_order_lines: list[dict],
+    factory_order_date: date,
     qualified_product_keys: Optional[list[str]] = None,
 ) -> AccrualResult:
     """
-    S23-06: Calcula y registra el accrual de rebate al cerrar una proforma.
+    S23-06: Calcula y registra el accrual de rebate al cerrar una factory_order.
 
     - Todo dentro de transaction.atomic() + select_for_update() en el ledger.
-    - Idempotente: si ya existe la entry (unique_together ledger+proforma_id),
+    - Idempotente: si ya existe la entry (unique_together ledger+factory_order_id),
       retorna el resultado existente sin modificar el ledger.
     - Recalcula totales con aggregate() desde entries — NUNCA F() incremental.
 
-    proforma_lines: lista de dicts con claves:
+    factory_order_lines: lista de dicts con claves:
         product_key (str), quantity (int), unit_price (Decimal), base_list_price (Decimal)
     qualified_product_keys: si None, todas las lineas califican.
     """
@@ -196,11 +196,11 @@ def calculate_rebate_accrual(
         # Filtrar lineas calificables
         if qualified_product_keys is not None:
             lines = [
-                l for l in proforma_lines
+                l for l in factory_order_lines
                 if l['product_key'] in qualified_product_keys
             ]
         else:
-            lines = proforma_lines
+            lines = factory_order_lines
 
         # Calcular montos
         qualifying_amount = _calculate_qualifying_amount(lines, program.calculation_base)
@@ -218,21 +218,21 @@ def calculate_rebate_accrual(
         try:
             RebateAccrualEntry.objects.create(
                 ledger=ledger,
-                proforma_id=proforma_id,
+                factory_order_id=factory_order_id,
                 qualifying_amount=qualifying_amount,
                 qualifying_units=qualifying_units,
                 accrued_amount=accrued_amount,
-                proforma_date=proforma_date,
+                factory_order_date=factory_order_date,
             )
             was_idempotent = False
         except IntegrityError:
             existing = RebateAccrualEntry.objects.get(
                 ledger=ledger,
-                proforma_id=proforma_id,
+                factory_order_id=factory_order_id,
             )
             return AccrualResult(
                 ledger_id=str(ledger.id),
-                proforma_id=proforma_id,
+                factory_order_id=factory_order_id,
                 qualifying_amount=existing.qualifying_amount,
                 qualifying_units=existing.qualifying_units,
                 accrued_amount=existing.accrued_amount,
@@ -267,7 +267,7 @@ def calculate_rebate_accrual(
 
     return AccrualResult(
         ledger_id=str(ledger.id),
-        proforma_id=proforma_id,
+        factory_order_id=factory_order_id,
         qualifying_amount=qualifying_amount,
         qualifying_units=qualifying_units,
         accrued_amount=accrued_amount,

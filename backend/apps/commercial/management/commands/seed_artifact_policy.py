@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # Si en el futuro se mueve a expedientes/artifact_policy.py, importar desde alli.
 ARTIFACT_POLICY = {
     "default": {
-        "required_artifacts": ["proforma", "invoice"],
+        "required_artifacts": ["factory_order", "invoice"],
         "optional_artifacts": ["packing_list", "certificate_of_origin"],
         "max_versions": 5,
         "allow_void": True,

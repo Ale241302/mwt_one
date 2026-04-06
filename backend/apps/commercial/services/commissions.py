@@ -121,7 +121,7 @@ def resolve_commission(
     cost_price: Optional[Decimal] = None,
 ) -> Optional[CommissionResult]:
     """
-    S23-08: Calcula la comision para un agente dado una proforma/linea.
+    S23-08: Calcula la comision para un agente dado una factory_order/linea.
 
     - commission_base 'sale_price': usa sale_price como base.
     - commission_base 'gross_margin': usa (sale_price - cost_price) como base.

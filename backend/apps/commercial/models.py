@@ -116,15 +116,17 @@ class RebateLedger(models.Model):
 
 class RebateAccrualEntry(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    ledger = models.ForeignKey(RebateLedger, on_delete=models.PROTECT, related_name='entries')
-    proforma = models.ForeignKey('expedientes.Proforma', on_delete=models.PROTECT)
-    qualifying_amount = models.DecimalField(max_digits=14, decimal_places=4)
+    factory_order = models.ForeignKey(
+        'expedientes.FactoryOrder', 
+        on_delete=models.PROTECT,
+        related_name='rebate_accrual_entries'
+    )
     qualifying_units = models.DecimalField(max_digits=14, decimal_places=4)
     rebate_amount = models.DecimalField(max_digits=14, decimal_places=4)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = [['ledger', 'proforma']]
+        unique_together = [['ledger', 'factory_order']]
 
 class CommissionRule(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
