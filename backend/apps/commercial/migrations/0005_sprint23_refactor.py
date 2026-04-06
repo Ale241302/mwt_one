@@ -17,7 +17,6 @@ class Migration(migrations.Migration):
     operations = [
 
         # ── 1. RebateProgram ──────────────────────────────────────────────────
-        # Remove old constraints
         migrations.RemoveConstraint(model_name='rebateprogram', name='rebate_program_valid_to_gte_valid_from'),
         migrations.RemoveConstraint(model_name='rebateprogram', name='rebate_program_amount_only_when_type_amount'),
         migrations.RemoveConstraint(model_name='rebateprogram', name='rebate_program_units_only_when_type_units'),
@@ -26,21 +25,16 @@ class Migration(migrations.Migration):
         migrations.RemoveConstraint(model_name='rebateprogram', name='rebate_program_units_excludes_amount'),
         migrations.RemoveConstraint(model_name='rebateprogram', name='rebate_program_value_positive'),
 
-        # Remove old threshold fields
         migrations.RemoveField(model_name='rebateprogram', name='threshold_amount'),
         migrations.RemoveField(model_name='rebateprogram', name='threshold_units'),
-
-        # Remove updated_at
         migrations.RemoveField(model_name='rebateprogram', name='updated_at'),
 
-        # Add threshold_value
         migrations.AddField(
             model_name='rebateprogram',
             name='threshold_value',
             field=models.DecimalField(blank=True, decimal_places=4, max_digits=14, null=True),
         ),
 
-        # Update period_type choices
         migrations.AlterField(
             model_name='rebateprogram',
             name='period_type',
@@ -50,14 +44,12 @@ class Migration(migrations.Migration):
             ),
         ),
 
-        # Update brand FK to PROTECT
         migrations.AlterField(
             model_name='rebateprogram',
             name='brand',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='brands.brand'),
         ),
 
-        # Update calculation_base choices label
         migrations.AlterField(
             model_name='rebateprogram',
             name='calculation_base',
@@ -69,10 +61,8 @@ class Migration(migrations.Migration):
             ),
         ),
 
-        # Rename table (remove db_table override)
-        migrations.AlterModelTable(model_name='rebateprogram', table=None),
+        migrations.AlterModelTable(name='rebateprogram', table=None),
 
-        # Add new constraints
         migrations.AddConstraint(
             model_name='rebateprogram',
             constraint=models.CheckConstraint(
@@ -117,8 +107,6 @@ class Migration(migrations.Migration):
         ),
 
         # ── 2. RebateProgramProduct ───────────────────────────────────────────
-        # Drop UUID id → replace with BigAutoField via recreating the model
-        # First remove old unique_together so we can drop the table cleanly
         migrations.AlterUniqueTogether(model_name='rebateprogramproduct', unique_together=set()),
         migrations.DeleteModel(name='RebateProgramProduct'),
         migrations.CreateModel(
@@ -138,7 +126,6 @@ class Migration(migrations.Migration):
         ),
 
         # ── 3. CommissionRule ─────────────────────────────────────────────────
-        # Remove old constraints
         migrations.RemoveConstraint(model_name='commissionrule', name='commission_rule_one_level_only'),
         migrations.RemoveConstraint(model_name='commissionrule', name='commission_rule_value_positive'),
         migrations.RemoveConstraint(model_name='commissionrule', name='commission_rule_unique_active_brand_default'),
@@ -148,21 +135,17 @@ class Migration(migrations.Migration):
         migrations.RemoveConstraint(model_name='commissionrule', name='commission_rule_unique_active_subsidiary_default'),
         migrations.RemoveConstraint(model_name='commissionrule', name='commission_rule_unique_active_subsidiary_product'),
 
-        # Remove updated_at
         migrations.RemoveField(model_name='commissionrule', name='updated_at'),
 
-        # Rename fields
         migrations.RenameField(model_name='commissionrule', old_name='rule_type', new_name='commission_type'),
         migrations.RenameField(model_name='commissionrule', old_name='rule_value', new_name='commission_value'),
 
-        # Update product_key max_length
         migrations.AlterField(
             model_name='commissionrule',
             name='product_key',
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
 
-        # Update FKs to PROTECT
         migrations.AlterField(
             model_name='commissionrule',
             name='brand',
@@ -179,10 +162,8 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='commission_rules', to='clientes.clientsubsidiary'),
         ),
 
-        # Rename table (remove db_table override)
-        migrations.AlterModelTable(model_name='commissionrule', table=None),
+        migrations.AlterModelTable(name='commissionrule', table=None),
 
-        # Add new constraints
         migrations.AddConstraint(
             model_name='commissionrule',
             constraint=models.CheckConstraint(
@@ -244,15 +225,12 @@ class Migration(migrations.Migration):
         ),
 
         # ── 4. BrandArtifactPolicyVersion ─────────────────────────────────────
-        # Remove old constraints
         migrations.RemoveConstraint(model_name='brandartifactpolicyversion', name='artifact_policy_unique_active_per_brand'),
         migrations.RemoveConstraint(model_name='brandartifactpolicyversion', name='artifact_policy_unique_version_per_brand'),
 
-        # Remove fields no longer in model
         migrations.RemoveField(model_name='brandartifactpolicyversion', name='notes'),
         migrations.RemoveField(model_name='brandartifactpolicyversion', name='updated_at'),
 
-        # Add created_by
         migrations.AddField(
             model_name='brandartifactpolicyversion',
             name='created_by',
@@ -263,28 +241,24 @@ class Migration(migrations.Migration):
             ),
         ),
 
-        # Update brand FK to PROTECT
         migrations.AlterField(
             model_name='brandartifactpolicyversion',
             name='brand',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='artifact_policy_versions', to='brands.brand'),
         ),
 
-        # Update artifact_policy (remove help_text)
         migrations.AlterField(
             model_name='brandartifactpolicyversion',
             name='artifact_policy',
             field=models.JSONField(),
         ),
 
-        # Update is_active default (False → True)
         migrations.AlterField(
             model_name='brandartifactpolicyversion',
             name='is_active',
             field=models.BooleanField(default=True),
         ),
 
-        # Update superseded_by (remove help_text)
         migrations.AlterField(
             model_name='brandartifactpolicyversion',
             name='superseded_by',
@@ -296,10 +270,8 @@ class Migration(migrations.Migration):
             ),
         ),
 
-        # Rename table (remove db_table override)
-        migrations.AlterModelTable(model_name='brandartifactpolicyversion', table=None),
+        migrations.AlterModelTable(name='brandartifactpolicyversion', table=None),
 
-        # Add new constraints
         migrations.AddConstraint(
             model_name='brandartifactpolicyversion',
             constraint=models.UniqueConstraint(
@@ -317,19 +289,14 @@ class Migration(migrations.Migration):
         ),
 
         # ── 5. RebateAccrualEntry ─────────────────────────────────────────────
-        # Fix unique_together: was (rebate_ledger, factory_order), now (ledger, factory_order)
         migrations.AlterUniqueTogether(model_name='rebateaccrualentry', unique_together=set()),
-
-        # Rename rebate_ledger → ledger
         migrations.RenameField(model_name='rebateaccrualentry', old_name='rebate_ledger', new_name='ledger'),
-
-        # Restore unique_together with new field name
         migrations.AlterUniqueTogether(
             model_name='rebateaccrualentry',
             unique_together={('ledger', 'factory_order')},
         ),
 
-        # ── 6. Clientes app ───────────────────────────────────────────────────
+        # ── 6. Clientes ───────────────────────────────────────────────────────
         migrations.AddField(
             model_name='clientsubsidiary',
             name='payment_grace_days',
