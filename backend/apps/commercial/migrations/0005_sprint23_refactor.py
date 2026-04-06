@@ -1,5 +1,4 @@
 # Sprint 23 refactor — aligns DB schema with updated models.py
-import uuid
 import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
@@ -10,7 +9,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('commercial', '0004_brand_artifact_policy_version'),
         ('brands', '__first__'),
-        ('clientes', '__first__'),
+        ('clientes', '0004_clientsubsidiary_payment_grace_days'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -133,7 +132,6 @@ class Migration(migrations.Migration):
         ),
 
         # ── 2. RebateProgramProduct ───────────────────────────────────────────
-        # UUID id → BigAutoField: drop and recreate
         migrations.AlterUniqueTogether(
             name='rebateprogramproduct',
             unique_together=set(),
@@ -383,12 +381,5 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name='rebateaccrualentry',
             unique_together={('ledger', 'factory_order')},
-        ),
-
-        # ── 6. Clientes ───────────────────────────────────────────────────────
-        migrations.AddField(
-            model_name='clientsubsidiary',
-            name='payment_grace_days',
-            field=models.PositiveIntegerField(default=0),
         ),
     ]
