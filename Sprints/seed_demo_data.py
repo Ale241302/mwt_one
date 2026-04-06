@@ -13,7 +13,7 @@ Crea datos realistas que ejercitan TODA la funcionalidad visible:
 - 1 expediente bloqueado
 - 1 cancelado
 
-Los datos están basados en operaciones reales (Sondel, UMMIE, Imporcomp)
+Los datos están Datos ficticios de demostración — no corresponden a clientes reales
 pero con valores ficticios para demo.
 
 IMPORTANTE: este script llama a services.py directamente, no a la API HTTP.
@@ -162,9 +162,9 @@ class Command(BaseCommand):
             return evt
 
         # ══════════════════════════════════════════════════════════════
-        # 1. EXPEDIENTE CERRADO (happy path completo) — Sondel Modelo C
+        # 1. EXPEDIENTE CERRADO (happy path completo) — Client_A Modelo C
         # ══════════════════════════════════════════════════════════════
-        exp1 = make_exp("EXP-DEMO-001", "SONDEL-CR", "FULL", "CERRADO", 90,
+        exp1 = make_exp("EXP-DEMO-001", "CLIENT_A-CR", "FULL", "CERRADO", 90,
                         payment_status="paid",
                         credit_clock_started_at=now - timedelta(days=85))
 
@@ -177,7 +177,7 @@ class Command(BaseCommand):
         make_cost(exp1, "customs_dai", 4695.88, "EN_DESTINO", 25)
         make_cost(exp1, "customs_iva", 5583.34, "EN_DESTINO", 25)
         make_cost(exp1, "handling", 350.00, "EN_DESTINO", 24)
-        make_payment(exp1, 47693.00, "wire", "TRF-SONDEL-2025-12", 8)
+        make_payment(exp1, 47693.00, "wire", "TRF-CLIENT_A-2025-12", 8)
         make_event(exp1, "expediente.created", 90)
         make_event(exp1, "expediente.state_changed", 85, {"from": "REGISTRO", "to": "PRODUCCION"})
         make_event(exp1, "expediente.state_changed", 65, {"from": "PRODUCCION", "to": "PREPARACION"})
@@ -187,9 +187,9 @@ class Command(BaseCommand):
         make_event(exp1, "expediente.completed", 8)
 
         # ══════════════════════════════════════════════════════════════
-        # 2. EN TRÁNSITO — Sondel Modelo C, reloj crédito activo (día 55)
+        # 2. EN TRÁNSITO — Client_A Modelo C, reloj crédito activo (día 55)
         # ══════════════════════════════════════════════════════════════
-        exp2 = make_exp("EXP-DEMO-002", "SONDEL-CR", "FULL", "TRANSITO", 60,
+        exp2 = make_exp("EXP-DEMO-002", "CLIENT_A-CR", "FULL", "TRANSITO", 60,
                         credit_clock_started_at=now - timedelta(days=55))
 
         make_artifact(exp2, "ART-01", payload={"po_number": "PO-504855", "total": 28750.00}, days_ago=60)
@@ -204,9 +204,9 @@ class Command(BaseCommand):
         make_event(exp2, "expediente.state_changed", 48, {"from": "DESPACHO", "to": "TRANSITO"})
 
         # ══════════════════════════════════════════════════════════════
-        # 3. EN DESTINO — UMMIE Guatemala, reloj crédito día 78 (ALERTA ÁMBAR)
+        # 3. EN DESTINO — CLIENT_B Guatemala, reloj crédito día 78 (ALERTA ÁMBAR)
         # ══════════════════════════════════════════════════════════════
-        exp3 = make_exp("EXP-DEMO-003", "UMMIE-GT", "COMISION", "EN_DESTINO", 85,
+        exp3 = make_exp("EXP-DEMO-003", "CLIENT_B-GT", "COMISION", "EN_DESTINO", 85,
                         credit_clock_started_at=now - timedelta(days=78),
                         payment_status="partial")
 
@@ -215,14 +215,14 @@ class Command(BaseCommand):
         make_artifact(exp3, "ART-05", payload={"carrier": "DHL Express", "awb": "1234567890", "transport_mode": "aereo"}, days_ago=78)
         make_cost(exp3, "merchandise", 15200.00, "PRODUCCION", 80)
         make_cost(exp3, "freight_air", 1890.00, "DESPACHO", 75)
-        make_payment(exp3, 800.00, "wire", "UMMIE-PARTIAL-001", 30)
+        make_payment(exp3, 800.00, "wire", "CLIENT_B-PARTIAL-001", 30)
         make_event(exp3, "expediente.created", 85)
         make_event(exp3, "credit_clock.warning", 18)
 
         # ══════════════════════════════════════════════════════════════
-        # 4. BLOQUEADO — Sondel, crédito día 82 (ALERTA CORAL)
+        # 4. BLOQUEADO — Client_A, crédito día 82 (ALERTA CORAL)
         # ══════════════════════════════════════════════════════════════
-        exp4 = make_exp("EXP-DEMO-004", "SONDEL-CR", "FULL", "TRANSITO", 88,
+        exp4 = make_exp("EXP-DEMO-004", "CLIENT_A-CR", "FULL", "TRANSITO", 88,
                         is_blocked=True,
                         blocked_reason="Credit clock >75 days — auto block",
                         blocked_at=now - timedelta(days=7),
@@ -240,14 +240,14 @@ class Command(BaseCommand):
         # ══════════════════════════════════════════════════════════════
         # 5. REGISTRO — nuevo, recién creado
         # ══════════════════════════════════════════════════════════════
-        exp5 = make_exp("EXP-DEMO-005", "IMPORCOMP-CO", "COMISION", "REGISTRO", 3)
+        exp5 = make_exp("EXP-DEMO-005", "CLIENT_C-CO", "COMISION", "REGISTRO", 3)
         make_artifact(exp5, "ART-01", payload={"po_number": "PO-CO-2026-015", "total": 8500.00}, days_ago=3)
         make_event(exp5, "expediente.created", 3)
 
         # ══════════════════════════════════════════════════════════════
         # 6. PRODUCCION — en fábrica, esperando
         # ══════════════════════════════════════════════════════════════
-        exp6 = make_exp("EXP-DEMO-006", "SONDEL-CR", "FULL", "PRODUCCION", 30)
+        exp6 = make_exp("EXP-DEMO-006", "CLIENT_A-CR", "FULL", "PRODUCCION", 30)
         make_artifact(exp6, "ART-01", payload={"po_number": "PO-505100", "total": 22300.00}, days_ago=30)
         make_artifact(exp6, "ART-02", payload={"consecutive": "2430-2026", "total_usd": 22300.00}, days_ago=28)
         make_cost(exp6, "merchandise", 22300.00, "PRODUCCION", 25)
@@ -257,7 +257,7 @@ class Command(BaseCommand):
         # ══════════════════════════════════════════════════════════════
         # 7. PREPARACION — listo para despachar
         # ══════════════════════════════════════════════════════════════
-        exp7 = make_exp("EXP-DEMO-007", "UMMIE-GT", "COMISION", "PREPARACION", 45)
+        exp7 = make_exp("EXP-DEMO-007", "CLIENT_B-GT", "COMISION", "PREPARACION", 45)
         make_artifact(exp7, "ART-01", payload={"po_number": "PO-GT-2026-002", "total": 11800.00}, days_ago=45)
         make_artifact(exp7, "ART-02", payload={"consecutive": "2431-2026", "total_usd": 11800.00, "comision_pactada": 9.37}, days_ago=43)
         make_cost(exp7, "merchandise", 11800.00, "PRODUCCION", 40)
@@ -268,7 +268,7 @@ class Command(BaseCommand):
         # ══════════════════════════════════════════════════════════════
         # 8. DESPACHO — docs listos, embarcando
         # ══════════════════════════════════════════════════════════════
-        exp8 = make_exp("EXP-DEMO-008", "SONDEL-CR", "FULL", "DESPACHO", 50,
+        exp8 = make_exp("EXP-DEMO-008", "CLIENT_A-CR", "FULL", "DESPACHO", 50,
                         credit_clock_started_at=now - timedelta(days=15))
         make_artifact(exp8, "ART-01", payload={"po_number": "PO-505200", "total": 19500.00}, days_ago=50)
         make_artifact(exp8, "ART-02", payload={"consecutive": "2432-2026", "total_usd": 19500.00}, days_ago=48)
@@ -284,7 +284,7 @@ class Command(BaseCommand):
         # ══════════════════════════════════════════════════════════════
         # 9. CANCELADO
         # ══════════════════════════════════════════════════════════════
-        exp9 = make_exp("EXP-DEMO-009", "IMPORCOMP-CO", "COMISION", "CANCELADO", 40)
+        exp9 = make_exp("EXP-DEMO-009", "CLIENT_C-CO", "COMISION", "CANCELADO", 40)
         make_artifact(exp9, "ART-01", payload={"po_number": "PO-CO-2026-010", "total": 5200.00}, days_ago=40)
         make_event(exp9, "expediente.created", 40)
         make_event(exp9, "expediente.cancelled", 35, {"reason": "Cliente canceló PO"})
@@ -292,7 +292,7 @@ class Command(BaseCommand):
         # ══════════════════════════════════════════════════════════════
         # 10. CERRADO Modelo B — con comisión pagada
         # ══════════════════════════════════════════════════════════════
-        exp10 = make_exp("EXP-DEMO-010", "UMMIE-GT", "COMISION", "CERRADO", 120,
+        exp10 = make_exp("EXP-DEMO-010", "CLIENT_B-GT", "COMISION", "CERRADO", 120,
                          payment_status="paid",
                          credit_clock_started_at=now - timedelta(days=100))
 
@@ -422,16 +422,16 @@ class Command(BaseCommand):
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                  ║
 ║  EXPEDIENTES (10):                                               ║
-║    EXP-001  CERRADO      Sondel CR    FULL     Happy path       ║
-║    EXP-002  TRANSITO     Sondel CR    FULL     Reloj día 55     ║
-║    EXP-003  EN_DESTINO   UMMIE GT     COMISION Reloj día 78 ⚠  ║
-║    EXP-004  BLOQUEADO    Sondel CR    FULL     Reloj día 82 🔴  ║
-║    EXP-005  REGISTRO     Imporcomp CO COMISION Recién creado    ║
-║    EXP-006  PRODUCCION   Sondel CR    FULL     En fábrica       ║
-║    EXP-007  PREPARACION  UMMIE GT     COMISION Listo despachar  ║
-║    EXP-008  DESPACHO     Sondel CR    FULL     Embarcando       ║
-║    EXP-009  CANCELADO    Imporcomp CO COMISION PO cancelada     ║
-║    EXP-010  CERRADO      UMMIE GT     COMISION Modelo B pagado  ║
+║    EXP-001  CERRADO      Client_A CR    FULL     Happy path       ║
+║    EXP-002  TRANSITO     Client_A CR    FULL     Reloj día 55     ║
+║    EXP-003  EN_DESTINO   CLIENT_B GT     COMISION Reloj día 78 ⚠  ║
+║    EXP-004  BLOQUEADO    Client_A CR    FULL     Reloj día 82 🔴  ║
+║    EXP-005  REGISTRO     Client_C CO COMISION Recién creado    ║
+║    EXP-006  PRODUCCION   Client_A CR    FULL     En fábrica       ║
+║    EXP-007  PREPARACION  CLIENT_B GT     COMISION Listo despachar  ║
+║    EXP-008  DESPACHO     Client_A CR    FULL     Embarcando       ║
+║    EXP-009  CANCELADO    Client_C CO COMISION PO cancelada     ║
+║    EXP-010  CERRADO      CLIENT_B GT     COMISION Modelo B pagado  ║
 ║                                                                  ║
 ║  SEMÁFOROS CRÉDITO:                                              ║
 ║    🟢 EXP-008 (15d)                                             ║

@@ -35,7 +35,7 @@ class Command(BaseCommand):
         if options["flush"]:
             self.stdout.write("Flushing demo data...")
             demo_exps = Expediente.objects.filter(
-                client__entity_id__in=["SONDEL-CR", "UMMIE-GT", "IMPORCOMP-CO"],
+                client__entity_id__in=["CLIENT_A-CR", "CLIENT_B-GT", "CLIENT_C-CO"],
                 brand__isnull=True,
             )
             demo_exp_ids = list(demo_exps.values_list('pk', flat=True))
@@ -46,7 +46,7 @@ class Command(BaseCommand):
             demo_exps.delete()
             Transfer.objects.filter(transfer_id__startswith="TRF-DEMO").delete()
             Node.objects.filter(name__startswith="DEMO ").delete()
-            LegalEntity.objects.filter(entity_id__in=["SONDEL-CR", "UMMIE-GT", "IMPORCOMP-CO", "MWT-CR"]).delete()
+            LegalEntity.objects.filter(entity_id__in=["CLIENT_A-CR", "CLIENT_B-GT", "CLIENT_C-CO", "MWT-CR"]).delete()
             if HAS_LIQUIDATIONS:
                 Liquidation.objects.filter(period__startswith="DEMO-").delete()
             self.stdout.write(self.style.SUCCESS("Flushed."))
@@ -64,22 +64,22 @@ class Command(BaseCommand):
                           pricing_visibility="INTERNAL", status="ACTIVE")
         )
         sondel_cr, _ = LegalEntity.objects.get_or_create(
-            entity_id="SONDEL-CR",
-            defaults=dict(legal_name="Sondel Costa Rica S.A.", country="CRI",
+            entity_id="CLIENT_A-CR",
+            defaults=dict(legal_name="Client_A Costa Rica S.A.", country="CRI",
                           role="DISTRIBUTOR", relationship_to_mwt="DISTRIBUTION",
                           frontend="MWT_ONE", visibility_level="FULL",
                           pricing_visibility="CLIENT", status="ACTIVE")
         )
         ummie_gt, _ = LegalEntity.objects.get_or_create(
-            entity_id="UMMIE-GT",
-            defaults=dict(legal_name="UMMIE Guatemala S.A.", country="GTM",
+            entity_id="CLIENT_B-GT",
+            defaults=dict(legal_name="CLIENT_B Guatemala S.A.", country="GTM",
                           role="DISTRIBUTOR", relationship_to_mwt="DISTRIBUTION",
                           frontend="MWT_ONE", visibility_level="FULL",
                           pricing_visibility="CLIENT", status="ACTIVE")
         )
         imporcomp_co, _ = LegalEntity.objects.get_or_create(
-            entity_id="IMPORCOMP-CO",
-            defaults=dict(legal_name="Imporcomp Colombia S.A.S.", country="COL",
+            entity_id="CLIENT_C-CO",
+            defaults=dict(legal_name="Client_C Colombia S.A.S.", country="COL",
                           role="DISTRIBUTOR", relationship_to_mwt="DISTRIBUTION",
                           frontend="MWT_ONE", visibility_level="FULL",
                           pricing_visibility="CLIENT", status="ACTIVE")
@@ -167,7 +167,7 @@ class Command(BaseCommand):
         make_cost(exp1, "freight_air", 4850.00, "DESPACHO", 58)
         make_cost(exp1, "customs_dai", 4695.88, "EN_DESTINO", 25)
         make_cost(exp1, "customs_iva", 5583.34, "EN_DESTINO", 25)
-        make_payment(exp1, 47693.00, "wire", "TRF-SONDEL-2025-12", 8)
+        make_payment(exp1, 47693.00, "wire", "TRF-CLIENT_A-2025-12", 8)
         make_event(exp1, "expediente.created", 90)
         make_event(exp1, "expediente.state_changed", 85, {"from": "REGISTRO", "to": "PRODUCCION"})
         make_event(exp1, "expediente.state_changed", 58, {"from": "PREPARACION", "to": "DESPACHO"})
@@ -189,7 +189,7 @@ class Command(BaseCommand):
         make_artifact(exp3, "ART-01", payload={"po_number": "PO-GT-2026-001", "total": 15200.00}, days_ago=85)
         make_artifact(exp3, "ART-05", payload={"carrier": "DHL Express", "awb": "1234567890"}, days_ago=78)
         make_cost(exp3, "merchandise", 15200.00, "PRODUCCION", 80)
-        make_payment(exp3, 800.00, "wire", "UMMIE-PARTIAL-001", 30)
+        make_payment(exp3, 800.00, "wire", "CLIENT_B-PARTIAL-001", 30)
         make_event(exp3, "expediente.created", 85)
         make_event(exp3, "credit_clock.warning", 18)
 
@@ -315,16 +315,16 @@ class Command(BaseCommand):
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    SEED DATA COMPLETADO                         ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  EXP-001  CERRADO      Sondel CR    FULL     Happy path        ║
-║  EXP-002  TRANSITO     Sondel CR    FULL     Reloj día 55      ║
-║  EXP-003  EN_DESTINO   UMMIE GT     COMISION Reloj día 78 ⚠   ║
-║  EXP-004  BLOQUEADO    Sondel CR    FULL     Reloj día 82 🔴   ║
-║  EXP-005  REGISTRO     Imporcomp CO COMISION Recién creado     ║
-║  EXP-006  PRODUCCION   Sondel CR    FULL     En fábrica        ║
-║  EXP-007  PREPARACION  UMMIE GT     COMISION Listo despachar   ║
-║  EXP-008  DESPACHO     Sondel CR    FULL     Embarcando        ║
-║  EXP-009  CANCELADO    Imporcomp CO COMISION PO cancelada      ║
-║  EXP-010  CERRADO      UMMIE GT     COMISION Modelo B pagado   ║
+║  EXP-001  CERRADO      Client_A CR    FULL     Happy path        ║
+║  EXP-002  TRANSITO     Client_A CR    FULL     Reloj día 55      ║
+║  EXP-003  EN_DESTINO   CLIENT_B GT     COMISION Reloj día 78 ⚠   ║
+║  EXP-004  BLOQUEADO    Client_A CR    FULL     Reloj día 82 🔴   ║
+║  EXP-005  REGISTRO     Client_C CO COMISION Recién creado     ║
+║  EXP-006  PRODUCCION   Client_A CR    FULL     En fábrica        ║
+║  EXP-007  PREPARACION  CLIENT_B GT     COMISION Listo despachar   ║
+║  EXP-008  DESPACHO     Client_A CR    FULL     Embarcando        ║
+║  EXP-009  CANCELADO    Client_C CO COMISION PO cancelada      ║
+║  EXP-010  CERRADO      CLIENT_B GT     COMISION Modelo B pagado   ║
 ║                                                                 ║
 ║  Para limpiar: python manage.py seed_demo_data --flush          ║
 ╚══════════════════════════════════════════════════════════════════╝

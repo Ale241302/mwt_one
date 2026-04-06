@@ -35,12 +35,12 @@ BRANDS = [
 ]
 
 CLIENTS = [
-    {'name': 'SONDEL S.A.', 'code': 'SOND', 'country': 'CR', 'sap': '4000000100'},
+    {'name': 'CLIENT_A S.A.', 'code': 'SOND', 'country': 'CR', 'sap': '4000000100'},
     {'name': 'MUITO WORK LIMITADA', 'code': 'MWLT', 'country': 'CR', 'sap': '4000000145'},
     {'name': 'DISTRIBUIDORA COMTEK S.A.S.', 'code': 'COMT', 'country': 'CO', 'sap': '4000000102'},
     {'name': 'SONEPAR COLOMBIA S.A.S.', 'code': 'SNPR', 'country': 'CO', 'sap': '4000000402'},
-    {'name': 'IMPORCOMP S.A.', 'code': 'IMPC', 'country': 'GT', 'sap': '4000000115'},
-    {'name': 'COMERCIALIZADORA UMMIE, S.A.', 'code': 'UMMI', 'country': 'GT', 'sap': '4000000400'},
+    {'name': 'CLIENT_C S.A.', 'code': 'IMPC', 'country': 'GT', 'sap': '4000000115'},
+    {'name': 'COMERCIALIZADORA CLIENT_B, S.A.', 'code': 'UMMI', 'country': 'GT', 'sap': '4000000400'},
     {'name': 'GRUPO SOLUCIONES DE INGENIERIA Y AUTOMATIZACION S.A.', 'code': 'SIAS', 'country': 'GT', 'sap': '4000000484'},
     {'name': 'EQUIPOS Y GUANTES INDUSTRIALES S.A.', 'code': 'EGUI', 'country': 'GT', 'sap': '4000000501'},
     {'name': 'PRO CUSTOMER CORP.', 'code': 'PRCU', 'country': 'PA', 'sap': '4000000126'},
