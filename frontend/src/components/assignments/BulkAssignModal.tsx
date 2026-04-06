@@ -11,11 +11,12 @@ interface BulkAssignResult {
 }
 
 interface Props {
+  brandId: number;
   onClose: () => void;
   onCreated: (count: number) => void;
 }
 
-export function BulkAssignModal({ onClose, onCreated }: Props) {
+export function BulkAssignModal({ brandId, onClose, onCreated }: Props) {
   const [productKey, setProductKey] = useState('');
   const [clientSubsidiaryId, setClientSubsidiaryId] = useState('');
   const [loading, setLoading] = useState(false);

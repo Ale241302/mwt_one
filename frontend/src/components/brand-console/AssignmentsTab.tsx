@@ -6,14 +6,13 @@ import { RefreshCw, AlertCircle, Package, Plus } from 'lucide-react';
 import { BulkAssignModal } from '@/components/assignments/BulkAssignModal';
 import { getClientAssignments, ClientProductAssignment } from '@/api/pricing';
 
-export function AssignmentsTab() {
+export function AssignmentsTab({ brandId }: { brandId: number }) {
   const [assignments, setAssignments] = useState<ClientProductAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBulkAssign, setShowBulkAssign] = useState(false);
   const [recalculating, setRecalculating] = useState<number | null>(null);
   const [filterStale, setFilterStale] = useState(false);
 
-  const brandId = 1; // Marluvas
 
   const fetchAssignments = React.useCallback(async () => {
     setLoading(true);
@@ -153,6 +152,7 @@ export function AssignmentsTab() {
 
       {showBulkAssign && (
         <BulkAssignModal
+          brandId={brandId}
           onClose={() => setShowBulkAssign(false)}
           onCreated={handleBulkAssignCreated}
         />

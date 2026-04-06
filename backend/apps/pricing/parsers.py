@@ -66,7 +66,11 @@ def _read_file(file):
         raise ValueError('El archivo está vacío.')
 
     if extension in ('xlsx', 'xls'):
-        df = pd.read_excel(io.BytesIO(raw), dtype=str)
+        try:
+            df = pd.read_excel(io.BytesIO(raw), dtype=str, engine='openpyxl')
+        except Exception:
+            # Fallback a motor por defecto si openpyxl falla
+            df = pd.read_excel(io.BytesIO(raw), dtype=str)
     elif extension == 'csv':
         # Intenta UTF-8 primero, luego latin-1
         try:
@@ -97,10 +101,14 @@ def _map_columns(df):
     rename_map = {}
     detected_size_cols = []
 
+    used_aliases = set()
     for col in df.columns:
         norm = _normalize_col(col)
         if norm in COLUMN_ALIASES:
-            rename_map[col] = COLUMN_ALIASES[norm]
+            alias = COLUMN_ALIASES[norm]
+            if alias not in used_aliases:
+                rename_map[col] = alias
+                used_aliases.add(alias)
         elif norm in [s.lower() for s in SIZE_COLUMNS]:
             # Normaliza talla a formato estándar (ej. '33/34')
             detected_size_cols.append(col)

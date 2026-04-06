@@ -9,16 +9,13 @@ import { GradeItemsTable } from '@/components/pricing/GradeItemsTable';
 import { getPriceListVersions, activatePriceList, PriceListVersion } from '@/api/pricing';
 import { useParams } from 'next/navigation';
 
-export function PricingTab() {
+export function PricingTab({ brandId }: { brandId: number }) {
   const [versions, setVersions] = useState<PriceListVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [activating, setActivating] = useState<number | null>(null);
   
-  // En un entorno real, el brand_id vendría del contexto de la consola del brand
-  // Por ahora hardcodeamos 1 (Marluvas) o lo inferimos si estuviera en la URL
-  const brandId = 1; 
 
   const fetchVersions = React.useCallback(async () => {
     setLoading(true);

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Layers, FileText, ShoppingCart, Box, DollarSign, Settings, CreditCard, Link2, ArrowLeft, BarChart2 } from "lucide-react";
+import { Layers, FileText, ShoppingCart, Box, DollarSign, Settings, CreditCard, Link2, ArrowLeft, BarChart2, Loader2 } from "lucide-react";
 import Link from "next/link";
+import api from "@/lib/api";
 import { PricingTab } from "@/components/brand-console/PricingTab";
 import { OperationsTab } from "@/components/brand-console/OperationsTab";
 import { PaymentTermsTab } from "@/components/brand-console/PaymentTermsTab";
@@ -17,6 +18,25 @@ export default function BrandDetailPage() {
   const lang = (params?.lang as string) || "es";
   const slug = params?.slug as string;
   const [activeTab, setActiveTab] = useState("overview");
+  const [brand, setBrand] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchBrand() {
+      try {
+        setLoading(true);
+        const res = await api.get(`/brands/${slug}/`);
+        setBrand(res.data);
+      } catch (err) {
+        console.error("Error fetching brand:", err);
+        setError("No se pudo cargar la información de la marca.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (slug) fetchBrand();
+  }, [slug]);
 
   const TABS = [
     { id: "overview",      label: "Resumen",             icon: Layers },
@@ -33,6 +53,32 @@ export default function BrandDetailPage() {
     { id: "commercial",    label: "Reglas Comerciales",   icon: BarChart2 },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-text-tertiary">
+        <Loader2 className="animate-spin mb-2" size={32} />
+        <p className="text-sm">Cargando consola de marca...</p>
+      </div>
+    );
+  }
+
+  if (error || !brand) {
+    return (
+      <div className="card p-10 text-center space-y-4">
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg inline-block mx-auto text-sm">
+          {error || "Marca no encontrada"}
+        </div>
+        <div>
+          <Link href={`/${lang}/brands`} className="btn btn-secondary btn-sm flex items-center gap-2 mx-auto w-fit">
+            <ArrowLeft size={14} /> Volver a marcas
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const brandId = brand.id;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4 mb-2">
@@ -40,7 +86,7 @@ export default function BrandDetailPage() {
           <ArrowLeft size={16} />
         </Link>
         <div>
-          <h1 className="page-title leading-tight">Brand Console: <span className="text-brand font-mono capitalize">{slug}</span></h1>
+          <h1 className="page-title leading-tight">Brand Console: <span className="text-brand font-mono capitalize">{brand.name}</span></h1>
           <p className="page-subtitle text-xs">Gestiona operaciones comerciales y pedidos de clientes para esta marca.</p>
         </div>
       </div>
@@ -86,11 +132,11 @@ export default function BrandDetailPage() {
            </div>
         )}
         {/* S22-15 — CatalogTab */}
-        {activeTab === "catalog"       && <CatalogTab />}
-        {activeTab === "pricing"       && <PricingTab />}
+        {activeTab === "catalog"       && <CatalogTab brandId={brandId} />}
+        {activeTab === "pricing"       && <PricingTab brandId={brandId} />}
         {activeTab === "operations"    && <OperationsTab />}
-        {activeTab === "payment-terms" && <PaymentTermsTab />}
-        {activeTab === "assignments"   && <AssignmentsTab />}
+        {activeTab === "payment-terms" && <PaymentTermsTab brandId={brandId} />}
+        {activeTab === "assignments"   && <AssignmentsTab brandId={brandId} />}
         {/* S23-13 — CommercialTab: Rebates + Comisiones (CEO only) + ArtifactPolicy */}
         {activeTab === "commercial"    && <CommercialTab slug={slug} />}
       </div>

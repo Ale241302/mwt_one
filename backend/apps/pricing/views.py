@@ -231,14 +231,22 @@ class PriceListUploadView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        result = parse_marluvas_pricelist(file, brand_id=brand_id)
+        try:
+            result = parse_marluvas_pricelist(file, brand_id=brand_id)
 
-        # Si solo hay errores críticos (sin session_id) → 400
-        if not result['session_id']:
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+            # Si solo hay errores críticos (sin session_id) → 400
+            if not result['session_id']:
+                return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
-        # Si hay líneas válidas (aunque haya warnings/errores de fila) → 200
-        return Response(result, status=status.HTTP_200_OK)
+            # Si hay líneas válidas (aunque haya warnings/errores de fila) → 200
+            return Response(result, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'detail': f'Error procesando el archivo: {str(e)}',
+                'valid_lines': 0,
+                'errors': [{'row': None, 'message': str(e)}],
+                'session_id': None
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 # -------------------------------------------------------------------

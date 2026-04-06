@@ -38,7 +38,7 @@ interface GroupedProduct {
   skus: BrandSKU[];
 }
 
-export function CatalogTab() {
+export function CatalogTab({ brandId }: { brandId: number }) {
   const [products, setProducts] = useState<GroupedProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -50,7 +50,7 @@ export function CatalogTab() {
     try {
       setLoading(true);
       setError(null);
-      const res = await api.get("/pricing/catalog/brand-skus/");
+      const res = await api.get(`/pricing/catalog/brand-skus/?brand_id=${brandId}`);
       const raw: BrandSKU[] = res.data?.results || res.data || [];
 
       // Group by product_key (reference_code prefix before last 2 chars)
@@ -69,9 +69,9 @@ export function CatalogTab() {
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, brandId]);
 
-  useEffect(() => { fetchCatalog(); }, [fetchCatalog]);
+  useEffect(() => { if (brandId) fetchCatalog(); }, [fetchCatalog, brandId]);
 
   const toggleProduct = (key: string) => {
     setExpanded((prev) => {
