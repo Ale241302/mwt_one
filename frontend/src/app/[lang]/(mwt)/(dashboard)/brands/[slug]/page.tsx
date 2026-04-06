@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Layers, FileText, ShoppingCart, Box, DollarSign, Settings, CreditCard, Link2, ArrowLeft } from "lucide-react";
+import { Layers, FileText, ShoppingCart, Box, DollarSign, Settings, CreditCard, Link2, ArrowLeft, BarChart2 } from "lucide-react";
 import Link from "next/link";
 import { PricingTab } from "@/components/brand-console/PricingTab";
 import { OperationsTab } from "@/components/brand-console/OperationsTab";
 import { PaymentTermsTab } from "@/components/brand-console/PaymentTermsTab";
 import { AssignmentsTab } from "@/components/brand-console/AssignmentsTab";
 import { CatalogTab } from "@/components/brand-console/CatalogTab";
+// S23-13 — Tab Reglas Comerciales
+import { CommercialTab } from "@/components/commercial/CommercialTab";
 
 export default function BrandDetailPage() {
   const params = useParams();
@@ -17,16 +19,18 @@ export default function BrandDetailPage() {
   const [activeTab, setActiveTab] = useState("overview");
 
   const TABS = [
-    { id: "overview",      label: "Resumen",            icon: Layers },
+    { id: "overview",      label: "Resumen",             icon: Layers },
     { id: "agreements",    label: "Acuerdos y Políticas", icon: FileText },
-    { id: "orders",        label: "Pedidos",             icon: ShoppingCart },
-    { id: "catalog",       label: "Catálogo",            icon: Box },
-    { id: "pricing",       label: "Precios",             icon: DollarSign },
-    { id: "operations",    label: "Operaciones",         icon: Settings },
+    { id: "orders",        label: "Pedidos",              icon: ShoppingCart },
+    { id: "catalog",       label: "Catálogo",             icon: Box },
+    { id: "pricing",       label: "Precios",              icon: DollarSign },
+    { id: "operations",    label: "Operaciones",          icon: Settings },
     // S22-16
-    { id: "payment-terms", label: "Términos de Pago",    icon: CreditCard },
+    { id: "payment-terms", label: "Términos de Pago",     icon: CreditCard },
     // S22-17
-    { id: "assignments",   label: "Assignments",         icon: Link2 },
+    { id: "assignments",   label: "Assignments",          icon: Link2 },
+    // S23-13 — Reglas Comerciales (rebates, comisiones, artifact policy)
+    { id: "commercial",    label: "Reglas Comerciales",   icon: BarChart2 },
   ];
 
   return (
@@ -81,12 +85,14 @@ export default function BrandDetailPage() {
              <p className="text-sm">Consulta pedidos entrantes y su estado de procesamiento.</p>
            </div>
         )}
-        {/* S22-15 — CatalogTab con precio base, MOQ y tallas */}
+        {/* S22-15 — CatalogTab */}
         {activeTab === "catalog"       && <CatalogTab />}
         {activeTab === "pricing"       && <PricingTab />}
         {activeTab === "operations"    && <OperationsTab />}
         {activeTab === "payment-terms" && <PaymentTermsTab />}
         {activeTab === "assignments"   && <AssignmentsTab />}
+        {/* S23-13 — CommercialTab: Rebates + Comisiones (CEO only) + ArtifactPolicy */}
+        {activeTab === "commercial"    && <CommercialTab slug={slug} />}
       </div>
     </div>
   );
