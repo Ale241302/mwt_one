@@ -110,7 +110,7 @@ class RebateLedger(models.Model):
 
 class RebateAccrualEntry(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    rebate_ledger = models.ForeignKey(
+    ledger = models.ForeignKey(
         RebateLedger,
         on_delete=models.PROTECT,
         related_name='entries'
@@ -126,7 +126,7 @@ class RebateAccrualEntry(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = [['rebate_ledger', 'factory_order']]
+        unique_together = [['ledger', 'factory_order']]
 
 class CommissionRule(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
