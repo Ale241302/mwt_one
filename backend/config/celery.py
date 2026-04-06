@@ -22,4 +22,10 @@ app.conf.beat_schedule = {
         'task': 'apps.knowledge.tasks.purge_expired_logs',
         'schedule': crontab(hour=3, minute=0),
     },
+    # Sprint 23 S23-07: liquidacion trimestral de rebates
+    # Corre el dia 1 de enero, abril, julio y octubre a las 06:00
+    'liquidate-rebates-trimestral': {
+        'task': 'apps.commercial.tasks.liquidate_rebates',
+        'schedule': crontab(hour=6, minute=0, day_of_month=1, month_of_year='1,4,7,10'),
+    },
 }
