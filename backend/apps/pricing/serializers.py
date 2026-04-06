@@ -98,8 +98,15 @@ class ClientProductAssignmentSerializer(serializers.ModelSerializer):
 
     def get_brand_sku_description(self, obj):
         return f"Ref: {obj.brand_sku.product_key}"
-    is_stale = serializers.BooleanField(read_only=True)
+    is_stale = serializers.SerializerMethodField()
 
+    def get_is_stale(self, obj):
+        from django.utils import timezone
+        import datetime
+        # if it hasn't been cached, we consider it stale
+        if not obj.cached_at:
+            return True
+        return (timezone.now() - obj.cached_at) > datetime.timedelta(days=7)
     class Meta:
         from apps.pricing.models import ClientProductAssignment
         model = ClientProductAssignment
