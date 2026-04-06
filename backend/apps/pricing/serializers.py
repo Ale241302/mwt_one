@@ -94,7 +94,10 @@ class ClientProductAssignmentSerializer(serializers.ModelSerializer):
     """S22-02: Serializer para assignments."""
     client_subsidiary_name = serializers.CharField(source='client_subsidiary.name', read_only=True)
     brand_sku_code = serializers.CharField(source='brand_sku.sku_code', read_only=True)
-    brand_sku_description = serializers.CharField(source='brand_sku.product.name', read_only=True)
+    brand_sku_description = serializers.SerializerMethodField()
+
+    def get_brand_sku_description(self, obj):
+        return f"Ref: {obj.brand_sku.product_key}"
     is_stale = serializers.BooleanField(read_only=True)
 
     class Meta:
