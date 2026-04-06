@@ -675,7 +675,7 @@ tiktoken
 
 **Variables nuevas en `.env`:**
 ```
-OPENAI_API_KEY=sk-...
+OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxx
 KNOWLEDGE_INTERNAL_TOKEN=<32 chars aleatorio>
 KNOWLEDGE_SERVICE_URL=http://mwt-knowledge:8001
 MIN_SIMILARITY=0.5

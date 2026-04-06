@@ -28,11 +28,15 @@ build/
 Thumbs.db
 desktop.ini
 
-# Logs
+# Logs — nunca commitear
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+mwt_logs.txt
+logs_django.txt
+out.txt
+salida.txt
 
 # Other
 # nginx/
