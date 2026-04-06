@@ -25,32 +25,26 @@ class RebateProgram(models.Model):
 
     class Meta:
         constraints = [
-            # valid_to >= valid_from
             models.CheckConstraint(
                 check=models.Q(valid_to__isnull=True) | models.Q(valid_to__gte=models.F('valid_from')),
                 name='rebate_valid_to_gte_valid_from'
             ),
-            # threshold_value requerido si threshold_type != none
             models.CheckConstraint(
                 check=~models.Q(threshold_type__in=['amount', 'units']) | models.Q(threshold_value__isnull=False),
                 name='rebate_threshold_value_required'
             ),
-            # threshold_value debe ser null si threshold_type = none
             models.CheckConstraint(
                 check=~models.Q(threshold_type='none') | models.Q(threshold_value__isnull=True),
                 name='rebate_threshold_value_null_when_none'
             ),
-            # rebate_value > 0
             models.CheckConstraint(
                 check=models.Q(rebate_value__gt=0),
                 name='rebate_value_positive'
             ),
-            # percentage <= 100
             models.CheckConstraint(
                 check=~models.Q(rebate_type='percentage') | models.Q(rebate_value__lte=100),
                 name='rebate_percentage_max_100'
             ),
-            # cross-field: fixed_amount no necesita calculation_base
             models.CheckConstraint(
                 check=~models.Q(rebate_type='fixed_amount') | models.Q(calculation_base__isnull=True),
                 name='rebate_fixed_no_calc_base'
@@ -116,17 +110,23 @@ class RebateLedger(models.Model):
 
 class RebateAccrualEntry(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    rebate_ledger = models.ForeignKey(
+        RebateLedger,
+        on_delete=models.PROTECT,
+        related_name='entries'
+    )
     factory_order = models.ForeignKey(
-        'expedientes.FactoryOrder', 
+        'expedientes.FactoryOrder',
         on_delete=models.PROTECT,
         related_name='rebate_accrual_entries'
     )
+    qualifying_amount = models.DecimalField(max_digits=14, decimal_places=4)
     qualifying_units = models.DecimalField(max_digits=14, decimal_places=4)
     rebate_amount = models.DecimalField(max_digits=14, decimal_places=4)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = [['ledger', 'factory_order']]
+        unique_together = [['rebate_ledger', 'factory_order']]
 
 class CommissionRule(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -153,7 +153,6 @@ class CommissionRule(models.Model):
                 ),
                 name='commission_one_level_only'
             ),
-            # 6 UniqueConstraints separadas por scope (NULLs en PG no disparan unique genérica)
             models.UniqueConstraint(
                 fields=['brand'],
                 condition=models.Q(is_active=True, product_key__isnull=True, client__isnull=True, subsidiary__isnull=True),
