@@ -14,10 +14,15 @@ interface PreviewLine {
   available_sizes: string[];
 }
 
+interface UploadErrorOrWarning {
+  row: number | null;
+  message: string;
+}
+
 interface UploadPreviewResponse {
   valid_lines: number;
-  warnings: string[];
-  errors: string[];
+  warnings: UploadErrorOrWarning[];
+  errors: UploadErrorOrWarning[];
   preview: PreviewLine[];
   session_id: string;
 }
@@ -29,6 +34,7 @@ interface Props {
 }
 
 export function UploadPreviewModal({ brandId, onClose, onConfirm }: Props) {
+//... (preserve rest of component till the JSX rendering area)
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [versionLabel, setVersionLabel] = useState('');
@@ -165,7 +171,18 @@ export function UploadPreviewModal({ brandId, onClose, onConfirm }: Props) {
                   <p className="text-[11px] font-bold text-amber-800 uppercase mb-1">Warnings</p>
                   <div className="max-h-20 overflow-y-auto space-y-1">
                     {preview.warnings.map((w, i) => (
-                      <p key={i} className="text-[11px] text-amber-700 leading-tight">• {w}</p>
+                      <p key={i} className="text-[11px] text-amber-700 leading-tight">• {w.row ? `Fila ${w.row}: ` : ''}{w.message}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {preview.errors.length > 0 && (
+                <div className="rounded-lg bg-red-50 border border-red-100 p-3">
+                  <p className="text-[11px] font-bold text-red-800 uppercase mb-1">Errores de validación</p>
+                  <div className="max-h-20 overflow-y-auto space-y-1">
+                    {preview.errors.map((e, i) => (
+                      <p key={i} className="text-[11px] text-red-700 leading-tight">• {e.row ? `Fila ${e.row}: ` : ''}{e.message}</p>
                     ))}
                   </div>
                 </div>
