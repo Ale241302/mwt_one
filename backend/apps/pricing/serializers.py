@@ -14,8 +14,9 @@ class BulkAssignmentSerializer(serializers.Serializer):
     )
     client_subsidiary_ids = serializers.ListField(
         child=serializers.IntegerField(),
-        min_length=1,
-        help_text='Lista de IDs de ClientSubsidiary a asignar',
+        required=False,
+        default=list,
+        help_text='Lista de IDs de ClientSubsidiary a asignar (vacío = todos)',
     )
 
 
