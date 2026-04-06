@@ -15,6 +15,12 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, RefreshCw, Trash2 } from "lucide-react";
 import api from "@/lib/api";
 
+interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface CommissionRule {
   id: string;
   brand: string | null;
@@ -40,26 +46,36 @@ const EMPTY_RULE = {
 
 export function CommissionsSection() {
   const [rules, setRules]       = useState<CommissionRule[]>([]);
+  const [brands, setBrands]     = useState<Brand[]>([]);
   const [loading, setLoading]   = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm]         = useState({ ...EMPTY_RULE });
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
 
-  const fetchRules = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get("/commercial/commission-rules/");
-      setRules(res.data?.results ?? res.data ?? []);
+      const [rRes, bRes] = await Promise.all([
+        api.get("/commercial/commission-rules/"),
+        api.get("/brands/"),
+      ]);
+      setRules(rRes.data?.results ?? rRes.data ?? []);
+      setBrands(bRes.data?.results ?? bRes.data ?? []);
     } catch (e: any) {
-      setError(e?.response?.data?.detail ?? "Error cargando reglas.");
+      setError(e?.response?.data?.detail ?? "Error cargando datos.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchRules(); }, [fetchRules]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Reset scope_id when scope changes to avoid sending stale UUID
+  const handleScopeChange = (scope: "brand" | "client" | "subsidiary") => {
+    setForm(f => ({ ...f, scope, scope_id: "" }));
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +95,7 @@ export function CommissionsSection() {
       await api.post("/commercial/commission-rules/", payload);
       setShowForm(false);
       setForm({ ...EMPTY_RULE });
-      fetchRules();
+      fetchAll();
     } catch (e: any) {
       const data = e?.response?.data;
       setError(typeof data === "object" ? JSON.stringify(data) : "Error al crear regla.");
@@ -92,14 +108,17 @@ export function CommissionsSection() {
     if (!confirm("¿Eliminar esta regla de comisión?")) return;
     try {
       await api.delete(`/commercial/commission-rules/${id}/`);
-      fetchRules();
+      fetchAll();
     } catch {
       alert("Error al eliminar.");
     }
   };
 
   const scopeLabel = (r: CommissionRule) => {
-    if (r.brand)      return `Brand: ${r.brand.substring(0, 8)}…`;
+    if (r.brand) {
+      const b = brands.find(b => b.id === r.brand);
+      return `Brand: ${b ? b.name : r.brand.substring(0, 8) + "…"}`;
+    }
     if (r.client)     return `Client: ${r.client.substring(0, 8)}…`;
     if (r.subsidiary) return `Subsidiary: ${r.subsidiary.substring(0, 8)}…`;
     return "—";
@@ -114,7 +133,7 @@ export function CommissionsSection() {
           <p className="text-xs text-text-tertiary mt-0.5">Solo visible para CEO.</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={fetchRules} className="btn btn-sm btn-ghost p-2" title="Refrescar">
+          <button onClick={fetchAll} className="btn btn-sm btn-ghost p-2" title="Refrescar">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </button>
           <button onClick={() => setShowForm(v => !v)} className="btn btn-sm btn-primary flex items-center gap-1.5">
@@ -133,20 +152,36 @@ export function CommissionsSection() {
         <form onSubmit={handleCreate} className="card p-5 border-2 border-brand/20 space-y-4">
           <h4 className="text-xs font-bold text-brand uppercase tracking-wide">Nueva Regla de Comisión</h4>
           <div className="grid grid-cols-2 gap-4">
+            {/* Scope selector */}
             <div className="space-y-1">
               <label className="text-[10px] font-semibold text-text-tertiary uppercase">Scope</label>
               <select className="input text-xs" value={form.scope}
-                onChange={e => setForm(f => ({ ...f, scope: e.target.value as any }))}>
+                onChange={e => handleScopeChange(e.target.value as any)}>
                 <option value="brand">Brand</option>
                 <option value="client">Client</option>
                 <option value="subsidiary">Subsidiary</option>
               </select>
             </div>
+
+            {/* Scope ID — brand uses select, client/subsidiary use UUID input */}
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-text-tertiary uppercase">{form.scope} UUID *</label>
-              <input required className="input text-xs font-mono" placeholder="uuid" value={form.scope_id}
-                onChange={e => setForm(f => ({ ...f, scope_id: e.target.value }))} />
+              <label className="text-[10px] font-semibold text-text-tertiary uppercase">
+                {form.scope === "brand" ? "Marca" : `${form.scope} UUID`} *
+              </label>
+              {form.scope === "brand" ? (
+                <select required className="input text-xs" value={form.scope_id}
+                  onChange={e => setForm(f => ({ ...f, scope_id: e.target.value }))}>
+                  <option value="">— Seleccionar marca —</option>
+                  {brands.map(b => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input required className="input text-xs font-mono" placeholder="uuid" value={form.scope_id}
+                  onChange={e => setForm(f => ({ ...f, scope_id: e.target.value }))} />
+              )}
             </div>
+
             <div className="space-y-1">
               <label className="text-[10px] font-semibold text-text-tertiary uppercase">Product Key</label>
               <input className="input text-xs" placeholder="vacío = default scope" value={form.product_key}
@@ -204,7 +239,7 @@ export function CommissionsSection() {
             <tbody className="divide-y divide-border/50">
               {rules.map(r => (
                 <tr key={r.id} className="hover:bg-brand/[0.02] transition-colors">
-                  <td className="px-4 py-3 font-mono text-[10px] text-text-secondary">{scopeLabel(r)}</td>
+                  <td className="px-4 py-3 text-text-secondary">{scopeLabel(r)}</td>
                   <td className="px-4 py-3 text-text-tertiary">{r.product_key ?? <span className="italic">default</span>}</td>
                   <td className="px-4 py-3 capitalize">{r.rule_type.replace("_", " ")}</td>
                   <td className="px-4 py-3 font-mono">
