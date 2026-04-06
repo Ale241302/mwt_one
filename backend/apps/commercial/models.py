@@ -257,7 +257,7 @@ class RebateLedger(TimestampMixin):
     threshold_met = models.BooleanField(default=False)
     # DEC-S23-02 pendiente — nullable hasta decisión CEO
     liquidation_type = models.CharField(
-        max_digits=20,
+        max_length=20,
         choices=LiquidationType.choices,
         null=True,
         blank=True,
