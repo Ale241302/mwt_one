@@ -77,12 +77,12 @@ export default function BrandConsolePage() {
           {activeTab === "overview" && <OverviewTab />}
           {activeTab === "agreements" && <AgreementsTab />}
           {activeTab === "orders" && <OrdersTab />}
-          {activeTab === "catalog" && <CatalogTab />}
-          {activeTab === "pricing" && <PricingTab />}
+          {activeTab === "catalog" && <CatalogTab brandId={1} />}
+          {activeTab === "pricing" && <PricingTab brandId={1} />}
           {activeTab === "operations" && <OperationsTab />}
           {activeTab === "tallas" && <SizeSystemTab />}
-          {activeTab === "payment" && <PaymentTermsTab />}
-          {activeTab === "assignments" && <AssignmentsTab />}
+          {activeTab === "payment" && <PaymentTermsTab brandId={1} />}
+          {activeTab === "assignments" && <AssignmentsTab brandId={1} />}
         </div>
       </div>
     </div>
