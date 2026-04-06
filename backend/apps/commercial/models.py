@@ -264,7 +264,7 @@ class RebateLedger(TimestampMixin):
     )
     liquidated_at = models.DateTimeField(null=True, blank=True)
     liquidated_by = models.ForeignKey(
-        'users.User',
+        'users.MWTUser',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
