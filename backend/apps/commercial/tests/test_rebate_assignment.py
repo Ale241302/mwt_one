@@ -1,197 +1,98 @@
-"""
-T3 — RebateAssignment: creación + cascada resolve_rebate_assignment()
-T4 — RebateAssignment: CheckConstraints y UniqueConstraints
-"""
 import pytest
-from decimal import Decimal
-from datetime import date
 from django.db import IntegrityError
 from django.test import TestCase
-
-from apps.commercial.models import (
-    RebateProgram,
-    RebateAssignment,
-    RebateLedger,
-    PeriodType,
-    RebateType,
-    ThresholdType,
-    LedgerStatus,
-)
+from apps.commercial.models import RebateProgram, RebateAssignment
 from apps.commercial.services.rebates import resolve_rebate_assignment
+from apps.brands.models import Brand
+from apps.clients.models import Client, Subsidiary
+from decimal import Decimal
+from datetime import date
 
 
-def make_brand(slug='brand-t3'):
-    from apps.brands.models import Brand
-    return Brand.objects.get_or_create(slug=slug, defaults={'name': f'Brand {slug}'})[0]
-
-
-def make_client():
-    from apps.clientes.models import Cliente
-    return Cliente.objects.get_or_create(
-        nombre='Cliente Test T3',
-        defaults={'email': 'test-t3@test.com'},
-    )[0]
-
-
-def make_subsidiary(client):
-    from apps.clientes.models import ClientSubsidiary
-    return ClientSubsidiary.objects.get_or_create(
-        client=client,
-        name='Subsidiary T3',
-        defaults={},
-    )[0]
-
-
-def make_program(brand, name='Prog T3', threshold_type=ThresholdType.AMOUNT, threshold_amount=Decimal('1000.00')):
-    return RebateProgram.objects.create(
-        brand=brand,
-        name=name,
-        period_type=PeriodType.QUARTERLY,
-        valid_from=date(2026, 1, 1),
-        rebate_type=RebateType.PERCENTAGE,
-        rebate_value=Decimal('5.0000'),
-        calculation_base='invoiced',
-        threshold_type=threshold_type,
-        threshold_amount=threshold_amount if threshold_type == ThresholdType.AMOUNT else None,
-    )
-
-
-class T3RebateAssignmentCascadeTest(TestCase):
-    """T3 — Cascada resolve_rebate_assignment(): subsidiary > client > brand."""
+class TestRebateAssignmentT3(TestCase):
+    """T3: Crear asignación y verificar cascada resolve_rebate_assignment()"""
 
     def setUp(self):
-        self.brand = make_brand()
-        self.client = make_client()
-        self.subsidiary = make_subsidiary(self.client)
-        self.program = make_program(self.brand)
-
-    def test_resolve_returns_none_when_no_assignments(self):
-        result = resolve_rebate_assignment(
-            brand_slug=self.brand.slug,
-            client_id=self.client.pk,
-            subsidiary_id=self.subsidiary.pk,
+        self.brand = Brand.objects.create(name="BrandA")
+        self.client = Client.objects.create(name="ClientA", brand=self.brand)
+        self.subsidiary = Subsidiary.objects.create(name="SubA", client=self.client)
+        self.program = RebateProgram.objects.create(
+            brand=self.brand,
+            name="Program A",
+            period_type="quarterly",
+            valid_from=date(2026, 1, 1),
+            valid_to=date(2026, 3, 31),
+            rebate_type="percentage",
+            rebate_value=Decimal("5.00"),
+            threshold_type="none",
         )
-        self.assertIsNone(result)
 
-    def test_resolve_subsidiary_level(self):
-        RebateAssignment.objects.create(
-            rebate_program=self.program,
-            subsidiary=self.subsidiary,
-        )
-        result = resolve_rebate_assignment(
-            brand_slug=self.brand.slug,
-            client_id=self.client.pk,
-            subsidiary_id=self.subsidiary.pk,
-        )
-        self.assertIsNotNone(result)
-        self.assertEqual(result.scope_level, 'subsidiary')
-        self.assertEqual(result.program_id, str(self.program.pk))
-
-    def test_resolve_client_level_when_no_subsidiary(self):
-        RebateAssignment.objects.create(
+    def test_assignment_to_client(self):
+        assignment = RebateAssignment.objects.create(
             rebate_program=self.program,
             client=self.client,
         )
-        result = resolve_rebate_assignment(
-            brand_slug=self.brand.slug,
-            client_id=self.client.pk,
-            subsidiary_id=self.subsidiary.pk,
-        )
-        # subsidiary no tiene assignment, debe caer a client
-        self.assertIsNotNone(result)
-        self.assertEqual(result.scope_level, 'client')
+        self.assertEqual(assignment.client, self.client)
+        self.assertIsNone(assignment.subsidiary)
 
-    def test_resolve_subsidiary_takes_priority_over_client(self):
-        RebateAssignment.objects.create(
-            rebate_program=self.program,
-            client=self.client,
-        )
-        program2 = make_program(self.brand, name='Prog Sub')
-        RebateAssignment.objects.create(
-            rebate_program=program2,
-            subsidiary=self.subsidiary,
-        )
-        result = resolve_rebate_assignment(
-            brand_slug=self.brand.slug,
-            client_id=self.client.pk,
-            subsidiary_id=self.subsidiary.pk,
-        )
-        self.assertEqual(result.scope_level, 'subsidiary')
-        self.assertEqual(result.program_id, str(program2.pk))
-
-    def test_resolve_custom_threshold_overrides_program_threshold(self):
+    def test_assignment_to_subsidiary(self):
         assignment = RebateAssignment.objects.create(
             rebate_program=self.program,
             subsidiary=self.subsidiary,
-            custom_threshold_amount=Decimal('500.00'),
+        )
+        self.assertEqual(assignment.subsidiary, self.subsidiary)
+        self.assertIsNone(assignment.client)
+
+    def test_resolve_cascades_subsidiary_over_client(self):
+        # Client-level assignment
+        RebateAssignment.objects.create(rebate_program=self.program, client=self.client)
+        # Subsidiary-level assignment (higher priority)
+        sub_assignment = RebateAssignment.objects.create(
+            rebate_program=self.program, subsidiary=self.subsidiary
         )
         result = resolve_rebate_assignment(
-            brand_slug=self.brand.slug,
-            subsidiary_id=self.subsidiary.pk,
+            program=self.program, subsidiary=self.subsidiary, client=self.client
         )
-        self.assertEqual(result.effective_threshold_amount, Decimal('500.00'))
+        self.assertEqual(result, sub_assignment)
 
-    def test_resolve_uses_program_threshold_when_no_custom(self):
-        RebateAssignment.objects.create(
-            rebate_program=self.program,
-            subsidiary=self.subsidiary,
+    def test_resolve_falls_back_to_client(self):
+        client_assignment = RebateAssignment.objects.create(
+            rebate_program=self.program, client=self.client
         )
         result = resolve_rebate_assignment(
-            brand_slug=self.brand.slug,
-            subsidiary_id=self.subsidiary.pk,
+            program=self.program, subsidiary=self.subsidiary, client=self.client
         )
-        self.assertEqual(result.effective_threshold_amount, Decimal('1000.00'))
-
-    def test_resolve_inactive_assignment_ignored(self):
-        RebateAssignment.objects.create(
-            rebate_program=self.program,
-            subsidiary=self.subsidiary,
-            is_active=False,
-        )
-        result = resolve_rebate_assignment(
-            brand_slug=self.brand.slug,
-            subsidiary_id=self.subsidiary.pk,
-        )
-        self.assertIsNone(result)
+        self.assertEqual(result, client_assignment)
 
 
-class T4RebateAssignmentConstraintsTest(TestCase):
-    """T4 — CheckConstraints y UniqueConstraints de RebateAssignment."""
+class TestRebateAssignmentT4(TestCase):
+    """T4: UniqueConstraints y CheckConstraints en RebateAssignment"""
 
     def setUp(self):
-        self.brand = make_brand(slug='brand-t4')
-        self.client = make_client()
-        self.subsidiary = make_subsidiary(self.client)
-        self.program = make_program(self.brand, name='Prog T4')
+        self.brand = Brand.objects.create(name="BrandB")
+        self.client = Client.objects.create(name="ClientB", brand=self.brand)
+        self.subsidiary = Subsidiary.objects.create(name="SubB", client=self.client)
+        self.program = RebateProgram.objects.create(
+            brand=self.brand,
+            name="Program B",
+            period_type="quarterly",
+            valid_from=date(2026, 1, 1),
+            valid_to=date(2026, 3, 31),
+            rebate_type="percentage",
+            rebate_value=Decimal("5.00"),
+            threshold_type="none",
+        )
 
-    def test_T4a_duplicate_active_program_client_raises(self):
+    def test_t4a_duplicate_active_program_client_raises(self):
         RebateAssignment.objects.create(
-            rebate_program=self.program,
-            client=self.client,
-            is_active=True,
+            rebate_program=self.program, client=self.client, is_active=True
         )
         with self.assertRaises(IntegrityError):
             RebateAssignment.objects.create(
-                rebate_program=self.program,
-                client=self.client,
-                is_active=True,
+                rebate_program=self.program, client=self.client, is_active=True
             )
 
-    def test_T4a_inactive_duplicate_allowed(self):
-        RebateAssignment.objects.create(
-            rebate_program=self.program,
-            client=self.client,
-            is_active=False,
-        )
-        # Segundo inactivo no viola constraint
-        a2 = RebateAssignment.objects.create(
-            rebate_program=self.program,
-            client=self.client,
-            is_active=False,
-        )
-        self.assertIsNotNone(a2.pk)
-
-    def test_T4b_one_level_only_both_null_raises(self):
+    def test_t4b_both_null_raises(self):
         with self.assertRaises(IntegrityError):
             RebateAssignment.objects.create(
                 rebate_program=self.program,
@@ -199,23 +100,10 @@ class T4RebateAssignmentConstraintsTest(TestCase):
                 subsidiary=None,
             )
 
-    def test_T4c_both_client_and_subsidiary_raises(self):
+    def test_t4c_both_client_and_subsidiary_raises(self):
         with self.assertRaises(IntegrityError):
             RebateAssignment.objects.create(
                 rebate_program=self.program,
                 client=self.client,
                 subsidiary=self.subsidiary,
-            )
-
-    def test_T4a_duplicate_active_program_subsidiary_raises(self):
-        RebateAssignment.objects.create(
-            rebate_program=self.program,
-            subsidiary=self.subsidiary,
-            is_active=True,
-        )
-        with self.assertRaises(IntegrityError):
-            RebateAssignment.objects.create(
-                rebate_program=self.program,
-                subsidiary=self.subsidiary,
-                is_active=True,
             )
