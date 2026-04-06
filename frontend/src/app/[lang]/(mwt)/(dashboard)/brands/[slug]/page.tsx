@@ -77,7 +77,7 @@ export default function BrandDetailPage() {
     );
   }
 
-  const brandId = brand.id;
+  const brandId = brand.slug || slug;
 
   return (
     <div className="space-y-6">

@@ -81,7 +81,7 @@ export async function resolveClientPrice(
 }
 
 // S22-01: Listar versiones por marca
-export async function getPriceListVersions(brandId: number): Promise<PriceListVersion[]> {
+export async function getPriceListVersions(brandId: number | string): Promise<PriceListVersion[]> {
   const res = await api.get<PriceListVersion[]>(`pricing/pricelists/?brand_id=${brandId}`);
   return res.data;
 }
@@ -93,7 +93,7 @@ export async function activatePriceList(versionId: number, force = false): Promi
 }
 
 // S22-03: Early Payment Policies
-export async function getEarlyPaymentPolicies(brandId: number): Promise<EarlyPaymentPolicy[]> {
+export async function getEarlyPaymentPolicies(brandId: number | string): Promise<EarlyPaymentPolicy[]> {
   const res = await api.get<EarlyPaymentPolicy[]>(`pricing/early-payment-policies/?brand_id=${brandId}`);
   return res.data;
 }
@@ -104,7 +104,7 @@ export async function updateEarlyPaymentPolicy(id: number, data: Partial<EarlyPa
 }
 
 // S22-02: Client Assignments
-export async function getClientAssignments(brandId: number): Promise<ClientProductAssignment[]> {
+export async function getClientAssignments(brandId: number | string): Promise<ClientProductAssignment[]> {
   const res = await api.get<ClientProductAssignment[]>(`pricing/client-assignments/?brand_id=${brandId}`);
   return res.data;
 }

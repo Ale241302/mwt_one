@@ -8,7 +8,7 @@ import { UploadPreviewModal } from '@/components/pricing/UploadPreviewModal';
 import { GradeItemsTable } from '@/components/pricing/GradeItemsTable';
 import { getPriceListVersions, activatePriceList, PriceListVersion } from '@/api/pricing';
 
-export function PricingTab({ brandId }: { brandId?: number }) {
+export function PricingTab({ brandId }: { brandId?: string | number }) {
   const [versions, setVersions] = useState<PriceListVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);

@@ -23,7 +23,7 @@ interface UploadPreviewResponse {
 }
 
 interface Props {
-  brandId: number;
+  brandId: number | string;
   onClose: () => void;
   onConfirm: (version: PriceListVersion) => void;
 }

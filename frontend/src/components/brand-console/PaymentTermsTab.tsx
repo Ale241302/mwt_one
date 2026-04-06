@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, ChevronDown, ChevronUp, Percent } from 'lucide-react';
 import { getEarlyPaymentPolicies, updateEarlyPaymentPolicy, EarlyPaymentPolicy, EarlyPaymentTier } from '@/api/pricing';
 
-export function PaymentTermsTab({ brandId }: { brandId?: number }) {
+export function PaymentTermsTab({ brandId }: { brandId?: string | number }) {
   const [policies, setPolicies] = useState<EarlyPaymentPolicy[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);

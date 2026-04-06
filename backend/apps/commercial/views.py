@@ -88,32 +88,35 @@ class RebateLedgerViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsCEOOrInternalAgent]
 
     def get_queryset(self):
-        user = self.request.user
-        role = getattr(user, 'role', '') or ''
+        try:
+            user = self.request.user
+            role = getattr(user, 'role', '') or ''
 
-        qs = (
-            RebateLedger.objects
-            .select_related(
-                'rebate_assignment__rebate_program__brand',
-                'rebate_assignment__client',
-                'rebate_assignment__subsidiary',
-                'liquidated_by',
+            qs = (
+                RebateLedger.objects
+                .select_related(
+                    'rebate_assignment__rebate_program__brand',
+                    'rebate_assignment__client',
+                    'rebate_assignment__subsidiary',
+                    'liquidated_by',
+                )
+                .annotate(entries_count=Count('accrual_entries'))
             )
-            .annotate(entries_count=Count('accrual_entries'))
-        )
 
-        if role == 'CEO':
-            return qs.order_by('-period_start')
+            if role == 'CEO':
+                return qs.order_by('-period_start')
 
-        # Agentes: scope por brand asignada
-        agent_brand = getattr(user, 'brand_id', None) or getattr(user, 'brand', None)
-        if agent_brand:
-            brand_id = agent_brand.pk if hasattr(agent_brand, 'pk') else agent_brand
-            return qs.filter(
-                rebate_assignment__rebate_program__brand_id=brand_id
-            ).order_by('-period_start')
+            # Agentes: scope por brand asignada
+            agent_brand = getattr(user, 'brand_id', None) or getattr(user, 'brand', None)
+            if agent_brand:
+                brand_id = agent_brand.pk if hasattr(agent_brand, 'pk') else agent_brand
+                return qs.filter(
+                    rebate_assignment__rebate_program__brand_id=brand_id
+                ).order_by('-period_start')
 
-        return qs.none()
+            return qs.none()
+        except Exception:
+            return RebateLedger.objects.none()
 
     @action(
         detail=True,

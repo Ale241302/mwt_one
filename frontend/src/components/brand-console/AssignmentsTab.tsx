@@ -6,7 +6,7 @@ import { RefreshCw, AlertCircle, Package, Plus } from 'lucide-react';
 import { BulkAssignModal } from '@/components/assignments/BulkAssignModal';
 import { getClientAssignments, ClientProductAssignment } from '@/api/pricing';
 
-export function AssignmentsTab({ brandId }: { brandId?: number }) {
+export function AssignmentsTab({ brandId }: { brandId?: string | number }) {
   const [assignments, setAssignments] = useState<ClientProductAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBulkAssign, setShowBulkAssign] = useState(false);

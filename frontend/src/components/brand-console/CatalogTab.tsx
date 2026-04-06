@@ -38,7 +38,7 @@ interface GroupedProduct {
   skus: BrandSKU[];
 }
 
-export function CatalogTab({ brandId }: { brandId?: number }) {
+export function CatalogTab({ brandId }: { brandId?: string | number }) {
   const [products, setProducts] = useState<GroupedProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

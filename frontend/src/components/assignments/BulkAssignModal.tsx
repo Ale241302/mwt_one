@@ -11,7 +11,7 @@ interface BulkAssignResult {
 }
 
 interface Props {
-  brandId: number;
+  brandId: number | string;
   onClose: () => void;
   onCreated: (count: number) => void;
 }
