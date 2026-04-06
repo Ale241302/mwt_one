@@ -73,7 +73,6 @@ export function ArtifactPolicySection({ brandId }: { brandId?: string }) {
     setSeeding(true);
     setSeedMsg(null);
     try {
-      // El endpoint llama al management command seed_artifact_policy
       const res = await api.post("/commercial/artifact-policies/seed/");
       setSeedMsg(res.data?.message ?? "Seed ejecutado correctamente.");
       fetchVersions();
@@ -90,7 +89,7 @@ export function ArtifactPolicySection({ brandId }: { brandId?: string }) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-navy">Artifact Policy</h3>
-          <p className="text-xs text-text-tertiary mt-0.5">Versiones versionadas — nunca se edita in-place.</p>
+          <p className="text-xs text-text-tertiary mt-0.5">Versiones versionadas &mdash; nunca se edita in-place.</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={fetchVersions} className="btn btn-sm btn-ghost p-2" title="Refrescar">
@@ -120,7 +119,7 @@ export function ArtifactPolicySection({ brandId }: { brandId?: string }) {
         <div className="card p-8 text-center text-text-tertiary">
           <CheckCircle size={36} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">No hay versión activa para esta marca.</p>
-          <p className="text-xs text-text-tertiary mt-1">Usa el botón "Seed desde constante" para inicializarla.</p>
+          <p className="text-xs text-text-tertiary mt-1">Usa el botón &quot;Seed desde constante&quot; para inicializarla.</p>
         </div>
       ) : (
         <div className="card border border-border/60 overflow-hidden">
