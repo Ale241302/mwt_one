@@ -496,13 +496,14 @@ class CatalogBrandSKUView(APIView):
     """
     GET /api/pricing/catalog/brand-skus/?brand_id=X
     Retorna lista de BrandSKUs con el precio resuelto inyectado.
+    También inyecta los Productos base que aún no tienen SKU.
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         from apps.brands.models import BrandSKU
         from apps.pricing.services import resolve_client_price
-        from apps.productos.models import ProductMaster
+        from apps.productos.models import ProductMaster, Producto
         
         brand_id = request.query_params.get('brand_id')
         if not brand_id:
@@ -516,6 +517,8 @@ class CatalogBrandSKUView(APIView):
         }
         
         results = []
+        added_refs = set()
+
         for sku in skus:
             # Resolvemos el precio (sin cliente ni subsidiaria, para ver el base de la marca)
             product = products_by_key.get(sku.product_key)
@@ -527,13 +530,30 @@ class CatalogBrandSKUView(APIView):
                 client_subsidiary_id=None
             )
             
+            ref_code = getattr(sku, 'reference_code', sku.sku_code)
+            added_refs.add(ref_code)
+
             results.append({
                 'id': sku.id,
                 'sku_code': sku.sku_code,
-                'reference_code': getattr(sku, 'reference_code', sku.sku_code),
+                'reference_code': ref_code,
                 'description': product.name if product else f"Producto {sku.product_key}",
                 'is_active': getattr(sku, 'is_active', True),
                 'price_resolved': res
             })
+
+        # Inject raw Productos from CRUD so they appear in catalog
+        productos = Producto.objects.filter(brand=brand_id)
+        for p in productos:
+            if p.sku_base not in added_refs:
+                results.append({
+                    'id': -p.id,  # Negative ID to avoid React key collision with BrandSKU
+                    'sku_code': p.sku_base,
+                    'reference_code': p.sku_base,
+                    'description': p.name,
+                    'is_active': True,
+                    'price_resolved': None
+                })
+                added_refs.add(p.sku_base)
 
         return Response(results)
