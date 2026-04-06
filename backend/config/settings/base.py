@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     'apps.audit',
     'apps.orders',
     'apps.suppliers',
+    # Sprint 23
+    'apps.commercial',
     'drf_spectacular',
 ]
 
