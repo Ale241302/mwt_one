@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { LayoutDashboard, Store, ShoppingBag, Activity, History, DollarSign, Settings, Search, ArrowRight } from "lucide-react";
+import { LayoutDashboard, Store, ShoppingBag, Activity, History, DollarSign, Settings, Search, ArrowRight, Gift } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { useParams } from "next/navigation";
 import { StateBadge } from "@/components/ui/StateBadge";
 import { StateTimelinePortal } from "@/components/portal/StateTimelinePortal";
 import { PortalCatalogTab } from "@/components/portal/PortalCatalogTab";
+// S23-14 — Tab Incentivos (rebate progress, CLIENT_* only, sin datos sensibles)
+import { IncentivosTab } from "@/components/commercial/IncentivosTab";
 
 interface Expediente {
   expediente_id: string;
@@ -26,13 +28,15 @@ export default function PortalPage() {
   const [search, setSearch] = useState("");
 
   const TABS = [
-    { id: "dashboard",     label: "General",       icon: LayoutDashboard },
-    { id: "catalog",       label: "Catálogo",       icon: Store },
-    { id: "cart",          label: "Carrito",        icon: ShoppingBag },
-    { id: "active-orders", label: "Pedidos Activos",icon: Activity },
-    { id: "history",       label: "Historial",      icon: History },
-    { id: "financials",    label: "Finanzas",       icon: DollarSign },
-    { id: "settings",      label: "Perfil",         icon: Settings },
+    { id: "dashboard",     label: "General",        icon: LayoutDashboard },
+    { id: "catalog",       label: "Catálogo",        icon: Store },
+    { id: "cart",          label: "Carrito",         icon: ShoppingBag },
+    { id: "active-orders", label: "Pedidos Activos", icon: Activity },
+    { id: "history",       label: "Historial",       icon: History },
+    { id: "financials",    label: "Finanzas",        icon: DollarSign },
+    // S23-14 — Tab de incentivos / rebate progress
+    { id: "incentivos",    label: "Incentivos",      icon: Gift },
+    { id: "settings",      label: "Perfil",          icon: Settings },
   ];
 
   const fetchData = useCallback(async () => {
@@ -183,6 +187,9 @@ export default function PortalPage() {
             )}
           </div>
         )}
+
+        {/* S23-14 — IncentivosTab: progreso de rebate, sin datos sensibles */}
+        {activeTab === "incentivos" && <IncentivosTab />}
 
         {["cart", "history", "financials", "settings"].includes(activeTab) && (
           <div className="card p-12 text-center text-text-tertiary">
