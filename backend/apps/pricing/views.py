@@ -469,7 +469,7 @@ class ClientAssignmentViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         from apps.pricing.models import ClientProductAssignment
         qs = ClientProductAssignment.objects.all().select_related(
-            'client_subsidiary', 'brand_sku', 'brand_sku__product'
+            'client_subsidiary', 'brand_sku'
         )
         brand_id = self.request.query_params.get('brand_id')
         if brand_id:

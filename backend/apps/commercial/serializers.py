@@ -40,7 +40,7 @@ class RebateProgramInternalSerializer(serializers.ModelSerializer):
     S23-10: Serializer completo de RebateProgram para uso interno.
     Incluye los productos del programa como nested read-only.
     """
-    product_inclusions = RebateProgramProductSerializer(many=True, read_only=True)
+    product_inclusions = RebateProgramProductSerializer(source='products', many=True, read_only=True)
 
     class Meta:
         model = RebateProgram

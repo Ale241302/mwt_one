@@ -58,7 +58,7 @@ class RebateProgramViewSet(viewsets.ModelViewSet):
         user = self.request.user
         role = getattr(user, 'role', '') or ''
 
-        qs = RebateProgram.objects.select_related('brand').prefetch_related('product_inclusions')
+        qs = RebateProgram.objects.select_related('brand').prefetch_related('products')
 
         # CEO ve todos los programas
         if role == 'CEO':
