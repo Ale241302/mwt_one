@@ -29,7 +29,12 @@ logger = logging.getLogger('load_kb')
 # Django setup — permite correr el script standalone
 # ---------------------------------------------------------------------------
 def _setup_django():
-    sys.path.insert(0, str(Path(__file__).parent.parent / 'backend'))
+    # El script vive en /app/scripts/load_kb.py
+    # parent       = /app/scripts
+    # parent.parent = /app   <- raiz Django (donde esta manage.py y config/)
+    django_root = Path(__file__).resolve().parent.parent
+    if str(django_root) not in sys.path:
+        sys.path.insert(0, str(django_root))
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
     import django
     django.setup()
