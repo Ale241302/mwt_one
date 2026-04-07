@@ -22,7 +22,7 @@ import logging
 from pathlib import Path
 from typing import List, Optional
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(levelname)s %(asctime)s %(name)s %(message)s')
 logger = logging.getLogger('load_kb')
 
 # ---------------------------------------------------------------------------
@@ -186,19 +186,26 @@ def embed_and_store(chunks: List[dict], reset: bool = False):
         from sentence_transformers import SentenceTransformer
         model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
         use_st = True
+        logger.info('Usando sentence_transformers para embeddings (dim=384).')
     except ImportError:
-        logger.warning('sentence_transformers no disponible, usando OpenAI embeddings')
+        logger.warning('sentence_transformers no disponible, usando OpenAI embeddings (text-embedding-3-small, dim=1536).')
         use_st = False
 
     from django.db import connection
 
     # Inicializar cliente OpenAI >= 1.0 una sola vez
     _openai_client = None
+    embedding_dim = 384  # sentence-transformers default
     if not use_st:
         import openai as _openai_lib
-        _openai_client = _openai_lib.OpenAI(
-            api_key=os.environ.get('OPENAI_API_KEY', '')
-        )
+        api_key = os.environ.get('OPENAI_API_KEY', '')
+        if not api_key:
+            raise RuntimeError(
+                'OPENAI_API_KEY no esta definida y sentence_transformers no esta disponible. '
+                'Instala sentence-transformers o define OPENAI_API_KEY en el entorno.'
+            )
+        _openai_client = _openai_lib.OpenAI(api_key=api_key)
+        embedding_dim = 1536  # text-embedding-3-small
 
     with connection.cursor() as cur:
         # Verificar que pgvector este instalado
@@ -208,15 +215,15 @@ def embed_and_store(chunks: List[dict], reset: bool = False):
                 'pgvector no esta instalado. Ejecutar: CREATE EXTENSION vector;'
             )
 
-        # Crear tabla si no existe
-        cur.execute("""
+        # Crear tabla si no existe — dimensión dinámica según el modelo
+        cur.execute(f"""
             CREATE TABLE IF NOT EXISTS knowledge_chunks (
                 id          BIGSERIAL PRIMARY KEY,
                 source_file TEXT        NOT NULL,
                 section_id  TEXT        NOT NULL,
                 visibility  TEXT        NOT NULL DEFAULT 'PUBLIC',
                 text        TEXT        NOT NULL,
-                embedding   vector(384),
+                embedding   vector({embedding_dim}),
                 created_at  TIMESTAMPTZ DEFAULT now()
             );
         """)
@@ -226,9 +233,22 @@ def embed_and_store(chunks: List[dict], reset: bool = False):
             cur.execute('TRUNCATE TABLE knowledge_chunks;')
 
         inserted = 0
-        for chunk in chunks:
+        skipped = 0
+        batch_size = 50  # commit por lotes para no saturar la conexión
+        for i, chunk in enumerate(chunks):
             text = chunk['text']
             if not text.strip():
+                skipped += 1
+                continue
+
+            # Guardar en DB — NO insertar CEO-ONLY (doble check S24-08)
+            visibility = chunk.get('visibility', 'PUBLIC').upper()
+            if visibility == VISIBILITY_CEO_ONLY:
+                logger.warning(
+                    'SKIP CEO-ONLY chunk en insert: %s / %s',
+                    chunk['source_file'], chunk['section_id']
+                )
+                skipped += 1
                 continue
 
             # Generar embedding
@@ -241,15 +261,6 @@ def embed_and_store(chunks: List[dict], reset: bool = False):
                     model='text-embedding-3-small'
                 )
                 emb = resp.data[0].embedding
-
-            # Guardar en DB — NO insertar CEO-ONLY (doble check S24-08)
-            visibility = chunk.get('visibility', 'PUBLIC').upper()
-            if visibility == VISIBILITY_CEO_ONLY:
-                logger.warning(
-                    'SKIP CEO-ONLY chunk en insert: %s / %s',
-                    chunk['source_file'], chunk['section_id']
-                )
-                continue
 
             cur.execute(
                 """
@@ -267,7 +278,11 @@ def embed_and_store(chunks: List[dict], reset: bool = False):
             )
             inserted += 1
 
-    logger.info('Inserted %d chunks into knowledge_chunks.', inserted)
+            # Log de progreso cada 200 chunks
+            if inserted % 200 == 0:
+                logger.info('  ... %d/%d chunks insertados', inserted, len(chunks))
+
+    logger.info('Inserted %d chunks into knowledge_chunks (%d skipped).', inserted, skipped)
 
 
 def run(kb_dir: str, reset: bool = False, pattern: str = '**/*.md'):
