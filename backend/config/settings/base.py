@@ -143,7 +143,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# --- LOGGING ---
+# --- LOGGING: S24-14 structured logging ---
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -151,6 +151,11 @@ LOGGING = {
         'verbose': {
             'format': '{levelname} {asctime} {module} {message}',
             'style': '{',
+        },
+        'json': {
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s',
+            # Usar python-json-logger si disponible; fallback a verbose
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter' if __import__('importlib').util.find_spec('pythonjsonlogger') else 'logging.Formatter',
         },
     },
     'handlers': {
@@ -167,6 +172,17 @@ LOGGING = {
         'django': {
             'handlers': ['console'],
             'level': 'INFO',
+            'propagate': False,
+        },
+        # S24-14: observability logger
+        'mwt.observability': {
+            'handlers': ['console'],
+            'level': env.str('LOG_LEVEL', default='INFO'),
+            'propagate': False,
+        },
+        'apps.knowledge': {
+            'handlers': ['console'],
+            'level': env.str('LOG_LEVEL', default='INFO'),
             'propagate': False,
         },
     },
@@ -231,10 +247,12 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '20/min',
         'user': '60/min',
+        'knowledge_ask': '30/min',  # S24-04: throttle específico knowledge
     },
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'EXCEPTION_HANDLER': 'core.exception_handler.mwt_exception_handler',
+    # S24-14: custom exception handler (loguea 429s + errores knowledge)
+    'EXCEPTION_HANDLER': 'apps.knowledge.observability.custom_exception_handler',
 }
 
 SPECTACULAR_SETTINGS = {
@@ -246,11 +264,11 @@ SPECTACULAR_SETTINGS = {
 
 # --- S24-02: JWT Config — 30min access, 7d refresh, rotation + blacklist ---
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),    # S24-02: 15min → 30min
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': True,                         # S24-02: nuevo
+    'UPDATE_LAST_LOGIN': True,
     'ALGORITHM': 'HS256',
     'AUTH_HEADER_TYPES': ('Bearer',),
     'TOKEN_OBTAIN_SERIALIZER': 'apps.users.serializers.MWTTokenObtainPairSerializer',
@@ -264,10 +282,13 @@ SESSION_COOKIE_AGE = 86400  # 24h
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
 
+# --- S24-14: Activar signal blacklist en apps ready ---
+# (Ver apps/knowledge/apps.py — KnowledgeConfig.ready())
+
 # --- Sprint 5 Tolerances ---
-LIQUIDATION_AMOUNT_TOLERANCE_PCT = 0.01   # +-1%
-LIQUIDATION_AMOUNT_TOLERANCE_ABS = 5.00   # +-$5 USD
-LIQUIDATION_COMMISSION_TOLERANCE_PP = 0.5 # +-0.5pp
+LIQUIDATION_AMOUNT_TOLERANCE_PCT = 0.01
+LIQUIDATION_AMOUNT_TOLERANCE_ABS = 5.00
+LIQUIDATION_COMMISSION_TOLERANCE_PP = 0.5
 
 # --- Sprint 8 Knowledge ---
 KNOWLEDGE_SERVICE_URL = env('KNOWLEDGE_SERVICE_URL', default='http://mwt-knowledge:8001')
@@ -282,3 +303,15 @@ DAI_RATES = {
     }
 }
 VIABILITY_FLETE_PCT = 0.05
+
+# --- S24: Sentry (opcional, activar con SENTRY_DSN en .env) ---
+_SENTRY_DSN = env.str('SENTRY_DSN', default='')
+if _SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=0.1,
+        send_default_pii=False,
+    )
