@@ -1,92 +1,295 @@
-#!/usr/bin/env python3
 """
-load_kb.py — Sube todos los .md de knowledge/MWT_KB_2026-03-13
-al contenedor mwt-knowledge (volumen /kb) y dispara POST /index/.
+S24-08: Script de carga de Knowledge Base a pgvector.
+
+Respeta POL_VISIBILIDAD:
+  - Archivos marcados CEO-ONLY en su frontmatter -> SKIP completo
+  - Secciones en 'ceo_only_sections' del frontmatter -> excluir solo esas secciones
+  - Cada chunk guarda metadata: source_file, visibility, section_id
 
 Uso:
-    python scripts/load_kb.py
+  python scripts/load_kb.py --kb-dir knowledge/docs --reset
 
-Requiere:
-    - Docker corriendo con mwt-knowledge healthy
-    - Variable de entorno KNOWLEDGE_INTERNAL_TOKEN en .env
-      (o exportada antes de ejecutar el script)
+Verificacion post-carga:
+  SELECT count(*) FROM knowledge_chunks WHERE visibility='CEO-ONLY';  -- debe ser 0
 """
+from __future__ import annotations
+
 import os
-import subprocess
+import re
 import sys
+import argparse
+import logging
 from pathlib import Path
+from typing import List, Optional
 
-# ── Configuración ────────────────────────────────────────────────────────────
-KB_LOCAL_DIR  = Path(__file__).parent.parent / "knowledge" / "MWT_KB_2026-03-13"
-CONTAINER     = "mwt-knowledge"
-KB_REMOTE_DIR = "/kb"
-KNOWLEDGE_URL = "http://localhost:8001"
-TOKEN         = os.environ.get("KNOWLEDGE_INTERNAL_TOKEN", "")
+logging.basicConfig(level=logging.INFO, format='%(levelname)s %(message)s')
+logger = logging.getLogger('load_kb')
+
+# ---------------------------------------------------------------------------
+# Django setup — permite correr el script standalone
+# ---------------------------------------------------------------------------
+def _setup_django():
+    sys.path.insert(0, str(Path(__file__).parent.parent / 'backend'))
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
+    import django
+    django.setup()
 
 
-def run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
-    print(f"  $ {' '.join(cmd)}")
-    return subprocess.run(cmd, check=check, capture_output=False, text=True)
+# ---------------------------------------------------------------------------
+# Modelos de datos
+# ---------------------------------------------------------------------------
+VISIBILITY_PUBLIC       = 'PUBLIC'
+VISIBILITY_PARTNER_B2B  = 'PARTNER_B2B'
+VISIBILITY_INTERNAL     = 'INTERNAL'
+VISIBILITY_CEO_ONLY     = 'CEO-ONLY'
+
+ALLOWED_VISIBILITIES = {VISIBILITY_PUBLIC, VISIBILITY_PARTNER_B2B, VISIBILITY_INTERNAL}
 
 
-def main():
-    # 1. Verificar que el directorio local existe
-    if not KB_LOCAL_DIR.exists():
-        print(f"[ERROR] No se encontró el directorio: {KB_LOCAL_DIR}")
-        print("        Asegúrate de ejecutar el script desde la raíz del proyecto.")
-        sys.exit(1)
+def parse_frontmatter(text: str) -> tuple[dict, str]:
+    """
+    Extrae frontmatter YAML simple (--- ... ---) del inicio del archivo.
+    Retorna (meta_dict, body_text).
+    """
+    meta = {}
+    body = text
+    pattern = re.compile(r'^---\s*\n(.*?)\n---\s*\n', re.DOTALL)
+    match = pattern.match(text)
+    if match:
+        yaml_block = match.group(1)
+        body = text[match.end():]
+        for line in yaml_block.splitlines():
+            line = line.strip()
+            if ':' in line:
+                key, _, val = line.partition(':')
+                meta[key.strip()] = val.strip().strip('"\'')
+    return meta, body
 
-    md_files = sorted(KB_LOCAL_DIR.glob("*.md"))
-    if not md_files:
-        print(f"[ERROR] No hay archivos .md en {KB_LOCAL_DIR}")
-        sys.exit(1)
 
-    print(f"[1/3] Encontrados {len(md_files)} archivos .md en {KB_LOCAL_DIR}")
+def split_into_chunks(body: str, source_file: str, visibility: str) -> List[dict]:
+    """
+    Divide el body en chunks por secciones H2/H3.
+    Cada chunk: {text, source_file, visibility, section_id}
+    """
+    chunks = []
+    # Dividir por encabezados ## o ###
+    sections = re.split(r'(?m)^(#{2,3}\s+.+)$', body)
+    current_section = 'intro'
+    buffer = ''
 
-    # 2. Crear directorio /kb dentro del contenedor y copiar los .md
-    print(f"\n[2/3] Copiando archivos al contenedor {CONTAINER}:{KB_REMOTE_DIR} ...")
-    run(["docker", "exec", CONTAINER, "mkdir", "-p", KB_REMOTE_DIR])
+    for part in sections:
+        if re.match(r'^#{2,3}\s+', part):
+            if buffer.strip():
+                chunks.append({
+                    'text': buffer.strip(),
+                    'source_file': source_file,
+                    'visibility': visibility,
+                    'section_id': _slugify(current_section),
+                })
+            current_section = part.strip()
+            buffer = ''
+        else:
+            buffer += part
 
-    for md in md_files:
-        run(["docker", "cp", str(md), f"{CONTAINER}:{KB_REMOTE_DIR}/{md.name}"])
-        print(f"     ✓ {md.name}")
+    if buffer.strip():
+        chunks.append({
+            'text': buffer.strip(),
+            'source_file': source_file,
+            'visibility': visibility,
+            'section_id': _slugify(current_section),
+        })
+    return chunks
 
-    print(f"\n     {len(md_files)} archivos copiados.")
 
-    # 3. Disparar el endpoint /index/ (requiere JWT con role=CEO)
-    print(f"\n[3/3] Disparando POST {KNOWLEDGE_URL}/api/knowledge/index/ ...")
-    if not TOKEN:
-        print("[WARN] KNOWLEDGE_INTERNAL_TOKEN no está definido.")
-        print("       Exporta el token antes de ejecutar:")
-        print("       $env:KNOWLEDGE_INTERNAL_TOKEN = 'tu_token_ceo'  # PowerShell")
-        print("       export KNOWLEDGE_INTERNAL_TOKEN=tu_token_ceo    # bash")
-        print("\n       O ejecuta el endpoint manualmente desde Swagger: http://localhost:8001/docs")
-        sys.exit(0)
+def _slugify(text: str) -> str:
+    return re.sub(r'[^a-z0-9_-]', '-', text.lower())[:80]
+
+
+def load_file(
+    filepath: Path,
+    ceo_only_override: bool = False,
+) -> List[dict]:
+    """
+    Carga un archivo .md y retorna lista de chunks respetando POL_VISIBILIDAD.
+    CEO-ONLY a nivel de archivo -> retorna [] (SKIP completo).
+    """
+    text = filepath.read_text(encoding='utf-8', errors='ignore')
+    meta, body = parse_frontmatter(text)
+
+    file_visibility = meta.get('visibility', VISIBILITY_PUBLIC).upper()
+    ceo_only_sections_raw = meta.get('ceo_only_sections', '')
+    ceo_only_sections = [
+        s.strip() for s in ceo_only_sections_raw.split(',')
+        if s.strip()
+    ]
+
+    # SKIP completo si el archivo es CEO-ONLY (S24-08)
+    if file_visibility == VISIBILITY_CEO_ONLY or ceo_only_override:
+        logger.info('SKIP CEO-ONLY: %s', filepath.name)
+        return []
+
+    # Si visibility no esta en los permitidos, tratarlo como INTERNAL
+    if file_visibility not in ALLOWED_VISIBILITIES:
+        logger.warning(
+            'Visibility desconocida "%s" en %s -> usando INTERNAL',
+            file_visibility, filepath.name
+        )
+        file_visibility = VISIBILITY_INTERNAL
+
+    # Dividir por secciones con visibilidad del archivo
+    chunks = split_into_chunks(body, str(filepath.name), file_visibility)
+
+    # Excluir secciones CEO-ONLY por nombre (S24-08)
+    if ceo_only_sections:
+        before = len(chunks)
+        chunks = [
+            c for c in chunks
+            if not any(
+                ceo_sec.lower() in c['section_id'].lower()
+                for ceo_sec in ceo_only_sections
+            )
+        ]
+        excluded = before - len(chunks)
+        if excluded:
+            logger.info(
+                'Excluded %d CEO-ONLY sections from %s', excluded, filepath.name
+            )
+
+    return chunks
+
+
+def embed_and_store(chunks: List[dict], reset: bool = False):
+    """
+    Genera embeddings e inserta chunks en la tabla knowledge_chunks (pgvector).
+    Usa sentence-transformers si esta disponible, fallback a OpenAI.
+    """
+    if not chunks:
+        logger.info('No chunks to store.')
+        return
 
     try:
-        import urllib.request, json
-        req = urllib.request.Request(
-            f"{KNOWLEDGE_URL}/api/knowledge/index/",
-            method="POST",
-            headers={
-                "Authorization": f"Bearer {TOKEN}",
-                "Content-Type": "application/json",
-            },
-            data=b"{}",
-        )
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            body = json.loads(resp.read())
-            print("\n[OK] Resultado del indexer:")
-            print(f"     files_indexed   : {body.get('files_indexed')}")
-            print(f"     chunks_inserted : {body.get('chunks_inserted')}")
-            print(f"     chunks_skipped  : {body.get('chunks_skipped')}")
-            if body.get("errors"):
-                print(f"     errors          : {body['errors']}")
-    except Exception as e:
-        print(f"[ERROR] llamando /index/: {e}")
-        print("        Puedes dispararlo manualmente en: http://localhost:8001/docs")
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+        use_st = True
+    except ImportError:
+        logger.warning('sentence_transformers no disponible, usando OpenAI embeddings')
+        use_st = False
+
+    from django.db import connection
+
+    with connection.cursor() as cur:
+        # Verificar que pgvector este instalado
+        cur.execute("SELECT 1 FROM pg_extension WHERE extname = 'vector'")
+        if not cur.fetchone():
+            raise RuntimeError(
+                'pgvector no esta instalado. Ejecutar: CREATE EXTENSION vector;'
+            )
+
+        # Crear tabla si no existe
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS knowledge_chunks (
+                id          BIGSERIAL PRIMARY KEY,
+                source_file TEXT        NOT NULL,
+                section_id  TEXT        NOT NULL,
+                visibility  TEXT        NOT NULL DEFAULT 'PUBLIC',
+                text        TEXT        NOT NULL,
+                embedding   vector(384),
+                created_at  TIMESTAMPTZ DEFAULT now()
+            );
+        """)
+
+        if reset:
+            logger.info('RESET: borrando knowledge_chunks existentes...')
+            cur.execute('TRUNCATE TABLE knowledge_chunks;')
+
+        inserted = 0
+        for chunk in chunks:
+            text = chunk['text']
+            if not text.strip():
+                continue
+
+            # Generar embedding
+            if use_st:
+                emb = model.encode(text).tolist()
+            else:
+                import os
+                import openai
+                openai.api_key = os.environ.get('OPENAI_API_KEY', '')
+                resp = openai.Embedding.create(
+                    input=text,
+                    model='text-embedding-3-small'
+                )
+                emb = resp['data'][0]['embedding']
+
+            # Guardar en DB — NO insertar CEO-ONLY (doble check S24-08)
+            visibility = chunk.get('visibility', 'PUBLIC').upper()
+            if visibility == VISIBILITY_CEO_ONLY:
+                logger.warning(
+                    'SKIP CEO-ONLY chunk en insert: %s / %s',
+                    chunk['source_file'], chunk['section_id']
+                )
+                continue
+
+            cur.execute(
+                """
+                INSERT INTO knowledge_chunks
+                    (source_file, section_id, visibility, text, embedding)
+                VALUES (%s, %s, %s, %s, %s::vector)
+                """,
+                [
+                    chunk['source_file'],
+                    chunk['section_id'],
+                    visibility,
+                    text,
+                    str(emb),
+                ]
+            )
+            inserted += 1
+
+    logger.info('Inserted %d chunks into knowledge_chunks.', inserted)
+
+
+def run(kb_dir: str, reset: bool = False, pattern: str = '**/*.md'):
+    """Punto de entrada principal."""
+    _setup_django()
+
+    kb_path = Path(kb_dir)
+    if not kb_path.exists():
+        logger.error('kb-dir no existe: %s', kb_dir)
         sys.exit(1)
 
+    md_files = sorted(kb_path.glob(pattern))
+    logger.info('Encontrados %d archivos .md en %s', len(md_files), kb_dir)
 
-if __name__ == "__main__":
-    main()
+    all_chunks = []
+    for filepath in md_files:
+        chunks = load_file(filepath)
+        all_chunks.extend(chunks)
+        logger.info('%s -> %d chunks (visibility=%s)',
+                    filepath.name, len(chunks),
+                    chunks[0]['visibility'] if chunks else 'SKIP')
+
+    logger.info('Total chunks a indexar: %d', len(all_chunks))
+    embed_and_store(all_chunks, reset=reset)
+    logger.info('Carga completada.')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='S24-08: Carga KB a pgvector')
+    parser.add_argument(
+        '--kb-dir',
+        default='knowledge/docs',
+        help='Directorio raiz de los archivos .md de la KB'
+    )
+    parser.add_argument(
+        '--reset',
+        action='store_true',
+        help='Borrar todos los chunks existentes antes de cargar'
+    )
+    parser.add_argument(
+        '--pattern',
+        default='**/*.md',
+        help='Glob pattern para buscar archivos (default: **/*.md)'
+    )
+    args = parser.parse_args()
+    run(kb_dir=args.kb_dir, reset=args.reset, pattern=args.pattern)
