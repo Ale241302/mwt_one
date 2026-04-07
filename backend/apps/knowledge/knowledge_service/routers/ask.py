@@ -46,7 +46,7 @@ async def ask(req: AskRequest, payload: dict = Depends(decode_token), db: Sessio
         vis_filter = "'PUBLIC','PRICING'"
 
     rows = db.execute(text(f"""
-        SELECT content FROM knowledge_chunks
+        SELECT text FROM knowledge_chunks
         WHERE kb_visibility IN ({vis_filter})
         ORDER BY embedding <=> :emb\\:\\:vector
         LIMIT 5
