@@ -161,7 +161,7 @@ def load_file(
 def embed_and_store(chunks: List[dict], reset: bool = False):
     """
     Genera embeddings e inserta chunks en la tabla knowledge_chunks (pgvector).
-    Usa sentence-transformers si esta disponible, fallback a OpenAI.
+    Usa sentence-transformers si esta disponible, fallback a OpenAI >= 1.0.
     """
     if not chunks:
         logger.info('No chunks to store.')
@@ -176,6 +176,14 @@ def embed_and_store(chunks: List[dict], reset: bool = False):
         use_st = False
 
     from django.db import connection
+
+    # Inicializar cliente OpenAI una sola vez (openai >= 1.0)
+    _openai_client = None
+    if not use_st:
+        import openai as _openai_lib
+        _openai_client = _openai_lib.OpenAI(
+            api_key=os.environ.get('OPENAI_API_KEY', '')
+        )
 
     with connection.cursor() as cur:
         # Verificar que pgvector este instalado
@@ -212,14 +220,12 @@ def embed_and_store(chunks: List[dict], reset: bool = False):
             if use_st:
                 emb = model.encode(text).tolist()
             else:
-                import os
-                import openai
-                openai.api_key = os.environ.get('OPENAI_API_KEY', '')
-                resp = openai.Embedding.create(
+                # openai >= 1.0 — client.embeddings.create(), acceso por atributo
+                resp = _openai_client.embeddings.create(
                     input=text,
                     model='text-embedding-3-small'
                 )
-                emb = resp['data'][0]['embedding']
+                emb = resp.data[0].embedding
 
             # Guardar en DB — NO insertar CEO-ONLY (doble check S24-08)
             visibility = chunk.get('visibility', 'PUBLIC').upper()
