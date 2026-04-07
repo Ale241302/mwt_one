@@ -33,6 +33,9 @@ def _setup_django():
     # parent       = /app/scripts
     # parent.parent = /app   <- raiz Django (donde esta manage.py y config/)
     django_root = Path(__file__).resolve().parent.parent
+    # Fallback explícito por si __file__ no resuelve bien via docker exec
+    if not (django_root / 'config').exists():
+        django_root = Path('/app')
     if str(django_root) not in sys.path:
         sys.path.insert(0, str(django_root))
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
@@ -49,6 +52,13 @@ VISIBILITY_INTERNAL     = 'INTERNAL'
 VISIBILITY_CEO_ONLY     = 'CEO-ONLY'
 
 ALLOWED_VISIBILITIES = {VISIBILITY_PUBLIC, VISIBILITY_PARTNER_B2B, VISIBILITY_INTERNAL}
+
+
+def _clean_visibility(raw: str) -> str:
+    """Normaliza visibility: quita brackets, espacios y pasa a uppercase.
+    '[CEO-ONLY]' -> 'CEO-ONLY', '[INTERNAL]' -> 'INTERNAL'
+    """
+    return re.sub(r'[\[\]\s]', '', raw).upper()
 
 
 def parse_frontmatter(text: str) -> tuple[dict, str]:
@@ -121,7 +131,7 @@ def load_file(
     text = filepath.read_text(encoding='utf-8', errors='ignore')
     meta, body = parse_frontmatter(text)
 
-    file_visibility = meta.get('visibility', VISIBILITY_PUBLIC).upper()
+    file_visibility = _clean_visibility(meta.get('visibility', VISIBILITY_PUBLIC))
     ceo_only_sections_raw = meta.get('ceo_only_sections', '')
     ceo_only_sections = [
         s.strip() for s in ceo_only_sections_raw.split(',')
@@ -182,7 +192,7 @@ def embed_and_store(chunks: List[dict], reset: bool = False):
 
     from django.db import connection
 
-    # Inicializar cliente OpenAI una sola vez (openai >= 1.0)
+    # Inicializar cliente OpenAI >= 1.0 una sola vez
     _openai_client = None
     if not use_st:
         import openai as _openai_lib
