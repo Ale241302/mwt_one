@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
+    'rest_framework_simplejwt.token_blacklist',  # S24-01: JWT blacklist
     'django_celery_beat',
     'corsheaders',
     'apps.core',
@@ -223,13 +223,14 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
+    # S24-04: Rate limiting — user=60/min, anon=20/min
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '30/min',
-        'user': '120/min',
+        'anon': '20/min',
+        'user': '60/min',
     },
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -241,18 +242,27 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'MWT Logistics Management System API',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-    # Otras configuraciones si se desea
 }
 
+# --- S24-02: JWT Config — 30min access, 7d refresh, rotation + blacklist ---
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),    # S24-02: 15min → 30min
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,                         # S24-02: nuevo
     'ALGORITHM': 'HS256',
     'AUTH_HEADER_TYPES': ('Bearer',),
     'TOKEN_OBTAIN_SERIALIZER': 'apps.users.serializers.MWTTokenObtainPairSerializer',
 }
+
+# --- S24-06: Cookie security ---
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 86400  # 24h
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
 
 # --- Sprint 5 Tolerances ---
 LIQUIDATION_AMOUNT_TOLERANCE_PCT = 0.01   # +-1%
