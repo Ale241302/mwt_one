@@ -1,5 +1,5 @@
 """
-Sprint 8 S8-08/09/10 + Sprint 24 S24-07/09/11:
+Sprint 8 S8-08/09/10 + Sprint 24 S24-05/07/09/11:
 Endpoints Knowledge Pipeline con intent routing, visibility filter y logging estructurado.
 Auth: JWT stateless.
 """
@@ -44,21 +44,14 @@ def _authenticate_jwt(request):
 
 # S24-09: Filtro de visibilidad segun rol del usuario
 def get_visibility_filter(user_role: str) -> list:
-    """
-    Retorna la lista de valores de visibility permitidos segun rol.
-    CLIENT_* -> ['PUBLIC', 'PARTNER_B2B']
-    CEO / INTERNAL -> ['PUBLIC', 'PARTNER_B2B', 'INTERNAL']
-    """
     if user_role.startswith('CLIENT_') or user_role == 'CLIENT':
         return ['PUBLIC', 'PARTNER_B2B']
     if user_role in ('CEO', 'INTERNAL', 'STAFF'):
         return ['PUBLIC', 'PARTNER_B2B', 'INTERNAL']
-    # Default restrictivo: solo PUBLIC
     return ['PUBLIC']
 
 
 def _build_visibility_q(user_role: str) -> Q:
-    """Retorna Q object para filtrar KnowledgeChunk por visibility."""
     allowed = get_visibility_filter(user_role)
     return Q(visibility__in=allowed)
 
@@ -73,7 +66,6 @@ class AskView(View):
     throttle_classes = [KnowledgeRateThrottle]  # S24-04
 
     def post(self, request):
-        # 1. Autenticar JWT
         token, err = _authenticate_jwt(request)
         if err:
             return err
@@ -83,7 +75,6 @@ class AskView(View):
         if not ask_perms.intersection(set(token_permissions)):
             return JsonResponse({'detail': 'Permission denied. Requires ask_knowledge_*.'}, status=403)
 
-        # 2. Parsear body
         try:
             body = json.loads(request.body)
         except json.JSONDecodeError:
@@ -98,7 +89,6 @@ class AskView(View):
         user_role      = token.get('role', '')
         expediente_id  = body.get('expediente_id')
 
-        # 3. Historial Redis
         redis_key = f'kw:session:{user_id}:{session_id}'
         try:
             r = _get_redis()
@@ -108,7 +98,6 @@ class AskView(View):
             logger.warning('S24-07 Redis read error: %s', exc)
             history = []
 
-        # 4. Intent classification (S24-10)
         try:
             from apps.knowledge.services.intent_classifier import classify_intent, IntentResult
             intent_result: IntentResult = classify_intent(question)
@@ -124,9 +113,8 @@ class AskView(View):
             user_id, user_role, intent, confidence, session_id
         )
 
-        visibility_allowed = get_visibility_filter(user_role)  # S24-09
+        visibility_allowed = get_visibility_filter(user_role)
 
-        # 5. Routing Ruta A / Ruta B
         RUTA_A_INTENTS = {'QUERY_PRODUCT', 'QUERY_OPERATIONS', 'ASK_CLARIFICATION'}
         RUTA_B_INTENTS = {'QUERY_EXPEDIENTE', 'DOWNLOAD_DOC', 'ESCALATE'}
 
@@ -136,7 +124,6 @@ class AskView(View):
         route_used = ''
 
         if intent in RUTA_A_INTENTS:
-            # Ruta A: RAG via knowledge service
             route_used = 'A'
             try:
                 import urllib.request as urlreq
@@ -148,7 +135,7 @@ class AskView(View):
                     'permissions': token_permissions,
                     'user_id': user_id,
                     'session_id': session_id,
-                    'visibility_filter': visibility_allowed,  # S24-09
+                    'visibility_filter': visibility_allowed,
                     'intent': intent,
                 }).encode()
                 req = urlreq.Request(
@@ -169,7 +156,6 @@ class AskView(View):
                 return JsonResponse({'detail': 'Knowledge service unavailable.'}, status=503)
 
         elif intent in RUTA_B_INTENTS:
-            # Ruta B: Orchestrator live (S24-11)
             route_used = 'B'
             try:
                 from apps.knowledge.services.orchestrator import orchestrate
@@ -193,7 +179,6 @@ class AskView(View):
         if not answer:
             answer = 'No se encontraron resultados relevantes para esta pregunta.'
 
-        # 6. Guardar ConversationLog
         try:
             from apps.knowledge.models import ConversationLog
             from apps.knowledge.utils import calculate_retention
@@ -221,7 +206,6 @@ class AskView(View):
         except Exception as exc:
             logger.error('S24-07 ConversationLog save error: %s', exc)
 
-        # 7. Actualizar Redis
         history.append({'role': 'user', 'content': question})
         history.append({'role': 'assistant', 'content': answer})
         try:
@@ -232,11 +216,91 @@ class AskView(View):
         return JsonResponse({
             'answer': answer,
             'session_id': session_id,
-            'source_chunks': source_chunks,      # Ruta A
-            'source_entities': source_entities,  # Ruta B
+            'source_chunks': source_chunks,
+            'source_entities': source_entities,
             'intent': intent,
             'route': route_used,
         })
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SearchView(View):
+    """
+    POST /api/knowledge/search/
+    S24-05 hotfix: RAG directo sin microservicio.
+    Genera embedding del query via OpenAI y busca en knowledge_chunks via pgvector.
+    Body: { "query": str, "top_k": int (default 5) }
+    """
+
+    def post(self, request):
+        token, err = _authenticate_jwt(request)
+        if err:
+            return err
+
+        token_permissions = [p.lower() for p in token.get('permissions', [])]
+        ask_perms = {'ask_knowledge_ops', 'ask_knowledge_products', 'ask_knowledge_pricing'}
+        if not ask_perms.intersection(set(token_permissions)):
+            return JsonResponse({'detail': 'Permission denied.'}, status=403)
+
+        try:
+            body = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'detail': 'Invalid JSON.'}, status=400)
+
+        query = body.get('query', '').strip()
+        top_k = int(body.get('top_k', 5))
+        if not query:
+            return JsonResponse({'detail': 'query es requerida.'}, status=400)
+
+        user_role = token.get('role', '')
+        visibility_allowed = get_visibility_filter(user_role)
+        visibility_sql = ', '.join(f"'{v}'" for v in visibility_allowed)
+
+        # Generar embedding del query via OpenAI
+        import os
+        import openai
+        api_key = os.environ.get('OPENAI_API_KEY') or getattr(settings, 'OPENAI_API_KEY', '')
+        if not api_key:
+            return JsonResponse({'detail': 'OPENAI_API_KEY no configurada.'}, status=500)
+
+        try:
+            client = openai.OpenAI(api_key=api_key)
+            resp = client.embeddings.create(model='text-embedding-3-small', input=query)
+            query_vec = resp.data[0].embedding
+        except Exception as exc:
+            logger.error('S24-05 embedding error: %s', exc)
+            return JsonResponse({'detail': 'Error generando embedding.'}, status=500)
+
+        # Busqueda por similitud coseno en pgvector
+        from django.db import connection
+        vec_str = '[' + ','.join(str(x) for x in query_vec) + ']'
+        try:
+            with connection.cursor() as cur:
+                cur.execute(f"""
+                    SELECT source_file, content, visibility,
+                           1 - (embedding <=> %s::vector) AS score
+                    FROM knowledge_chunks
+                    WHERE visibility IN ({visibility_sql})
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s
+                """, [vec_str, vec_str, top_k])
+                rows = cur.fetchall()
+        except Exception as exc:
+            logger.error('S24-05 pgvector query error: %s', exc)
+            return JsonResponse({'detail': 'Error en busqueda vectorial.'}, status=500)
+
+        results = [
+            {
+                'source_file': r[0],
+                'content': r[1],
+                'visibility': r[2],
+                'score': round(float(r[3]), 4),
+            }
+            for r in rows
+        ]
+
+        logger.info('S24-05 search | user=%s top_k=%d results=%d', token.get('user_id'), top_k, len(results))
+        return JsonResponse({'query': query, 'results': results, 'total': len(results)})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
