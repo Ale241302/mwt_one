@@ -79,7 +79,7 @@ from apps.core.models import (
 )
 from apps.users.models import MWTUser
 from apps.brands.models import Brand, BrandType, BrandSKU, BrandArtifactRule, ArchProfile, DestinationChoices
-from apps.clientes.models import Cliente, ClientGroup, ClientUltimateParent
+from apps.clientes.models import Cliente, ClientGroup, ClientUltimateParent, ClientSubsidiary
 from apps.productos.models import Producto, ProductMaster
 from apps.suppliers.models import Supplier, SupplierContact
 from apps.pricing.models import PriceList, PriceListItem, PriceListVersion
@@ -313,8 +313,13 @@ for data in CLIENTES:
         defaults={**data, "is_active": True}
     )
     clientes.append(c)
+    # S22: ClientSubsidiary placeholder para Altaverde
+    sub_av, _ = ClientSubsidiary.objects.get_or_create(
+        alias="AV-CR-01",
+        defaults=dict(group=group_vr, name="Altaverde Principal (demo)", country="CR", legal_entity=le_dist_cr)
+    )
 
-print(f"   ✅ {Cliente.objects.count()} clientes")
+print(f"   ✅ {Cliente.objects.count()} clientes · {ClientSubsidiary.objects.count()} subsidiaries")
 
 # ============================================================
 # BLOQUE 5 — PRODUCT MASTERS
@@ -426,33 +431,53 @@ if HAS_S22:
         ("35 ao 40", Decimal("27.80"), {"35":1,"36":1,"37":1,"38":1,"39":1,"40":1}),
         ("41 ao 44", Decimal("29.20"), {"41":1,"42":1,"43":1,"44":1}),
     ]:
-        PriceListGradeItem.objects.update_or_create(
-            pricelist_version=plv,
-            grade_label=grade_label,
-            defaults=dict(unit_price_usd=price, size_multipliers=multipliers)
-        )
+        try:
+            gi, created = PriceListGradeItem.objects.get_or_create(
+                pricelist_version=plv,
+                grade_label=grade_label,
+                defaults=dict(unit_price_usd=price, size_multipliers=multipliers)
+            )
+            if not created:
+                gi.unit_price_usd = price
+                gi.size_multipliers = multipliers
+                gi.save()
+        except Exception as e:
+            print(f"      ⚠️  Error en GradeItem '{grade_label}': {e}")
+            # Intentamos manual update si falló el get_or_create por race condition o similar
+            PriceListGradeItem.objects.filter(pricelist_version=plv, grade_label=grade_label).update(
+                unit_price_usd=price,
+                size_multipliers=multipliers
+            )
 
     # ClientProductAssignment — precio cached para MAR-GOL-L-40 / Altaverde
-    ClientProductAssignment.objects.get_or_create(
-        brand_sku="MAR-GOL-L-40",
-        client_subsidiary=le_dist_cr,
-        defaults=dict(
-            brand=brand_marluvas,
-            cached_client_price=Decimal("26.50"),
-            is_active=True,
-        )
-    )
+    try:
+        bsku_gol_40 = BrandSKU.objects.filter(sku_code="MAR-GOL-L-40").first()
+        if bsku_gol_40:
+            ClientProductAssignment.objects.update_or_create(
+                brand_sku=bsku_gol_40,
+                client_subsidiary=sub_av,
+                defaults=dict(
+                    cached_client_price=Decimal("26.50"),
+                    is_active=True,
+                )
+            )
+    except Exception as e:
+        print(f"      ⚠️  Error en CPA: {e}")
 
     # EarlyPaymentPolicy — marluvas / Altaverde
-    epp, _ = EarlyPaymentPolicy.objects.get_or_create(
-        brand=brand_marluvas,
-        client=le_dist_cr,
-        defaults=dict(base_payment_days=90, base_commission_pct=Decimal("10.00"))
-    )
-    for days, pct in [(8, Decimal("2.75")), (30, Decimal("1.75")), (60, Decimal("1.00"))]:
-        EarlyPaymentTier.objects.get_or_create(
-            policy=epp, payment_days=days, defaults=dict(discount_pct=pct)
+    try:
+        epp, _ = EarlyPaymentPolicy.objects.get_or_create(
+            brand=brand_marluvas,
+            client_subsidiary=sub_av,
+            defaults=dict(base_payment_days=90, base_commission_pct=Decimal("10.00"))
         )
+        for days, pct in [(8, Decimal("2.75")), (30, Decimal("1.75")), (60, Decimal("1.00"))]:
+            EarlyPaymentTier.objects.get_or_create(
+                policy=epp, payment_days=days, defaults=dict(discount_pct=pct)
+            )
+    except Exception as e:
+        print(f"      ⚠️  Error en EPP: {e}")
+
     print(f"   ✅ S22: {PriceListGradeItem.objects.count()} grade items · {ClientProductAssignment.objects.count()} CPAs · {EarlyPaymentPolicy.objects.count()} EPPs")
 else:
     print("   ✅ S14 pricing only")
@@ -720,9 +745,9 @@ node_mwt_cr, _ = Node.objects.get_or_create(
     name="Bodega MWT Costa Rica (demo)",
     defaults=dict(
         legal_entity=le_mwt_cr,
-        node_type=NodeType.OWNED_WAREHOUSE,   # 'owned_warehouse' lowercase
+        node_type="owned_warehouse",
         location="San José, Costa Rica",
-        status=NodeStatus.ACTIVE,             # 'active' lowercase
+        status="active",
     )
 )
 
@@ -730,9 +755,9 @@ node_mwt_fba, _ = Node.objects.get_or_create(
     name="MWT FBA Amazon USA (demo)",
     defaults=dict(
         legal_entity=le_mwt_usa,
-        node_type=NodeType.FBA,               # 'fba'
+        node_type="fba",
         location="Miami, Florida, USA",
-        status=NodeStatus.ACTIVE,
+        status="active",
     )
 )
 
@@ -740,9 +765,9 @@ node_factory, _ = Node.objects.get_or_create(
     name="Horizonte Factory Brasil (demo)",
     defaults=dict(
         legal_entity=le_factory,
-        node_type=NodeType.FACTORY,           # 'factory'
+        node_type="factory",
         location="São Paulo, Brasil",
-        status=NodeStatus.ACTIVE,
+        status="active",
     )
 )
 
@@ -750,9 +775,9 @@ node_dist, _ = Node.objects.get_or_create(
     name="Altaverde Distribución (demo)",
     defaults=dict(
         legal_entity=le_dist_cr,
-        node_type=NodeType.THIRD_PARTY,       # 'third_party'
+        node_type="third_party",
         location="Cartago, Costa Rica",
-        status=NodeStatus.ACTIVE,
+        status="active",
     )
 )
 
@@ -766,10 +791,10 @@ transfer1, t1_new = Transfer.objects.get_or_create(
         ownership_before=le_factory,
         ownership_after=le_mwt_cr,
         ownership_changes=True,
-        legal_context=LegalContext.NATIONALIZATION,  # 'nationalization'
+        legal_context="nationalization",
         customs_required=True,
         pricing_context={"incoterm": "FOB", "currency": "USD"},
-        status=TransferStatus.RECONCILED,            # 'reconciled'
+        status="reconciled",
         dispatched_at=NOW - timedelta(days=22),
         received_at=NOW - timedelta(days=8),
         reconciled_at=NOW - timedelta(days=5),
@@ -798,9 +823,9 @@ transfer2, t2_new = Transfer.objects.get_or_create(
         ownership_before=le_mwt_cr,
         ownership_after=le_dist_cr,
         ownership_changes=True,
-        legal_context=LegalContext.DISTRIBUTION,     # 'distribution'
+        legal_context="distribution",
         customs_required=False,
-        status=TransferStatus.PLANNED,
+        status="planned",
         pricing_context={"incoterm": "DDP", "currency": "USD"},
     )
 )
@@ -818,21 +843,31 @@ INV = [
     (masters[0], node_mwt_fba, 288, 0),    # GOL en FBA USA: sin reservas
 ]
 for master, node, qty, reserved in INV:
-    InventoryEntry.objects.get_or_create(
-        product=Producto.objects.filter(sku_base=master.sku_base).first() or \
-                Producto.objects.create(
-                    sku_base=master.sku_base, name=master.name,
-                    brand=master.brand, category=master.category,
-                    description=f"Demo {master.name}"
-                ),
-        node=node,
-        defaults=dict(
-            quantity=qty,
-            reserved=reserved,
-            lot_number=f"LOT-{master.sku_base[:7]}-D01",
-            received_at=NOW - timedelta(days=30),
+    try:
+        # Get or create Producto first, robustly
+        prod, _ = Producto.objects.get_or_create(
+            sku_base=master.sku_base,
+            defaults=dict(
+                name=master.name,
+                brand=master.brand,
+                category=master.category,
+                description=f"Demo {master.name}"
+            )
         )
-    )
+        
+        # Get or create InventoryEntry
+        InventoryEntry.objects.get_or_create(
+            product=prod,
+            node=node,
+            defaults=dict(
+                quantity=qty,
+                reserved=reserved,
+                lot_number=f"LOT-{master.sku_base[:7]}-D01",
+                received_at=NOW - timedelta(days=30),
+            )
+        )
+    except Exception as e:
+        print(f"      ⚠️  Error en InventoryEntry '{master.sku_base}': {e}")
 
 print(f"   ✅ {InventoryEntry.objects.count()} inventory entries")
 
@@ -874,6 +909,7 @@ rows = [
     ("BrandSKUs",                BrandSKU.objects.count()),
     ("BrandArtifactRules",       BrandArtifactRule.objects.count()),
     ("Clientes",                 Cliente.objects.count()),
+    ("ClientSubsidiaries",       ClientSubsidiary.objects.count()),
     ("ProductMasters",           ProductMaster.objects.count()),
     ("Suppliers",                Supplier.objects.count()),
     ("PriceLists",               PriceList.objects.count()),
