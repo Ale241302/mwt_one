@@ -277,7 +277,7 @@ class SearchView(View):
         try:
             with connection.cursor() as cur:
                 cur.execute(f"""
-                    SELECT source_file, content, visibility,
+                    SELECT source_file, text, visibility,
                            1 - (embedding <=> %s::vector) AS score
                     FROM knowledge_chunks
                     WHERE visibility IN ({visibility_sql})
