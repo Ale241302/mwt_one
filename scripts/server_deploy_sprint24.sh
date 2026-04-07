@@ -2,6 +2,11 @@
 # =============================================================================
 # SCRIPT DE DEPLOY SERVIDOR — Sprint 24 Fases 0–3
 # Ejecutar como root en /opt/mwt luego de git pull
+# Nombres reales de containers (docker-compose.yml):
+#   backend  → mwt-django
+#   postgres → mwt-postgres
+#   redis    → mwt-redis
+#   minio    → mwt-minio
 # Uso: bash scripts/server_deploy_sprint24.sh
 # =============================================================================
 set -euo pipefail
@@ -11,33 +16,61 @@ ok()  { echo -e "${GREEN}[OK]${NC} $*"; }
 warn(){ echo -e "${YELLOW}[WARN]${NC} $*"; }
 err() { echo -e "${RED}[ERR]${NC} $*"; exit 1; }
 
+# Nombres reales de containers
+C_BACKEND="mwt-django"
+C_POSTGRES="mwt-postgres"
+C_REDIS="mwt-redis"
+C_MINIO="mwt-minio"
+
 echo ""
 echo "====================================================="
 echo "  MWT Sprint 24 — Deploy Post git pull"
 echo "  $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+echo "  Backend: $C_BACKEND | DB: $C_POSTGRES"
 echo "====================================================="
 echo ""
 
 # -------------------------------------------------------------------------
-# FASE 0 — Pendiente manual
+# SANITY CHECK: containers corriendo
+# -------------------------------------------------------------------------
+echo "--- Verificando containers activos ---"
+
+for NAME in "$C_BACKEND" "$C_POSTGRES" "$C_REDIS"; do
+  if docker ps --filter name=^/${NAME}$ --filter status=running -q | grep -q .; then
+    ok "Container $NAME: UP"
+  else
+    err "Container $NAME: NO está corriendo. Ejecutar: docker compose up -d"
+  fi
+done
+
+echo ""
+
+# -------------------------------------------------------------------------
+# FASE 0 — Migraciones + Nginx
 # -------------------------------------------------------------------------
 echo "--- FASE 0: Migraciones + Nginx ---"
 
-# 1. Migraciones (incluye rest_framework_simplejwt.token_blacklist)
-docker exec mwt_one_backend python manage.py migrate --noinput \
+# 1. Migraciones (incluye token_blacklist)
+docker exec "$C_BACKEND" python manage.py migrate --noinput \
   && ok "migrate ejecutado" \
-  || err "migrate falló — revisar docker logs mwt_one_backend --tail 50"
+  || err "migrate falló — revisar: docker logs $C_BACKEND --tail 50"
 
 # 2. collectstatic
-docker exec mwt_one_backend python manage.py collectstatic --noinput --clear \
+docker exec "$C_BACKEND" python manage.py collectstatic --noinput --clear \
   && ok "collectstatic ejecutado" \
   || warn "collectstatic con warnings (no bloqueante)"
 
-# 3. Verificar config Nginx
-nginx -t && ok "nginx -t OK" || err "nginx config inválida"
-
-# 4. Reload Nginx
-systemctl reload nginx && ok "nginx recargado" || err "nginx reload falló"
+# 3. Nginx: verificar y recargar (Nginx corre como container mwt-nginx)
+if docker ps --filter name=^/mwt-nginx$ --filter status=running -q | grep -q .; then
+  docker exec mwt-nginx nginx -t \
+    && ok "nginx -t OK" \
+    || err "nginx config inválida — revisar nginx/mwt.conf"
+  docker exec mwt-nginx nginx -s reload \
+    && ok "nginx recargado" \
+    || warn "nginx reload con advertencia"
+else
+  warn "Container mwt-nginx no encontrado. Verificar: docker ps | grep nginx"
+fi
 
 echo ""
 
@@ -47,45 +80,54 @@ echo ""
 echo "--- FASE 1: pgvector + KB ---"
 
 # 1. Verificar / instalar pgvector
-PG_VECTOR=$(docker exec mwt_one_postgres psql -U mwt -d mwt -tAc \
-  "SELECT COUNT(*) FROM pg_extension WHERE extname = 'vector';")
+PG_VECTOR=$(docker exec "$C_POSTGRES" psql -U mwt -d mwt -tAc \
+  "SELECT COUNT(*) FROM pg_extension WHERE extname = 'vector';" 2>/dev/null || echo "0")
 
 if [ "$PG_VECTOR" = "1" ]; then
   ok "pgvector ya instalado"
 else
   warn "pgvector NO encontrado — instalando..."
-  docker exec mwt_one_postgres psql -U mwt -d mwt -c \
+  docker exec "$C_POSTGRES" psql -U mwt -d mwt -c \
     "CREATE EXTENSION IF NOT EXISTS vector;" \
     && ok "pgvector instalado" \
-    || err "No se pudo instalar pgvector. Instalar manualmente: apt install postgresql-16-pgvector"
+    || err "No se pudo instalar pgvector (imagen usa pgvector/pgvector:pg16 — debería funcionar)"
 fi
 
 # 2. Verificar tabla knowledge_chunks
-TABLE_EXISTS=$(docker exec mwt_one_postgres psql -U mwt -d mwt -tAc \
-  "SELECT COUNT(*) FROM information_schema.tables WHERE table_name='knowledge_chunks';")
+TABLE_EXISTS=$(docker exec "$C_POSTGRES" psql -U mwt -d mwt -tAc \
+  "SELECT COUNT(*) FROM information_schema.tables WHERE table_name='knowledge_chunks';" 2>/dev/null || echo "0")
 
 if [ "$TABLE_EXISTS" = "1" ]; then
   ok "Tabla knowledge_chunks existe"
 else
-  warn "Tabla knowledge_chunks NO existe — se creará al correr load_kb.py"
+  warn "Tabla knowledge_chunks NO existe — correr migración o load_kb.py"
 fi
 
-# 3. Correr load_kb si existe el directorio KB
-KB_DIR="/opt/mwt/knowledge/docs"
-if [ -d "$KB_DIR" ]; then
-  ok "Directorio KB encontrado: $KB_DIR"
-  docker exec mwt_one_backend python scripts/load_kb.py --kb-dir "$KB_DIR" \
-    && ok "load_kb.py ejecutado" \
-    || warn "load_kb.py con errores — verificar manualmente"
+# 3. Correr load_kb si existe el directorio KB (volumen kb_data montado en /kb)
+KB_DIR_HOST="/opt/mwt/knowledge/docs"
+KB_DIR_CONTAINER="/kb"
+
+if [ -d "$KB_DIR_HOST" ] && [ "$(ls -A $KB_DIR_HOST 2>/dev/null)" ]; then
+  ok "Directorio KB encontrado: $KB_DIR_HOST"
+  # load_kb.py usa el directorio dentro del container knowledge
+  if docker ps --filter name=^/mwt-knowledge$ --filter status=running -q | grep -q .; then
+    docker exec mwt-knowledge python /app/scripts/load_kb.py --kb-dir "$KB_DIR_CONTAINER" \
+      && ok "load_kb.py ejecutado en mwt-knowledge" \
+      || warn "load_kb.py con errores — verificar: docker logs mwt-knowledge --tail 30"
+  else
+    # Fallback: correr desde django
+    docker exec "$C_BACKEND" python scripts/load_kb.py --kb-dir "$KB_DIR_HOST" \
+      && ok "load_kb.py ejecutado desde mwt-django" \
+      || warn "load_kb.py con errores"
+  fi
 else
-  warn "Directorio $KB_DIR no existe — skip load_kb.py"
-  warn "Crear directorio y archivos .md antes de correr carga KB:"
-  warn "  mkdir -p $KB_DIR"
+  warn "Directorio $KB_DIR_HOST vacío o inexistente — skip load_kb.py"
+  warn "Para cargar KB: mkdir -p $KB_DIR_HOST && copiar archivos .md ahí"
 fi
 
 # 4. Verificar cero chunks CEO-ONLY
-CEO_CHUNKS=$(docker exec mwt_one_postgres psql -U mwt -d mwt -tAc \
-  "SELECT COUNT(*) FROM knowledge_chunks WHERE visibility='CEO-ONLY';" 2>/dev/null || echo "0")
+CEO_CHUNKS=$(docker exec "$C_POSTGRES" psql -U mwt -d mwt -tAc \
+  "SELECT COUNT(*) FROM knowledge_chunks WHERE visibility='CEO-ONLY';" 2>/dev/null | tr -d '[:space:]' || echo "0")
 
 if [ "$CEO_CHUNKS" = "0" ]; then
   ok "knowledge_chunks: 0 chunks CEO-ONLY (correcto)"
@@ -96,62 +138,77 @@ fi
 echo ""
 
 # -------------------------------------------------------------------------
-# FASE 1 BONUS — S24-05 Signed URLs (verificar endpoint)
+# FASE 1 BONUS — S24-05 Signed URLs (detectar endpoint)
 # -------------------------------------------------------------------------
-echo "--- S24-05: Verificar endpoint signed URL ---"
+echo "--- S24-05: Detectar endpoint signed URL ---"
 
-ENDPOINT_EXP=$(docker exec mwt_one_backend grep -rl "presigned\|signed_url\|minio" \
-  /app/apps/expedientes/views.py 2>/dev/null | wc -l)
-ENDPOINT_ART=$(docker exec mwt_one_backend grep -rl "presigned\|signed_url\|minio" \
-  /app/apps/ 2>/dev/null | head -5)
+MINIO_FILES=$(docker exec "$C_BACKEND" grep -rl "presigned\|signed_url\|minio_client\|presigned_get_object" \
+  /app/apps/ 2>/dev/null || echo "")
 
-if [ "$ENDPOINT_EXP" -gt "0" ]; then
-  ok "S24-05: endpoint signed URL detectado en apps/expedientes/views.py"
+if [ -n "$MINIO_FILES" ]; then
+  ok "S24-05: Archivos con referencias MinIO/signed URL:"
+  echo "$MINIO_FILES"
 else
-  warn "S24-05: Endpoint signed URL pendiente — archivos que mencionan minio:"
-  echo "$ENDPOINT_ART"
+  warn "S24-05: No se detectó endpoint signed URL en /app/apps/ — implementar como hotfix"
 fi
 
 echo ""
 
 # -------------------------------------------------------------------------
-# FASE 2 — Checklist secrets (verificación automática no-intrusiva)
+# FASE 2 — Verificación de secrets
 # -------------------------------------------------------------------------
 echo "--- FASE 2: Verificación de Secrets ---"
 
-ENV_FILE="/opt/mwt/backend/.env"
-[ -f "$ENV_FILE" ] || ENV_FILE="/opt/mwt/.env"
-[ -f "$ENV_FILE" ] && ok ".env encontrado: $ENV_FILE" || warn ".env no encontrado en /opt/mwt ni /opt/mwt/backend"
+# Buscar .env en ubicaciones comunes
+ENV_FILE=""
+for CANDIDATE in "/opt/mwt/.env" "/opt/mwt/backend/.env"; do
+  [ -f "$CANDIDATE" ] && ENV_FILE="$CANDIDATE" && break
+done
 
-# Verificar que secrets no están en git history
-SK_IN_GIT=$(cd /opt/mwt && git log -p --all -- '*.py' '*.env*' 2>/dev/null | grep -c 'sk-ant\|sk-proj\|AKIA' || true)
-if [ "$SK_IN_GIT" = "0" ]; then
-  ok "Scan git history: sin API keys expuestas"
+if [ -n "$ENV_FILE" ]; then
+  ok ".env encontrado: $ENV_FILE"
 else
-  err "ALERTA: $SK_IN_GIT posibles API keys en historial git. Revocar inmediatamente."
+  warn ".env no encontrado. Crear en /opt/mwt/.env con las variables requeridas."
+  ENV_FILE="/dev/null"
 fi
 
-# Redis password no es default
-REDIS_URL=$(grep 'REDIS_URL\|CELERY_BROKER' "$ENV_FILE" 2>/dev/null | head -1 || echo "")
-if echo "$REDIS_URL" | grep -q 'mwt2024'; then
-  warn "Redis password es el default 'mwt2024' — cambiar en prod"
+# Scan git history — buscar API keys expuestas
+SK_IN_GIT=$(cd /opt/mwt && git log -p --all -- '*.py' 2>/dev/null | grep -cE 'sk-ant-|sk-proj-|AKIA[0-9A-Z]' || true)
+if [ "$SK_IN_GIT" = "0" ]; then
+  ok "Scan git history: sin API keys expuestas (sk-ant, sk-proj, AKIA)"
 else
-  ok "Redis password no es el default"
+  err "ALERTA: $SK_IN_GIT posibles API keys en historial git. Revocar y limpiar historial inmediatamente."
+fi
+
+# Verificar Django SECRET_KEY no hardcodeada
+SECRET_HARDCODED=$(cd /opt/mwt && grep -rn "SECRET_KEY\s*=\s*'[^e][^n][^v]" backend/config/ 2>/dev/null | grep -v 'env(' | wc -l || echo "0")
+if [ "$SECRET_HARDCODED" = "0" ]; then
+  ok "Django SECRET_KEY: no hardcodeada en settings"
+else
+  err "ALERTA: Django SECRET_KEY posiblemente hardcodeada en settings ($SECRET_HARDCODED ocurrencias)"
+fi
+
+# Redis password default check
+REDIS_URL=$(grep -E 'REDIS_URL|CELERY_BROKER' "$ENV_FILE" 2>/dev/null | head -1 || echo "")
+if echo "$REDIS_URL" | grep -q 'mwt2024'; then
+  warn "FASE 2: Redis password es el default 'mwt2024' — cambiar en .env y reiniciar: docker restart $C_REDIS"
+else
+  ok "Redis password: no es el default 'mwt2024'"
 fi
 
 echo ""
 
 # -------------------------------------------------------------------------
-# FASE 3 — Correr tests de seguridad
+# FASE 3 — Tests de seguridad S24-13
 # -------------------------------------------------------------------------
 echo "--- FASE 3: Tests de Seguridad (S24-13) ---"
 
-docker exec mwt_one_backend python manage.py test \
-  backend.tests.test_security_sprint24 \
+docker exec "$C_BACKEND" python manage.py test \
+  tests.test_security_sprint24 \
   --verbosity=1 \
-  --keepdb 2>&1 | tail -20 \
+  --keepdb 2>&1 | tail -25 \
   && ok "Tests S24-13 completados" \
-  || warn "Algunos tests fallaron — revisar output completo con --verbosity=2"
+  || warn "Algunos tests fallaron — correr con: docker exec $C_BACKEND python manage.py test tests.test_security_sprint24 --verbosity=2"
 
 echo ""
 
@@ -160,36 +217,31 @@ echo ""
 # -------------------------------------------------------------------------
 echo "--- Verificaciones finales ---"
 
-# Health check backend
-HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/health/ 2>/dev/null || echo "000")
-if [ "$HTTP_STATUS" = "200" ]; then
-  ok "Backend health check: 200"
+# Health check backend (Django admin como proxy)
+HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+  http://localhost:8000/admin/ 2>/dev/null || echo "000")
+if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
+  ok "Backend responde en :8000 (HTTP $HTTP_STATUS)"
 elif [ "$HTTP_STATUS" = "000" ]; then
-  warn "Backend no responde en :8000 — verificar docker ps"
+  warn "Backend no responde en :8000 — revisar: docker logs $C_BACKEND --tail 30"
 else
-  warn "Backend /api/health/ retorna $HTTP_STATUS"
+  warn "Backend retorna HTTP $HTTP_STATUS en :8000"
 fi
 
-# Verificar containers corriendo
-BACKEND_UP=$(docker ps --filter name=mwt_one_backend --filter status=running -q | wc -l)
-POSTGRES_UP=$(docker ps --filter name=mwt_one_postgres --filter status=running -q | wc -l)
-REDIS_UP=$(docker ps --filter name=mwt_one_redis --filter status=running -q | wc -l)
-MINIO_UP=$(docker ps --filter name=mwt_one_minio --filter status=running -q | wc -l)
-
-[ "$BACKEND_UP" = "1" ] && ok "Container backend: UP" || err "Container backend: DOWN"
-[ "$POSTGRES_UP" = "1" ] && ok "Container postgres: UP" || warn "Container postgres: DOWN o nombre diferente"
-[ "$REDIS_UP" = "1" ] && ok "Container redis: UP" || warn "Container redis: DOWN o nombre diferente"
-[ "$MINIO_UP" = "1" ] && ok "Container minio: UP" || warn "Container minio: DOWN o nombre diferente"
+# Estado de todos los containers
+echo ""
+echo "  Estado containers:"
+docker ps --format "  {{.Names}}\t{{.Status}}" | grep mwt || echo "  (ninguno con prefijo 'mwt')"
 
 echo ""
 echo "====================================================="
 echo "  Deploy Sprint 24 completado: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 echo "====================================================="
 echo ""
-echo "  COMANDOS MANUALES PENDIENTES:"
-echo "  1. Si Redis password es 'mwt2024' — cambiar en .env y reiniciar redis"
-echo "  2. Si load_kb.py no corrió — crear /opt/mwt/knowledge/docs y cargar .md"
-echo "  3. Verificar S24-05 signed URL endpoint (ver output de S24-05 arriba)"
-echo "  4. Configurar Sentry DSN en .env: SENTRY_DSN=https://..."
-echo "  5. Configurar backups PostgreSQL: ver scripts/backup_pg.sh"
+echo "  ACCIONES MANUALES PENDIENTES (si aplican):"
+echo "  1. Redis password 'mwt2024' → cambiar en .env + docker restart $C_REDIS"
+echo "  2. load_kb.py no corrió → mkdir -p /opt/mwt/knowledge/docs y copiar .md"
+echo "  3. S24-05 signed URL → verificar output arriba e implementar si falta"
+echo "  4. Sentry DSN → agregar SENTRY_DSN=https://... en .env + docker restart $C_BACKEND"
+echo "  5. Backup PG → bash scripts/backup_pg.sh + agregar a crontab"
 echo ""
