@@ -258,28 +258,27 @@ class ExpedienteBundleSerializer(serializers.Serializer):
             # Solo pagos credit_released cuentan (S25-05)
             total_released = sum(
                 p.amount_paid or Decimal('0.00')
-                for p in obj.payment_lines.filter(payment_status='credit_released')
+                for p in obj.pagos.filter(payment_status='credit_released')
             ) or Decimal('0.00')
 
             total_pending = sum(
                 p.amount_paid or Decimal('0.00')
-                for p in obj.payment_lines.filter(payment_status__in=['pending', 'verified'])
+                for p in obj.pagos.filter(payment_status__in=['pending', 'verified'])
             ) or Decimal('0.00')
 
             total_rejected = sum(
                 p.amount_paid or Decimal('0.00')
-                for p in obj.payment_lines.filter(payment_status='rejected')
+                for p in obj.pagos.filter(payment_status='rejected')
             ) or Decimal('0.00')
 
-            # total del expediente: sum de líneas de producto
-            expediente_total = sum(
+            # total del expediente: sum de líneas de producto (SSOT)
+            total_lines = sum(
                 (line.unit_price or Decimal('0.00')) * (line.quantity or 0)
                 for line in obj.product_lines.all()
             ) or Decimal('0.00')
 
-            # Si el total de líneas es 0, intentar total_cost del modelo
-            if expediente_total <= 0:
-                expediente_total = getattr(obj, 'total_cost', Decimal('0.00')) or Decimal('0.00')
+            # total_value logic matches services/credit.py
+            expediente_total = getattr(obj, 'total_value', None) or total_lines
 
             payment_coverage, coverage_pct = compute_coverage(total_released, expediente_total)
 
