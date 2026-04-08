@@ -228,15 +228,15 @@ export default function PagosSection({ expedienteId, isCeo = false, onCreditRefr
 
   const totalReleased = pagos
     .filter((p) => p.payment_status === "credit_released")
-    .reduce((s, p) => s + (p.amount_paid ?? 0), 0);
+    .reduce((s, p) => s + Number(p.amount_paid ?? 0), 0);
 
   const totalPending = pagos
     .filter((p) => p.payment_status === "pending")
-    .reduce((s, p) => s + (p.amount_paid ?? 0), 0);
+    .reduce((s, p) => s + Number(p.amount_paid ?? 0), 0);
 
   const totalVerified = pagos
     .filter((p) => p.payment_status === "verified")
-    .reduce((s, p) => s + (p.amount_paid ?? 0), 0);
+    .reduce((s, p) => s + Number(p.amount_paid ?? 0), 0);
 
   const verifiedCount = pagos.filter((p) => p.payment_status === "verified").length;
 
