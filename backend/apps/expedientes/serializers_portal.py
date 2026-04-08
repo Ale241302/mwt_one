@@ -72,18 +72,36 @@ class PortalExpedienteDetailSerializer(serializers.ModelSerializer):
     def get_payment_coverage(self, obj):
         from apps.expedientes.services.credit import compute_coverage
         from decimal import Decimal
-        total_released = sum(p.amount_paid for p in obj.pagos.filter(payment_status='credit_released') if p.amount_paid) or Decimal('0.00')
-        total_value = getattr(obj, 'total_value', None) or sum((l.unit_price * l.quantity) for l in obj.product_lines.all())
+        total_released = sum(
+            p.amount_paid or Decimal('0.00')
+            for p in obj.pagos.filter(payment_status='credit_released')
+        ) or Decimal('0.00')
+
+        total_lines = sum(
+            (l.unit_price or Decimal('0.00')) * (l.quantity or 0)
+            for l in obj.product_lines.all()
+        ) or Decimal('0.00')
+
+        total_value = getattr(obj, 'total_value', None) or total_lines
         coverage, _ = compute_coverage(total_released, total_value)
         return coverage
 
     def get_coverage_pct(self, obj):
         from apps.expedientes.services.credit import compute_coverage
         from decimal import Decimal
-        total_released = sum(p.amount_paid for p in obj.pagos.filter(payment_status='credit_released') if p.amount_paid) or Decimal('0.00')
-        total_value = getattr(obj, 'total_value', None) or sum((l.unit_price * l.quantity) for l in obj.product_lines.all())
+        total_released = sum(
+            p.amount_paid or Decimal('0.00')
+            for p in obj.pagos.filter(payment_status='credit_released')
+        ) or Decimal('0.00')
+
+        total_lines = sum(
+            (l.unit_price or Decimal('0.00')) * (l.quantity or 0)
+            for l in obj.product_lines.all()
+        ) or Decimal('0.00')
+
+        total_value = getattr(obj, 'total_value', None) or total_lines
         _, pct = compute_coverage(total_released, total_value)
-        return pct
+        return float(pct)
 
     def get_deferred_total_price(self, obj):
         if obj.deferred_visible:
