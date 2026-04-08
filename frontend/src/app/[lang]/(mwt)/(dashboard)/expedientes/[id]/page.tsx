@@ -3,6 +3,7 @@
  * S10-03 — Detalle Expediente con acordeón de artefactos.
  * S19-12 — Barrido hex: todos los colores reemplazados por CSS vars.
  * S21    — isAdmin desde bundle.is_admin (is_superuser Django) → panel admin.
+ * fix    — deshabilitar Pagos/Costos hasta bundle cargado; guard expedienteId.
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -168,6 +169,9 @@ export default function ExpedienteDetailPage() {
   }
 
   const { expediente } = bundle;
+  // expedienteId nunca es undefined aquí: bundle ya cargó y expediente.id existe
+  const expedienteId: string = expediente.id;
+
   // is_admin viene del backend (is_superuser del usuario autenticado)
   const isAdmin = bundle.is_admin === true;
   const creditCls = CREDIT_BAND_CLASSES[bundle.credit_clock?.band ?? "MINT"];
@@ -305,8 +309,21 @@ export default function ExpedienteDetailPage() {
               <Lock size={14} /> Desbloquear
             </button>
           )}
-          <button className="btn btn-sm btn-secondary" onClick={() => setActiveModal({ commandKey: "C15" })}>Costos</button>
-          <button className="btn btn-sm btn-secondary" onClick={() => setActiveModal({ commandKey: "C21" })}>Pagos</button>
+          {/* Fix: botones Costos/Pagos usan expedienteId validado (nunca undefined aquí) */}
+          <button
+            className="btn btn-sm btn-secondary"
+            onClick={() => setActiveModal({ commandKey: "C15" })}
+            disabled={!expedienteId}
+          >
+            Costos
+          </button>
+          <button
+            className="btn btn-sm btn-secondary"
+            onClick={() => setActiveModal({ commandKey: "C21" })}
+            disabled={!expedienteId}
+          >
+            Pagos
+          </button>
           {hasAction("C16") && (
             <button className="btn btn-sm btn-danger-outline" onClick={() => setActiveModal({ commandKey: "C16" })}>Cancelar</button>
           )}
@@ -514,7 +531,7 @@ export default function ExpedienteDetailPage() {
           )}
 
           <ExpedienteAccordion
-            expedienteId={expediente.id}
+            expedienteId={expedienteId}
             expedienteData={{ ...expediente, artifacts: bundle.artifacts, artifact_policy: bundle.artifact_policy }}
             artifacts={(Array.isArray(bundle.artifacts) ? bundle.artifacts : []).map(a => ({
               artifact_id: a.id,
@@ -530,7 +547,7 @@ export default function ExpedienteDetailPage() {
             isAdmin={isAdmin}
           />
 
-          <CostTable expedienteId={expediente.id} />
+          <CostTable expedienteId={expedienteId} />
         </div>
 
         <div>
@@ -581,7 +598,7 @@ export default function ExpedienteDetailPage() {
       {activeModal?.commandKey === "C2" ? (
         <CreateProformaModal
           open={true}
-          expedienteId={id}
+          expedienteId={expedienteId}
           brandSlug={bundle.expediente.brand_slug}
           orphanLines={(bundle.product_lines || []).filter(l => l.proforma_id === null)}
           onClose={() => setActiveModal(null)}
@@ -590,7 +607,7 @@ export default function ExpedienteDetailPage() {
       ) : activeModal && (
         <ArtifactModal
           open={true}
-          expedienteId={expediente.id}
+          expedienteId={expedienteId}
           commandKey={activeModal.commandKey}
           artifact={activeModal.artifact}
           onClose={() => setActiveModal(null)}
@@ -602,7 +619,7 @@ export default function ExpedienteDetailPage() {
       {reassignLineId && (
         <ReassignLineModal
           open={true}
-          expedienteId={expediente.id}
+          expedienteId={expedienteId}
           lineId={reassignLineId}
           proformas={(bundle.artifacts || []).filter(a => a.artifact_type === 'ART-02')}
           onClose={() => setReassignLineId(null)}
