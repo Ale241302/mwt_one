@@ -5,7 +5,9 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from core.views_logger import FrontendLoggerView
-from apps.expedientes.views import FinancialDashboardView
+# S25 FIX: import directo desde views.py legacy para evitar conflicto con
+# el subpaquete views/ creado en S25. views/ shadowa views.py en Python.
+from apps.expedientes.views_s20 import FinancialDashboardView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
