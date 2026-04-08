@@ -1,17 +1,28 @@
 # views_financial.py
-# S25 FIX: Este archivo existe porque views/__init__.py (subpaquete S25)
-# shadowa al archivo views.py en Python, rompiendo imports desde config/urls.py.
-# FinancialDashboardView, FinancialComparisonView y FinancialSummaryView
-# se reexportan aqui para que config/urls.py y urls.py los importen sin conflicto.
+# S25 FIX: El subpaquete views/ (creado en S25) shadowa al archivo views.py
+# en Python, haciendo imposible importar directamente con:
+#   from apps.expedientes.views import FinancialDashboardView
 #
-# El archivo views.py original NO se modifica para preservar el resto de sus vistas
-# que son importadas por apps/expedientes/urls.py.
+# Solucion: cargar views.py por path de archivo via importlib,
+# completamente fuera del sistema de modulos normal de Python.
+# Esto evita el conflicto sin tocar views.py ni views/__init__.py.
 
-from apps.expedientes.views import (
-    FinancialDashboardView,
-    FinancialComparisonView,
-    FinancialSummaryView,
+import importlib.util
+import sys
+import os
+
+_views_py_path = os.path.join(os.path.dirname(__file__), 'views.py')
+_spec = importlib.util.spec_from_file_location(
+    'apps.expedientes._views_legacy',
+    _views_py_path,
 )
+_views_legacy = importlib.util.module_from_spec(_spec)
+sys.modules['apps.expedientes._views_legacy'] = _views_legacy
+_spec.loader.exec_module(_views_legacy)
+
+FinancialDashboardView = _views_legacy.FinancialDashboardView
+FinancialComparisonView = _views_legacy.FinancialComparisonView
+FinancialSummaryView = _views_legacy.FinancialSummaryView
 
 __all__ = [
     'FinancialDashboardView',
