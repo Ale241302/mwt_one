@@ -375,6 +375,13 @@ export default function ExpedienteDetailPage() {
             + Costo
           </button>
 
+          <button
+            className="btn btn-sm btn-secondary"
+            onClick={() => setActiveModal({ commandKey: "C21" })}
+          >
+            + Pago
+          </button>
+
           {hasAction("C16") && (
             <button className="btn btn-sm btn-danger-outline" onClick={() => setActiveModal({ commandKey: "C16" })}>Cancelar</button>
           )}
