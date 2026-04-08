@@ -233,10 +233,23 @@ def merge_expedientes(request, pk):
     return Response(BundleSerializer(master).data)
 
 
-# ─────────────── T1.6: Split ───────────────
+# ─────────────── T1.6: Split (S25-07 extended) ───────────────
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def split_expediente(request, pk):
+    """
+    S18: separate-products
+    S25-07: extendido con invert_parent (default False).
+
+    invert_parent=False (default):
+      nuevo expediente = hijo (parent_expediente = original)
+    invert_parent=True:
+      original = hijo (parent_expediente = nuevo, is_inverted_child = True)
+      Restricción: 409 si original ya tiene parent_expediente (ya es child).
+
+    EventLog en AMBOS expedientes.
+    Backward compat: llamadas sin invert_parent → comportamiento S18.
+    """
     original = _get_expediente(request, pk)
     if original is None:
         return Response({'detail': 'No encontrado.'}, status=status.HTTP_404_NOT_FOUND)
@@ -252,25 +265,97 @@ def split_expediente(request, pk):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    invert_parent = bool(request.data.get('invert_parent', False))
+
+    # S25-07 M4: Restricción dura — no invertir si original ya es child
+    if invert_parent and original.parent_expediente_id is not None:
+        return Response(
+            {
+                'error': (
+                    'Cannot invert parent on an expediente that is already a child. '
+                    'Split normally or create a new top-level expediente.'
+                )
+            },
+            status=status.HTTP_409_CONFLICT,
+        )
+
     with transaction.atomic():
+        original_locked = Expediente.objects.select_for_update().get(
+            expediente_id=original.expediente_id
+        )
+
         new_exp = Expediente.objects.create(
-            legal_entity=original.legal_entity,
-            brand=original.brand,
-            client=original.client,
-            destination=original.destination,
-            dispatch_mode=original.dispatch_mode,
-            incoterms=original.incoterms,
-            purchase_order_number=original.purchase_order_number,
+            legal_entity=original_locked.legal_entity,
+            brand=original_locked.brand,
+            client=original_locked.client,
+            destination=original_locked.destination,
+            dispatch_mode=original_locked.dispatch_mode,
+            incoterms=original_locked.incoterms,
+            purchase_order_number=original_locked.purchase_order_number,
+        )
+
+        moved_lines = list(
+            ExpedienteProductLine.objects.filter(
+                expediente=original_locked,
+                id__in=line_ids,
+            )
         )
         ExpedienteProductLine.objects.filter(
-            expediente=original,
+            expediente=original_locked,
             id__in=line_ids,
         ).update(expediente=new_exp, separated_to_expediente=new_exp)
 
-        recalculate_expediente_credit(original)
+        # S25-07: Genealogía parent/child
+        if invert_parent:
+            # Nuevo = padre (parent_expediente = NULL)
+            # Original = hijo (parent_expediente = nuevo, is_inverted_child = True)
+            original_locked.parent_expediente = new_exp
+            original_locked.is_inverted_child = True
+            original_locked.save(update_fields=['parent_expediente', 'is_inverted_child'])
+            parent_id = str(new_exp.expediente_id)
+            child_id = str(original_locked.expediente_id)
+        else:
+            # Nuevo = hijo (parent_expediente = original)
+            new_exp.parent_expediente = original_locked
+            new_exp.save(update_fields=['parent_expediente'])
+            parent_id = str(original_locked.expediente_id)
+            child_id = str(new_exp.expediente_id)
+
+        # S25-07: EventLog en AMBOS expedientes
+        import uuid as _uuid
+        from django.utils import timezone as _tz
+        from apps.expedientes.models import EventLog
+        now = _tz.now()
+        moved_line_ids = [str(l.id) for l in moved_lines]
+
+        for exp, role in [
+            (original_locked, 'original'),
+            (new_exp, 'new'),
+        ]:
+            EventLog.objects.create(
+                event_type='expediente.split',
+                aggregate_type='EXPEDIENTE',
+                aggregate_id=exp.expediente_id,
+                expediente=exp,
+                action_source='separate_products',
+                user=request.user,
+                occurred_at=now,
+                emitted_by='split_expediente',
+                correlation_id=_uuid.uuid4(),
+                payload={
+                    'parent_id': parent_id,
+                    'child_id': child_id,
+                    'inverted': invert_parent,
+                    'role': role,
+                    'lines_moved': moved_line_ids,
+                },
+            )
+
+        recalculate_expediente_credit(original_locked)
         recalculate_expediente_credit(new_exp)
 
     return Response({
-        'original': BundleSerializer(original).data,
+        'original': BundleSerializer(original_locked).data,
         'new_expediente': BundleSerializer(new_exp).data,
     }, status=status.HTTP_201_CREATED)
+

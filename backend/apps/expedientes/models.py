@@ -279,6 +279,39 @@ class Expediente(TimestampMixin):
         )
     )
 
+    # === S25-02: Precio diferido + parent/child ===
+    deferred_total_price = models.DecimalField(
+        max_digits=14, decimal_places=2,
+        null=True, blank=True,
+        help_text=(
+            "Precio diferido del expediente. Uso interno CEO. "
+            "Equivale a 'order_full_price_diferido' del sistema viejo. "
+            "NULL = no definido. Editable solo por CEO."
+        )
+    )
+    deferred_visible = models.BooleanField(
+        default=False,
+        help_text=(
+            "Si True, el precio diferido es visible en el portal del cliente. "
+            "Por default invisible (solo CEO). Toggle manual."
+        )
+    )
+    parent_expediente = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='child_expedientes',
+        help_text="Expediente padre (origen de un split). NULL = expediente original."
+    )
+    is_inverted_child = models.BooleanField(
+        default=False,
+        help_text=(
+            "True si este expediente fue creado por split con inversión: "
+            "el 'nuevo' expediente tomó el rol de padre y el 'original' se convirtió en hijo. "
+            "Informativo para el CEO — no afecta lógica de negocio."
+        )
+    )
+
     class Meta:
         verbose_name = 'Expediente'
         verbose_name_plural = 'Expedientes'
@@ -452,6 +485,51 @@ class ExpedientePago(models.Model):
         ],
         default='PENDING',
     )
+
+    # === S25-01: Payment Status Machine ===
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pendiente verificación'),
+        ('verified', 'Verificado'),
+        ('credit_released', 'Crédito liberado'),
+        ('rejected', 'Rechazado'),
+    ]
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='pending',
+        help_text=(
+            "Estado del pago dentro de su ciclo de vida. "
+            "pending → verificado por CEO → crédito liberado. "
+            "Pagos legacy (pre-S25) migrados según regla C2."
+        )
+    )
+    verified_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp de verificación por CEO."
+    )
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='verified_payments',
+        help_text="Usuario que verificó el pago."
+    )
+    credit_released_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp de liberación de crédito."
+    )
+    credit_released_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='released_payments',
+        help_text="Usuario que liberó el crédito."
+    )
+    rejection_reason = models.TextField(
+        blank=True, default='',
+        help_text="Motivo de rechazo si payment_status='rejected'."
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

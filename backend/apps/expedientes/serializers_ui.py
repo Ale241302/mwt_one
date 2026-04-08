@@ -127,7 +127,15 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     product_lines = serializers.SerializerMethodField()
 
     def get_expediente(self, obj):
-        data = UIExpedienteListSerializer(obj).data
+        """
+        S25-08: Unifies with BundleSerializer to include credit snapshot,
+        deferred pricing, and genealogy fields in the UI detail bundle.
+        """
+        from .serializers import BundleSerializer
+        # Base with S25 fields
+        data = BundleSerializer(obj).data
+        
+        # Merge UI-specific metadata
         data.update({
             'mode': obj.mode,
             'freight_mode': obj.freight_mode,
