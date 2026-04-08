@@ -42,19 +42,58 @@ def _get_expediente_and_pago(exp_id, pago_id):
 
 
 # ─────────────── FIX-2026-04-08c: LIST PAGOS ───────────────
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def list_pagos(request, exp_id):
     """
-    GET /api/expedientes/{exp_id}/pagos/
-    Retorna todos los pagos del expediente en formato PagoSerializer (CEO/AGENT tier).
-    Acceso: cualquier usuario autenticado con acceso al expediente.
+    GET /api/expedientes/{exp_id}/pagos/ -> Listado
+    POST /api/expedientes/{exp_id}/pagos/ -> Crear (PENDING)
     """
     try:
         expediente = Expediente.objects.get(expediente_id=exp_id)
     except Expediente.DoesNotExist:
         return Response({'error': 'Expediente no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
+    if request.method == 'POST':
+        # Registrar Pago Manual (S25 UI)
+        amount = request.data.get('amount')
+        payment_date = request.data.get('payment_date')
+
+        if not amount or not payment_date:
+            return Response({'error': 'amount and payment_date are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Crear Pago como 'pending'
+        pago = ExpedientePago.objects.create(
+            expediente=expediente,
+            amount_paid=Decimal(str(amount)),
+            payment_date=payment_date,
+            metodo_pago='TRANSFERENCIA',  # Valor default; expandir si necesario
+            tipo_pago='PARCIAL',
+            payment_status='pending',
+            additional_info=request.data.get('notes', ''),
+        )
+
+        # EventLog
+        EventLog.objects.create(
+            event_type='payment.created',
+            aggregate_type='EXPEDIENTE',
+            aggregate_id=expediente.expediente_id,
+            expediente=expediente,
+            action_source='register_payment_ui',
+            user=request.user,
+            occurred_at=timezone.now(),
+            emitted_by='ui',
+            correlation_id=uuid.uuid4(),
+            payload={
+                'pago_id': str(pago.pk),
+                'amount': str(amount),
+            },
+        )
+
+        from apps.expedientes.serializers import PagoSerializer
+        return Response(PagoSerializer(pago).data, status=status.HTTP_201_CREATED)
+
+    # GET logic
     from apps.expedientes.serializers import PagoSerializer
     pagos = ExpedientePago.objects.filter(expediente=expediente).order_by('-payment_date', '-created_at')
     serializer = PagoSerializer(pagos, many=True)

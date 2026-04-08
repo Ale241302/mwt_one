@@ -277,7 +277,7 @@ export default function PagosSection({ expedienteId, isCeo = false, onCreditRefr
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-1.5 text-xs bg-[var(--color-navy)] text-white rounded-lg px-3 py-1.5 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-1.5 text-xs bg-red-600 text-white rounded-lg px-3 py-1.5 hover:bg-red-700 transition-colors shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" /> Registrar pago
           </button>
