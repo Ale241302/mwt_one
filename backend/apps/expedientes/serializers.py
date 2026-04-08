@@ -138,9 +138,11 @@ class BundleSerializer(serializers.ModelSerializer):
             if p.amount_paid
         ) or Decimal('0.00')
         
+        # total_released already uses obj.pagos in the previous lines
+        
         # total_value logic matches services/credit.py
         total_lines = sum(
-            (line.unit_price * line.quantity)
+            (line.unit_price or Decimal('0.00')) * (line.quantity or 0)
             for line in obj.product_lines.all()
         ) or Decimal('0.00')
         expediente_total = getattr(obj, 'total_value', None) or total_lines
