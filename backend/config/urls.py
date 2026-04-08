@@ -5,7 +5,8 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from core.views_logger import FrontendLoggerView
-from apps.expedientes.views import FinancialDashboardView
+# S25 FIX: import desde views_financial para evitar conflicto views/ vs views.py
+from apps.expedientes.views_financial import FinancialDashboardView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -40,7 +41,7 @@ urlpatterns = [
     path('api/logs/', include(([
         path('', FrontendLoggerView.as_view()),
     ], 'logs'))),
-    # FIX: Dashboard endpoints directamente en /api/ui/dashboard/ (el frontend los llama aqui)
+    # FIX: Dashboard endpoints directamente en /api/ui/dashboard/
     path('api/ui/dashboard/financial/', FinancialDashboardView.as_view(), name='ui-dashboard-financial'),
     path('api/ui/dashboard/', FinancialDashboardView.as_view(), name='ui-dashboard'),
     # S21: Activity Feed endpoints
