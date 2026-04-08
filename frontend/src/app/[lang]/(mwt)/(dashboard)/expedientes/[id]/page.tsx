@@ -4,6 +4,9 @@
  * S19-12 — Barrido hex: todos los colores reemplazados por CSS vars.
  * S21    — isAdmin desde bundle.is_admin (is_superuser Django) → panel admin.
  * fix    — guard expedienteId en ArtifactModal; botones Costos/Pagos sin disabled.
+ * FIX-2026-04-08 — expedienteId con triple fallback: expediente.id ?? expediente.expediente_id ?? params.id
+ *                  El backend expone 'expediente_id' pero page.tsx buscaba 'id'.
+ *                  Ahora serializers_ui.py también agrega 'id' como alias (fix backend).
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -31,7 +34,10 @@ import CreateProformaModal from "@/components/expediente/CreateProformaModal";
 
 interface ExpedienteBundle {
   expediente: {
+    /** Alias de expediente_id — expuesto desde serializers_ui.py FIX-2026-04-08 */
     id: string;
+    /** UUID raw del expediente — campo canónico del modelo Django */
+    expediente_id?: string;
     custom_ref: string;
     status: string;
     brand_name: string;
@@ -169,8 +175,15 @@ export default function ExpedienteDetailPage() {
   }
 
   const { expediente } = bundle;
-  // expedienteId: siempre string válido aquí — el guard if(!bundle) de arriba lo garantiza
-  const expedienteId: string = expediente.id;
+
+  /**
+   * FIX-2026-04-08: Triple fallback para garantizar que expedienteId NUNCA sea vacío.
+   * Orden de prioridad:
+   *   1. expediente.id          — alias agregado por serializers_ui.py (fix backend)
+   *   2. expediente.expediente_id — campo UUID canónico del modelo Django
+   *   3. id (params.id)         — UUID de la URL — siempre disponible como último recurso
+   */
+  const expedienteId: string = expediente.id || expediente.expediente_id || id || '';
 
   const isAdmin = bundle.is_admin === true;
   const creditCls = CREDIT_BAND_CLASSES[bundle.credit_clock?.band ?? "MINT"];
