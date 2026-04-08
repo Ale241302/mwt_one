@@ -36,24 +36,24 @@ const COVERAGE_CONFIG: Record<
 > = {
   none: {
     label: "Sin pagos liberados",
-    barColor: "bg-gray-200",
+    barColor: "bg-slate-200",
     icon: <Shield className="w-4 h-4" />,
-    textColor: "text-gray-500",
-    bgColor: "bg-gray-50",
+    textColor: "text-slate-500",
+    bgColor: "bg-slate-50/50",
   },
   partial: {
     label: "Cobertura parcial",
     barColor: "bg-amber-400",
     icon: <ShieldAlert className="w-4 h-4" />,
     textColor: "text-amber-700",
-    bgColor: "bg-amber-50",
+    bgColor: "bg-amber-50/50",
   },
   complete: {
     label: "Cobertura completa",
     barColor: "bg-emerald-500",
     icon: <ShieldCheck className="w-4 h-4" />,
     textColor: "text-emerald-700",
-    bgColor: "bg-emerald-50",
+    bgColor: "bg-emerald-50/50",
   },
 };
 
@@ -112,10 +112,10 @@ export default function CreditBar({
       </div>
 
       {/* Progress bar */}
-      <div className="h-3 bg-white/60 rounded-full overflow-hidden border border-[var(--color-border)]">
+      <div className="h-3 bg-white/40 rounded-full overflow-hidden border border-[var(--color-border)]/50">
         <div
           className={cn(
-            "h-full rounded-full transition-all duration-700 ease-out",
+            "h-full rounded-full transition-all duration-700 ease-out shadow-sm",
             cfg.barColor
           )}
           style={{ width: `${pct}%` }}

@@ -2,8 +2,9 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from apps.expedientes.models import Expediente
+from apps.expedientes.models import Expediente, ExpedientePago
 from apps.users.models import UserRole
+from apps.expedientes.serializers import PagoClienteSerializer
 from .serializers import ExpedientePortalSerializer
 
 class PortalExpedienteViewSet(viewsets.ReadOnlyModelViewSet):
@@ -36,6 +37,19 @@ class PortalExpedienteViewSet(viewsets.ReadOnlyModelViewSet):
         
         artifacts = ArtifactInstance.objects.filter(expediente=expediente)
         serializer = ArtifactPortalSerializer(artifacts, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def pagos(self, request, pk=None):
+        """
+        S25-13 FIX: GET /api/portal/expedientes/{id}/pagos/
+        Retorna pagos con campos restringidos para el portal del cliente.
+        """
+        expediente = self.get_object()
+        pagos = ExpedientePago.objects.filter(
+            expediente=expediente
+        ).order_by('-payment_date', '-created_at')
+        serializer = PagoClienteSerializer(pagos, many=True)
         return Response(serializer.data)
 
 
