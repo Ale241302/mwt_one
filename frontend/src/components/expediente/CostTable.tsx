@@ -24,6 +24,8 @@ export default function CostTable({ expedienteId }: CostTableProps) {
   const [internalView, setInternalView] = useState(true);
 
   const fetchCosts = useCallback(async () => {
+    // Guard: no hacer fetch si el id no está disponible aún
+    if (!expedienteId) return;
     setLoading(true);
     setError(null);
     try {
