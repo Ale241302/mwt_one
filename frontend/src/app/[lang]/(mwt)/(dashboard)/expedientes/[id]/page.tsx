@@ -4,11 +4,11 @@
  * S19-12 — Barrido hex: todos los colores reemplazados por CSS vars.
  * S21    — isAdmin desde bundle.is_admin (is_superuser Django) → panel admin.
  * fix    — guard expedienteId en ArtifactModal; botones Costos/Pagos sin disabled.
- * FIX-2026-04-08 — expedienteId con triple fallback: expediente.id ?? expediente.expediente_id ?? params.id
- *                  El backend expone 'expediente_id' pero page.tsx buscaba 'id'.
- *                  Ahora serializers_ui.py también agrega 'id' como alias (fix backend).
- * S25 WIRING — conecta PagosSection, CreditBar (S25-10), DeferredPricePanel,
- *              FamilyBanner y PortalPagosTab al detalle del expediente.
+ * FIX-2026-04-08  — expedienteId con triple fallback.
+ * S25 WIRING      — conecta PagosSection, CreditBar (S25-10), DeferredPricePanel,
+ *                   FamilyBanner y PortalPagosTab al detalle del expediente.
+ * FIX-2026-04-08b — CostTable recibe costs desde el bundle (no fetch duplicado);
+ *                   CreditBar recibe credit_snapshot del bundle (fix $0 bug).
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -45,11 +45,19 @@ interface ExpedienteRef {
   custom_ref?: string;
 }
 
+interface CostLine {
+  id: string;
+  cost_type: string;
+  description: string;
+  amount: number;
+  currency: string;
+  phase: string;
+  visible_to_client: boolean;
+}
+
 interface ExpedienteBundle {
   expediente: {
-    /** Alias de expediente_id — expuesto desde serializers_ui.py FIX-2026-04-08 */
     id: string;
-    /** UUID raw del expediente — campo canónico del modelo Django */
     expediente_id?: string;
     custom_ref: string;
     status: string;
@@ -65,10 +73,8 @@ interface ExpedienteBundle {
     block_reason: string;
     total_cost: number;
     artifact_count: number;
-    // ── S25-02 deferred fields ──
     deferred_total_price?: number | null;
     deferred_visible?: boolean;
-    // ── S25-02 parent/child fields ──
     parent_expediente?: ExpedienteRef | null;
     child_expedientes?: ExpedienteRef[];
     is_inverted_child?: boolean;
@@ -108,17 +114,20 @@ interface ExpedienteBundle {
     started_at: string | null;
     is_ignored: boolean;
   };
-  // ── S25-01 credit snapshot ──
+  // FIX-2026-04-08b: credit_snapshot es campo top-level del bundle
   credit_snapshot?: {
     payment_coverage?: "none" | "partial" | "complete";
     coverage_pct?: number;
     total_released?: number;
+    total_pending?: number;
+    total_rejected?: number;
+    expediente_total?: number;
     credit_released?: boolean;
   };
-  costs: any[];
+  // FIX-2026-04-08b: costs tipados con visible_to_client (bool)
+  costs: CostLine[];
   payments: any[];
   documents: any[];
-  /** Viene del backend: True si el usuario autenticado es is_superuser */
   is_admin?: boolean;
 }
 
@@ -202,10 +211,6 @@ export default function ExpedienteDetailPage() {
   }
 
   const { expediente } = bundle;
-
-  /**
-   * FIX-2026-04-08: Triple fallback para garantizar que expedienteId NUNCA sea vacío.
-   */
   const expedienteId: string = expediente.id || expediente.expediente_id || id || '';
 
   const isAdmin = bundle.is_admin === true;
@@ -247,22 +252,17 @@ export default function ExpedienteDetailPage() {
 
     if (currentState === "REGISTRO") {
       const orphanLines = (bundle.product_lines || []).filter((l: any) => l.proforma_id === null);
-      if (orphanLines.length > 0) {
-        errors.push(`${orphanLines.length} línea(s) sin proforma`);
-      }
+      if (orphanLines.length > 0) errors.push(`${orphanLines.length} línea(s) sin proforma`);
 
       const proformas = (bundle.artifacts || []).filter(
         a => a.artifact_type === 'ART-02' && a.status?.toUpperCase() === 'COMPLETED'
       );
       const noMode = proformas.filter(p => !p.payload?.mode);
-      if (noMode.length > 0) {
-        errors.push(`${noMode.length} proforma(s) sin modo`);
-      }
+      if (noMode.length > 0) errors.push(`${noMode.length} proforma(s) sin modo`);
     }
 
     const gateCommand = STATE_TO_ADVANCE_COMMAND[currentState];
     const canAdvance = errors.length === 0 && !!gateCommand && hasAction(gateCommand);
-
     return { canAdvance, errors };
   };
 
@@ -270,14 +270,14 @@ export default function ExpedienteDetailPage() {
   const hasArt06 = bundle.artifacts.some(a => a.artifact_type === 'ART-06' && a.status?.toUpperCase() === 'COMPLETED');
   const showC11B = currentState === 'DESPACHO' && hasArt06 && hasAction('C11B');
 
-  // ── S25: credit_snapshot helpers ──────────────────────────────────────────
+  // ── S25: credit_snapshot desde bundle (FIX-2026-04-08b) ──────────────────
   const snap = bundle.credit_snapshot;
   const paymentCoverage = snap?.payment_coverage ?? "none";
-  const coveragePct = snap?.coverage_pct ?? 0;
-  const totalReleased = snap?.total_released ?? 0;
-  const creditReleased = snap?.credit_released ?? false;
+  const coveragePct    = snap?.coverage_pct     ?? 0;
+  const totalReleased  = snap?.total_released   ?? 0;
+  const creditReleased = snap?.credit_released  ?? false;
 
-  // ── S25: portal meta for PortalPagosTab ───────────────────────────────────
+  // ── S25: portal meta para PortalPagosTab ─────────────────────────────────
   const portalMeta = {
     expediente_id: expedienteId,
     payment_coverage: paymentCoverage as "none" | "partial" | "complete",
@@ -298,7 +298,9 @@ export default function ExpedienteDetailPage() {
           </Link>
           <div>
             <div className="flex items-center gap-3 mb-1.5">
-              <h1 className="page-title leading-none">Expediente <span className="font-mono text-[var(--interactive)]">{expediente.custom_ref}</span></h1>
+              <h1 className="page-title leading-none">
+                Expediente <span className="font-mono text-[var(--interactive)]">{expediente.custom_ref}</span>
+              </h1>
               <span className={cn(
                 "badge text-xs font-semibold px-2.5 py-0.5",
                 STATE_BADGE_CLASSES[expediente.status] ?? "bg-[var(--bg)] text-[var(--text-secondary)]"
@@ -357,7 +359,11 @@ export default function ExpedienteDetailPage() {
             </button>
           )}
           {hasAction("C18") && expediente.is_blocked && (
-            <button className="btn btn-sm" style={{ color: "var(--success)", borderColor: "var(--success)", background: "transparent", border: "1px solid" }} onClick={() => setActiveModal({ commandKey: "C18" })}>
+            <button
+              className="btn btn-sm"
+              style={{ color: "var(--success)", borderColor: "var(--success)", background: "transparent", border: "1px solid" }}
+              onClick={() => setActiveModal({ commandKey: "C18" })}
+            >
               <Lock size={14} /> Desbloquear
             </button>
           )}
@@ -366,7 +372,7 @@ export default function ExpedienteDetailPage() {
             className="btn btn-sm btn-secondary"
             onClick={() => setActiveModal({ commandKey: "C15" })}
           >
-            Costos
+            + Costo
           </button>
 
           {hasAction("C16") && (
@@ -471,7 +477,6 @@ export default function ExpedienteDetailPage() {
 
       {/* ═══════════════════════════════════════════════════════════════════════
           VISTA CLIENTE (S25-13 — PortalPagosTab)
-          Toggle "Cliente" en el top bar activa esta vista.
       ════════════════════════════════════════════════════════════════════════ */}
       {viewMode === 'client' && (
         <div className="card p-5">
@@ -529,7 +534,7 @@ export default function ExpedienteDetailPage() {
               <section className="space-y-6 mb-8">
                 <div className="flex items-center justify-between">
                   <h2 className="heading-sm font-semibold flex items-center gap-2 text-[var(--interactive)]">
-                     <Package size={18} /> Proformas y Líneas
+                    <Package size={18} /> Proformas y Líneas
                   </h2>
                   {currentState === "REGISTRO" && hasAction("C3") && (
                     <button
@@ -544,7 +549,6 @@ export default function ExpedienteDetailPage() {
                 {(() => {
                   const proformas = (bundle.artifacts || []).filter(a => a.artifact_type === 'ART-02');
                   const orphanLines = (bundle.product_lines || []).filter(l => l.proforma_id === null);
-
                   return (
                     <>
                       {proformas.map(pf => (
@@ -562,7 +566,6 @@ export default function ExpedienteDetailPage() {
                           isEditable={currentState === 'REGISTRO'}
                         />
                       ))}
-
                       {orphanLines.length > 0 && (
                         <div className="card border-dashed border-2 border-red-200 bg-red-50/10 overflow-hidden">
                           <div className="px-5 py-4 flex items-center justify-between bg-red-50/20">
@@ -620,7 +623,13 @@ export default function ExpedienteDetailPage() {
               isAdmin={isAdmin}
             />
 
-            <CostTable expedienteId={expedienteId} />
+            {/* FIX-2026-04-08b: CostTable recibe costs del bundle (no fetch duplicado).
+                Después de registrar un costo, onRefresh recarga el bundle completo. */}
+            <CostTable
+              expedienteId={expedienteId}
+              costs={bundle.costs}
+              onRefresh={() => fetchBundle(true)}
+            />
 
             {/* ── S25-09: PagosSection ── */}
             <div className="card p-5">
@@ -632,9 +641,8 @@ export default function ExpedienteDetailPage() {
             </div>
           </div>
 
-          {/* ── Right column: events + S25-11 DeferredPricePanel ── */}
+          {/* ── Right column: DeferredPricePanel + events ── */}
           <div className="space-y-6">
-            {/* S25-11: DeferredPricePanel — solo CEO */}
             {isAdmin && (
               <DeferredPricePanel
                 expedienteId={expedienteId}

@@ -4,6 +4,10 @@ S20-06: ExpedienteBundleSerializer ahora incluye artifact_policy calculada diná
 FIX-2026-03-31: get_product_lines envuelto en try/except para no romper el bundle.
 FIX-2026-04-08: get_expediente ahora expone 'id' (alias de expediente_id) para que
                 page.tsx pueda usar expediente.id en ArtifactModal (C21, C15, etc.)
+FIX-2026-04-08b: get_credit_snapshot computa credit_snapshot desde pagos (S25-05)
+                 y lo expone como campo top-level del bundle.
+                 CostLineSummarySerializer usa visible_to_client (bool) en lugar de
+                 visibility (str) para que el toggle Vista Cliente funcione.
 """
 import datetime
 from decimal import Decimal
@@ -69,14 +73,27 @@ class ArtifactSummarySerializer(serializers.Serializer):
 
 
 class CostLineSummarySerializer(serializers.Serializer):
+    """
+    FIX-2026-04-08b: visible_to_client ahora es bool (antes 'visibility' str).
+    CostTable.tsx filtra por visible_to_client para el toggle Vista Cliente.
+    """
     id = serializers.UUIDField(source='cost_line_id')
     cost_type = serializers.CharField()
     amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     currency = serializers.CharField()
     phase = serializers.CharField()
     description = serializers.CharField()
-    visibility = serializers.CharField()   # Sprint 4 S4-02
+    visible_to_client = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField()
+
+    def get_visible_to_client(self, obj):
+        """Unifica campo 'visibility' (str) con bool esperado por el frontend."""
+        vis = getattr(obj, 'visibility', None)
+        if isinstance(vis, bool):
+            return vis
+        if isinstance(vis, str):
+            return vis.lower() in ('public', 'client', 'true', '1', 'visible')
+        return False
 
 
 class LogisticsOptionSerializer(serializers.Serializer):
@@ -95,12 +112,23 @@ class LogisticsOptionSerializer(serializers.Serializer):
 
 
 class PaymentLineSummarySerializer(serializers.Serializer):
+    """
+    FIX-2026-04-08b: expone payment_status y campos S25-01 para que
+    PagosSection y CreditBar puedan consumir los pagos del bundle.
+    """
     payment_line_id = serializers.UUIDField()
     amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     currency = serializers.CharField()
     method = serializers.CharField()
     reference = serializers.CharField()
     created_at = serializers.DateTimeField()
+    # S25-01 campos del ciclo de vida del pago
+    payment_status = serializers.CharField(default='pending')
+    verified_at = serializers.DateTimeField(allow_null=True, required=False)
+    verified_by = serializers.CharField(allow_null=True, required=False)
+    credit_released_at = serializers.DateTimeField(allow_null=True, required=False)
+    credit_released_by = serializers.CharField(allow_null=True, required=False)
+    rejection_reason = serializers.CharField(allow_null=True, required=False)
 
 
 class DocumentSummarySerializer(serializers.Serializer):
@@ -115,8 +143,8 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     Complete bundle for Expediente Detail page <200ms.
     S20-06: agrega artifact_policy calculada dinámicamente por brand + proformas.
     FIX-2026-03-31: get_product_lines protegido con try/except.
-    FIX-2026-04-08: get_expediente expone 'id' como alias de expediente_id para
-                    compatibilidad con page.tsx (expediente.id en ArtifactModal).
+    FIX-2026-04-08: get_expediente expone 'id' como alias de expediente_id.
+    FIX-2026-04-08b: credit_snapshot como campo top-level del bundle (Bug CreditBar $0).
     """
     expediente = serializers.SerializerMethodField()
     events = serializers.SerializerMethodField()
@@ -129,21 +157,20 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     # S20-06: policy de artefactos calculada dinámicamente
     artifact_policy = serializers.SerializerMethodField()
     product_lines = serializers.SerializerMethodField()
+    # FIX-2026-04-08b: credit_snapshot top-level (antes solo era campo del serializer S25)
+    credit_snapshot = serializers.SerializerMethodField()
+    is_admin = serializers.SerializerMethodField()
 
     def get_expediente(self, obj):
         """
         S25-08: Unifies with BundleSerializer to include credit snapshot,
         deferred pricing, and genealogy fields in the UI detail bundle.
-        FIX-2026-04-08: Agrega 'id' como alias de expediente_id para que
-        page.tsx pueda leer expediente.id correctamente en ArtifactModal.
+        FIX-2026-04-08: Agrega 'id' como alias de expediente_id.
         """
         from .serializers import BundleSerializer
-        # Base with S25 fields
         data = BundleSerializer(obj).data
 
         # FIX: asegura que 'id' siempre esté presente como string UUID
-        # page.tsx hace: const expedienteId: string = expediente.id
-        # BundleSerializer expone 'expediente_id' pero NO 'id' — este alias lo resuelve.
         data['id'] = str(obj.expediente_id)
 
         # Merge UI-specific metadata
@@ -168,14 +195,12 @@ class ExpedienteBundleSerializer(serializers.Serializer):
 
     def get_product_lines(self, obj):
         """
-        FIX-2026-03-31: Protegido con try/except para no romper el bundle
-        si ProductLineSerializer falla (import circular u otro error).
+        FIX-2026-03-31: Protegido con try/except para no romper el bundle.
         """
         try:
             from apps.expedientes.serializers import ProductLineSerializer
             return ProductLineSerializer(obj.product_lines.all(), many=True).data
         except Exception:
-            # Fallback: retorna lista vacía para no romper el bundle
             return []
 
     def get_costs(self, obj):
@@ -211,13 +236,80 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     def get_artifact_policy(self, obj):
         """
         S20-06: Retorna la política de artefactos resuelta dinámicamente.
-        - Sin proformas completadas → solo estado REGISTRO
-        - Con proformas → policy completa por estado mergeada por mode
-        - Siempre JSON-serializable (listas ordenadas, nunca sets)
         """
         from apps.expedientes.services.artifact_policy import resolve_artifact_policy
         try:
             return resolve_artifact_policy(obj)
         except Exception:
-            # Nunca romper el bundle por un fallo en la policy
             return {'REGISTRO': {'required': ['ART-01'], 'optional': [], 'gate_for_advance': ['ART-01']}}
+
+    def get_credit_snapshot(self, obj):
+        """
+        FIX-2026-04-08b: Computa credit_snapshot directamente desde pagos.
+        Antes nunca llegaba al frontend — la CreditBar siempre mostraba $0.
+
+        Usa compute_coverage() de services/credit.py (SSOT S25-05):
+        solo pagos con payment_status='credit_released' cuentan para total_released.
+        """
+        try:
+            from decimal import Decimal
+            from apps.expedientes.services.credit import compute_coverage
+
+            # Solo pagos credit_released cuentan (S25-05)
+            total_released = sum(
+                p.amount_paid or Decimal('0.00')
+                for p in obj.payment_lines.filter(payment_status='credit_released')
+            ) or Decimal('0.00')
+
+            total_pending = sum(
+                p.amount_paid or Decimal('0.00')
+                for p in obj.payment_lines.filter(payment_status__in=['pending', 'verified'])
+            ) or Decimal('0.00')
+
+            total_rejected = sum(
+                p.amount_paid or Decimal('0.00')
+                for p in obj.payment_lines.filter(payment_status='rejected')
+            ) or Decimal('0.00')
+
+            # total del expediente: sum de líneas de producto
+            expediente_total = sum(
+                (line.unit_price or Decimal('0.00')) * (line.quantity or 0)
+                for line in obj.product_lines.all()
+            ) or Decimal('0.00')
+
+            # Si el total de líneas es 0, intentar total_cost del modelo
+            if expediente_total <= 0:
+                expediente_total = getattr(obj, 'total_cost', Decimal('0.00')) or Decimal('0.00')
+
+            payment_coverage, coverage_pct = compute_coverage(total_released, expediente_total)
+
+            credit_released = getattr(obj, 'credit_released', False)
+
+            return {
+                'payment_coverage': payment_coverage,
+                'coverage_pct': float(coverage_pct),
+                'total_released': float(total_released),
+                'total_pending': float(total_pending),
+                'total_rejected': float(total_rejected),
+                'expediente_total': float(expediente_total),
+                'credit_released': credit_released,
+            }
+        except Exception as e:
+            # Nunca romper el bundle
+            return {
+                'payment_coverage': 'none',
+                'coverage_pct': 0.0,
+                'total_released': 0.0,
+                'total_pending': 0.0,
+                'total_rejected': 0.0,
+                'expediente_total': 0.0,
+                'credit_released': False,
+                '_error': str(e),
+            }
+
+    def get_is_admin(self, obj):
+        """Expone is_admin desde el contexto del request (superuser)."""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            return request.user.is_superuser
+        return getattr(obj, '_is_admin', False)

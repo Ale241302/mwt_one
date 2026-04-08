@@ -10,39 +10,56 @@ interface Cost {
   amount: number;
   currency: string;
   phase: string;
+  // FIX-2026-04-08b: campo unificado (antes 'visibility' string en serializer)
   visible_to_client: boolean;
 }
 
 interface CostTableProps {
   expedienteId: string;
+  /**
+   * FIX-2026-04-08b: Si el padre pasa `costs` desde el bundle, usamos esos
+   * directamente y evitamos el fetch duplicado. Solo hacemos fetch propio si
+   * costs === undefined (modo standalone).
+   */
+  costs?: Cost[];
+  /** Llamar para refrescar el bundle completo después de registrar un costo */
+  onRefresh?: () => void;
 }
 
-export default function CostTable({ expedienteId }: CostTableProps) {
-  const [costs, setCosts] = useState<Cost[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function CostTable({ expedienteId, costs: propCosts, onRefresh }: CostTableProps) {
+  const [localCosts, setLocalCosts] = useState<Cost[]>([]);
+  const [loading, setLoading] = useState(propCosts === undefined);
   const [error, setError] = useState<string | null>(null);
   const [internalView, setInternalView] = useState(true);
 
+  // Solo fetcheamos si no nos pasaron costs desde el bundle
   const fetchCosts = useCallback(async () => {
-    // Guard: no hacer fetch si el id no está disponible aún
+    if (propCosts !== undefined) return; // usamos prop, no fetch
     if (!expedienteId) return;
     setLoading(true);
     setError(null);
     try {
       const res = await api.get(`/expedientes/${expedienteId}/costs/`);
-      setCosts(res.data);
+      setLocalCosts(Array.isArray(res.data) ? res.data : []);
     } catch (e: any) {
       setError(e.message || "Error cargando costos");
     } finally {
       setLoading(false);
     }
-  }, [expedienteId]);
+  }, [expedienteId, propCosts]);
 
   useEffect(() => {
-    fetchCosts();
-  }, [fetchCosts]);
+    if (propCosts === undefined) {
+      fetchCosts();
+    }
+  }, [fetchCosts, propCosts]);
 
-  const filteredCosts = internalView ? (Array.isArray(costs) ? costs : []) : (Array.isArray(costs) ? costs : []).filter(c => c.visible_to_client);
+  // Fuente de datos: prop (bundle) tiene prioridad sobre fetch local
+  const allCosts: Cost[] = propCosts !== undefined ? propCosts : localCosts;
+
+  const filteredCosts = internalView
+    ? allCosts
+    : allCosts.filter(c => c.visible_to_client);
 
   if (loading) {
     return (
@@ -77,10 +94,12 @@ export default function CostTable({ expedienteId }: CostTableProps) {
           )}
         </button>
       </div>
-      
-      {(filteredCosts || []).length === 0 ? (
+
+      {filteredCosts.length === 0 ? (
         <div className="p-6 text-center text-text-tertiary text-sm">
-          No hay costos registrados.
+          {internalView
+            ? "No hay costos registrados."
+            : "No hay costos visibles al cliente."}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -97,7 +116,7 @@ export default function CostTable({ expedienteId }: CostTableProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-divider text-sm text-navy">
-              {(Array.isArray(filteredCosts) ? filteredCosts : []).map(cost => (
+              {filteredCosts.map(cost => (
                 <tr key={cost.id} className="hover:bg-bg/50 transition-colors">
                   <td className="px-5 py-3 font-medium whitespace-nowrap">{cost.cost_type}</td>
                   <td className="px-5 py-3">{cost.description || "—"}</td>
@@ -105,7 +124,10 @@ export default function CostTable({ expedienteId }: CostTableProps) {
                     <span className="badge bg-slate-100 text-slate-600">{cost.phase}</span>
                   </td>
                   <td className="px-5 py-3 text-right font-mono">
-                    {Number(cost.amount).toLocaleString("es-CO", { style: "currency", currency: cost.currency || "USD" })}
+                    {Number(cost.amount).toLocaleString("es-CO", {
+                      style: "currency",
+                      currency: cost.currency || "USD",
+                    })}
                   </td>
                   {internalView && (
                     <td className="px-5 py-3 text-center">
