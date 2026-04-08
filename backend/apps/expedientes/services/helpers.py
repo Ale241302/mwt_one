@@ -41,7 +41,8 @@ def _get_rule_count(expediente):
     return len(rules)
 
 def _update_payment_status(expediente):
-    total_paid = sum(p.amount for p in expediente.payments.all())
+    # fix: related_name is 'payment_lines', not 'payments'
+    total_paid = sum(p.amount for p in expediente.payment_lines.all())
     # This logic might be simplified later
     if total_paid > 0:
         expediente.payment_status = 'partial'

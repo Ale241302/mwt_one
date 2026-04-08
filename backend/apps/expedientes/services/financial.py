@@ -1,11 +1,19 @@
 from decimal import Decimal
 from django.utils import timezone
 from apps.expedientes.models import PaymentLine, CostLine
+from apps.expedientes.enums_exp import CostLineVisibility
 from .helpers import _update_payment_status
 
 
 def handle_c15(expediente, payload, env=None):
     # Registrar Gasto (Financial)
+    # fix: read visibility from payload; default CLIENT so costs show in portal
+    raw_visibility = payload.get('visibility', CostLineVisibility.CLIENT)
+    # Normalise to uppercase to match enum values (INTERNAL / CLIENT)
+    visibility = str(raw_visibility).upper()
+    if visibility not in (CostLineVisibility.INTERNAL, CostLineVisibility.CLIENT):
+        visibility = CostLineVisibility.CLIENT
+
     cost = CostLine(
         expediente=expediente,
         cost_type=payload.get('cost_type', ''),
@@ -13,6 +21,7 @@ def handle_c15(expediente, payload, env=None):
         currency=payload.get('currency', 'USD'),
         phase=payload.get('phase', ''),
         description=payload.get('description', ''),
+        visibility=visibility,
         cost_category=payload.get('cost_category', 'landed_cost'),
         cost_behavior=payload.get('cost_behavior'),
         base_currency=payload.get('base_currency', 'USD'),

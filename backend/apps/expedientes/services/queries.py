@@ -1,16 +1,18 @@
 from django.db.models import Sum
 from apps.expedientes.models import CostLine
+from apps.expedientes.enums_exp import CostLineVisibility
 
 def get_costs(expediente, view='internal'):
     qs = expediente.cost_lines.all()
     if view == 'client':
-        qs = qs.filter(visibility='client')
+        # fix: was filtering by 'client' (lowercase) — enum value is 'CLIENT'
+        qs = qs.filter(visibility=CostLineVisibility.CLIENT)
     return qs
 
 def get_costs_summary(expediente):
     # Sum internal vs client costs
     internal = expediente.cost_lines.aggregate(total=Sum('amount'))['total'] or 0
-    client = expediente.cost_lines.filter(visibility='client').aggregate(total=Sum('amount'))['total'] or 0
+    client = expediente.cost_lines.filter(visibility=CostLineVisibility.CLIENT).aggregate(total=Sum('amount'))['total'] or 0
     return {
         'internal_total': float(internal),
         'client_total': float(client),
