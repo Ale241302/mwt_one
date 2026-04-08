@@ -18,6 +18,8 @@ def compute_coverage(total_paid: Decimal, expediente_total) -> tuple:
     """
     # PASO 1: Early return si no hay denominador válido
     if expediente_total is None or expediente_total <= 0:
+        if total_paid > 0:
+            return 'complete', Decimal('100.00')
         return 'none', Decimal('0.00')
 
     # PASO 2: Calcular porcentaje con ROUND_HALF_UP (fix N1 R6)
