@@ -434,9 +434,16 @@ class FinancialDashboardView(APIView):
             payload = getattr(art, 'payload', {}) or {}
             total_invoiced += _safe_decimal(payload.get('total_client_view'))
 
-        total_paid = PaymentLine.objects.filter(
+        total_paid_legacy = PaymentLine.objects.filter(
             expediente__in=active_expedientes
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+        total_paid_s25 = ExpedientePago.objects.filter(
+            expediente__in=active_expedientes,
+            payment_status='credit_released'
+        ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
+
+        total_paid = total_paid_legacy + total_paid_s25
 
         total_receivables = total_invoiced - total_paid
         margin = total_invoiced - total_cost
@@ -458,11 +465,18 @@ class FinancialDashboardView(APIView):
             for art in brand_arts:
                 payload = getattr(art, 'payload', {}) or {}
                 brand_invoiced += _safe_decimal(payload.get('total_client_view'))
+            brand_paid_s25 = ExpedientePago.objects.filter(
+                expediente__brand=b['brand'],
+                expediente__in=active_expedientes,
+                payment_status='credit_released'
+            ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
+
             brand_breakdown.append({
                 'brand': b['brand'] or 'Sin marca',
                 'count': b['count'],
                 'total_cost': float(b['total_cost'] or 0),
                 'total_invoiced': float(brand_invoiced),
+                'total_paid': float(brand_paid_s25), # Simplificado para el breakdown
             })
 
         return Response({
@@ -548,9 +562,8 @@ class FinancialSummaryView(APIView):
 
         total_costs = costs_qs.aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
-        # Pagos
-        payments_qs = exp.payment_lines.all()
-        payments_data = [
+        # Pagos (Unificados: Legacy + S25)
+        payments_legacy = [
             {
                 'payment_id': str(p.pk),
                 'amount': float(p.amount),
@@ -558,10 +571,29 @@ class FinancialSummaryView(APIView):
                 'method': p.method,
                 'reference': p.reference,
                 'registered_at': p.registered_at,
+                'status': 'legacy',
             }
-            for p in payments_qs
+            for p in exp.payment_lines.all()
         ]
-        total_paid = payments_qs.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+        payments_s25 = [
+            {
+                'payment_id': str(p.pk),
+                'amount': float(p.amount_paid),
+                'currency': 'USD', # Default
+                'method': p.metodo_pago,
+                'reference': 'S25-PAY',
+                'registered_at': p.created_at,
+                'status': p.payment_status,
+            }
+            for p in exp.pagos.all()
+        ]
+
+        payments_data = payments_legacy + payments_s25
+
+        total_paid_legacy = exp.payment_lines.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        total_paid_s25 = exp.pagos.filter(payment_status='credit_released').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
+        total_paid = total_paid_legacy + total_paid_s25
 
         # Factura ART-09
         invoice = None
