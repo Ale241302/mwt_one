@@ -12,36 +12,48 @@ interface ArtifactModalProps {
   readOnly?: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  /** Si es admin, muestra el botón "Nuevo registro" en modo readOnly */
   isAdmin?: boolean;
-  /** Callback para abrir un nuevo formulario vacío desde el readOnly */
   onNewRecord?: () => void;
-  /** Lista completa de todos los registros previos de este mismo tipo */
   allArtifacts?: any[];
 }
 
 const COMMAND_META: Record<string, { label: string; endpoint: string; icon: React.ReactNode; color: string; bgClass: string; textClass: string }> = {
-  C3: { label: "Registrar OC", endpoint: "register-oc", icon: <FileText size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
-  C2: { label: "Registrar Proforma", endpoint: "register-proforma", icon: <FileText size={18} />, color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
-  C4: { label: "Decidir Modo", endpoint: "decide-mode", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
-  C5: { label: "Confirmar SAP", endpoint: "confirm-sap", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
-  C6: { label: "Confirmar Producción", endpoint: "confirm-production", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C7: { label: "Registrar Embarque", endpoint: "register-shipment", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
-  C8: { label: "Cotización Flete", endpoint: "register-freight-quote", icon: <DollarSign size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
-  C9: { label: "Registrar Aduana", endpoint: "register-customs", icon: <FileText size={18} />, color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
-  C10: { label: "Aprobar Despacho", endpoint: "approve-dispatch", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C11: { label: "Confirmar Salida (MWT)", endpoint: "confirm-departure-mwt", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
-  C11B: { label: "Confirmar Salida (China)", endpoint: "confirm-departure-china", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
-  C12: { label: "Confirmar Llegada", endpoint: "confirm-arrival", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C13: { label: "Emitir Factura MWT", endpoint: "issue-invoice", icon: <Receipt size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C14: { label: "Cerrar Expediente", endpoint: "close", icon: <Lock size={18} />, color: "var(--brand-primary)", bgClass: "bg-slate-600 border-slate-600", textClass: "text-slate-600" },
-  C15: { label: "Registrar Costo", endpoint: "register-cost", icon: <DollarSign size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
-  C16: { label: "Cancelar Expediente", endpoint: "cancel", icon: <XCircle size={18} />, color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600", textClass: "text-red-600" },
-  C17: { label: "Bloquear Expediente", endpoint: "block", icon: <Lock size={18} />, color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600", textClass: "text-red-600" },
-  C18: { label: "Desbloquear Expediente", endpoint: "unblock", icon: <Unlock size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C21: { label: "Registrar Pago", endpoint: "register-payment", icon: <CreditCard size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C22: { label: "Emitir Factura Comisión", endpoint: "issue-commission-invoice", icon: <Receipt size={18} />, color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
-  C30: { label: "Materializar Logística", endpoint: "materialize-logistics", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
+  C3:  { label: "Registrar OC",              endpoint: "register-oc",             icon: <FileText size={18} />,  color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700",    textClass: "text-blue-700" },
+  C2:  { label: "Registrar Proforma",        endpoint: "register-proforma",       icon: <FileText size={18} />,  color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
+  C4:  { label: "Decidir Modo",              endpoint: "decide-mode",             icon: <Package size={18} />,   color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700",   textClass: "text-amber-700" },
+  C5:  { label: "Confirmar SAP",             endpoint: "confirm-sap",             icon: <Package size={18} />,   color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700",   textClass: "text-amber-700" },
+  C6:  { label: "Confirmar Producción",      endpoint: "confirm-production",      icon: <Package size={18} />,   color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C7:  { label: "Registrar Embarque",        endpoint: "register-shipment",       icon: <Truck size={18} />,     color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700",    textClass: "text-blue-700" },
+  C8:  { label: "Cotización Flete",          endpoint: "register-freight-quote",  icon: <DollarSign size={18} />,color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700",   textClass: "text-amber-700" },
+  C9:  { label: "Registrar Aduana",          endpoint: "register-customs",        icon: <FileText size={18} />,  color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
+  C10: { label: "Aprobar Despacho",          endpoint: "approve-dispatch",        icon: <Truck size={18} />,     color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C11: { label: "Confirmar Salida (MWT)",    endpoint: "confirm-departure-mwt",   icon: <Truck size={18} />,     color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700",    textClass: "text-blue-700" },
+  C11B:{ label: "Confirmar Salida (China)",  endpoint: "confirm-departure-china", icon: <Truck size={18} />,     color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700",    textClass: "text-blue-700" },
+  C12: { label: "Confirmar Llegada",         endpoint: "confirm-arrival",         icon: <Truck size={18} />,     color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C13: { label: "Emitir Factura MWT",        endpoint: "issue-invoice",           icon: <Receipt size={18} />,   color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C14: { label: "Cerrar Expediente",         endpoint: "close",                   icon: <Lock size={18} />,      color: "var(--brand-primary)", bgClass: "bg-slate-600 border-slate-600",  textClass: "text-slate-600" },
+  C15: { label: "Registrar Costo",           endpoint: "register-cost",           icon: <DollarSign size={18} />,color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700",   textClass: "text-amber-700" },
+  C16: { label: "Cancelar Expediente",       endpoint: "cancel",                  icon: <XCircle size={18} />,   color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600",      textClass: "text-red-600" },
+  C17: { label: "Bloquear Expediente",       endpoint: "block",                   icon: <Lock size={18} />,      color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600",      textClass: "text-red-600" },
+  C18: { label: "Desbloquear Expediente",    endpoint: "unblock",                 icon: <Unlock size={18} />,    color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C21: { label: "Registrar Pago",            endpoint: "register-payment",        icon: <CreditCard size={18} />,color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
+  C22: { label: "Emitir Factura Comisión",   endpoint: "issue-commission-invoice",icon: <Receipt size={18} />,   color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
+  C30: { label: "Materializar Logística",    endpoint: "materialize-logistics",   icon: <Package size={18} />,   color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700",   textClass: "text-amber-700" },
+};
+
+/**
+ * Defaults explícitos por comando para todos los campos tipo <select>.
+ * Esto evita que form[key] sea undefined al abrir el modal, lo que causaba
+ * que el backend recibiera strings vacíos violando constraints NOT NULL en la DB.
+ *
+ * FIX-2026-04-08: C21 recibía method="" (null en DB) porque form={} al init.
+ *                 C15 recibía visibility="" y currency="" por el mismo motivo.
+ */
+const COMMAND_DEFAULTS: Record<string, Record<string, string | number | boolean>> = {
+  C4:  { mode: "maritime" },
+  C15: { cost_type: "", amount: 0, currency: "USD", visibility: "internal" },
+  C21: { amount: 0, method: "wire", reference: "", currency: "USD" },
+  C22: { invoice_number: "", commission_amount: 0, commission_pct: 0, notes: "" },
 };
 
 type FormData = Record<string, string | number | boolean>;
@@ -90,14 +102,14 @@ function CommandForm({
         </div>
       </div>
     );
-    case "C5": return <div className="space-y-3">{inp("Número SAP", "sap_number", "text", "SAP-00001")}</div>;
-    case "C6": return <div className="space-y-3">{inp("Notas de producción", "notes")}</div>;
-    case "C7": return <div className="space-y-3">{inp("Número BL", "bl_number", "text", "MSCUXXX")}{inp("Transportista", "carrier")}{inp("Puerto origen", "origin_port")}{inp("Puerto destino", "destination_port")}</div>;
-    case "C8": return <div className="space-y-3">{inp("Monto flete (USD)", "freight_amount", "number", "0")}{inp("Proveedor", "provider")}</div>;
-    case "C9": return <div className="space-y-3">{inp("Agencia aduanal", "customs_agency")}{inp("Número declaración", "declaration_number")}</div>;
+    case "C5":  return <div className="space-y-3">{inp("Número SAP", "sap_number", "text", "SAP-00001")}</div>;
+    case "C6":  return <div className="space-y-3">{inp("Notas de producción", "notes")}</div>;
+    case "C7":  return <div className="space-y-3">{inp("Número BL", "bl_number", "text", "MSCUXXX")}{inp("Transportista", "carrier")}{inp("Puerto origen", "origin_port")}{inp("Puerto destino", "destination_port")}</div>;
+    case "C8":  return <div className="space-y-3">{inp("Monto flete (USD)", "freight_amount", "number", "0")}{inp("Proveedor", "provider")}</div>;
+    case "C9":  return <div className="space-y-3">{inp("Agencia aduanal", "customs_agency")}{inp("Número declaración", "declaration_number")}</div>;
     case "C10": return <div className="space-y-3">{inp("Observaciones", "notes")}</div>;
     case "C11": return <div className="space-y-3">{inp("Fecha salida MWT", "departure_date", "date")}{inp("Notas", "notes")}</div>;
-    case "C11B": return <div className="space-y-3">{inp("Fecha salida China", "departure_date", "date")}{inp("Notas", "notes")}</div>;
+    case "C11B":return <div className="space-y-3">{inp("Fecha salida China", "departure_date", "date")}{inp("Notas", "notes")}</div>;
     case "C12": return <div className="space-y-3">{inp("Fecha llegada", "arrival_date", "date")}{inp("Notas", "notes")}</div>;
     case "C13": return <div className="space-y-3">{inp("Número factura", "invoice_number", "text", "INV-001")}{inp("Monto cliente (USD)", "total_client_view", "number", "0")}</div>;
     case "C14": return <div className="space-y-3">{inp("Razón de cierre", "reason")}</div>;
@@ -108,7 +120,12 @@ function CommandForm({
         {inp("Divisa", "currency", "text", "USD")}
         <div>
           <label className="th-label block mb-1">Visibilidad</label>
-          <select className="input w-full" value={String(form.visibility ?? "internal")} onChange={(e) => set("visibility", e.target.value)} disabled={isReadOnly}>
+          <select
+            className="input w-full"
+            value={String(form.visibility ?? "internal")}
+            onChange={(e) => set("visibility", e.target.value)}
+            disabled={isReadOnly}
+          >
             <option value="internal">Interna</option>
             <option value="client">Cliente</option>
           </select>
@@ -123,7 +140,16 @@ function CommandForm({
         {inp("Monto (USD)", "amount", "number", "0")}
         <div>
           <label className="th-label block mb-1">Método de pago</label>
-          <select className="input w-full" value={String(form.method ?? "wire")} onChange={(e) => set("method", e.target.value)} disabled={isReadOnly}>
+          {/*
+            FIX-2026-04-08: form.method se inicializa con "wire" desde COMMAND_DEFAULTS[C21].
+            Antes era undefined → el <select> mostraba "wire" visualmente pero enviaba "" al POST.
+          */}
+          <select
+            className="input w-full"
+            value={String(form.method ?? "wire")}
+            onChange={(e) => set("method", e.target.value)}
+            disabled={isReadOnly}
+          >
             <option value="wire">Wire transfer</option>
             <option value="check">Cheque</option>
             <option value="cash">Efectivo</option>
@@ -162,12 +188,25 @@ export default function ArtifactModal({
   onNewRecord,
   allArtifacts,
 }: ArtifactModalProps) {
-  // readOnly solo si se pasa explícitamente readOnly=true.
-  // NO inferir readOnly desde artifact — C21/C15 se abren sin artifact y deben ser editables.
   const isReadOnly = readOnlyProp === true;
 
   const [activeTab, setActiveTab] = useState<"form" | "history">("form");
-  const [form, setForm] = useState<FormData>(artifact?.payload || {});
+
+  /**
+   * FIX-2026-04-08: El form se inicializa con los defaults del comando FUSIONADOS
+   * con el payload del artifact (si existe). Esto garantiza que campos tipo <select>
+   * como `method` (C21), `visibility` (C15) y `mode` (C4) siempre tengan un valor
+   * real en el estado antes del primer render, nunca undefined.
+   *
+   * Sin este fix, el <select> mostraba el valor correcto visualmente (via `?? default`)
+   * pero form[key] era undefined → el POST enviaba "" → NOT NULL constraint violada en DB.
+   */
+  const initialForm: FormData = {
+    ...(COMMAND_DEFAULTS[commandKey] ?? {}),
+    ...(artifact?.payload ?? {}),
+  };
+  const [form, setForm] = useState<FormData>(initialForm);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -188,7 +227,7 @@ export default function ArtifactModal({
     setError(null);
     try {
       await api.post(`/expedientes/${expedienteId}/commands/${meta.endpoint}/`, form);
-      setForm({});
+      setForm(COMMAND_DEFAULTS[commandKey] ?? {});
       onSuccess();
       onClose();
     } catch (err: any) {
