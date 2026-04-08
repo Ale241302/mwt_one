@@ -237,7 +237,11 @@ QR_SALT = env.str("QR_SALT", default="default-fallback-salt-do-not-use-in-prod-q
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        # CsrfExemptSessionAuthentication: igual que SessionAuthentication
+        # pero sin enforce_csrf(), para que las API calls con session cookie
+        # no fallen por CSRF token missing. El CSRF middleware de Django
+        # sigue activo para /admin/ y vistas HTML normales.
+        'apps.core.authentication.CsrfExemptSessionAuthentication',
     ],
     # S24-04: Rate limiting — user=60/min, anon=20/min
     'DEFAULT_THROTTLE_CLASSES': [
@@ -281,6 +285,9 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_AGE = 86400  # 24h
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False
+# 'None' es necesario para que el cookie CSRF se envíe en requests
+# cross-origin (Next.js → Django) en HTTPS. Requiere CSRF_COOKIE_SECURE=True.
+CSRF_COOKIE_SAMESITE = 'None'
 
 # --- S24-14: Activar signal blacklist en apps ready ---
 # (Ver apps/knowledge/apps.py — KnowledgeConfig.ready())
