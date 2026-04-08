@@ -3,7 +3,7 @@
  * S10-03 — Detalle Expediente con acordeón de artefactos.
  * S19-12 — Barrido hex: todos los colores reemplazados por CSS vars.
  * S21    — isAdmin desde bundle.is_admin (is_superuser Django) → panel admin.
- * fix    — deshabilitar Pagos/Costos hasta bundle cargado; guard expedienteId.
+ * fix    — guard expedienteId en ArtifactModal; botones Costos/Pagos sin disabled.
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -169,10 +169,9 @@ export default function ExpedienteDetailPage() {
   }
 
   const { expediente } = bundle;
-  // expedienteId nunca es undefined aquí: bundle ya cargó y expediente.id existe
+  // expedienteId: siempre string válido aquí — el guard if(!bundle) de arriba lo garantiza
   const expedienteId: string = expediente.id;
 
-  // is_admin viene del backend (is_superuser del usuario autenticado)
   const isAdmin = bundle.is_admin === true;
   const creditCls = CREDIT_BAND_CLASSES[bundle.credit_clock?.band ?? "MINT"];
   const currentState = expediente.status === "ABIERTO" ? "REGISTRO" : expediente.status;
@@ -260,7 +259,6 @@ export default function ExpedienteDetailPage() {
                   <Lock size={10} /> BLOQUEADO
                 </span>
               )}
-              {/* Badge admin visible */}
               {isAdmin && (
                 <span className="badge text-[10px] bg-amber-100 text-amber-700 border border-amber-300 px-2 py-0.5">
                   👑 ADMIN
@@ -309,21 +307,21 @@ export default function ExpedienteDetailPage() {
               <Lock size={14} /> Desbloquear
             </button>
           )}
-          {/* Fix: botones Costos/Pagos usan expedienteId validado (nunca undefined aquí) */}
+
+          {/* Costos y Pagos: siempre clickeables cuando bundle está cargado */}
           <button
             className="btn btn-sm btn-secondary"
             onClick={() => setActiveModal({ commandKey: "C15" })}
-            disabled={!expedienteId}
           >
             Costos
           </button>
           <button
             className="btn btn-sm btn-secondary"
             onClick={() => setActiveModal({ commandKey: "C21" })}
-            disabled={!expedienteId}
           >
             Pagos
           </button>
+
           {hasAction("C16") && (
             <button className="btn btn-sm btn-danger-outline" onClick={() => setActiveModal({ commandKey: "C16" })}>Cancelar</button>
           )}
@@ -576,7 +574,6 @@ export default function ExpedienteDetailPage() {
                         <p className="text-xs text-[var(--text-secondary)] truncate pr-2" title={ev.emitted_by}>
                           Ref: {ev.emitted_by}
                         </p>
-                        {/* Payload del evento cuando existe */}
                         {ev.payload && Object.keys(ev.payload).length > 0 && (
                           <details className="mt-1">
                             <summary className="text-[10px] text-[var(--text-tertiary)] cursor-pointer hover:text-[var(--text-secondary)]">Ver payload</summary>
