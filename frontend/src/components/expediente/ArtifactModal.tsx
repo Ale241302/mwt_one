@@ -162,7 +162,9 @@ export default function ArtifactModal({
   onNewRecord,
   allArtifacts,
 }: ArtifactModalProps) {
-  const isReadOnly = readOnlyProp === true || (!!artifact && readOnlyProp !== false);
+  // readOnly solo si se pasa explícitamente readOnly=true.
+  // NO inferir readOnly desde artifact — C21/C15 se abren sin artifact y deben ser editables.
+  const isReadOnly = readOnlyProp === true;
 
   const [activeTab, setActiveTab] = useState<"form" | "history">("form");
   const [form, setForm] = useState<FormData>(artifact?.payload || {});
@@ -173,13 +175,11 @@ export default function ArtifactModal({
 
   if (!open || !meta) return null;
 
-  // History entries, newest first, excluding the currently viewed artifact
   const historyEntries = (allArtifacts || []).filter(
     (a) => !artifact || a !== artifact
   );
 
   const handleSubmit = async () => {
-    // Guard: evitar POST si el expedienteId no está disponible (race condition)
     if (!expedienteId) {
       setError("Error: ID de expediente no disponible. Recarga la página e intenta de nuevo.");
       return;
@@ -209,13 +209,11 @@ export default function ArtifactModal({
     ? `Detalle — ${meta.label} (${commandKey})`
     : `${meta.label} (${commandKey})`;
 
-  // Tab bar: only show when there are history entries
   const showTabs = isReadOnly && historyEntries.length > 0;
 
   const footerContent = (
     <div className="flex items-center justify-between w-full gap-2">
       <div className="flex items-center gap-2">
-        {/* En modo readOnly: botón "Nuevo registro" para crear uno adicional */}
         {isReadOnly && onNewRecord && (
           <button
             className="btn btn-sm btn-ghost border border-primary text-primary flex items-center gap-1"
@@ -234,7 +232,7 @@ export default function ArtifactModal({
           <button
             className={`btn btn-md text-white ${meta.bgClass}`}
             onClick={handleSubmit}
-            disabled={loading || !expedienteId}
+            disabled={loading}
           >
             {loading ? "Ejecutando..." : meta.label}
           </button>
@@ -251,24 +249,25 @@ export default function ArtifactModal({
       footer={footerContent}
       size="sm"
     >
-      {/* Tab Navigation */}
       {showTabs && (
         <div className="flex gap-1 mb-4 border-b border-divider">
           <button
             onClick={() => setActiveTab("form")}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "form"
-              ? "border-b-2 border-primary text-primary"
-              : "text-text-tertiary hover:text-text"
-              }`}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === "form"
+                ? "border-b-2 border-primary text-primary"
+                : "text-text-tertiary hover:text-text"
+            }`}
           >
             Registro actual
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`px-4 py-2 text-sm font-medium flex items-center gap-1 transition-colors ${activeTab === "history"
-              ? "border-b-2 border-primary text-primary"
-              : "text-text-tertiary hover:text-text"
-              }`}
+            className={`px-4 py-2 text-sm font-medium flex items-center gap-1 transition-colors ${
+              activeTab === "history"
+                ? "border-b-2 border-primary text-primary"
+                : "text-text-tertiary hover:text-text"
+            }`}
           >
             <History size={13} />
             Historial
@@ -280,7 +279,6 @@ export default function ArtifactModal({
       )}
 
       {activeTab === "history" ? (
-        /* History Tab */
         <div className="space-y-2">
           {historyEntries.length === 0 ? (
             <p className="text-sm text-text-tertiary py-4 text-center">
@@ -323,7 +321,6 @@ export default function ArtifactModal({
           )}
         </div>
       ) : (
-        /* Form Tab (default) */
         <>
           {isReadOnly && (
             <div className="mb-4 px-3 py-2 rounded-lg bg-bg border border-divider text-xs text-text-tertiary">
