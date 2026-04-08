@@ -2,6 +2,8 @@
 Sprint 3-4 — UI Serializers
 S20-06: ExpedienteBundleSerializer ahora incluye artifact_policy calculada dinámicamente.
 FIX-2026-03-31: get_product_lines envuelto en try/except para no romper el bundle.
+FIX-2026-04-08: get_expediente ahora expone 'id' (alias de expediente_id) para que
+                page.tsx pueda usar expediente.id en ArtifactModal (C21, C15, etc.)
 """
 import datetime
 from decimal import Decimal
@@ -113,6 +115,8 @@ class ExpedienteBundleSerializer(serializers.Serializer):
     Complete bundle for Expediente Detail page <200ms.
     S20-06: agrega artifact_policy calculada dinámicamente por brand + proformas.
     FIX-2026-03-31: get_product_lines protegido con try/except.
+    FIX-2026-04-08: get_expediente expone 'id' como alias de expediente_id para
+                    compatibilidad con page.tsx (expediente.id en ArtifactModal).
     """
     expediente = serializers.SerializerMethodField()
     events = serializers.SerializerMethodField()
@@ -130,11 +134,18 @@ class ExpedienteBundleSerializer(serializers.Serializer):
         """
         S25-08: Unifies with BundleSerializer to include credit snapshot,
         deferred pricing, and genealogy fields in the UI detail bundle.
+        FIX-2026-04-08: Agrega 'id' como alias de expediente_id para que
+        page.tsx pueda leer expediente.id correctamente en ArtifactModal.
         """
         from .serializers import BundleSerializer
         # Base with S25 fields
         data = BundleSerializer(obj).data
-        
+
+        # FIX: asegura que 'id' siempre esté presente como string UUID
+        # page.tsx hace: const expedienteId: string = expediente.id
+        # BundleSerializer expone 'expediente_id' pero NO 'id' — este alias lo resuelve.
+        data['id'] = str(obj.expediente_id)
+
         # Merge UI-specific metadata
         data.update({
             'mode': obj.mode,
