@@ -280,7 +280,7 @@ SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_AGE = 86400  # 24h
 CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False
 
 # --- S24-14: Activar signal blacklist en apps ready ---
 # (Ver apps/knowledge/apps.py — KnowledgeConfig.ready())
