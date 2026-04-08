@@ -48,7 +48,7 @@ export default function RegisterPaymentDrawer({
     payment_date: today,
   });
 
-  const { create } = useCRUD(`expedientes/${expedienteId}/register-payment/`);
+  const { create } = useCRUD(`expedientes/${expedienteId}/commands/register-payment/`);
 
   const { handleSubmit, submitting } = useFormSubmit(async (data) => {
     return create({

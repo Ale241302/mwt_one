@@ -9,16 +9,18 @@ const api = axios.create({
     },
 });
 
+// Helper to read cookies in client-side
+function getCookie(name: string): string | null {
+    if (typeof document === 'undefined') return null;
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
 // CSRF Interceptor
 api.interceptors.request.use((config) => {
-    // Try to get csrftoken from cookies
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; csrftoken=`);
-    if (parts.length === 2) {
-        const csrfToken = parts.pop()?.split(';').shift();
-        if (csrfToken) {
-            config.headers['X-CSRFToken'] = csrfToken;
-        }
+    const csrfToken = getCookie('csrftoken');
+    if (csrfToken) {
+        config.headers['X-CSRFToken'] = csrfToken;
     }
     return config;
 });
