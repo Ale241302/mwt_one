@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Scissors, Search, AlertTriangle } from "lucide-react";
+import { X, Scissors, Search, AlertTriangle, ArrowUpDown } from "lucide-react";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 
@@ -24,11 +24,13 @@ interface ExpedienteResult {
 interface Props {
   expedienteId: number | string;
   productLines: ProductLine[];
+  /** Si el expediente ya tiene parent, invert_parent no está disponible */
+  hasParent?: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function ModalSplit({ expedienteId, productLines, onClose, onSuccess }: Props) {
+export default function ModalSplit({ expedienteId, productLines, hasParent = false, onClose, onSuccess }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<number | string>>(new Set());
   const [destMode, setDestMode] = useState<"new" | "existing">("new");
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,6 +38,8 @@ export default function ModalSplit({ expedienteId, productLines, onClose, onSucc
   const [searching, setSearching] = useState(false);
   const [destExpediente, setDestExpediente] = useState<ExpedienteResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  /** S25-12: invert_parent — el nuevo expediente pasa a ser el padre */
+  const [invertParent, setInvertParent] = useState(false);
 
   const toggleLine = (id: number | string) => {
     setSelectedIds((prev) => {
@@ -72,6 +76,7 @@ export default function ModalSplit({ expedienteId, productLines, onClose, onSucc
     try {
       const payload: Record<string, unknown> = {
         product_line_ids: Array.from(selectedIds),
+        invert_parent: invertParent,
       };
       if (destMode === "existing" && destExpediente) {
         payload.destino = destExpediente.id;
@@ -145,6 +150,45 @@ export default function ModalSplit({ expedienteId, productLines, onClose, onSucc
               </div>
             )}
           </div>
+
+          {/* S25-12: Invert parent */}
+          {destMode === "new" && (
+            <div className="space-y-2">
+              <label
+                className={`flex items-start gap-3 border rounded-xl px-4 py-3 cursor-pointer transition-colors ${
+                  invertParent
+                    ? "border-violet-400 bg-violet-50"
+                    : "border-[var(--color-border)] hover:bg-[var(--color-bg-alt)]"
+                } ${hasParent ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={invertParent}
+                  disabled={hasParent}
+                  onChange={() => !hasParent && setInvertParent((v) => !v)}
+                  className="accent-violet-600 w-4 h-4 flex-shrink-0 mt-0.5"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <ArrowUpDown className="w-3.5 h-3.5 text-violet-500" />
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      Invertir jerarquía
+                    </p>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">
+                    El nuevo expediente creado pasá a ser el <strong>padre</strong> y el
+                    actual pasa a ser hijo.
+                  </p>
+                  {hasParent && (
+                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      No disponible: este expediente ya tiene un padre.
+                    </p>
+                  )}
+                </div>
+              </label>
+            </div>
+          )}
 
           {/* Destination */}
           <div>

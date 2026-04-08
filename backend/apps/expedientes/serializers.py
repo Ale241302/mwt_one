@@ -41,14 +41,51 @@ class FactoryOrderSerializer(serializers.ModelSerializer):
 
 
 class PagoSerializer(serializers.ModelSerializer):
+    """S25-08: CEO / AGENT_* tier — incluye campos completos del payment status machine."""
+    verified_by_display = serializers.SerializerMethodField(read_only=True)
+    credit_released_by_display = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = ExpedientePago
         fields = [
             'id', 'expediente', 'tipo_pago', 'metodo_pago',
             'payment_date', 'amount_paid', 'additional_info',
             'url_comprobante', 'credit_status', 'created_at',
+            # S25-01 nuevos
+            'payment_status',
+            'verified_at', 'verified_by', 'verified_by_display',
+            'credit_released_at', 'credit_released_by', 'credit_released_by_display',
+            'rejection_reason',
         ]
-        read_only_fields = ['credit_status', 'expediente', 'created_at']
+        read_only_fields = [
+            'credit_status', 'expediente', 'created_at',
+            'payment_status', 'verified_at', 'verified_by', 'verified_by_display',
+            'credit_released_at', 'credit_released_by', 'credit_released_by_display',
+        ]
+
+    def get_verified_by_display(self, obj):
+        if obj.verified_by:
+            return getattr(obj.verified_by, 'get_full_name', lambda: str(obj.verified_by))() or str(obj.verified_by)
+        return None
+
+    def get_credit_released_by_display(self, obj):
+        if obj.credit_released_by:
+            return getattr(obj.credit_released_by, 'get_full_name', lambda: str(obj.credit_released_by))() or str(obj.credit_released_by)
+        return None
+
+
+class PagoClienteSerializer(serializers.ModelSerializer):
+    """
+    S25-08: CLIENT_* tier — campos restringidos.
+    NUNCA incluye: rejection_reason, verified_by, credit_released_by.
+    El badge 'rejected' es informativo (cliente sabe, no ve motivo interno).
+    """
+    class Meta:
+        model = ExpedientePago
+        fields = [
+            'id', 'payment_date', 'amount_paid', 'payment_status',
+        ]
+        read_only_fields = fields
 
 
 class BundleSerializer(serializers.ModelSerializer):

@@ -52,7 +52,7 @@ class FactoryOrderInline(admin.TabularInline):
 class ExpedientePagoInline(admin.TabularInline):
     model = ExpedientePago
     extra = 0
-    readonly_fields = ('created_at',)
+    readonly_fields = ('created_at', 'verified_by', 'credit_released_by')
     show_change_link = True
 
 
@@ -61,7 +61,7 @@ class ExpedienteAdmin(admin.ModelAdmin):
     list_display = ('expediente_id', 'status', 'destination', 'client', 'is_blocked', 'created_at')
     list_filter = ('status', 'destination', 'is_blocked', 'operado_por')
     search_fields = ('expediente_id', 'ref_number', 'factory_order_number', 'awb_bl_number')
-    readonly_fields = ('expediente_id', 'created_at', 'updated_at')
+    readonly_fields = ('expediente_id', 'created_at', 'updated_at', 'parent_expediente', 'is_inverted_child')  # S25-02
     inlines = [
         ArtifactInstanceInline,
         CostLineInline,
@@ -113,6 +113,16 @@ class ExpedienteAdmin(admin.ModelAdmin):
             'fields': ('intermediate_airport_or_port', 'transit_arrival_date', 'url_packing_list_detallado'),
             'classes': ('collapse',)
         }),
+        ('S25-02 — Precio diferido', {
+            'fields': ('deferred_total_price', 'deferred_visible'),
+            'classes': ('collapse',),
+            'description': 'Precio diferido editable solo por CEO. NULL = no definido.',
+        }),
+        ('S25-02 — Parent/Child (read-only)', {
+            'fields': ('parent_expediente', 'is_inverted_child'),
+            'classes': ('collapse',),
+            'description': 'Relación genealógica entre expedientes (split). Informativo.',
+        }),
     )
 
 
@@ -152,9 +162,36 @@ class FactoryOrderAdmin(admin.ModelAdmin):
 
 @admin.register(ExpedientePago)
 class ExpedientePagoAdmin(admin.ModelAdmin):
-    list_display = ('expediente', 'tipo_pago', 'metodo_pago', 'amount_paid', 'payment_date', 'created_at')
-    list_filter = ('tipo_pago', 'metodo_pago')
-    readonly_fields = ('created_at',)
+    list_display = (
+        'expediente', 'tipo_pago', 'metodo_pago', 'amount_paid',
+        'payment_status', 'payment_date', 'created_at',
+    )
+    list_filter = ('tipo_pago', 'metodo_pago', 'payment_status')  # S25-01: filtrable
+    search_fields = ('expediente__expediente_id',)
+    readonly_fields = (
+        'created_at',
+        'verified_by', 'credit_released_by',   # S25-01: read-only (auditoria)
+    )
+    fieldsets = (
+        ('Datos del pago', {
+            'fields': (
+                'expediente', 'tipo_pago', 'metodo_pago', 'amount_paid',
+                'payment_date', 'additional_info', 'url_comprobante', 'credit_status',
+            )
+        }),
+        ('S25-01 — Payment Status Machine', {
+            'fields': (
+                'payment_status', 'rejection_reason',
+                'verified_at', 'verified_by',
+                'credit_released_at', 'credit_released_by',
+            ),
+            'classes': ('collapse',),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',),
+        }),
+    )
 
 
 # === S21-02: EventLog admin extendido con campos S21 ===

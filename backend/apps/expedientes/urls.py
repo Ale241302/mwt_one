@@ -6,6 +6,7 @@ Sprint 17: Portal endpoints added (S17-04)
 Sprint 20: S20-11 ProformaCreateView, S20-10 ProformaModeChangeView
 Sprint 20+: Alias /commands/ para compatibilidad con frontend
 Sprint 21 (S21): Admin advance/revert state + add/remove artifact policy
+Sprint 25 (S25): Payment status machine + deferred price endpoints
 """
 from django.urls import path
 from apps.expedientes.views import (
@@ -39,6 +40,14 @@ from apps.expedientes.views_admin import (
     AddArtifactToPolicyView,
     RemoveArtifactFromPolicyView,
 )
+# S25: Payment status machine + deferred price
+from apps.expedientes.views.payment_status import (
+    verify_payment,
+    reject_payment,
+    release_credit,
+    release_all_verified,
+)
+from apps.expedientes.views.deferred import patch_deferred_price
 
 app_name = 'expedientes'
 
@@ -157,4 +166,13 @@ urlpatterns = [
     path('<uuid:pk>/commands/register-compensation/', CommandDispatchView.as_view(), {'cmd_id': 'C29'}, name='commands-register-compensation'),
     path('<uuid:pk>/commands/add-shipment-update/', CommandDispatchView.as_view(), {'cmd_id': 'C36'}, name='commands-add-shipment-update'),
     path('<uuid:pk>/commands/reopen/', CommandDispatchView.as_view(), {'cmd_id': 'REOPEN'}, name='commands-reopen'),
+
+    # ── S25: Payment Status Machine ──
+    path('<uuid:exp_id>/pagos/<int:pago_id>/verify/', verify_payment, name='payment-verify'),
+    path('<uuid:exp_id>/pagos/<int:pago_id>/reject/', reject_payment, name='payment-reject'),
+    path('<uuid:exp_id>/pagos/<int:pago_id>/release-credit/', release_credit, name='payment-release-credit'),
+    path('<uuid:exp_id>/pagos/release-all-verified/', release_all_verified, name='payment-release-all-verified'),
+
+    # ── S25: Deferred Price ──
+    path('<uuid:exp_id>/deferred-price/', patch_deferred_price, name='deferred-price'),
 ]
