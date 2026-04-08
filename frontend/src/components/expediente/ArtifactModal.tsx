@@ -179,6 +179,11 @@ export default function ArtifactModal({
   );
 
   const handleSubmit = async () => {
+    // Guard: evitar POST si el expedienteId no está disponible (race condition)
+    if (!expedienteId) {
+      setError("Error: ID de expediente no disponible. Recarga la página e intenta de nuevo.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -229,7 +234,7 @@ export default function ArtifactModal({
           <button
             className={`btn btn-md text-white ${meta.bgClass}`}
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || !expedienteId}
           >
             {loading ? "Ejecutando..." : meta.label}
           </button>
@@ -294,12 +299,13 @@ export default function ArtifactModal({
                 <div className="flex items-center gap-2">
                   <span className="text-text-tertiary text-[11px]">{i + 1}.</span>
                   <span
-                    className={`badge text-[10px] px-1.5 py-0.5 ${h.status === "COMPLETED" || h.status === "completed"
-                      ? "badge-success"
-                      : h.status === "VOIDED" || h.status === "voided"
-                        ? "badge-critical"
-                        : "badge-info"
-                      }`}
+                    className={`badge text-[10px] px-1.5 py-0.5 ${
+                      h.status === "COMPLETED" || h.status === "completed"
+                        ? "badge-success"
+                        : h.status === "VOIDED" || h.status === "voided"
+                          ? "badge-critical"
+                          : "badge-info"
+                    }`}
                   >
                     {h.status}
                   </span>
