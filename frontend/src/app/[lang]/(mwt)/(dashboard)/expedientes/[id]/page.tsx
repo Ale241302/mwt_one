@@ -7,6 +7,8 @@
  * FIX-2026-04-08 — expedienteId con triple fallback: expediente.id ?? expediente.expediente_id ?? params.id
  *                  El backend expone 'expediente_id' pero page.tsx buscaba 'id'.
  *                  Ahora serializers_ui.py también agrega 'id' como alias (fix backend).
+ * S25 WIRING — conecta PagosSection, CreditBar (S25-10), DeferredPricePanel,
+ *              FamilyBanner y PortalPagosTab al detalle del expediente.
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -25,12 +27,23 @@ import ArtifactModal from "@/components/expediente/ArtifactModal";
 import ProformaSection from "@/components/expediente/ProformaSection";
 import ReassignLineModal from "@/components/expediente/ReassignLineModal";
 import { CANONICAL_STATES, STATE_BADGE_CLASSES } from "@/constants/states";
-import { CreditBar } from "@/components/ui/CreditBar";
 import { EXPEDIENTE_LEVEL_ARTIFACTS } from "@/constants/proforma-artifact-policy";
 import { ARTIFACT_UI_REGISTRY } from "@/constants/artifact-ui-registry";
 import { MODE_LABELS } from "@/constants/mode-labels";
 import CreateProformaModal from "@/components/expediente/CreateProformaModal";
 
+// ── S25 imports ────────────────────────────────────────────────────────────────
+import CreditBar from "@/components/expediente/CreditBar";
+import PagosSection from "@/components/expediente/PagosSection";
+import DeferredPricePanel from "@/components/expediente/DeferredPricePanel";
+import FamilyBanner from "@/components/expediente/FamilyBanner";
+import { PortalPagosTab } from "@/components/portal/PortalPagosTab";
+
+interface ExpedienteRef {
+  expediente_id: string;
+  ref_number?: string;
+  custom_ref?: string;
+}
 
 interface ExpedienteBundle {
   expediente: {
@@ -52,6 +65,13 @@ interface ExpedienteBundle {
     block_reason: string;
     total_cost: number;
     artifact_count: number;
+    // ── S25-02 deferred fields ──
+    deferred_total_price?: number | null;
+    deferred_visible?: boolean;
+    // ── S25-02 parent/child fields ──
+    parent_expediente?: ExpedienteRef | null;
+    child_expedientes?: ExpedienteRef[];
+    is_inverted_child?: boolean;
   };
   artifacts: Array<{
     id: string;
@@ -87,6 +107,13 @@ interface ExpedienteBundle {
     band: "MINT" | "AMBER" | "RED";
     started_at: string | null;
     is_ignored: boolean;
+  };
+  // ── S25-01 credit snapshot ──
+  credit_snapshot?: {
+    payment_coverage?: "none" | "partial" | "complete";
+    coverage_pct?: number;
+    total_released?: number;
+    credit_released?: boolean;
   };
   costs: any[];
   payments: any[];
@@ -178,10 +205,6 @@ export default function ExpedienteDetailPage() {
 
   /**
    * FIX-2026-04-08: Triple fallback para garantizar que expedienteId NUNCA sea vacío.
-   * Orden de prioridad:
-   *   1. expediente.id          — alias agregado por serializers_ui.py (fix backend)
-   *   2. expediente.expediente_id — campo UUID canónico del modelo Django
-   *   3. id (params.id)         — UUID de la URL — siempre disponible como último recurso
    */
   const expedienteId: string = expediente.id || expediente.expediente_id || id || '';
 
@@ -202,10 +225,10 @@ export default function ExpedienteDetailPage() {
 
   const calculateAdvanceValidation = () => {
     if (currentState === "CERRADO" || currentState === "CANCELADO") return { canAdvance: false, errors: [] };
-    
+
     const currentPolicy = bundle.artifact_policy?.[currentState];
     const errors: string[] = [];
-    
+
     if (currentPolicy) {
       const gateArtifacts = currentPolicy.gate_for_advance || [];
       const completedTypes = new Set(
@@ -213,7 +236,7 @@ export default function ExpedienteDetailPage() {
           .filter(a => a.status?.toUpperCase() === 'COMPLETED')
           .map(a => a.artifact_type)
       );
-      
+
       gateArtifacts.forEach((artType: string) => {
         if (!completedTypes.has(artType)) {
           const label = ARTIFACT_UI_REGISTRY[artType]?.label || artType;
@@ -227,7 +250,7 @@ export default function ExpedienteDetailPage() {
       if (orphanLines.length > 0) {
         errors.push(`${orphanLines.length} línea(s) sin proforma`);
       }
-      
+
       const proformas = (bundle.artifacts || []).filter(
         a => a.artifact_type === 'ART-02' && a.status?.toUpperCase() === 'COMPLETED'
       );
@@ -239,13 +262,31 @@ export default function ExpedienteDetailPage() {
 
     const gateCommand = STATE_TO_ADVANCE_COMMAND[currentState];
     const canAdvance = errors.length === 0 && !!gateCommand && hasAction(gateCommand);
-    
+
     return { canAdvance, errors };
   };
 
   const { canAdvance, errors: advanceErrors } = calculateAdvanceValidation();
   const hasArt06 = bundle.artifacts.some(a => a.artifact_type === 'ART-06' && a.status?.toUpperCase() === 'COMPLETED');
   const showC11B = currentState === 'DESPACHO' && hasArt06 && hasAction('C11B');
+
+  // ── S25: credit_snapshot helpers ──────────────────────────────────────────
+  const snap = bundle.credit_snapshot;
+  const paymentCoverage = snap?.payment_coverage ?? "none";
+  const coveragePct = snap?.coverage_pct ?? 0;
+  const totalReleased = snap?.total_released ?? 0;
+  const creditReleased = snap?.credit_released ?? false;
+
+  // ── S25: portal meta for PortalPagosTab ───────────────────────────────────
+  const portalMeta = {
+    expediente_id: expedienteId,
+    payment_coverage: paymentCoverage as "none" | "partial" | "complete",
+    coverage_pct: coveragePct,
+    credit_released: creditReleased,
+    deferred_total_price: expediente.deferred_total_price ?? null,
+    deferred_visible: expediente.deferred_visible ?? false,
+    total_lines_value: expediente.total_cost,
+  };
 
   return (
     <div className="space-y-6">
@@ -321,18 +362,11 @@ export default function ExpedienteDetailPage() {
             </button>
           )}
 
-          {/* Costos y Pagos: siempre clickeables cuando bundle está cargado */}
           <button
             className="btn btn-sm btn-secondary"
             onClick={() => setActiveModal({ commandKey: "C15" })}
           >
             Costos
-          </button>
-          <button
-            className="btn btn-sm btn-secondary"
-            onClick={() => setActiveModal({ commandKey: "C21" })}
-          >
-            Pagos
           </button>
 
           {hasAction("C16") && (
@@ -349,14 +383,27 @@ export default function ExpedienteDetailPage() {
         </div>
       </div>
 
-      {/* ─── Credit Indicator ─── */}
+      {/* ─── S25-12: FamilyBanner ─── */}
+      {(expediente.parent_expediente || (expediente.child_expedientes && expediente.child_expedientes.length > 0)) && (
+        <FamilyBanner
+          currentId={expedienteId}
+          parentExpediente={expediente.parent_expediente ?? null}
+          childExpedientes={expediente.child_expedientes ?? []}
+          isInvertedChild={expediente.is_inverted_child ?? false}
+          lang={lang}
+        />
+      )}
+
+      {/* ─── S25-10: CreditBar (vista interna) ─── */}
       {viewMode === 'internal' && (
         <div className="animate-in fade-in slide-in-from-top-2 duration-500">
           <CreditBar
-            used={expediente.total_cost || 0}
-            total={100000}
-            currency="USD"
-            className="shadow-sm"
+            paymentCoverage={paymentCoverage}
+            coveragePct={coveragePct}
+            totalReleased={totalReleased}
+            expedienteTotal={expediente.total_cost}
+            creditReleased={creditReleased}
+            isCeo={isAdmin}
           />
         </div>
       )}
@@ -422,188 +469,227 @@ export default function ExpedienteDetailPage() {
         </div>
       </div>
 
-      {/* ─── Main content ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <GateMessage requiredToAdvance={advanceErrors} currentState={currentState} />
-
-          {!canAdvance && advanceErrors.length > 0 && (
-            <div className="card p-4 bg-amber-50 border-amber-200 mb-6 flex items-start gap-4">
-              <div className="p-2 bg-white rounded-lg shadow-sm border border-amber-100 text-amber-600">
-                <Info size={20} />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-amber-900 mb-1">Pendiente para avanzar a la siguiente fase</p>
-                <div className="flex flex-wrap gap-2">
-                  {advanceErrors.map((err, i) => (
-                    <span key={i} className="px-2 py-0.5 bg-amber-100/50 text-amber-700 text-[11px] font-medium rounded-full border border-amber-200">
-                      {err}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {canAdvance && (
-            <button
-              className="w-full btn btn-primary bg-[var(--interactive)] text-white flex items-center justify-center gap-2 py-3 shadow-md hover:shadow-lg transition-all"
-              onClick={() => setActiveModal({ commandKey: STATE_TO_ADVANCE_COMMAND[currentState]! })}
-            >
-              Avanzar a la siguiente fase <ArrowRight size={16} />
-            </button>
-          )}
-
-          {showC11B && (
-            <button
-              className="w-full btn btn-secondary flex items-center justify-center gap-2 py-3 shadow-sm mt-4 text-[var(--info)] border-[var(--info)]"
-              onClick={() => setActiveModal({ commandKey: "C11B" })}
-            >
-              <Truck size={18} /> Confirmar Salida (China)
-            </button>
-          )}
-
-          {bundle.product_lines && bundle.product_lines.length > 0 && (
-            <section className="space-y-6 mb-8">
-              <div className="flex items-center justify-between">
-                <h2 className="heading-sm font-semibold flex items-center gap-2 text-[var(--interactive)]">
-                   <Package size={18} /> Proformas y Líneas
-                </h2>
-                {currentState === "REGISTRO" && hasAction("C3") && (
-                  <button 
-                    className="btn btn-sm btn-outline text-[var(--interactive)] border-[var(--interactive)] hover:bg-[var(--interactive)]/5 flex items-center gap-1.5"
-                    onClick={() => setActiveModal({ commandKey: "C3" })}
-                  >
-                    + Crear Proforma
-                  </button>
-                )}
-              </div>
-
-              {(() => {
-                const proformas = (bundle.artifacts || []).filter(a => a.artifact_type === 'ART-02');
-                const orphanLines = (bundle.product_lines || []).filter(l => l.proforma_id === null);
-
-                return (
-                  <>
-                    {proformas.map(pf => (
-                      <ProformaSection
-                        key={pf.id}
-                        proforma={pf}
-                        brandSlug={expediente.brand_slug}
-                        currentState={currentState}
-                        lines={(bundle.product_lines || []).filter(l => l.proforma_id === pf.id)}
-                        childArtifacts={(bundle.artifacts || []).filter(a => a.parent_proforma_id === pf.id)}
-                        availableActions={bundle.available_actions}
-                        onActionClick={(cmd, art) => setActiveModal({ commandKey: cmd, artifact: art })}
-                        hasAction={hasAction}
-                        onReassignLine={(lineId) => setReassignLineId(lineId)}
-                        isEditable={currentState === 'REGISTRO'}
-                      />
-                    ))}
-
-                    {orphanLines.length > 0 && (
-                      <div className="card border-dashed border-2 border-red-200 bg-red-50/10 overflow-hidden">
-                        <div className="px-5 py-4 flex items-center justify-between bg-red-50/20">
-                          <div className="flex items-center gap-2 text-red-700">
-                            <AlertTriangle size={16} />
-                            <span className="font-semibold text-sm">Líneas sin asignar a proforma</span>
-                          </div>
-                          <span className="text-[10px] font-bold text-red-500 uppercase px-2 py-0.5 bg-white border border-red-200 rounded">Acción Requerida</span>
-                        </div>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-sm">
-                            <tbody className="divide-y divide-red-100">
-                              {orphanLines.map(line => (
-                                <tr key={line.id} className="hover:bg-red-50/20 transition-colors">
-                                  <td className="px-5 py-3 flex items-center gap-2">
-                                    <Package size={14} className="text-red-400" />
-                                    <span>{line.product_name}</span>
-                                  </td>
-                                  <td className="px-5 py-3 text-red-600 text-xs font-medium">Sin Proforma</td>
-                                  <td className="px-5 py-3 text-right">
-                                    <button 
-                                      className="btn btn-sm btn-ghost text-red-700 hover:bg-red-100"
-                                      onClick={() => setReassignLineId(line.id)}
-                                    >
-                                      Asignar
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-            </section>
-          )}
-
-          <ExpedienteAccordion
-            expedienteId={expedienteId}
-            expedienteData={{ ...expediente, artifacts: bundle.artifacts, artifact_policy: bundle.artifact_policy }}
-            artifacts={(Array.isArray(bundle.artifacts) ? bundle.artifacts : []).map(a => ({
-              artifact_id: a.id,
-              artifact_type: a.artifact_type,
-              status: a.status,
-              created_at: a.created_at,
-              payload: a.payload
-            }))}
-            availableActions={bundle.available_actions || { primary: [], secondary: [], ops: [] }}
-            onRefresh={() => fetchBundle(true)}
-            currentState={currentState}
-            onActionClick={(cmd, artifact) => setActiveModal({ commandKey: cmd, artifact })}
-            isAdmin={isAdmin}
-          />
-
-          <CostTable expedienteId={expedienteId} />
+      {/* ═══════════════════════════════════════════════════════════════════════
+          VISTA CLIENTE (S25-13 — PortalPagosTab)
+          Toggle "Cliente" en el top bar activa esta vista.
+      ════════════════════════════════════════════════════════════════════════ */}
+      {viewMode === 'client' && (
+        <div className="card p-5">
+          <h2 className="heading-sm font-semibold mb-4 text-[var(--interactive)]">Vista del cliente</h2>
+          <PortalPagosTab expedienteMeta={portalMeta} />
         </div>
+      )}
 
-        <div>
-          <h2 className="heading-sm font-semibold mb-3 text-[var(--interactive)]">Historial de eventos</h2>
-          <div className="card overflow-hidden h-[600px] flex flex-col">
-            <div className="flex-1 overflow-y-auto min-h-0 relative">
-              {(!Array.isArray(bundle.events) || bundle.events.length === 0) ? (
-                <div className="p-6 text-center text-[var(--text-tertiary)] text-sm absolute inset-0 flex items-center justify-center">
-                  Sin eventos aún.
+      {/* ═══════════════════════════════════════════════════════════════════════
+          VISTA INTERNA
+      ════════════════════════════════════════════════════════════════════════ */}
+      {viewMode === 'internal' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* ── Left / main column ── */}
+          <div className="lg:col-span-2 space-y-6">
+            <GateMessage requiredToAdvance={advanceErrors} currentState={currentState} />
+
+            {!canAdvance && advanceErrors.length > 0 && (
+              <div className="card p-4 bg-amber-50 border-amber-200 mb-6 flex items-start gap-4">
+                <div className="p-2 bg-white rounded-lg shadow-sm border border-amber-100 text-amber-600">
+                  <Info size={20} />
                 </div>
-              ) : (
-                <div className="divide-y divide-[var(--divider)]">
-                  {bundle.events.map((ev) => (
-                    <div key={ev.id} className="px-5 py-3.5 hover:bg-[var(--surface-hover)] transition-colors group">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono text-[10px] tracking-tight font-semibold text-[var(--interactive)] bg-[var(--brand-accent-soft)] px-1.5 py-0.5 rounded border border-[var(--border)]">
-                            {ev.event_type}
-                          </span>
-                          <span className="text-[10px] text-[var(--text-tertiary)] whitespace-nowrap">
-                            {ev.occurred_at
-                              ? new Date(ev.occurred_at).toLocaleDateString("es-CO", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-                              : "—"}
-                          </span>
+                <div>
+                  <p className="text-sm font-semibold text-amber-900 mb-1">Pendiente para avanzar a la siguiente fase</p>
+                  <div className="flex flex-wrap gap-2">
+                    {advanceErrors.map((err, i) => (
+                      <span key={i} className="px-2 py-0.5 bg-amber-100/50 text-amber-700 text-[11px] font-medium rounded-full border border-amber-200">
+                        {err}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {canAdvance && (
+              <button
+                className="w-full btn btn-primary bg-[var(--interactive)] text-white flex items-center justify-center gap-2 py-3 shadow-md hover:shadow-lg transition-all"
+                onClick={() => setActiveModal({ commandKey: STATE_TO_ADVANCE_COMMAND[currentState]! })}
+              >
+                Avanzar a la siguiente fase <ArrowRight size={16} />
+              </button>
+            )}
+
+            {showC11B && (
+              <button
+                className="w-full btn btn-secondary flex items-center justify-center gap-2 py-3 shadow-sm mt-4 text-[var(--info)] border-[var(--info)]"
+                onClick={() => setActiveModal({ commandKey: "C11B" })}
+              >
+                <Truck size={18} /> Confirmar Salida (China)
+              </button>
+            )}
+
+            {bundle.product_lines && bundle.product_lines.length > 0 && (
+              <section className="space-y-6 mb-8">
+                <div className="flex items-center justify-between">
+                  <h2 className="heading-sm font-semibold flex items-center gap-2 text-[var(--interactive)]">
+                     <Package size={18} /> Proformas y Líneas
+                  </h2>
+                  {currentState === "REGISTRO" && hasAction("C3") && (
+                    <button
+                      className="btn btn-sm btn-outline text-[var(--interactive)] border-[var(--interactive)] hover:bg-[var(--interactive)]/5 flex items-center gap-1.5"
+                      onClick={() => setActiveModal({ commandKey: "C3" })}
+                    >
+                      + Crear Proforma
+                    </button>
+                  )}
+                </div>
+
+                {(() => {
+                  const proformas = (bundle.artifacts || []).filter(a => a.artifact_type === 'ART-02');
+                  const orphanLines = (bundle.product_lines || []).filter(l => l.proforma_id === null);
+
+                  return (
+                    <>
+                      {proformas.map(pf => (
+                        <ProformaSection
+                          key={pf.id}
+                          proforma={pf}
+                          brandSlug={expediente.brand_slug}
+                          currentState={currentState}
+                          lines={(bundle.product_lines || []).filter(l => l.proforma_id === pf.id)}
+                          childArtifacts={(bundle.artifacts || []).filter(a => a.parent_proforma_id === pf.id)}
+                          availableActions={bundle.available_actions}
+                          onActionClick={(cmd, art) => setActiveModal({ commandKey: cmd, artifact: art })}
+                          hasAction={hasAction}
+                          onReassignLine={(lineId) => setReassignLineId(lineId)}
+                          isEditable={currentState === 'REGISTRO'}
+                        />
+                      ))}
+
+                      {orphanLines.length > 0 && (
+                        <div className="card border-dashed border-2 border-red-200 bg-red-50/10 overflow-hidden">
+                          <div className="px-5 py-4 flex items-center justify-between bg-red-50/20">
+                            <div className="flex items-center gap-2 text-red-700">
+                              <AlertTriangle size={16} />
+                              <span className="font-semibold text-sm">Líneas sin asignar a proforma</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-red-500 uppercase px-2 py-0.5 bg-white border border-red-200 rounded">Acción Requerida</span>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                              <tbody className="divide-y divide-red-100">
+                                {orphanLines.map(line => (
+                                  <tr key={line.id} className="hover:bg-red-50/20 transition-colors">
+                                    <td className="px-5 py-3 flex items-center gap-2">
+                                      <Package size={14} className="text-red-400" />
+                                      <span>{line.product_name}</span>
+                                    </td>
+                                    <td className="px-5 py-3 text-red-600 text-xs font-medium">Sin Proforma</td>
+                                    <td className="px-5 py-3 text-right">
+                                      <button
+                                        className="btn btn-sm btn-ghost text-red-700 hover:bg-red-100"
+                                        onClick={() => setReassignLineId(line.id)}
+                                      >
+                                        Asignar
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
-                        <p className="text-xs text-[var(--text-secondary)] truncate pr-2" title={ev.emitted_by}>
-                          Ref: {ev.emitted_by}
-                        </p>
-                        {ev.payload && Object.keys(ev.payload).length > 0 && (
-                          <details className="mt-1">
-                            <summary className="text-[10px] text-[var(--text-tertiary)] cursor-pointer hover:text-[var(--text-secondary)]">Ver payload</summary>
-                            <pre className="mt-1 text-[9px] bg-[var(--bg-alt)] rounded p-2 overflow-x-auto text-[var(--text-tertiary)] whitespace-pre-wrap break-all">
-                              {JSON.stringify(ev.payload, null, 2)}
-                            </pre>
-                          </details>
-                        )}
-                      </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </section>
+            )}
+
+            <ExpedienteAccordion
+              expedienteId={expedienteId}
+              expedienteData={{ ...expediente, artifacts: bundle.artifacts, artifact_policy: bundle.artifact_policy }}
+              artifacts={(Array.isArray(bundle.artifacts) ? bundle.artifacts : []).map(a => ({
+                artifact_id: a.id,
+                artifact_type: a.artifact_type,
+                status: a.status,
+                created_at: a.created_at,
+                payload: a.payload
+              }))}
+              availableActions={bundle.available_actions || { primary: [], secondary: [], ops: [] }}
+              onRefresh={() => fetchBundle(true)}
+              currentState={currentState}
+              onActionClick={(cmd, artifact) => setActiveModal({ commandKey: cmd, artifact })}
+              isAdmin={isAdmin}
+            />
+
+            <CostTable expedienteId={expedienteId} />
+
+            {/* ── S25-09: PagosSection ── */}
+            <div className="card p-5">
+              <PagosSection
+                expedienteId={expedienteId}
+                isCeo={isAdmin}
+                onCreditRefresh={() => fetchBundle(true)}
+              />
+            </div>
+          </div>
+
+          {/* ── Right column: events + S25-11 DeferredPricePanel ── */}
+          <div className="space-y-6">
+            {/* S25-11: DeferredPricePanel — solo CEO */}
+            {isAdmin && (
+              <DeferredPricePanel
+                expedienteId={expedienteId}
+                deferredTotalPrice={expediente.deferred_total_price ?? null}
+                deferredVisible={expediente.deferred_visible ?? false}
+                isCeo={true}
+                onUpdate={() => fetchBundle(true)}
+              />
+            )}
+
+            <div>
+              <h2 className="heading-sm font-semibold mb-3 text-[var(--interactive)]">Historial de eventos</h2>
+              <div className="card overflow-hidden h-[600px] flex flex-col">
+                <div className="flex-1 overflow-y-auto min-h-0 relative">
+                  {(!Array.isArray(bundle.events) || bundle.events.length === 0) ? (
+                    <div className="p-6 text-center text-[var(--text-tertiary)] text-sm absolute inset-0 flex items-center justify-center">
+                      Sin eventos aún.
                     </div>
-                  ))}
+                  ) : (
+                    <div className="divide-y divide-[var(--divider)]">
+                      {bundle.events.map((ev) => (
+                        <div key={ev.id} className="px-5 py-3.5 hover:bg-[var(--surface-hover)] transition-colors group">
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono text-[10px] tracking-tight font-semibold text-[var(--interactive)] bg-[var(--brand-accent-soft)] px-1.5 py-0.5 rounded border border-[var(--border)]">
+                                {ev.event_type}
+                              </span>
+                              <span className="text-[10px] text-[var(--text-tertiary)] whitespace-nowrap">
+                                {ev.occurred_at
+                                  ? new Date(ev.occurred_at).toLocaleDateString("es-CO", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                                  : "—"}
+                              </span>
+                            </div>
+                            <p className="text-xs text-[var(--text-secondary)] truncate pr-2" title={ev.emitted_by}>
+                              Ref: {ev.emitted_by}
+                            </p>
+                            {ev.payload && Object.keys(ev.payload).length > 0 && (
+                              <details className="mt-1">
+                                <summary className="text-[10px] text-[var(--text-tertiary)] cursor-pointer hover:text-[var(--text-secondary)]">Ver payload</summary>
+                                <pre className="mt-1 text-[9px] bg-[var(--bg-alt)] rounded p-2 overflow-x-auto text-[var(--text-tertiary)] whitespace-pre-wrap break-all">
+                                  {JSON.stringify(ev.payload, null, 2)}
+                                </pre>
+                              </details>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {activeModal?.commandKey === "C2" ? (
         <CreateProformaModal
