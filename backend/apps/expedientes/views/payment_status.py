@@ -2,6 +2,11 @@
 S25-03 / S25-04 — Payment Status Machine: verify, reject, release credit endpoints.
 Permisos: CEO only (IsCEO).
 Locking: transaction.atomic() + select_for_update() en Expediente + ExpedientePago.
+
+FIX-2026-04-08c:
+  - Agrega list_pagos() GET — listado de pagos de un expediente.
+    Usa PagoSerializer (CEO/AGENT tier). Requiere IsAuthenticated.
+    Resuelve bug: PagosSection llamaba este endpoint que no existía.
 """
 from decimal import Decimal
 import uuid
@@ -9,6 +14,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.expedientes.models import Expediente, ExpedientePago, EventLog
@@ -33,6 +39,26 @@ def _get_expediente_and_pago(exp_id, pago_id):
             status=status.HTTP_404_NOT_FOUND,
         )
     return expediente, pago, None
+
+
+# ─────────────── FIX-2026-04-08c: LIST PAGOS ───────────────
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_pagos(request, exp_id):
+    """
+    GET /api/expedientes/{exp_id}/pagos/
+    Retorna todos los pagos del expediente en formato PagoSerializer (CEO/AGENT tier).
+    Acceso: cualquier usuario autenticado con acceso al expediente.
+    """
+    try:
+        expediente = Expediente.objects.get(expediente_id=exp_id)
+    except Expediente.DoesNotExist:
+        return Response({'error': 'Expediente no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+    from apps.expedientes.serializers import PagoSerializer
+    pagos = ExpedientePago.objects.filter(expediente=expediente).order_by('-payment_date', '-created_at')
+    serializer = PagoSerializer(pagos, many=True)
+    return Response(serializer.data)
 
 
 # ─────────────── S25-03: VERIFY ───────────────
