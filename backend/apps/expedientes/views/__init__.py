@@ -5,4 +5,4 @@
 #   - payment_status.py (verify, reject, release_credit)
 #   - deferred.py (patch_deferred_price)
 
-from apps.expedientes.views_admin import FinancialDashboardView  # noqa: F401
+from apps.expedientes.views_compat import FinancialDashboardView  # noqa: F401
