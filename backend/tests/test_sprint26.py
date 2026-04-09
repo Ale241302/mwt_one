@@ -148,15 +148,17 @@ def test_unique_constraint_templates(base_data, seed_templates):
     # 1 Assertion
     assert NotificationTemplate.objects.filter(template_key='expediente.registered', is_active=True).count() == 1
     
-    # But creating an inactive one is allowed
-    NotificationTemplate.objects.create(
-        template_key='expediente.registered',
-        brand=base_data['brand'], 
-        language='es',
-        is_active=False
-    )
+    # Trying to create an identical INACTIVE template ALSO fails! 
+    # (The UniqueConstraint operates on brand vs null, not on is_active)
+    with pytest.raises(IntegrityError):
+        NotificationTemplate.objects.create(
+            template_key='expediente.registered',
+            brand=base_data['brand'], 
+            language='es',
+            is_active=False
+        )
     # 1 Assertion
-    assert NotificationTemplate.objects.filter(template_key='expediente.registered').count() == 2
+    assert NotificationTemplate.objects.filter(template_key='expediente.registered').count() == 1
 
 
 # =============================================================================
@@ -465,7 +467,8 @@ def test_terminal_log_helpers(base_data):
     assert NotificationLog.objects.filter(status='sent').count() == 1 # 58
     
     # With event_log_id, locks but saves
-    _persist_terminal('event123', 'u@t.com', log_base, 'exhausted', 'sub', 'body')
+    event_id = str(uuid.uuid4())
+    _persist_terminal(event_id, 'u@t.com', log_base, 'exhausted', 'sub', 'body')
     assert NotificationLog.objects.filter(status='exhausted').count() == 1 # 59
 
 def test_send_proforma_no_recipient(ceo_client, base_data):
