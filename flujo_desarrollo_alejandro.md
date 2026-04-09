@@ -42,6 +42,7 @@ estableciendo qué debe construirse primero, qué depende de qué, y cuáles mó
 | `clients` | Existe referenciado en expedientes pero sin app dedicada confirmada |
 | `users` | Django usa auth.User base pero sin modelo extendido confirmado |
 | `groups_permissions` | Django tiene Group nativo pero sin API REST expuesta |
+| `finance` | No existe — pagos, facturas, liquidaciones y reportes financieros |
 
 ---
 
@@ -566,7 +567,174 @@ GET    /api/permissions/                         → Listar todos los permisos d
 - [ ] Grupos base seed creados automáticamente en migrations
 
 **Dependencias:** Módulo 10 (Usuarios)  
-**Desbloquea:** RBAC real activo en toda la plataforma
+**Desbloquea:** RBAC real activo en toda la plataforma, Módulo 12 (Financiero — permisos del rol `financiero`)
+
+---
+
+### Módulo 12 — Financiero
+
+**Nombre técnico:** `finance`  
+**App Django:** `backend/apps/finance/` — **NUEVA APP** (no existe)  
+**Estado backend:** ❌ Debe crearse. La app `liquidations` existente puede ser base o fusionarse.  
+**Estado frontend:** ❌ Sin UI  
+**Prioridad:** P1 — cierre del ciclo operativo: cobros, pagos y liquidaciones  
+
+**Descripción:**  
+Gestión financiera de la operación MWT. Centraliza: facturas a clientes, pagos a proveedores,
+liquidaciones de expedientes y reportes de flujo de caja. Es el último módulo en el orden
+porque consume datos de todos los anteriores (expedientes, clientes, proveedores, transfers).
+El rol `financiero` del Módulo 11 es quien opera este módulo en producción.
+
+**Modelos clave:**
+```python
+class Invoice(models.Model):
+    """Factura emitida a un cliente (cuentas por cobrar)"""
+    id              = UUIDField(primary_key=True)
+    expediente      = ForeignKey('expedientes.Expediente', on_delete=PROTECT)
+    client          = ForeignKey('clients.Client', on_delete=PROTECT)
+    invoice_number  = CharField(max_length=50, unique=True)
+    currency        = CharField(max_length=3, default='USD')
+    subtotal        = DecimalField(max_digits=14, decimal_places=2)
+    tax             = DecimalField(max_digits=14, decimal_places=2, default=0)
+    total           = DecimalField(max_digits=14, decimal_places=2)
+    status          = CharField(choices=[
+                          ('borrador', 'Borrador'),
+                          ('emitida', 'Emitida'),
+                          ('pagada', 'Pagada'),
+                          ('vencida', 'Vencida'),
+                          ('anulada', 'Anulada'),
+                      ])
+    issued_at       = DateField(null=True)
+    due_at          = DateField(null=True)        # issued_at + client.credit_days
+    paid_at         = DateTimeField(null=True)
+    notes           = TextField(blank=True)
+    is_active       = BooleanField(default=True)
+    created_at      = DateTimeField(auto_now_add=True)
+    updated_at      = DateTimeField(auto_now=True)
+    deleted_at      = DateTimeField(null=True, blank=True)
+
+
+class Payment(models.Model):
+    """Pago recibido de un cliente (puede cubrir una o varias facturas)"""
+    id              = UUIDField(primary_key=True)
+    client          = ForeignKey('clients.Client', on_delete=PROTECT)
+    amount          = DecimalField(max_digits=14, decimal_places=2)
+    currency        = CharField(max_length=3, default='USD')
+    payment_method  = CharField(choices=[
+                          ('transferencia', 'Transferencia Bancaria'),
+                          ('cheque', 'Cheque'),
+                          ('efectivo', 'Efectivo'),
+                          ('otro', 'Otro'),
+                      ])
+    reference       = CharField(max_length=100, blank=True)  # Núm. de transferencia
+    payment_date    = DateField()
+    invoices        = ManyToManyField(Invoice, through='PaymentInvoice')
+    notes           = TextField(blank=True)
+    created_by      = ForeignKey('users.MWTUser', on_delete=SET_NULL, null=True)
+    created_at      = DateTimeField(auto_now_add=True)
+
+
+class SupplierPayment(models.Model):
+    """Pago realizado a un proveedor (cuentas por pagar)"""
+    id              = UUIDField(primary_key=True)
+    supplier        = ForeignKey('suppliers.Supplier', on_delete=PROTECT)
+    expediente      = ForeignKey('expedientes.Expediente', on_delete=PROTECT, null=True)
+    amount          = DecimalField(max_digits=14, decimal_places=2)
+    currency        = CharField(max_length=3, default='USD')
+    payment_method  = CharField(max_length=30)
+    reference       = CharField(max_length=100, blank=True)
+    payment_date    = DateField()
+    notes           = TextField(blank=True)
+    created_by      = ForeignKey('users.MWTUser', on_delete=SET_NULL, null=True)
+    created_at      = DateTimeField(auto_now_add=True)
+
+
+class Liquidation(models.Model):
+    """Liquidación final de un expediente — puede fusionarse con app liquidations existente"""
+    id              = UUIDField(primary_key=True)
+    expediente      = OneToOneField('expedientes.Expediente', on_delete=PROTECT)
+    total_ingresos  = DecimalField(max_digits=14, decimal_places=2)
+    total_costos    = DecimalField(max_digits=14, decimal_places=2)
+    margen          = DecimalField(max_digits=14, decimal_places=2)  # ingresos - costos
+    currency        = CharField(max_length=3, default='USD')
+    status          = CharField(choices=[
+                          ('borrador', 'Borrador'),
+                          ('aprobada', 'Aprobada'),
+                          ('cerrada', 'Cerrada'),
+                      ])
+    approved_by     = ForeignKey('users.MWTUser', on_delete=SET_NULL, null=True)
+    approved_at     = DateTimeField(null=True)
+    created_at      = DateTimeField(auto_now_add=True)
+    updated_at      = DateTimeField(auto_now=True)
+```
+
+**Endpoints Backend:**
+
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/finance/invoices/` | Listar facturas (filtrar por cliente, estado, fecha) | Financiero |
+| POST | `/api/finance/invoices/` | Crear factura | Financiero |
+| GET | `/api/finance/invoices/{id}/` | Detalle factura | Financiero |
+| PATCH | `/api/finance/invoices/{id}/` | Editar factura (solo si está en borrador) | Financiero |
+| POST | `/api/finance/invoices/{id}/emit/` | Emitir factura (borrador → emitida) | Financiero |
+| POST | `/api/finance/invoices/{id}/cancel/` | Anular factura | CEO |
+| GET | `/api/finance/payments/` | Listar pagos de clientes | Financiero |
+| POST | `/api/finance/payments/` | Registrar pago de cliente | Financiero |
+| GET | `/api/finance/payments/{id}/` | Detalle de pago | Financiero |
+| GET | `/api/finance/supplier-payments/` | Listar pagos a proveedores | Financiero |
+| POST | `/api/finance/supplier-payments/` | Registrar pago a proveedor | Financiero |
+| GET | `/api/finance/liquidations/` | Listar liquidaciones | Financiero |
+| POST | `/api/finance/liquidations/` | Crear liquidación de expediente | Financiero |
+| GET | `/api/finance/liquidations/{id}/` | Detalle liquidación | Financiero |
+| POST | `/api/finance/liquidations/{id}/approve/` | Aprobar liquidación | CEO |
+| GET | `/api/finance/dashboard/` | KPIs financieros: AR, AP, margen por brand | CEO |
+| GET | `/api/finance/report/cash-flow/` | Flujo de caja por rango de fechas | CEO |
+| GET | `/api/finance/report/aging/` | Reporte de antigedad de cartera (AR aging) | CEO |
+
+**Rutas Frontend:**
+```
+[lang]/(mwt)/(dashboard)/financiero/page                        → Dashboard financiero (KPIs)
+[lang]/(mwt)/(dashboard)/financiero/facturas/page               → Lista de facturas
+[lang]/(mwt)/(dashboard)/financiero/facturas/nueva/page         → Crear factura
+[lang]/(mwt)/(dashboard)/financiero/facturas/[id]/page          → Detalle factura
+[lang]/(mwt)/(dashboard)/financiero/pagos/page                  → Pagos recibidos de clientes
+[lang]/(mwt)/(dashboard)/financiero/pagos/nuevo/page            → Registrar pago
+[lang]/(mwt)/(dashboard)/financiero/pagos-proveedor/page        → Pagos a proveedores
+[lang]/(mwt)/(dashboard)/financiero/liquidaciones/page          → Lista liquidaciones
+[lang]/(mwt)/(dashboard)/financiero/liquidaciones/[id]/page     → Detalle liquidación
+[lang]/(mwt)/(dashboard)/financiero/reportes/flujo-caja/page    → Reporte flujo de caja
+[lang]/(mwt)/(dashboard)/financiero/reportes/aging/page         → AR Aging (cartera vencida)
+```
+
+**UI — Componentes requeridos:**
+
+- **Dashboard financiero:** KPIs en cards — Cuentas por cobrar (AR) total, Cuentas por pagar (AP) total, Margen operativo del mes, Facturas vencidas (#)
+- **Lista facturas:** Tabla — número, cliente, expediente, total, estado, fecha emisión, fecha vencimiento
+- **Crear factura:** Página nueva — selección expediente (carga cliente automático), ítems de costo, totales
+- **Detalle factura:** Vista completa + historial de pagos vinculados + botón emitir/anular
+- **Registrar pago:** Drawer — cliente, monto, método, referencia, vinculación a facturas pendientes
+- **Liquidaciones:** Tabla resumen por expediente — ingresos vs costos vs margen — semáforo de rentabilidad
+- **Reporte aging:** Tabla de cartera vencida agrupada por rango (0-30, 31-60, 61-90, +90 días)
+- **Flujo de caja:** Gráfico de barras mensual — ingresos vs egresos (chart con ENT_PLAT_DESIGN_TOKENS)
+
+**Criterio de done:**
+- [ ] CRUD completo de facturas desde consola
+- [ ] Flujo factura: `borrador → emitida → pagada` controlado desde UI
+- [ ] Registro de pagos vinculado a facturas (un pago puede cubrir múltiples facturas)
+- [ ] Registro de pagos a proveedores con referencia a expediente
+- [ ] Liquidación de expediente con cálculo automático de margen
+- [ ] Dashboard financiero con KPIs en tiempo real
+- [ ] Reporte AR Aging exportable
+- [ ] Reporte de flujo de caja por período
+- [ ] Facturas vencidas disparan badge de alerta en menú lateral
+- [ ] Solo usuario con rol `financiero` o `superadmin` puede ver y operar este módulo
+
+**Nota sobre `liquidations` app existente:**  
+Antes de crear `finance` desde cero, Claude debe leer `backend/apps/liquidations/` para evaluar
+si el modelo existente puede extenderse o si se crea app paralela. Evitar duplicación de modelos.
+
+**Dependencias:** Módulos 5 (Proveedores), 8 (Clientes), 9 (Expedientes), 10 (Usuarios), 11 (Roles & Permisos)  
+**Desbloquea:** Cierre del ciclo operativo completo de MWT ONE
 
 ---
 
@@ -584,10 +752,13 @@ Módulo 1  (Brands)
   │     └── Módulo 7  (Transfers)
   ├── Módulo 5  (Proveedores)
   │     └── Módulo 9  (Expedientes — integración)
+  │           └── Módulo 12 (Financiero)
   ├── Módulo 8  (Clientes)
   │     └── Módulo 9  (Expedientes — integración)
+  │           └── Módulo 12 (Financiero)
   └── Módulo 10 (Usuarios)
         └── Módulo 11 (Roles & Permisos)
+              └── Módulo 12 (Financiero — rol financiero activo)
 ```
 
 ---
@@ -608,6 +779,7 @@ Módulo 1  (Brands)
 | 9 | Expedientes | `expedientes` | ✅ Completo | ✅ Sprint 7 | M3, M5, M8 |
 | 10 | Usuarios Portal & Consola | `users` | ❌ Nueva | ❌ Sin UI | M1, M11 |
 | 11 | Roles & Permisos | `permission_groups` | ❌ Nueva | ❌ Sin UI | M10 |
+| 12 | Financiero | `finance` | ❌ Nueva | ❌ Sin UI | M5, M8, M9, M10, M11 |
 
 ---
 
@@ -629,9 +801,11 @@ CUANDO leas este archivo al inicio de un sprint, debes:
 8. Respetar ENT_PLAT_DESIGN_TOKENS para estilos
 9. Consultar MODULOS_FALTANTES_FRONTEND_BACKEND.md para especificaciones detalladas
    de cada módulo (modelos, endpoints, UI completa)
+10. Para el Módulo 12 (Financiero): leer `backend/apps/liquidations/` antes de crear
+    la app `finance` para evitar duplicación de modelos
 ```
 
 ---
 
-*Stamp: v1.0 — generado 2026-04-08*  
+*Stamp: v1.1 — actualizado 2026-04-08 — agregado Módulo 12 Financiero*  
 *Origen: Revisión base de conocimiento MWT ONE — carpetas Sprints/ y docs/ — instrucciones CEO Alejandro*
