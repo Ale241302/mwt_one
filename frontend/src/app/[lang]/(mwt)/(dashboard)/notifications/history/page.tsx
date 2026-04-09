@@ -52,26 +52,25 @@ export default function HistoryPage() {
       </div>
 
       <NotificationLogTable logs={logs} loading={loading} />
-        
-        {/* Pagination */}
-        <div className="p-4 border-t border-[rgba(255,255,255,0.06)] flex justify-between items-center text-sm text-[rgba(255,255,255,0.6)]">
-          <div>Mostrando página {page} de {Math.ceil(totalCount / 25) || 1} ({totalCount} total)</div>
-          <div className="flex space-x-2">
-            <button 
-              disabled={page === 1} 
-              onClick={() => setPage(p => p - 1)}
-              className="px-3 py-1 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] rounded disabled:opacity-50"
-            >
-              Anterior
-            </button>
-            <button 
-              disabled={page * 25 >= totalCount} 
-              onClick={() => setPage(p => p + 1)}
-              className="px-3 py-1 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] rounded disabled:opacity-50"
-            >
-              Siguiente
-            </button>
-          </div>
+
+      {/* Pagination */}
+      <div className="p-4 border-t border-[rgba(255,255,255,0.06)] flex justify-between items-center text-sm text-[rgba(255,255,255,0.6)]">
+        <div>Mostrando página {page} de {Math.ceil(totalCount / 25) || 1} ({totalCount} total)</div>
+        <div className="flex space-x-2">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(p => p - 1)}
+            className="px-3 py-1 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] rounded disabled:opacity-50"
+          >
+            Anterior
+          </button>
+          <button
+            disabled={page * 25 >= totalCount}
+            onClick={() => setPage(p => p + 1)}
+            className="px-3 py-1 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] rounded disabled:opacity-50"
+          >
+            Siguiente
+          </button>
         </div>
       </div>
     </div>
