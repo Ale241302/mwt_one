@@ -25,7 +25,7 @@ export default function CollectionsLogPage() {
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/api/notifications/collections/?page=${page}`);
+      const res = await api.get(`/notifications/collections/?page=${page}`);
       setLogs(res.data.results);
       setTotalCount(res.data.count);
     } catch (err) {
