@@ -21,7 +21,7 @@ estableciendo qué debe construirse primero, qué depende de qué, y cuáles mó
 ### Apps Django existentes en `backend/apps/`
 
 | App | Backend | Frontend Consola |
-|-----|---------|-----------------|
+|-----|---------|-----------------| 
 | `expedientes` | ✅ 39 endpoints — 100% funcional | ✅ Completado Sprint 7 |
 | `brands` | ✅ Existe (fixtures + generate_brands_fixtures.py) | ❌ Sin UI en consola |
 | `transfers` | ✅ Existe app | ❌ Sin UI en consola |
@@ -43,6 +43,7 @@ estableciendo qué debe construirse primero, qué depende de qué, y cuáles mó
 | `users` | Django usa auth.User base pero sin modelo extendido confirmado |
 | `groups_permissions` | Django tiene Group nativo pero sin API REST expuesta |
 | `finance` | No existe — pagos, facturas, liquidaciones y reportes financieros |
+| `ai_agents` | No existe — configuración de agentes IA (OpenAI, Google, Anthropic) |
 
 ---
 
@@ -734,7 +735,146 @@ Antes de crear `finance` desde cero, Claude debe leer `backend/apps/liquidations
 si el modelo existente puede extenderse o si se crea app paralela. Evitar duplicación de modelos.
 
 **Dependencias:** Módulos 5 (Proveedores), 8 (Clientes), 9 (Expedientes), 10 (Usuarios), 11 (Roles & Permisos)  
-**Desbloquea:** Cierre del ciclo operativo completo de MWT ONE
+**Desbloquea:** Cierre del ciclo operativo completo de MWT ONE, Módulo 13 (Agentes IA)
+
+---
+
+### Módulo 13 — Agentes IA
+
+**Nombre técnico:** `ai_agents`  
+**App Django:** `backend/apps/ai_agents/` — **NUEVA APP** (no existe)  
+**Estado backend:** ❌ Debe crearse  
+**Estado frontend:** ❌ Sin UI  
+**Prioridad:** P2 — capacidades de automatización inteligente sobre la operación MWT  
+
+**Descripción:**  
+Módulo de configuración y gestión de agentes de inteligencia artificial que operan dentro
+de la plataforma MWT ONE. Permite definir agentes con nombre, rol, prompt base, proveedor
+de IA (OpenAI, Google, Anthropic/Claude) y API Key propia. Cada agente puede asociarse
+a un módulo o flujo específico del sistema (expedientes, inventario, finanzas, etc.).
+
+Va de último en el orden de desarrollo porque los agentes consumirán datos de todos los
+módulos anteriores para operar con contexto real de la plataforma.
+
+**Modelos clave:**
+```python
+class AIProvider(models.TextChoices):
+    OPENAI    = 'openai',    'OpenAI'
+    GOOGLE    = 'google',    'Google (Gemini)'
+    ANTHROPIC = 'anthropic', 'Anthropic (Claude)'
+
+class AIModel(models.TextChoices):
+    # OpenAI
+    GPT_4O          = 'gpt-4o',          'GPT-4o'
+    GPT_4O_MINI     = 'gpt-4o-mini',     'GPT-4o Mini'
+    GPT_4_TURBO     = 'gpt-4-turbo',     'GPT-4 Turbo'
+    O1_PREVIEW      = 'o1-preview',      'o1 Preview'
+    O1_MINI         = 'o1-mini',         'o1 Mini'
+    # Google
+    GEMINI_15_PRO   = 'gemini-1.5-pro',  'Gemini 1.5 Pro'
+    GEMINI_15_FLASH = 'gemini-1.5-flash','Gemini 1.5 Flash'
+    GEMINI_2_FLASH  = 'gemini-2.0-flash','Gemini 2.0 Flash'
+    # Anthropic
+    CLAUDE_35_SONNET = 'claude-3-5-sonnet-20241022', 'Claude 3.5 Sonnet'
+    CLAUDE_35_HAIKU  = 'claude-3-5-haiku-20241022',  'Claude 3.5 Haiku'
+    CLAUDE_3_OPUS    = 'claude-3-opus-20240229',      'Claude 3 Opus'
+
+
+class AIAgent(models.Model):
+    """Configuración de un agente IA dentro de MWT ONE"""
+    id           = UUIDField(primary_key=True, default=uuid4)
+    name         = CharField(max_length=100)           # Nombre del agente ej: "Asistente Expedientes"
+    slug         = SlugField(max_length=100, unique=True)
+    description  = TextField(blank=True)               # Para qué sirve este agente
+    provider     = CharField(max_length=20, choices=AIProvider.choices)
+    model        = CharField(max_length=60, choices=AIModel.choices)
+    system_prompt = TextField()                        # Prompt base / instrucciones del agente
+    temperature  = FloatField(default=0.7)             # 0.0 – 2.0
+    max_tokens   = PositiveIntegerField(default=2048)
+    api_key      = CharField(max_length=200)           # Encriptada — ver nota de seguridad
+    module_scope = CharField(max_length=50, blank=True,
+                             choices=[
+                                 ('global',      'Global — todos los módulos'),
+                                 ('expedientes', 'Expedientes'),
+                                 ('inventory',   'Inventario'),
+                                 ('finance',     'Financiero'),
+                                 ('transfers',   'Transfers'),
+                                 ('clientes',    'Clientes'),
+                             ])
+    is_active    = BooleanField(default=True)
+    created_at   = DateTimeField(auto_now_add=True)
+    updated_at   = DateTimeField(auto_now=True)
+    deleted_at   = DateTimeField(null=True, blank=True)
+
+
+class AIAgentLog(models.Model):
+    """Log de ejecuciones del agente — para auditoría y debugging"""
+    id           = UUIDField(primary_key=True, default=uuid4)
+    agent        = ForeignKey(AIAgent, on_delete=PROTECT, related_name='logs')
+    user         = ForeignKey('users.MWTUser', on_delete=SET_NULL, null=True)
+    input_text   = TextField()                         # Prompt enviado por el usuario
+    output_text  = TextField()                         # Respuesta del modelo
+    tokens_used  = PositiveIntegerField(default=0)
+    latency_ms   = PositiveIntegerField(default=0)
+    status       = CharField(max_length=20, choices=[
+                       ('success', 'Éxito'),
+                       ('error',   'Error'),
+                       ('timeout', 'Timeout'),
+                   ])
+    error_detail = TextField(blank=True)
+    created_at   = DateTimeField(auto_now_add=True)
+```
+
+> ⚠️ **Nota de seguridad — API Keys:**  
+> El campo `api_key` en `AIAgent` **NUNCA debe almacenarse en texto plano**.  
+> Usar `django-fernet-fields` o cifrado simétrico con `SECRET_KEY` como KEK.  
+> La API Key nunca debe retornarse en ningún endpoint GET — solo confirmación de que está configurada (`has_api_key: true`).  
+> Claude debe leer `backend/apps/integrations/` antes de implementar para ver si ya existe un patrón de cifrado de credenciales en el proyecto.
+
+**Endpoints Backend:**
+
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/ai-agents/` | Listar agentes configurados | superadmin |
+| POST | `/api/ai-agents/` | Crear agente nuevo | superadmin |
+| GET | `/api/ai-agents/{id}/` | Detalle del agente (sin exponer api_key) | superadmin |
+| PATCH | `/api/ai-agents/{id}/` | Editar configuración del agente | superadmin |
+| DELETE | `/api/ai-agents/{id}/` | Desactivar agente (soft delete) | superadmin |
+| POST | `/api/ai-agents/{id}/test/` | Probar agente con mensaje de prueba | superadmin |
+| GET | `/api/ai-agents/{id}/logs/` | Historial de ejecuciones del agente | superadmin |
+| GET | `/api/ai-agents/models/` | Listar modelos disponibles por proveedor | superadmin |
+
+**Rutas Frontend:**
+```
+[lang]/(mwt)/(dashboard)/configuracion/agentes-ia/page          → Lista de agentes IA
+[lang]/(mwt)/(dashboard)/configuracion/agentes-ia/nuevo/page    → Crear agente (página completa)
+[lang]/(mwt)/(dashboard)/configuracion/agentes-ia/[id]/page     → Detalle + editar + logs
+```
+
+**UI — Componentes requeridos:**
+
+- **Lista agentes:** Tabla — nombre, proveedor (logo/badge), modelo, módulo asignado, estado activo, última ejecución
+- **Crear / editar agente:** Página completa (formulario largo) con secciones:
+  - **Identidad:** nombre, slug, descripción, módulo asignado
+  - **Proveedor & Modelo:** selector de proveedor (OpenAI / Google / Claude) con logos, luego selector de modelo filtrado por proveedor seleccionado
+  - **Configuración:** temperature (slider 0–2), max_tokens (input numérico)
+  - **API Key:** input tipo password — solo escritura, nunca se muestra el valor existente. Badge `✓ Configurada` si ya existe
+  - **System Prompt:** textarea grande con contador de tokens estimados
+- **Panel de prueba (Test Agent):** dentro del detalle — input de mensaje libre → botón "Probar" → muestra respuesta del modelo en tiempo real con streaming si el proveedor lo soporta. Muestra tokens usados y latencia.
+- **Logs de ejecución:** Tabla paginada — fecha, usuario, tokens, latencia, status. Drawer para ver input/output completo de cada log.
+
+**Criterio de done:**
+- [ ] CRUD completo de agentes desde consola
+- [ ] Selector de proveedor actualiza dinámicamente los modelos disponibles
+- [ ] API Key almacenada cifrada — nunca expuesta en GET
+- [ ] Panel de prueba funcional (POST a `/api/ai-agents/{id}/test/`)
+- [ ] Log de cada ejecución registrado automáticamente
+- [ ] Agente inactivo no puede ejecutarse ni aparecer en integraciones
+- [ ] Solo usuarios con rol `superadmin` pueden crear/editar agentes
+- [ ] Temperature y max_tokens con validación de rango en frontend y backend
+
+**Dependencias:** Módulo 10 (Usuarios), Módulo 11 (Roles & Permisos), Módulo 12 (Financiero)  
+**Desbloquea:** Automatización inteligente en cualquier módulo del sistema — IA sobre expedientes, inventario, finanzas
 
 ---
 
@@ -753,12 +893,15 @@ Módulo 1  (Brands)
   ├── Módulo 5  (Proveedores)
   │     └── Módulo 9  (Expedientes — integración)
   │           └── Módulo 12 (Financiero)
+  │                 └── Módulo 13 (Agentes IA)
   ├── Módulo 8  (Clientes)
   │     └── Módulo 9  (Expedientes — integración)
   │           └── Módulo 12 (Financiero)
+  │                 └── Módulo 13 (Agentes IA)
   └── Módulo 10 (Usuarios)
         └── Módulo 11 (Roles & Permisos)
-              └── Módulo 12 (Financiero — rol financiero activo)
+              ├── Módulo 12 (Financiero — rol financiero activo)
+              └── Módulo 13 (Agentes IA — solo superadmin)
 ```
 
 ---
@@ -780,6 +923,7 @@ Módulo 1  (Brands)
 | 10 | Usuarios Portal & Consola | `users` | ❌ Nueva | ❌ Sin UI | M1, M11 |
 | 11 | Roles & Permisos | `permission_groups` | ❌ Nueva | ❌ Sin UI | M10 |
 | 12 | Financiero | `finance` | ❌ Nueva | ❌ Sin UI | M5, M8, M9, M10, M11 |
+| 13 | Agentes IA | `ai_agents` | ❌ Nueva | ❌ Sin UI | M10, M11, M12 |
 
 ---
 
@@ -803,9 +947,12 @@ CUANDO leas este archivo al inicio de un sprint, debes:
    de cada módulo (modelos, endpoints, UI completa)
 10. Para el Módulo 12 (Financiero): leer `backend/apps/liquidations/` antes de crear
     la app `finance` para evitar duplicación de modelos
+11. Para el Módulo 13 (Agentes IA): leer `backend/apps/integrations/` antes de crear
+    la app `ai_agents` para reutilizar patrón de cifrado de credenciales existente.
+    La API Key NUNCA debe retornarse en ningún endpoint GET.
 ```
 
 ---
 
-*Stamp: v1.1 — actualizado 2026-04-08 — agregado Módulo 12 Financiero*  
+*Stamp: v1.2 — actualizado 2026-04-09 — agregado Módulo 13 Agentes IA*  
 *Origen: Revisión base de conocimiento MWT ONE — carpetas Sprints/ y docs/ — instrucciones CEO Alejandro*
