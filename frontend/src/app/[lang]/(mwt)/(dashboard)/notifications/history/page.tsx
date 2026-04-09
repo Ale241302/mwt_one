@@ -26,7 +26,7 @@ export default function HistoryPage() {
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/api/notifications/log/?page=${page}`);
+      const res = await api.get(`/notifications/log/?page=${page}`);
       setLogs(res.data.results);
       setTotalCount(res.data.count);
     } catch (err) {
