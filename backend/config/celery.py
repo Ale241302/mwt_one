@@ -28,4 +28,9 @@ app.conf.beat_schedule = {
         'task': 'apps.commercial.tasks.liquidate_rebates',
         'schedule': crontab(hour=6, minute=0, day_of_month=1, month_of_year='1,4,7,10'),
     },
+    # Sprint 26 S26-08: cobranza diaria 8:00 AM Costa Rica (14:00 UTC)
+    'check-overdue-payments': {
+        'task': 'apps.notifications.tasks.check_overdue_payments',
+        'schedule': crontab(hour=14, minute=0),
+    },
 }

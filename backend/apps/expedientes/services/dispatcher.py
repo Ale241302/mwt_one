@@ -76,5 +76,55 @@ def s21_eventlog_hook(expediente, command_code, user, result, **kwargs):
     )
 
 
+
 # Auto-registrar el hook S21
 register_hook(s21_eventlog_hook)
+
+
+# === S26: Hook que encola send_notification ===
+def notify_on_command(expediente, command_code, user, result, **kwargs):
+    """
+    Hook post-command que encola send_notification si el command_code tiene template.
+    Si el hook falla → el comando sigue siendo exitoso (no bloquear).
+    event_log_id: el EventLog fue creado por s21_eventlog_hook antes de este hook.
+    """
+    from apps.notifications.mappings import TRIGGER_TO_TEMPLATE
+
+    template_key = TRIGGER_TO_TEMPLATE.get(command_code)
+    if not template_key:
+        return  # comando no mapeado — no notification
+
+    # Obtener el event_log_id creado por s21_eventlog_hook
+    # El log más reciente para este expediente+action_source
+    try:
+        from apps.expedientes.models import EventLog, ArtifactInstance
+        from apps.notifications.tasks import send_notification
+
+        event_log = EventLog.objects.filter(
+            expediente=expediente,
+            action_source=command_code,
+        ).order_by('-occurred_at').first()
+
+        event_log_id = str(event_log.event_id) if event_log else None
+
+        # Detectar proforma si el result es ArtifactInstance ART-02
+        proforma_id = None
+        if isinstance(result, ArtifactInstance) and result.artifact_type == 'ART-02':
+            proforma_id = str(result.artifact_id)
+
+        send_notification.delay(
+            template_key=template_key,
+            expediente_id=str(expediente.expediente_id),
+            proforma_id=proforma_id,
+            event_log_id=event_log_id,
+            trigger_action_source=command_code,
+            extra_context={},
+        )
+    except Exception as exc:
+        # Hook failure no debe bloquear el comando principal
+        import logging
+        logging.getLogger(__name__).warning(f"[NOTIF_HOOK] Failed for {command_code}: {exc}")
+
+
+# Auto-registrar el hook S26
+register_hook(notify_on_command)
