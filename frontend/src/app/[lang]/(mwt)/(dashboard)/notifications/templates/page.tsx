@@ -53,31 +53,31 @@ export default function TemplatesPage() {
   if (loading) return <div className="p-8 text-white">Cargando templates...</div>;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Email Templates</h1>
-          <p className="text-[rgba(255,255,255,0.6)] mt-2">
+          <h1 className="text-2xl font-display font-bold">Email Templates</h1>
+          <p className="text-sm text-text-tertiary mt-1">
             Plantillas para notificaciones automáticas y transaccionales (CEO only).
           </p>
         </div>
-        <button 
+        <button
           onClick={() => setShowEditor(true)}
-          className="bg-mint text-navy-dark px-4 py-2 font-bold rounded hover:bg-mint-hover"
+          className="bg-navy hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95 flex items-center gap-2"
         >
           Crear Template
         </button>
       </div>
 
       <TemplateList templates={templates} onToggleStatus={toggleStatus} />
-      
+
       {showEditor && (
-        <TemplateEditor 
+        <TemplateEditor
           onSaved={() => {
             setShowEditor(false);
             fetchTemplates();
-          }} 
-          onClose={() => setShowEditor(false)} 
+          }}
+          onClose={() => setShowEditor(false)}
         />
       )}
     </div>

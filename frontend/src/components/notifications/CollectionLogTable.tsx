@@ -21,56 +21,58 @@ interface Props {
 
 export function CollectionLogTable({ logs, loading }: Props) {
   const getStatusBadge = (status: string) => {
-    if (status === 'sent') return <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-[rgba(117,203,179,0.15)] text-mint font-bold">Sent</span>;
-    if (status === 'failed') return <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-red-500/20 text-red-400 font-bold">Failed</span>;
-    return <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-[rgba(255,255,255,0.1)] text-white font-bold">{status}</span>;
+    if (status === 'sent') return <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-mint-soft/20 text-mint font-bold border border-mint/20">Sent</span>;
+    if (status === 'failed') return <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-coral-soft/20 text-coral font-bold border border-coral/20">Failed</span>;
+    return <span className="px-2 py-1 text-[10px] uppercase rounded-full bg-surface border border-border text-text-secondary font-bold">{status}</span>;
   };
 
   return (
-    <div className="bg-navy overflow-hidden">
-      <table className="w-full text-sm text-left text-[rgba(255,255,255,0.8)]">
-        <thead className="text-xs uppercase bg-navy-dark text-[rgba(255,255,255,0.6)] border-b border-[rgba(255,255,255,0.1)]">
-          <tr>
-            <th className="px-6 py-4 font-semibold">Fecha / Status</th>
-            <th className="px-6 py-4 font-semibold">Expediente</th>
-            <th className="px-6 py-4 font-semibold">Destinatario</th>
-            <th className="px-6 py-4 font-semibold">Monto / Gracia</th>
-            <th className="px-6 py-4 font-semibold">Detalle Error</th>
+    <div className="bg-surface rounded-xl shadow-sm border border-border overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse whitespace-nowrap">
+          <thead>
+            <tr className="bg-bg-alt/50 text-xs uppercase text-text-tertiary font-semibold tracking-wider border-b border-border">
+            <th className="px-5 py-4">Fecha / Status</th>
+            <th className="px-5 py-4">Expediente</th>
+            <th className="px-5 py-4">Destinatario</th>
+            <th className="px-5 py-4">Monto / Gracia</th>
+            <th className="px-5 py-4">Detalle Error</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-[rgba(255,255,255,0.06)]">
+        <tbody>
           {loading && logs.length === 0 ? (
-             <tr><td colSpan={5} className="px-6 py-8 text-center text-[rgba(255,255,255,0.5)]">Cargando...</td></tr>
-          ) : logs.map((log) => (
-            <tr key={log.id} className="hover:bg-[rgba(255,255,255,0.02)] transition-colors">
-              <td className="px-6 py-4">
-                <div className="text-white whitespace-nowrap">{format(new Date(log.created_at), 'dd/MM/yyyy HH:mm')}</div>
+             <tr><td colSpan={5} className="px-5 py-8 text-center text-text-tertiary">Cargando...</td></tr>
+          ) : logs.map((log, idx) => (
+            <tr key={log.id} className={`group cursor-pointer transition-colors border-b border-divider hover:bg-surface-hover ${idx % 2 === 0 ? 'bg-surface' : 'bg-bg-alt/30'}`}>
+              <td className="px-5 py-4">
+                <div className="text-sm font-medium text-text-primary whitespace-nowrap group-hover:text-mint transition-colors">{format(new Date(log.created_at), 'dd/MM/yyyy HH:mm')}</div>
                 <div className="mt-2">{getStatusBadge(log.status)}</div>
               </td>
-              <td className="px-6 py-4 font-medium text-white">
+              <td className="px-5 py-4 font-medium text-text-secondary">
                 {log.expediente_code || 'N/A'}
               </td>
-              <td className="px-6 py-4 font-medium">
+              <td className="px-5 py-4 font-medium text-text-secondary text-sm">
                 {log.recipient_email}
               </td>
-              <td className="px-6 py-4">
-                <div className="text-mint font-medium font-mono">${log.amount_overdue}</div>
-                <div className="text-xs text-[rgba(255,255,255,0.6)] mt-1">{log.grace_days_used} días gracia</div>
+              <td className="px-5 py-4">
+                <div className="text-mint font-medium font-mono text-sm">${log.amount_overdue}</div>
+                <div className="text-xs text-text-tertiary mt-1">{log.grace_days_used} días gracia</div>
               </td>
-              <td className="px-6 py-4 text-xs text-red-300 max-w-xs truncate" title={log.error}>
+              <td className="px-5 py-4 text-xs text-coral max-w-xs truncate" title={log.error}>
                 {log.error || '-'}
               </td>
             </tr>
           ))}
           {!loading && logs.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-6 py-8 text-center text-[rgba(255,255,255,0.5)]">
+              <td colSpan={5} className="px-5 py-12 text-center text-text-tertiary bg-surface">
                 No hay registros de cobranza.
               </td>
             </tr>
           )}
          </tbody>
       </table>
+      </div>
     </div>
   );
 }

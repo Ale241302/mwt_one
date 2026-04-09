@@ -40,11 +40,11 @@ export default function CollectionsLogPage() {
   }, [fetchLogs]);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Historial de Cobranza Automática</h1>
-          <p className="text-[rgba(255,255,255,0.6)] mt-2">
+          <h1 className="text-2xl font-display font-bold">Historial de Cobranza Automática</h1>
+          <p className="text-sm text-text-tertiary mt-1">
             Registro inmutable de correos de pagos vencidos generados por cron.
           </p>
         </div>
