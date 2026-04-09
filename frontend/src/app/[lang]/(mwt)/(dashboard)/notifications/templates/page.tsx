@@ -27,7 +27,7 @@ export default function TemplatesPage() {
 
   const fetchTemplates = async () => {
     try {
-      const res = await api.get("/api/notifications/templates/");
+      const res = await api.get("/notifications/templates/");
       setTemplates(res.data);
     } catch (err) {
       console.error(err);
@@ -39,9 +39,9 @@ export default function TemplatesPage() {
   const toggleStatus = async (id: string, currentStatus: boolean) => {
     try {
       if (currentStatus) {
-        await api.delete(`/api/notifications/templates/${id}/`);
+        await api.delete(`/notifications/templates/${id}/`);
       } else {
-        await api.post(`/api/notifications/templates/${id}/restore/`);
+        await api.post(`/notifications/templates/${id}/restore/`);
       }
       fetchTemplates();
     } catch (err) {
