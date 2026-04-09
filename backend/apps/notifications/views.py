@@ -59,6 +59,8 @@ class NotificationTemplateViewSet(viewsets.ModelViewSet):
         """DELETE = desactivar. No borra el template."""
         instance = self.get_object()
         instance.is_active = False
+        # Nota: instance.save() bypasses ImmutableManager (si se aplicara en el futuro)
+        # NotificationTemplate no es inmutable por ahora, así que esto es seguro.
         instance.save(update_fields=['is_active'])
         return Response({'detail': 'Template desactivado.'}, status=status.HTTP_200_OK)
 
