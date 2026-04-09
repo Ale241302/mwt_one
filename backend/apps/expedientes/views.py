@@ -14,6 +14,7 @@ from rest_framework.exceptions import PermissionDenied
 
 from apps.expedientes.models import (
     Expediente, ArtifactInstance, CostLine, PaymentLine, EventLog, LogisticsOption,
+    ExpedientePago,
 )
 from apps.expedientes.services import (
     create_expediente, can_execute_command, execute_command,
