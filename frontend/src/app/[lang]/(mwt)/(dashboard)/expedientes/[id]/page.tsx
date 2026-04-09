@@ -38,6 +38,7 @@ import PagosSection from "@/components/expediente/PagosSection";
 import DeferredPricePanel from "@/components/expediente/DeferredPricePanel";
 import FamilyBanner from "@/components/expediente/FamilyBanner";
 import { PortalPagosTab } from "@/components/portal/PortalPagosTab";
+import NotificationLogsSection from "@/components/expediente/NotificationLogsSection";
 
 interface ExpedienteRef {
   expediente_id: string;
@@ -658,6 +659,12 @@ export default function ExpedienteDetailPage() {
                 isCeo={true}
                 onUpdate={() => fetchBundle(true)}
               />
+            )}
+
+            {isAdmin && (
+              <div className="card p-5">
+                <NotificationLogsSection expedienteId={expedienteId} isCeo={isAdmin} />
+              </div>
             )}
 
             <div>

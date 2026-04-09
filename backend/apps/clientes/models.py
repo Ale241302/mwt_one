@@ -82,6 +82,18 @@ class ClientSubsidiary(models.Model):
         help_text="Días de gracia post-vencimiento antes de email cobranza."
     )
 
+    # S26-02: Email de contacto para notificaciones transaccionales
+    contact_email = models.EmailField(
+        null=True, blank=True,
+        help_text="Email de contacto para notificaciones. Si null, se salta notificación."
+    )
+    # S26-02: Idioma preferido para templates email
+    preferred_language = models.CharField(
+        max_length=5,
+        null=True, blank=True,
+        help_text="Idioma preferido (ISO 639-1). Default: es si null."
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

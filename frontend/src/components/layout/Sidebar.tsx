@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, FolderOpen, Kanban, PieChart, ArrowLeftRight, 
   Network, Users2, Building2, Package, ClipboardList, Truck,
-  LogOut, ChevronLeft, ChevronRight
+  LogOut, ChevronLeft, ChevronRight, Mail, History, CreditCard
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -38,12 +38,17 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Productos", href: "/productos", icon: <Package size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
   { label: "Proveedores", href: "/suppliers", icon: <Truck size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
   { label: "Inventario", href: "/inventario", icon: <ClipboardList size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
+  // Notificaciones (CEO only) — S26
+  { label: "Templates", href: "/notifications/templates", icon: <Mail size={20} />, group: "notificaciones", roles: ["CEO"] },
+  { label: "Historial", href: "/notifications/history", icon: <History size={20} />, group: "notificaciones", roles: ["CEO"] },
+  { label: "Cobros", href: "/notifications/collections", icon: <CreditCard size={20} />, group: "notificaciones", roles: ["CEO"] },
 ];
 
 const GROUP_LABELS: Record<string, string> = {
   core: "",
   financiero: "Financiero",
   estructura: "Estructura",
+  notificaciones: "Notificaciones",
 };
 
 export default function Sidebar({
@@ -70,7 +75,7 @@ export default function Sidebar({
     return () => window.removeEventListener("resize", handleResize);
   }, [setIsOpen]);
 
-  const groups = ["core", "financiero", "estructura"];
+  const groups = ["core", "financiero", "estructura", "notificaciones"];
 
   return (
     <aside

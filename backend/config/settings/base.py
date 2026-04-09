@@ -65,6 +65,8 @@ INSTALLED_APPS = [
     'apps.suppliers',
     # Sprint 23
     'apps.commercial',
+    # Sprint 26
+    'apps.notifications',
     'drf_spectacular',
 ]
 
@@ -322,3 +324,18 @@ if _SENTRY_DSN:
         traces_sample_rate=0.1,
         send_default_pii=False,
     )
+
+# --- S26: Email notifications settings ---
+MWT_EMAIL_BACKEND = env('MWT_EMAIL_BACKEND', default='apps.notifications.backends.SMTPBackend')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='info@mwt.one')
+MWT_NOTIFICATION_ENABLED = env.bool('MWT_NOTIFICATION_ENABLED', default=False)
+CEO_EMAIL = env('CEO_EMAIL', default='')
+PORTAL_BASE_URL = env('PORTAL_BASE_URL', default='https://consola.mwt.one')
+AWS_SES_REGION = env('AWS_SES_REGION', default='us-east-1')
+
+# --- S26: SMTP Email Config ---
+EMAIL_HOST = env('EMAIL_HOST', default='mail.mwt.one')
+EMAIL_PORT = env.int('EMAIL_PORT', default=465)
+EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=True)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='info@mwt.one')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')

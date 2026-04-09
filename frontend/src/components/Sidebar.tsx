@@ -8,7 +8,7 @@ import {
   LayoutDashboard, FolderOpen, Kanban, PieChart, Receipt,
   ArrowLeftRight, Network, Users2, Building2, Users,
   LogOut, ChevronLeft, ChevronRight, Package, ClipboardList,
-  Truck
+  Truck, Mail, History, CreditCard
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -19,32 +19,38 @@ interface NavItem {
   href: string;
   icon: React.ReactNode;
   group?: string;
+  roles?: string[]; // Optional roles allowed to see this item
 }
 
 // ── All nav items ─────────────────────────────────────────────────────────────
 // NOTE: /usuarios y /liquidaciones fueron eliminados (rutas no implementadas — 404).
 const NAV_ITEMS: NavItem[] = [
   // Core
-  { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={20} />, group: "core" },
-  { label: "Expedientes", href: "/expedientes", icon: <FolderOpen size={20} />, group: "core" },
-  { label: "Pipeline", href: "/pipeline", icon: <Kanban size={20} />, group: "core" },
-  { label: "Portal", href: "/portal", icon: <Building2 size={20} />, group: "core" },
+  { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={20} />, group: "core", roles: ["CEO", "AGENT", "CLIENT"] },
+  { label: "Expedientes", href: "/expedientes", icon: <FolderOpen size={20} />, group: "core", roles: ["CEO", "AGENT", "CLIENT"] },
+  { label: "Pipeline", href: "/pipeline", icon: <Kanban size={20} />, group: "core", roles: ["CEO", "AGENT"] },
+  { label: "Portal", href: "/portal", icon: <Building2 size={20} />, group: "core", roles: ["CEO", "AGENT"] },
   // Financiero
-  { label: "Financiero", href: "/dashboard/financial", icon: <PieChart size={20} />, group: "financiero" },
-  { label: "Transfers", href: "/transfers", icon: <ArrowLeftRight size={20} />, group: "financiero" },
+  { label: "Financiero", href: "/dashboard/financial", icon: <PieChart size={20} />, group: "financiero", roles: ["CEO"] },
+  { label: "Transfers", href: "/transfers", icon: <ArrowLeftRight size={20} />, group: "financiero", roles: ["CEO", "AGENT"] },
   // Estructura
-  { label: "Nodos", href: "/nodos", icon: <Network size={20} />, group: "estructura" },
-  { label: "Clientes", href: "/clientes", icon: <Users2 size={20} />, group: "estructura" },
-  { label: "Brands", href: "/brands", icon: <Building2 size={20} />, group: "estructura" },
-  { label: "Productos", href: "/productos", icon: <Package size={20} />, group: "estructura" },
-  { label: "Proveedores", href: "/suppliers", icon: <Truck size={20} />, group: "estructura" },
-  { label: "Inventario", href: "/inventario", icon: <ClipboardList size={20} />, group: "estructura" },
+  { label: "Nodos", href: "/nodos", icon: <Network size={20} />, group: "estructura", roles: ["CEO"] },
+  { label: "Clientes", href: "/clientes", icon: <Users2 size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
+  { label: "Brands", href: "/brands", icon: <Building2 size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
+  { label: "Productos", href: "/productos", icon: <Package size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
+  { label: "Proveedores", href: "/suppliers", icon: <Truck size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
+  { label: "Inventario", href: "/inventario", icon: <ClipboardList size={20} />, group: "estructura", roles: ["CEO", "AGENT"] },
+  // Notificaciones (CEO only) — S26
+  { label: "Templates", href: "/notifications/templates", icon: <Mail size={20} />, group: "notificaciones", roles: ["CEO"] },
+  { label: "Historial", href: "/notifications/history", icon: <History size={20} />, group: "notificaciones", roles: ["CEO"] },
+  { label: "Cobros", href: "/notifications/collections", icon: <CreditCard size={20} />, group: "notificaciones", roles: ["CEO"] },
 ];
 
 const GROUP_LABELS: Record<string, string> = {
   core: "",
   financiero: "Financiero",
   estructura: "Estructura",
+  notificaciones: "Notificaciones",
 };
 
 export default function Sidebar({
@@ -55,7 +61,7 @@ export default function Sidebar({
   setIsOpen: (open: boolean) => void;
 }) {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth(); // assuming user provides full data including role
 
   // Auto-collapse on small screens
   useEffect(() => {
@@ -71,7 +77,7 @@ export default function Sidebar({
     return () => window.removeEventListener("resize", handleResize);
   }, [setIsOpen]);
 
-  const groups = ["core", "financiero", "estructura"];
+  const groups = ["core", "financiero", "estructura", "notificaciones"];
 
   return (
     <aside
@@ -109,7 +115,15 @@ export default function Sidebar({
       {/* ── Navigation ─────────────────────────────────────────────────── */}
       <nav aria-label="Menú lateral" className="flex-1 overflow-y-auto py-4">
         {groups.map((group) => {
-          const items = NAV_ITEMS.filter((i) => i.group === group);
+          let items = NAV_ITEMS.filter((i) => i.group === group);
+          
+          // Role-based filtering if user is available
+          if (user && user.role) {
+            items = items.filter((i) => !i.roles || i.roles.includes(user.role));
+          }
+
+          if (items.length === 0) return null;
+
           const label = GROUP_LABELS[group];
           return (
             <div key={group}>

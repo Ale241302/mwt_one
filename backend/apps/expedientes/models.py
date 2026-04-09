@@ -530,6 +530,16 @@ class ExpedientePago(models.Model):
         help_text="Motivo de rechazo si payment_status='rejected'."
     )
 
+    # S26-02b: FK proforma — para resolve_collection_recipient()
+    proforma = models.ForeignKey(
+        'ArtifactInstance',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='payments',
+        limit_choices_to={'artifact_type': 'ART-02'},
+        help_text='S26-02b: Proforma (ART-02) del pago. Null para pagos legacy pre-S26.'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
