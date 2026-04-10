@@ -77,6 +77,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.core.middleware.DataAccessAuditMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -107,7 +108,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': env('POSTGRES_DB', default='mwt'),
         'USER': env('POSTGRES_USER', default='mwt'),
-        'PASSWORD': env('POSTGRES_PASSWORD', default=''),
+        'PASSWORD': env('POSTGRES_PASSWORD'),
         'HOST': env('POSTGRES_HOST', default='postgres'),
         'PORT': env.int('POSTGRES_PORT', default=5432),
     }
@@ -117,7 +118,7 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('REDIS_URL', default='redis://:mwt2024@redis:6379/0'),
+        'LOCATION': env('REDIS_URL'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -125,8 +126,8 @@ CACHES = {
 }
 
 # --- CELERY ---
-CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://:mwt2024@redis:6379/0')
-CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://:mwt2024@redis:6379/1')
+CELERY_BROKER_URL = env('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -135,7 +136,7 @@ CELERY_TIMEZONE = 'America/Costa_Rica'
 # --- MINIO ---
 MINIO_ENDPOINT = env('MINIO_ENDPOINT', default='minio:9000')
 MINIO_ACCESS_KEY = env('MINIO_ROOT_USER', default='admin')
-MINIO_SECRET_KEY = env('MINIO_ROOT_PASSWORD', default='')
+MINIO_SECRET_KEY = env('MINIO_ROOT_PASSWORD')
 MINIO_SECURE = False
 MINIO_BUCKET_NAME = 'mwt-documents'
 
@@ -180,6 +181,11 @@ LOGGING = {
         'mwt.observability': {
             'handlers': ['console'],
             'level': env.str('LOG_LEVEL', default='INFO'),
+            'propagate': False,
+        },
+        'mwt.audit': {
+            'handlers': ['console'],
+            'level': 'INFO',
             'propagate': False,
         },
         'apps.knowledge': {
@@ -301,7 +307,7 @@ LIQUIDATION_COMMISSION_TOLERANCE_PP = 0.5
 
 # --- Sprint 8 Knowledge ---
 KNOWLEDGE_SERVICE_URL = env('KNOWLEDGE_SERVICE_URL', default='http://mwt-knowledge:8001')
-KNOWLEDGE_INTERNAL_TOKEN = env('KNOWLEDGE_INTERNAL_TOKEN', default='')
+KNOWLEDGE_INTERNAL_TOKEN = env('KNOWLEDGE_INTERNAL_TOKEN')
 
 # --- Sprint 13 ---
 DAI_RATES = {
@@ -338,4 +344,4 @@ EMAIL_HOST = env('EMAIL_HOST', default='mail.mwt.one')
 EMAIL_PORT = env.int('EMAIL_PORT', default=465)
 EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=True)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='info@mwt.one')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
