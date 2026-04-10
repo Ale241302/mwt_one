@@ -11,7 +11,7 @@ umask 077
 DATE=$(date +%Y-%m-%d_%H%M%S)
 WORK_DIR=$(mktemp -d)
 STATUS_FILE="/opt/mwt/backup_status.txt"
-BACKUP_BUCKET="mwt-backup"
+BACKUP_BUCKET="mwt-local/mwt-backups"
 LOCAL_BUCKET="mwt-local"
 # CEO_GPG_KEY_ID="[DECISION_CEO]" # Reemplazar con ID real en el servidor
 RETENTION_DAYS=30
@@ -58,7 +58,7 @@ if [ -z "${DATABASE_URL:-}" ]; then
     fail "DATABASE_URL no definida"
 fi
 
-pg_dump "$DATABASE_URL" > "${WORK_DIR}/backup_${DATE}.sql" || fail "pg_dump falló"
+docker exec mwt-postgres pg_dump "$DATABASE_URL" > "${WORK_DIR}/backup_${DATE}.sql" || fail "docker exec mwt-postgres pg_dump falló"
 DUMP_SIZE=$(stat -c%s "${WORK_DIR}/backup_${DATE}.sql")
 DUMP_SHA256=$(sha256sum "${WORK_DIR}/backup_${DATE}.sql" | awk '{print $1}')
 
@@ -78,7 +78,7 @@ log "Sincronizando objetos MinIO..."
 # Sincronizar documentos de producción a carpeta temporal de backup
 mkdir -p "${WORK_DIR}/minio_mirror"
 # mc alias set local http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD
-mc mirror --overwrite "${LOCAL_BUCKET}/documents" "${WORK_DIR}/minio_mirror/" || log "ADVERTENCIA: Fallo parcial en mc mirror documentos"
+mc mirror --overwrite "mwt-local/mwt-documents" "${WORK_DIR}/minio_mirror/" || log "ADVERTENCIA: Fallo parcial en mc mirror documentos"
 MINIO_COUNT=$(find "${WORK_DIR}/minio_mirror/" -type f | wc -l)
 
 # 4. Configuración Crítica (Hard Fail)
