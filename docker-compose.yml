@@ -13,6 +13,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    mem_limit: 1g
+    cpus: 1.0
+    user: "postgres"
 
   redis:
     image: redis:7-alpine
@@ -26,6 +29,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    mem_limit: 256m
+    cpus: 0.5
 
   minio:
     image: minio/minio
@@ -43,6 +48,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    mem_limit: 512m
+    cpus: 0.5
+    user: "1000:1000"
 
   django:
     build:
@@ -69,6 +77,8 @@ services:
       retries: 5
       start_period: 30s
     restart: always
+    mem_limit: 1g
+    cpus: 1.0
 
   celery-worker:
     build:
@@ -85,6 +95,13 @@ services:
     depends_on:
       django:
         condition: service_healthy
+    mem_limit: 1g
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'celery worker' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   celery-beat:
     build:
@@ -102,6 +119,13 @@ services:
     depends_on:
       django:
         condition: service_healthy
+    mem_limit: 512m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'celery beat' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
     build:
@@ -116,6 +140,13 @@ services:
     #   - /app/node_modules
     ports:
       - "3000:3000"
+    mem_limit: 512m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   nginx:
     build:
@@ -136,6 +167,13 @@ services:
         condition: service_healthy
       frontend:
         condition: service_started
+    mem_limit: 256m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ────────────────────────────────────────────────
   # Sprint 4 S4-10: Paperless-ngx (standalone)

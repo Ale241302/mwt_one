@@ -79,6 +79,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.core.middleware.DataAccessAuditMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -180,6 +181,11 @@ LOGGING = {
         'mwt.observability': {
             'handlers': ['console'],
             'level': env.str('LOG_LEVEL', default='INFO'),
+            'propagate': False,
+        },
+        'mwt.audit': {
+            'handlers': ['console'],
+            'level': 'INFO',
             'propagate': False,
         },
         'apps.knowledge': {
