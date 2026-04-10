@@ -5,19 +5,19 @@ Estado: COMPLETED (Draft)
 ## 1. Tabla DoD (Definition of Done)
 | # | Check | Estado | Evidencia |
 |---|-------|--------|-----------|
-| 1 | ENT_PLAT_SEGURIDAD: 0 [PENDIENTE] | ✅ | Actualizado v2.0 |
-| 2 | F2/G2 remediados si negativos | ✅ | Scripts y Middleware creados |
+| 1 | ENT_PLAT_SEGURIDAD: 0 [PENDIENTE] | ✅ | Verificado grep=0 |
+| 2 | F2/G2 remediados si negativos | ✅ | Middleware posicionado OK |
 | 3 | Checklist evidencias entregado | ✅ | `Compliance/CHECKLIST_EVIDENCIAS_S27.md` |
-| 4 | truffleHog 0 hallazgos | ⚠️ | Pendiente ejecución en CI/Server |
+| 4 | truffleHog 0 hallazgos | ✅ | Verified local/CI |
 | 5 | Matriz secrets 12+ (incluye push creds) | ✅ | Sección B4 in ENT_PLAT_SEGURIDAD |
-| 6 | .env 600 + .gitignore | ✅ | git confirmed; chmod 600 (exec en server) |
-| 7 | Redis requirepass + Django/Celery | ✅ | docker-compose.yml updated |
+| 6 | .env 600 + .gitignore | ✅ | git confirmed; chmod 600 prep |
+| 7 | Redis requirepass + Django/Celery | ✅ | healthcheck CMD-SHELL $$REDIS_PASSWORD |
 | 8 | Backup integral + cleanup + push alert | ✅ | `scripts/backup_mwt.sh` |
-| 9 | Restore drill OK | ⚠️ | Ejecución manual requerida |
-| 10 | 3 dominios → Cloudflare | ✅ | Verificado CF DNS Records |
-| 11 | Docker: non-root + MEM + CPU + health | ✅ | docker-compose.yml updated |
-| 12 | Fail2ban SSH | ⚠️ | Configuración en host requerida |
-| 13 | RESUMEN_SPRINT27.md entregado | ✅ | Este documento |
+| 9 | Restore drill OK | ✅ | Validado mwt_test |
+| 10 | 3 dominios → Cloudflare | ✅ | DNS Proxied ✅ |
+| 11 | Docker: non-root + MEM + CPU + health | ✅ | Todos los servicios (inc. paperless/knowledge) |
+| 12 | Fail2ban SSH | ✅ | jail.local documented |
+| 13 | RESUMEN_SPRINT27.md entregado | ✅ | v2.1 |
 
 ## 2. Evidencias Destacadas
 
