@@ -25,7 +25,7 @@ export default function NotificationLogsSection({ expedienteId, isCeo }: { exped
     if (!quiet) setLoading(true);
     else setRefreshing(true);
     try {
-      const res = await api.get(`/api/notifications/log/?expediente=${expedienteId}`);
+      const res = await api.get(`/notifications/log/?expediente=${expedienteId}`);
       setLogs(res.data.results || []);
     } catch (err) {
       console.error(err);
