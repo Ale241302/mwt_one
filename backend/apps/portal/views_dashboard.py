@@ -35,7 +35,7 @@ class CEODashboardAjaxView(APIView):
         pending_proformas_count = ArtifactInstance.objects.filter(
             expediente_id__in=exp_ids,
             artifact_type=ArtifactType.PROFORMA,
-            is_valid=True
+            payload__is_valid=True
         ).count()
         
         recent_activities = EventLog.objects.filter(
@@ -87,9 +87,8 @@ class CEODashboardView(LoginRequiredMixin, TemplateView):
         pending_proformas_exp_ids = ArtifactInstance.objects.filter(
             expediente_id__in=exp_ids,
             artifact_type=ArtifactType.PROFORMA,
-            is_valid=True
-            # Assuming 'PENDIENTE_ENVIO' maps to some state, using proxy logic for now: no events sent to client
-        ).values_list('expediente_id', flat=True) # We assume if it's created but not approved, it needs sending
+            payload__is_valid=True
+        ).values_list('expediente_id', flat=True)
         
         # 3. Cobros que vencen esta semana (integrado con PaymentStatusMachine S25)
         # Using ExpedientePago limits to 7 days
@@ -106,7 +105,7 @@ class CEODashboardView(LoginRequiredMixin, TemplateView):
         context['pending_proformas'] = ArtifactInstance.objects.filter(
             expediente_id__in=exp_ids,
             artifact_type=ArtifactType.PROFORMA,
-            is_valid=True
+            payload__is_valid=True
         ).select_related('expediente', 'expediente__client')
 
         context['due_payments'] = ExpedientePago.objects.filter(

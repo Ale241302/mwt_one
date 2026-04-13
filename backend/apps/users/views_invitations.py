@@ -7,7 +7,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model
 from apps.users.models import UserRole
-from apps.clientes.models import Client
+from apps.clientes.models import Cliente
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -20,15 +21,15 @@ class InviteClientView(APIView):
             
         email = request.data.get('email')
         client_id = request.data.get('client_id')
-        role = request.data.get('role', UserRole.CLIENT_RANAWALK)
+        role = request.data.get('role', UserRole.CLIENT_MARLUVAS)
         
         if not email or not client_id:
             return Response({"error": "email and client_id required"}, status=status.HTTP_400_BAD_REQUEST)
             
         try:
-            client_record = Client.objects.get(pk=client_id)
-        except Client.DoesNotExist:
-            return Response({"error": "Client not found"}, status=status.HTTP_404_NOT_FOUND)
+            client_record = Cliente.objects.get(pk=client_id)
+        except Cliente.DoesNotExist:
+            return Response({"error": "Cliente not found"}, status=status.HTTP_404_NOT_FOUND)
             
         # Create user without password (inactive/pending)
         invite_token = uuid.uuid4().hex

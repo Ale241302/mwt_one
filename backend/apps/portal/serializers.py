@@ -28,4 +28,4 @@ class ExpedientePortalSerializer(serializers.ModelSerializer):
 class ArtifactPortalSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArtifactInstance
-        fields = ['artifact_id', 'artifact_type', 'status', 'created_at', 'updated_at']
+        fields = ['artifact_id', 'artifact_type', 'status', 'payload', 'created_at', 'updated_at']

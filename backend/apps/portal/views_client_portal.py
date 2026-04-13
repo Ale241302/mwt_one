@@ -58,12 +58,13 @@ class ClientPortalViewSet(viewsets.ReadOnlyModelViewSet):
         proforma = ArtifactInstance.objects.filter(
             expediente=expediente, 
             artifact_type=ArtifactType.PROFORMA,
-            is_valid=True
+            payload__is_valid=True
         ).last()
         
         if not proforma:
             return Response({"error": "No proforma available"}, status=status.HTTP_404_NOT_FOUND)
             
-        # S24 mocked S3 Signed URL generation
-        signed_url = f"{proforma.file_url}?AuthToken=S24TokenSigned"
+        # S24 mocked S3 Signed URL generation from payload
+        file_url = proforma.payload.get('file_url', '')
+        signed_url = f"{file_url}?AuthToken=S24TokenSigned"
         return Response({"download_url": signed_url})

@@ -130,6 +130,6 @@ class AforoType(TextChoices):
 
 
 class ArtifactType(TextChoices):
-    PROFORMA = 'proforma', 'Proforma'
-    CERTIFICATE_OF_ORIGIN = 'certificate_of_origin', 'Certificado de Origen'
-    DUE_EXPORT_BR = 'due_export_br', 'DU-E Exportación Brasil'
+    PROFORMA = 'ART-02', 'Proforma'
+    CERTIFICATE_OF_ORIGIN = 'ART-03', 'Certificado de Origen'
+    DUE_EXPORT_BR = 'ART-05', 'DU-E Exportación Brasil'

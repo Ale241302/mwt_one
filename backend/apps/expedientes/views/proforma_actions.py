@@ -18,15 +18,15 @@ class ProformaSendView(APIView):
         proforma = ArtifactInstance.objects.filter(
             expediente=expediente, 
             artifact_type=ArtifactType.PROFORMA,
-            is_valid=True
+            payload__is_valid=True
         ).last()
         
         if not proforma:
             return Response({"error": "No hay proforma válida"}, status=status.HTTP_404_NOT_FOUND)
             
-        # Generar token de aprobación único (guardado temporalmente en notes o Redis, mocking aquí en notes por MVP)
+        # Generar token de aprobación único (guardado en el payload)
         token = uuid.uuid4().hex
-        proforma.notes = f"token:{token}"
+        proforma.payload['token'] = token
         proforma.save()
         
         # Integrar S26 email send
@@ -50,11 +50,10 @@ class ProformaApproveRejectView(APIView):
         if action not in ['aprobar', 'rechazar']:
             return Response({"error": "Acción inválida"}, status=status.HTTP_400_BAD_REQUEST)
             
-        # Buscar proforma con este token en notes (MVP approach, debería en un modelo Token)
-        # Note: A real implementation would use a Token model. Using robust matching to avoid breaking.
+        # Buscar proforma con este token en el payload
         proformas = ArtifactInstance.objects.filter(
             artifact_type=ArtifactType.PROFORMA,
-            notes__icontains=f"token:{token}"
+            payload__token=token
         )
         
         if not proformas.exists():
@@ -66,10 +65,10 @@ class ProformaApproveRejectView(APIView):
         try:
             if action == 'aprobar':
                 expediente.status = ExpedienteStatus.CONFIRMADO # Or specific step
-                proforma.notes += " | APROBADA"
+                proforma.payload['approval_status'] = 'APROBADA'
             else:
                 expediente.status = ExpedienteStatus.CANCELADO # Or specific step backwards
-                proforma.notes += " | RECHAZADA"
+                proforma.payload['approval_status'] = 'RECHAZADA'
             
             proforma.save()
             expediente.save()

@@ -43,14 +43,17 @@ class ProformaGeneratorService:
         # 3. Simulate upload to S3 via S24 signed logic
         file_url = f"s3://mwt-documents/proformas/{expediente.expediente_id}/PROFORMA_{uuid.uuid4().hex[:8]}.pdf"
         
-        # 4. Save ArtifactInstance metadata
+        # 4. Save ArtifactInstance metadata in payload
         artifact = ArtifactInstance.objects.create(
             expediente=expediente,
             artifact_type=ArtifactType.PROFORMA,
-            doc_code=f"PF-{expediente.expediente_id}-{timezone.now().year}",
-            file_url=file_url,
-            is_valid=True
+            payload={
+                "doc_code": f"PF-REF-{expediente.expediente_id}",
+                "file_url": file_url,
+                "is_valid": True,
+                "pricing_mode": pricing_mode
+            }
         )
         
-        logger.info(f"Generated Proforma {artifact.doc_code} for Expediente {expediente.expediente_id}")
+        logger.info(f"Generated Proforma {artifact.payload.get('doc_code')} for Expediente {expediente.expediente_id}")
         return artifact
