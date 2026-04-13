@@ -13,7 +13,7 @@ class VendorCatalogView(APIView):
         user = request.user
         
         # Vendor or CEO can see catalog. CEO sees all, Vendor only sees base prices.
-        if user.role not in [UserRole.VENDOR, UserRole.CEO, UserRole.INTERNAL]:
+        if user.role not in [UserRole.INTERNAL, UserRole.CEO]:
             return Response({"error": "Unauthorized"}, status=403)
             
         brand_slug = request.query_params.get('brand')
