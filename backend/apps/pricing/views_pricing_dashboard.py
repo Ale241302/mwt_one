@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from apps.pricing.models import PriceAssignment
+from apps.pricing.models import ClientProductAssignment
 from apps.users.models import UserRole
 from django.utils import timezone
 from datetime import timedelta
@@ -13,7 +13,7 @@ class PricingDashboardView(APIView):
         if request.user.role not in [UserRole.CEO, UserRole.INTERNAL, UserRole.VENDOR]:
             return Response({"error": "Unauthorized"}, status=403)
             
-        assignments = PriceAssignment.objects.all().select_related('brand', 'client')
+        assignments = ClientProductAssignment.objects.all().select_related('brand_sku__brand', 'client_subsidiary')
         
         # S31 Identify stale prices (>90 days without update)
         ninety_days_ago = timezone.now() - timedelta(days=90)
@@ -26,10 +26,10 @@ class PricingDashboardView(APIView):
             
             data.append({
                 "assignment_id": assign.id,
-                "brand": assign.brand.name if assign.brand else None,
-                "client": assign.client.legal_name if assign.client else None,
-                "sku": assign.sku,
-                "price": float(assign.price),
+                "brand": assign.brand_sku.brand.name if assign.brand_sku and assign.brand_sku.brand else None,
+                "client": assign.client_subsidiary.legal_name if assign.client_subsidiary else None,
+                "sku": assign.brand_sku.sku if assign.brand_sku else None,
+                "price": float(assign.cached_client_price) if assign.cached_client_price else 0.0,
                 "last_updated": last_updated,
                 "is_stale": is_stale,
                 "requires_review": is_stale

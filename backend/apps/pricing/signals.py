@@ -1,12 +1,12 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from apps.pricing.models import PriceAssignment
+from apps.pricing.models import ClientProductAssignment
 from apps.expedientes.models import Expediente
 import logging
 
 logger = logging.getLogger(__name__)
 
-@receiver([post_save, post_delete], sender=PriceAssignment)
+@receiver([post_save, post_delete], sender=ClientProductAssignment)
 def trigger_cpa_recalculate(sender, instance, **kwargs):
     """
     S32: CPA Auto-recalculate
@@ -14,15 +14,15 @@ def trigger_cpa_recalculate(sender, instance, **kwargs):
     that rely on this price.
     """
     # Find active expedientes for this brand and SKU that might need recalcs
-    brand = instance.brand
-    client = instance.client
-    sku = instance.sku
+    brand_sku = instance.brand_sku
+    client_subsidiary = instance.client_subsidiary
+    sku = instance.brand_sku
 
-    if brand and sku:
+    if brand_sku and sku:
         # Simplification: we trigger recalculate for active ones based on pricing fields
         active_expedientes = Expediente.objects.filter(
-            brand=brand,
-            client=client,
+            brand=brand_sku.brand,
+            client=client_subsidiary,
             is_blocked=False # or whatever open statuses
         )
         
