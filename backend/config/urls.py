@@ -44,6 +44,10 @@ urlpatterns = [
     # FIX: Dashboard endpoints directamente en /api/ui/dashboard/
     path('api/ui/dashboard/financial/', FinancialDashboardView.as_view(), name='ui-dashboard-financial'),
     path('api/ui/dashboard/', FinancialDashboardView.as_view(), name='ui-dashboard'),
+    
+    # S28: CEO Dashboard Landing Page
+    path('api/portal/ceo-dashboard/', __import__('apps.portal.views_dashboard').portal.views_dashboard.CEODashboardView.as_view(), name='ceo-dashboard'),
+    
     # S21: Activity Feed endpoints
     path('api/', include('apps.expedientes.urls_activity')),
     # S22: Pricing endpoints

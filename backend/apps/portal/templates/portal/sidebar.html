@@ -1,0 +1,89 @@
+<!-- Role-Based Sidebar Navigation -->
+<div class="sidebar">
+    <div class="sidebar-header">MWT Portal</div>
+    <ul class="nav">
+        {% if user.is_authenticated %}
+            <!-- CEO / Internal Access -->
+            {% if user.role == "ceo" or user.role == "internal" %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'ceo-dashboard' %}">CEO Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/api/ui/dashboard/">Financial Operations</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/admin/">Django Admin</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/api/users/invite/">Invite User</a>
+            </li>
+            {% endif %}
+            
+            <!-- Vendor / Sales Access -->
+            {% if user.role == "vendor" or user.role == "ceo" %}
+            <li class="nav-item">
+                <a class="nav-link" href="/api/portal/catalog/">Sales Catalog</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/api/pricing/dashboard/">Pricing Dashboard</a>
+            </li>
+            {% endif %}
+
+            <!-- Client Access -->
+            {% if "client" in user.role %}
+            <li class="nav-item">
+                <a class="nav-link" href="/api/portal/client/">My Orders</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/api/portal/client/historical/">Order History</a>
+            </li>
+            {% endif %}
+
+            <!-- Common -->
+            <li class="nav-item">
+                <a class="nav-link" href="/api/core/logout/">Logout ({{ user.username }})</a>
+            </li>
+        {% else %}
+            <li class="nav-item">
+                <a class="nav-link" href="/api/core/login/">Login</a>
+            </li>
+        {% endif %}
+    </ul>
+</div>
+
+<style>
+.sidebar {
+    width: 250px;
+    background-color: #1a1a1a;
+    color: white;
+    height: 100vh;
+    padding: 20px 0;
+    position: fixed;
+}
+.sidebar-header {
+    padding: 0 20px 20px 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-bottom: 1px solid #333;
+    margin-bottom: 10px;
+}
+.nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.nav-item {
+    padding: 10px 20px;
+}
+.nav-link {
+    color: #ccc;
+    text-decoration: none;
+    display: block;
+}
+.nav-link:hover {
+    color: #fff;
+    background-color: #333;
+    padding-left: 5px;
+    transition: all 0.2s;
+}
+</style>

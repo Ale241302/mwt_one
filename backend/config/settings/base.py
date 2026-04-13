@@ -133,6 +133,13 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'America/Costa_Rica'
 
+CELERY_BEAT_SCHEDULE = {
+    'daily_automated_collections': {
+        'task': 'apps.expedientes.tasks.automated_collection_sweep', 
+        'schedule': 86400.0, # Every 24 hours, conceptually or crontab(hour=8, minute=0)
+    },
+}
+
 # --- MINIO ---
 MINIO_ENDPOINT = env('MINIO_ENDPOINT', default='minio:9000')
 MINIO_ACCESS_KEY = env('MINIO_ROOT_USER', default='admin')
@@ -210,6 +217,9 @@ USE_I18N = True
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_REDIRECT_URL = '/api/portal/ceo-dashboard/'
+LOGIN_URL = '/api/core/login/'
 
 # --- CSRF / Proxy ---
 CSRF_TRUSTED_ORIGINS = [

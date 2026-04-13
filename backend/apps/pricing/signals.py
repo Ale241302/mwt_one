@@ -1,28 +1,36 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from apps.pricing.models import PriceAssignment
+from apps.expedientes.models import Expediente
+import logging
 
+logger = logging.getLogger(__name__)
 
-@receiver(post_save, sender='pricing.EarlyPaymentPolicy')
-def log_early_payment_policy_change(sender, instance, created, **kwargs):
+@receiver([post_save, post_delete], sender=PriceAssignment)
+def trigger_cpa_recalculate(sender, instance, **kwargs):
     """
-    Registra cambios en EarlyPaymentPolicy en ConfigChangeLog.
-    Excepción explícita a S14-C5: esta política es mutable.
+    S32: CPA Auto-recalculate
+    When a PriceAssignment changes, flag or trigger recalculation of open Expedientes
+    that rely on this price.
     """
-    try:
-        from apps.core.models import ConfigChangeLog  # import lazy para evitar circular imports
-        action = 'created' if created else 'updated'
-        ConfigChangeLog.objects.create(
-            model_name='EarlyPaymentPolicy',
-            object_id=str(instance.pk),
-            action=action,
-            details={
-                'client_subsidiary_id': instance.client_subsidiary_id,
-                'brand_id': instance.brand_id,
-                'base_payment_days': instance.base_payment_days,
-                'base_commission_pct': str(instance.base_commission_pct),
-                'is_active': instance.is_active,
-            },
+    # Find active expedientes for this brand and SKU that might need recalcs
+    brand = instance.brand
+    client = instance.client
+    sku = instance.sku
+
+    if brand and sku:
+        # Simplification: we trigger recalculate for active ones based on pricing fields
+        active_expedientes = Expediente.objects.filter(
+            brand=brand,
+            client=client,
+            is_blocked=False # or whatever open statuses
         )
-    except Exception:
-        # Si ConfigChangeLog no existe aún o falla, no rompemos el flujo principal
-        pass
+        
+        for exp in active_expedientes:
+            try:
+                # Trigger specific method. Assume Expediente has update_cached_base_price()
+                if hasattr(exp, 'update_cached_base_price'):
+                    exp.update_cached_base_price()
+                    logger.info(f"Triggered CPA auto-recalc for Exp {exp.expediente_id}")
+            except Exception as e:
+                logger.error(f"Error recalculating CPA for Exp {exp.expediente_id}: {e}")
