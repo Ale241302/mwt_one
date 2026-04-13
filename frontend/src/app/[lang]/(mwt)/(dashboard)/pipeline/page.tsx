@@ -209,7 +209,10 @@ export default function PipelinePage() {
               {filtered.map((exp) => {
                 const credit = getCreditLevel(exp.credit_days, exp.is_blocked);
                 return (
-                  <tr key={exp.id} className={exp.is_blocked ? "row-critical" : ""}>
+                  <tr key={exp.id} 
+                      className={exp.is_blocked ? "row-critical" : ""}
+                      onClick={() => goToDetail(exp.id)}
+                      style={{ cursor: "pointer" }}>
                     <td className="cell-ref">{exp.ref || `EXP-${exp.id.substring(0, 8)}`}</td>
                     <td><span className={`badge ${STATE_BADGE_CLASSES[exp.status] ?? "badge-info"}`}>{STATE_LABELS[exp.status] || exp.status}</span></td>
                     <td>{exp.client || "—"}</td>
