@@ -14,6 +14,8 @@ def trigger_cpa_recalculate(sender, instance, **kwargs):
     S32: CPA Auto-recalculate
     When a PriceAssignment changes, flag or trigger recalculation of open Expedientes
     that rely on this price.
+    """
+    created = kwargs.get('created', False)
     if not created:
         # S31: History of changes per client/SKU (audited)
         ConfigChangeLog.objects.create(

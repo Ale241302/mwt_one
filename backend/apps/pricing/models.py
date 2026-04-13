@@ -161,6 +161,10 @@ class ClientProductAssignment(TimestampMixin):
     cached_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._old_price = self.cached_client_price
+
     class Meta:
         db_table = 'pricing_clientproductassignment'
         unique_together = ('client_subsidiary', 'brand_sku')
