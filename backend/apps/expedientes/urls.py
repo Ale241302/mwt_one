@@ -35,6 +35,10 @@ from apps.expedientes.views_s20 import (
     ProformaCreateView,
     ProformaModeChangeView,
 )
+from apps.expedientes.views.proforma_actions import (
+    ProformaSendView,
+    ProformaApproveRejectView,
+)
 # S21: Admin views (state navigation + policy management)
 from apps.expedientes.views_admin import (
     AdvanceStateView,
@@ -103,8 +107,12 @@ urlpatterns = [
     # ── S17-03: REOPEN ──
     path('<uuid:pk>/reopen/', CommandDispatchView.as_view(), {'cmd_id': 'REOPEN'}, name='reopen'),
 
-    # ── S20-11: Crear proforma ──
+    # ── S20-11: Crear proforma (Formulario mode_b/mode_c) ──
     path('<uuid:pk>/proformas/', ProformaCreateView.as_view(), name='proforma-create'),
+
+    # ── S29: Acciones sobre Proformas ──
+    path('<uuid:pk>/proforma/send/', ProformaSendView.as_view(), name='proforma-send'),
+    path('proforma/token/<str:action>/', ProformaApproveRejectView.as_view(), name='proforma-approve-reject'),
 
     # ── S20-10: Cambiar modo de proforma ──
     path('<uuid:pk>/proforma/<uuid:pf_id>/change-mode/', ProformaModeChangeView.as_view(), name='proforma-change-mode'),

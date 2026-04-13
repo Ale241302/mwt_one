@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/suppliers/', include('apps.suppliers.urls')),
     # Sprint 8: Users & Auth
     path('api/portal/', include('apps.portal.urls')),
+    path('api/users/', include('apps.users.urls')),
     path('api/agreements/', include('apps.agreements.urls')),
     # Inventario
     path('api/inventario/', include('apps.inventario.urls')),

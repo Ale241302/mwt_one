@@ -83,3 +83,17 @@ class CatalogVersion(TimestampMixin):
 
     def __str__(self):
         return f"{self.brand.slug} Catalog {self.version}"
+
+class BrandTechnicalSheet(TimestampMixin):
+    """
+    S31: ENT_MARCA_FICHA_TECNICA. 
+    Contenedor de especificaciones técnicas por modelo.
+    """
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='tech_sheets')
+    factory_reference = models.CharField(max_length=100)
+    document_url = models.CharField(max_length=500, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"TechSheet {self.brand.slug} - {self.factory_reference}"
+

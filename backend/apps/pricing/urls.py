@@ -12,6 +12,7 @@ from apps.pricing.views import (
     ClientAssignmentViewSet,
     CatalogBrandSKUView,
 )
+from apps.pricing.views_pricing_dashboard import PricingDashboardView
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -61,6 +62,12 @@ urlpatterns = [
         'catalog/brand-skus/',
         CatalogBrandSKUView.as_view(),
         name='pricing-catalog-brand-skus',
+    ),
+    # S31: Pricing Dashboard
+    path(
+        'dashboard/',
+        PricingDashboardView.as_view(),
+        name='pricing-dashboard',
     ),
     # Router endpoints (pricelists list, policies, assignments)
     path('', include(router.urls)),

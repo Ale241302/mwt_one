@@ -3,6 +3,8 @@ from django.dispatch import receiver
 from apps.pricing.models import ClientProductAssignment
 from apps.expedientes.models import Expediente
 import logging
+from apps.audit.models import ConfigChangeLog
+
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +14,19 @@ def trigger_cpa_recalculate(sender, instance, **kwargs):
     S32: CPA Auto-recalculate
     When a PriceAssignment changes, flag or trigger recalculation of open Expedientes
     that rely on this price.
-    """
+    if not created:
+        # S31: History of changes per client/SKU (audited)
+        ConfigChangeLog.objects.create(
+            user=kwargs.get('user'), # Conceptually, if passed via session or thread-local
+            model_name='ClientProductAssignment',
+            record_id=str(instance.id),
+            action='update',
+            changes={
+                "old_price": float(instance._old_price) if hasattr(instance, '_old_price') else None,
+                "new_price": float(instance.cached_client_price) if instance.cached_client_price else 0.0
+            }
+        )
+
     # Find active expedientes for this brand and SKU that might need recalcs
     brand_sku = instance.brand_sku
     client_subsidiary = instance.client_subsidiary
