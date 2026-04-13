@@ -3,8 +3,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from apps.expedientes.enums_artifacts import ArtifactType
-from apps.expedientes.enums_exp import ExpedienteStatus, AggregateType
+from apps.expedientes.enums_exp import ExpedienteStatus, AggregateType, ArtifactType
 from apps.expedientes.models import Expediente, ArtifactInstance, EventLog
 
 class ProformaSendView(APIView):
