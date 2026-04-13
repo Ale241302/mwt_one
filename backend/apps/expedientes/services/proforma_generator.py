@@ -3,6 +3,7 @@ import logging
 from django.utils import timezone
 from apps.expedientes.models import Expediente, ArtifactInstance
 from apps.expedientes.enums_artifacts import ArtifactType
+from apps.pricing.services import resolve_client_price
 
 logger = logging.getLogger(__name__)
 
@@ -14,11 +15,23 @@ class ProformaGeneratorService:
     
     @classmethod
     def generate_proforma(cls, expediente: Expediente, pricing_mode: str) -> ArtifactInstance:
-        # Aquí se integraría con resolve_client_price de S22
-        # resolve_client_price(brand_id=..., party_id=... mode=pricing_mode)
+        # Integración S22: Resolver el precio validado para este expediente antes de emitir proforma
+        brand_id = expediente.brand_id if expediente.brand else None
+        client_id = expediente.client_id if expediente.client else None
         
-        # 1. Render HTML logic (stubbed)
-        rendered_html = f"<html><body>Proforma for {expediente.expediente_id} - Mode {pricing_mode}</body></html>"
+        price_lookup = resolve_client_price(
+            brand_id=brand_id,
+            party_type='client',
+            party_id=client_id,
+            sku='GENERIC-PROFORMA-CHECK', # En producción se iteran los productos del expediente
+            mode=pricing_mode,
+            currency='USD',
+            date=timezone.now().date()
+        )
+        base_price = price_lookup['price'] if price_lookup else 0.0
+
+        # 1. Render HTML logic (stubbed with real resolved price reference)
+        rendered_html = f"<html><body>Proforma for {expediente.expediente_id} - Mode {pricing_mode} - Base {base_price}</body></html>"
         
         # 2. Convert to PDF (stubbed fallback)
         # try:

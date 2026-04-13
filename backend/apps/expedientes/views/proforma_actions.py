@@ -3,9 +3,9 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from apps.expedientes.models import Expediente, ArtifactInstance
 from apps.expedientes.enums_artifacts import ArtifactType
-from apps.expedientes.enums_exp import ExpedienteStatus
+from apps.expedientes.enums_exp import ExpedienteStatus, AggregateType
+from apps.expedientes.models import Expediente, ArtifactInstance, EventLog
 
 class ProformaSendView(APIView):
     permission_classes = [IsAuthenticated]
@@ -76,6 +76,12 @@ class ProformaApproveRejectView(APIView):
             expediente.save()
             
             # TODO: Log EventLog here about the transition
+            EventLog.objects.create(
+                aggregate_id=expediente.expediente_id,
+                aggregate_type=AggregateType.EXPEDIENTE,
+                event_type=f"PROFORMA_{action.upper()}",
+                payload={"action": action, "token_used": True}
+            )
             
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

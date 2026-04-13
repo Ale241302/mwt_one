@@ -5,6 +5,51 @@ from apps.expedientes.models import Expediente, EventLog, ArtifactInstance, Expe
 from django.utils import timezone
 from datetime import timedelta
 from apps.expedientes.enums_exp import ExpedienteStatus, ArtifactType, AggregateType
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+class CEODashboardAjaxView(APIView):
+    """S32: Polling endpoint para realtime stats del CEO dashboard (Opción A)"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        if request.user.role != UserRole.CEO:
+            return Response({"error": "Forbidden"}, status=403)
+            
+        now = timezone.now()
+        three_days_ago = now - timedelta(days=3)
+        
+        active_expedientes = Expediente.objects.exclude(
+            status__in=[ExpedienteStatus.CERRADO, ExpedienteStatus.CANCELADO]
+        )
+        exp_ids = list(active_expedientes.values_list('expediente_id', flat=True))
+        
+        # Action needed count
+        events = EventLog.objects.filter(
+            aggregate_id__in=exp_ids,
+            aggregate_type=AggregateType.EXPEDIENTE
+        ).order_by('aggregate_id', '-occurred_at').distinct('aggregate_id')
+        stale_exp_ids = [e.aggregate_id for e in events if e.occurred_at <= three_days_ago]
+        
+        pending_proformas_count = ArtifactInstance.objects.filter(
+            expediente_id__in=exp_ids,
+            artifact_type=ArtifactType.PROFORMA,
+            is_valid=True
+        ).count()
+        
+        recent_activities = EventLog.objects.filter(
+            aggregate_type=AggregateType.EXPEDIENTE
+        ).order_by('-occurred_at')[:5]
+        
+        return Response({
+            "action_needed_count": len(stale_exp_ids),
+            "pending_proformas_count": pending_proformas_count,
+            "pipeline_count": active_expedientes.count(),
+            "latest_activity": [{"id": str(a.id), "event": str(a.event_type), "time": a.occurred_at} for a in recent_activities]
+        })
+
+
 
 class CEODashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'portal/ceo_dashboard.html'
@@ -72,5 +117,12 @@ class CEODashboardView(LoginRequiredMixin, TemplateView):
         
         # Pipeline Data
         context['pipeline'] = active_expedientes
+        
+        # S21: Activity Feed Connect
+        # Get latest 10 events across all expedientes
+        recent_activity = EventLog.objects.filter(
+            aggregate_type=AggregateType.EXPEDIENTE
+        ).select_related('user').order_by('-occurred_at')[:10]
+        context['activity_feed'] = recent_activity
 
         return context

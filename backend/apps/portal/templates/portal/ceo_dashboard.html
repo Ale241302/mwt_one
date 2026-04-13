@@ -132,13 +132,41 @@
                 <p class="text-sm">No active pipeline.</p>
             {% endfor %}
         </div>
+        <!-- S21 Activity Feed Section -->
+        <div class="section" style="margin-top:20px;">
+            <h2>Recent Activity Feed</h2>
+            <ul id="activity-feed-list" style="list-style-type: none; padding: 0;">
+                {% for act in activity_feed %}
+                    <li style="border-bottom: 1px solid #333; padding: 10px 0;">
+                        <span style="color:var(--accent);">{{ act.occurred_at|date:"SHORT_DATETIME_FORMAT" }}</span> - 
+                        <strong>{{ act.user.username|default:"System" }}</strong>: {{ act.event_type }}
+                        <div class="text-sm">Expediente ID: {{ act.aggregate_id }}</div>
+                    </li>
+                {% empty %}
+                    <li class="text-sm">No recent activity found.</li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 </div>
 
 <script>
-    // AJAX Polling for Dashboard refresh every 60s (S32 target)
+    // AJAX Polling for Dashboard async refresh every 60s (S32 target complete)
     setInterval(() => {
-        location.reload();
+        fetch('/api/portal/ceo-dashboard/ajax/')
+            .then(res => res.json())
+            .then(data => {
+                if(data.latest_activity) {
+                    let htmlList = '';
+                    data.latest_activity.forEach(a => {
+                        htmlList += `<li style='border-bottom: 1px solid #333; padding: 10px 0;'>
+                            <span style='color:var(--accent);'>${new Date(a.time).toLocaleString()}</span> - 
+                            ${a.event} (id: ${a.id})
+                        </li>`;
+                    });
+                    document.getElementById('activity-feed-list').innerHTML = htmlList;
+                }
+            }).catch(console.error);
     }, 60000);
 </script>
 </body>

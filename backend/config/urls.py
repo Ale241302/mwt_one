@@ -47,6 +47,7 @@ urlpatterns = [
     
     # S28: CEO Dashboard Landing Page
     path('api/portal/ceo-dashboard/', __import__('apps.portal.views_dashboard').portal.views_dashboard.CEODashboardView.as_view(), name='ceo-dashboard'),
+    path('api/portal/ceo-dashboard/ajax/', __import__('apps.portal.views_dashboard').portal.views_dashboard.CEODashboardAjaxView.as_view(), name='ceo-dashboard-ajax'),
     
     # S21: Activity Feed endpoints
     path('api/', include('apps.expedientes.urls_activity')),
