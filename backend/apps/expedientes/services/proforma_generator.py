@@ -2,7 +2,7 @@ import uuid
 import logging
 from django.utils import timezone
 from apps.expedientes.models import Expediente, ArtifactInstance
-from apps.expedientes.enums_artifacts import ArtifactType
+from apps.expedientes.enums_exp import ArtifactType
 from apps.pricing.services import resolve_client_price
 
 logger = logging.getLogger(__name__)

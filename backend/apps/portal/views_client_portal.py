@@ -2,9 +2,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from apps.expedientes.models import Expediente, ExpedientePago, ArtifactInstance
-from apps.expedientes.enums_artifacts import ArtifactType
+from apps.expedientes.enums_exp import ExpedienteStatus, ArtifactType
 from apps.users.models import UserRole
-from apps.expedientes.enums_exp import ExpedienteStatus
 from apps.portal.serializers import ExpedientePortalSerializer
 
 class ClientPortalViewSet(viewsets.ReadOnlyModelViewSet):
