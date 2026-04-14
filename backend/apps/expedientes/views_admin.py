@@ -212,13 +212,7 @@ class AddArtifactToPolicyView(APIView):
         if not art_type:
             return Response({'detail': 'El campo "artifact_type" es requerido.'}, status=400)
 
-        # Permitir cualquier ART-XX (no restringir a ALL_KNOWN_ARTIFACTS para flexibilidad)
-        # pero al menos validar formato básico
-        if not art_type.startswith('ART-'):
-            return Response(
-                {'detail': f'artifact_type debe tener formato ART-XX. Recibido: {art_type}'},
-                status=400,
-            )
+        # Permitir cualquier artefacto (como números o IDs dinámicos de Builder API)
 
         custom = dict(exp.custom_artifact_policy or {})
         state_ops = dict(custom.get(state, {}))
@@ -279,11 +273,6 @@ class RemoveArtifactFromPolicyView(APIView):
         if not art_type:
             return Response({'detail': 'El campo "artifact_type" es requerido.'}, status=400)
 
-        if not art_type.startswith('ART-'):
-            return Response(
-                {'detail': f'artifact_type debe tener formato ART-XX. Recibido: {art_type}'},
-                status=400,
-            )
 
         custom = dict(exp.custom_artifact_policy or {})
         state_ops = dict(custom.get(state, {}))
