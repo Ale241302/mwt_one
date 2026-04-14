@@ -26,7 +26,8 @@ export default function AddArtifactModal({
       setIsLoading(true);
       fetchBuilderArtifacts()
         .then((res) => {
-          setBuilderTypes(res?.results || []);
+          const arr = Array.isArray(res) ? res : res?.results || [];
+          setBuilderTypes(arr);
           setIsLoading(false);
         })
         .catch(() => setIsLoading(false));
