@@ -1,8 +1,11 @@
+import uuid
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from apps.expedientes.models import Expediente, ArtifactInstance, EventLog
+from apps.expedientes.enums_exp import AggregateType
 
 class GenericArtifactCreateView(APIView):
     """
@@ -29,10 +32,12 @@ class GenericArtifactCreateView(APIView):
 
         EventLog.objects.create(
             aggregate_id=exp.expediente_id,
-            aggregate_type='expediente',
+            aggregate_type=AggregateType.EXPEDIENTE,
             event_type='artifact_dynamics.created',
             emitted_by=request.user.email,
-            payload={'artifact_id': str(art.artifact_id), 'artifact_type': art.artifact_type}
+            payload={'artifact_id': str(art.artifact_id), 'artifact_type': art.artifact_type},
+            occurred_at=timezone.now(),
+            correlation_id=uuid.uuid4(),
         )
 
         return Response({
@@ -58,10 +63,12 @@ class GenericArtifactUpdateView(APIView):
 
             EventLog.objects.create(
                 aggregate_id=pk,
-                aggregate_type='expediente',
+                aggregate_type=AggregateType.EXPEDIENTE,
                 event_type='artifact_dynamics.updated',
                 emitted_by=request.user.email,
-                payload={'artifact_id': str(art.artifact_id), 'artifact_type': art.artifact_type}
+                payload={'artifact_id': str(art.artifact_id), 'artifact_type': art.artifact_type},
+                occurred_at=timezone.now(),
+                correlation_id=uuid.uuid4(),
             )
 
         return Response({
