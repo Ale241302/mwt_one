@@ -55,6 +55,7 @@ from apps.expedientes.views.payment_status import (
     release_all_verified,
 )
 from apps.expedientes.views.deferred import patch_deferred_price
+from apps.expedientes.views_dynamic import GenericArtifactCreateView, GenericArtifactUpdateView
 
 app_name = 'expedientes'
 
@@ -190,4 +191,8 @@ urlpatterns = [
 
     # ── S25: Deferred Price ──
     path('<uuid:exp_id>/deferred-price/', patch_deferred_price, name='deferred-price'),
+
+    # ── DYNAMIC ARTIFACTS ──
+    path('<uuid:pk>/artifacts/dynamic/', GenericArtifactCreateView.as_view(), name='artifacts-dynamic-create'),
+    path('<uuid:pk>/artifacts/dynamic/<uuid:artifact_id>/', GenericArtifactUpdateView.as_view(), name='artifacts-dynamic-update'),
 ]

@@ -31,6 +31,7 @@ import { EXPEDIENTE_LEVEL_ARTIFACTS } from "@/constants/proforma-artifact-policy
 import { ARTIFACT_UI_REGISTRY } from "@/constants/artifact-ui-registry";
 import { MODE_LABELS } from "@/constants/mode-labels";
 import CreateProformaModal from "@/components/expediente/CreateProformaModal";
+import { fetchBuilderArtifacts } from "@/lib/builderApi";
 
 // ── S25 imports ────────────────────────────────────────────────────────────────
 import CreditBar from "@/components/expediente/CreditBar";
@@ -160,6 +161,15 @@ export default function ExpedienteDetailPage() {
   const [activeModal, setActiveModal] = useState<{ commandKey: string; artifact?: any } | null>(null);
   const [reassignLineId, setReassignLineId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'internal' | 'client'>('internal');
+  const [builderContext, setBuilderContext] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchBuilderArtifacts().then(data => {
+      setBuilderContext(data || []);
+    }).catch(err => {
+      console.error("Error fetching builder artifacts:", err);
+    });
+  }, []);
 
   const fetchBundle = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -629,6 +639,7 @@ export default function ExpedienteDetailPage() {
               currentState={currentState}
               onActionClick={(cmd, artifact) => setActiveModal({ commandKey: cmd, artifact })}
               isAdmin={isAdmin}
+              builderContext={builderContext}
             />
 
             {/* FIX-2026-04-08b: CostTable recibe costs del bundle (no fetch duplicado).
@@ -731,6 +742,7 @@ export default function ExpedienteDetailPage() {
           onClose={() => setActiveModal(null)}
           onSuccess={() => { setActiveModal(null); fetchBundle(true); }}
           isAdmin={isAdmin}
+          builderContext={builderContext}
         />
       )}
 

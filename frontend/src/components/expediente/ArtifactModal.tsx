@@ -1,179 +1,128 @@
 "use client";
-import { useState } from "react";
-import { FileText, Package, Truck, DollarSign, CreditCard, XCircle, Lock, Unlock, Receipt, PlusCircle, History, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FileText, XCircle, History, ChevronRight, PlusCircle, AlignLeft } from "lucide-react";
 import api from "@/lib/api";
 import FormModal from "@/components/ui/FormModal";
+import { fetchBuilderArtifactStructure } from "@/lib/builderApi";
 
 interface ArtifactModalProps {
   open: boolean;
   expedienteId: string;
-  commandKey: string;
-  artifact?: any;
+  commandKey: string; // Puede ser el slug 'ART-01' o el ID del builder '3'
+  artifact?: any; // The existing DB instance, if editing
   readOnly?: boolean;
   onClose: () => void;
   onSuccess: () => void;
   isAdmin?: boolean;
   onNewRecord?: () => void;
-  allArtifacts?: any[];
+  allArtifacts?: any[]; // All existing DB instances for this type
+  builderContext?: any[]; // The list of builder artifacts to map name/id if needed
 }
 
-const COMMAND_META: Record<string, { label: string; endpoint: string; icon: React.ReactNode; color: string; bgClass: string; textClass: string }> = {
-  C3: { label: "Registrar OC", endpoint: "register-oc", icon: <FileText size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
-  C2: { label: "Registrar Proforma", endpoint: "register-proforma", icon: <FileText size={18} />, color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
-  C4: { label: "Decidir Modo", endpoint: "decide-mode", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
-  C5: { label: "Confirmar SAP", endpoint: "confirm-sap", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
-  C6: { label: "Confirmar Producción", endpoint: "confirm-production", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C7: { label: "Registrar Embarque", endpoint: "register-shipment", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
-  C8: { label: "Cotización Flete", endpoint: "register-freight-quote", icon: <DollarSign size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
-  C9: { label: "Registrar Aduana", endpoint: "register-customs", icon: <FileText size={18} />, color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
-  C10: { label: "Aprobar Despacho", endpoint: "approve-dispatch", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C11: { label: "Confirmar Salida (MWT)", endpoint: "confirm-departure-mwt", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
-  C11B: { label: "Confirmar Salida (China)", endpoint: "confirm-departure-china", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-blue-700 border-blue-700", textClass: "text-blue-700" },
-  C12: { label: "Confirmar Llegada", endpoint: "confirm-arrival", icon: <Truck size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C13: { label: "Emitir Factura MWT", endpoint: "issue-invoice", icon: <Receipt size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C14: { label: "Cerrar Expediente", endpoint: "close", icon: <Lock size={18} />, color: "var(--brand-primary)", bgClass: "bg-slate-600 border-slate-600", textClass: "text-slate-600" },
-  C15: { label: "Registrar Costo", endpoint: "register-cost", icon: <DollarSign size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
-  C16: { label: "Cancelar Expediente", endpoint: "cancel", icon: <XCircle size={18} />, color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600", textClass: "text-red-600" },
-  C17: { label: "Bloquear Expediente", endpoint: "block", icon: <Lock size={18} />, color: "var(--brand-primary)", bgClass: "bg-red-600 border-red-600", textClass: "text-red-600" },
-  C18: { label: "Desbloquear Expediente", endpoint: "unblock", icon: <Unlock size={18} />, color: "var(--brand-primary)", bgClass: "bg-brand-primary border-brand-primary", textClass: "text-brand-primary" },
-  C21: { label: "Registrar Pago", endpoint: "register-payment", icon: <CreditCard size={18} />, color: "var(--brand-primary)", bgClass: "bg-red-600 border-brand-primary", textClass: "text-brand-primary" },
-  C22: { label: "Emitir Factura Comisión", endpoint: "issue-commission-invoice", icon: <Receipt size={18} />, color: "var(--brand-primary)", bgClass: "bg-purple-600 border-purple-600", textClass: "text-purple-600" },
-  C30: { label: "Materializar Logística", endpoint: "materialize-logistics", icon: <Package size={18} />, color: "var(--brand-primary)", bgClass: "bg-amber-700 border-amber-700", textClass: "text-amber-700" },
-};
+type FormData = Record<string, any>;
 
-/**
- * Defaults explícitos por comando para todos los campos tipo <select>.
- * Esto evita que form[key] sea undefined al abrir el modal, lo que causaba
- * que el backend recibiera strings vacíos violando constraints NOT NULL en la DB.
- *
- * FIX-2026-04-08: C21 recibía method="" (null en DB) porque form={} al init.
- *                 C15 recibía visibility="" y currency="" por el mismo motivo.
- */
-const COMMAND_DEFAULTS: Record<string, Record<string, string | number | boolean>> = {
-  C4: { mode: "maritime" },
-  C15: { cost_type: "", amount: 0, currency: "USD", visibility: "internal" },
-  C21: { amount: 0, method: "wire", reference: "", currency: "USD" },
-  C22: { invoice_number: "", commission_amount: 0, commission_pct: 0, notes: "" },
-};
-
-type FormData = Record<string, string | number | boolean>;
-
-function CommandForm({
-  commandKey,
+// Componente para renderizar la estructura JSON
+function DynamicFormRenderer({
+  structure,
   form,
   setForm,
   isReadOnly,
 }: {
-  commandKey: string;
+  structure: any;
   form: FormData;
   setForm: (f: FormData) => void;
   isReadOnly?: boolean;
 }) {
-  const set = (k: string, v: string | number | boolean) => {
+  if (!structure || !structure.sections) return <div className="p-4 text-center text-text-tertiary">Estructura de formulario vacía</div>;
+
+  const set = (k: string, v: any) => {
     if (isReadOnly) return;
     setForm({ ...form, [k]: v });
   };
-  const inp = (label: string, key: string, type: string = "text", placeholder: string = "") => (
-    <div key={key}>
-      <label className="th-label block mb-1">{label}</label>
-      <input
-        type={type}
-        className="input w-full"
-        placeholder={placeholder}
-        value={String(form[key] ?? "")}
-        onChange={(e) => set(key, type === "number" ? Number(e.target.value) : e.target.value)}
-        disabled={isReadOnly}
-      />
+
+  return (
+    <div className="space-y-6">
+      {structure.sections.map((section: any) => (
+        <div key={section.id} className="p-3 bg-surface border border-divider rounded-lg shadow-sm space-y-4">
+          {section.columns?.map((col: any) => (
+            <div key={col.id} className="space-y-4">
+              {col.fields?.map((field: any) => {
+                // Infer input type mappings
+                const isNumber = field.type === "number";
+                const isDate = field.type === "date";
+                const isCode = field.type === "code";
+                const isSelect = field.type === "select";
+                const isRadio = field.type === "radio";
+                
+                const htmlType = isNumber ? "number" : isDate ? "date" : "text";
+
+                // Normalize options since they can be simple strings or objects with a `label`
+                const normalizedOptions = (field.options || []).map((opt: any) => {
+                  if (typeof opt === 'string') return { value: opt, label: opt };
+                  return { value: opt.label, label: opt.label };
+                });
+
+                return (
+                  <div key={field.id} className="space-y-1">
+                    <label className="th-label block font-semibold text-navy">
+                      {field.label}
+                    </label>
+                    {isSelect ? (
+                      <select
+                        className="input w-full"
+                        value={form[field.id] || ""}
+                        onChange={(e) => set(field.id, e.target.value)}
+                        disabled={isReadOnly}
+                      >
+                        <option value="">-- Seleccionar --</option>
+                        {normalizedOptions.map((opt: any, i: number) => (
+                          <option key={i} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    ) : isRadio ? (
+                      <div className="flex flex-col gap-2 mt-1">
+                        {normalizedOptions.map((opt: any, idx: number) => (
+                          <label key={idx} className="flex items-center gap-2 cursor-pointer text-sm">
+                            <input
+                              type="radio"
+                              name={field.id}
+                              value={opt.value}
+                              checked={form[field.id] === opt.value}
+                              onChange={(e) => set(field.id, e.target.value)}
+                              disabled={isReadOnly}
+                              className="w-4 h-4 text-primary bg-bg border-gray-300 focus:ring-primary"
+                            />
+                            <span>{opt.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : isCode ? (
+                      <textarea
+                        className="input w-full font-mono text-sm h-32"
+                        placeholder="Escribe aquí..."
+                        value={String(form[field.id] ?? "")}
+                        onChange={(e) => set(field.id, e.target.value)}
+                        disabled={isReadOnly}
+                      />
+                    ) : (
+                      <input
+                        type={field.type === 'file' ? 'text' : htmlType}
+                        className="input w-full"
+                        placeholder={field.type === 'file' ? 'Adjuntar archivo no soportado aún, ingresa URL' : ''}
+                        value={String(form[field.id] ?? "")}
+                        onChange={(e) => set(field.id, isNumber ? Number(e.target.value) : e.target.value)}
+                        disabled={isReadOnly}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
-
-  switch (commandKey) {
-    case "C3": return <div className="space-y-3">{inp("Número OC", "oc_number", "text", "OC-2024-001")}{inp("Notas", "notes")}</div>;
-    case "C2": return <div className="space-y-3">{inp("Número proforma", "proforma_number", "text", "PRF-001")}{inp("Monto (USD)", "amount", "number", "0")}</div>;
-    case "C4": return (
-      <div className="space-y-3">
-        <div>
-          <label className="th-label block mb-1">Modo logístico</label>
-          <select className="input w-full" value={String(form.mode ?? "maritime")} onChange={(e) => set("mode", e.target.value)} disabled={isReadOnly}>
-            <option value="maritime">Marítimo</option>
-            <option value="air">Aéreo</option>
-            <option value="land">Terrestre</option>
-          </select>
-        </div>
-      </div>
-    );
-    case "C5": return <div className="space-y-3">{inp("Número SAP", "sap_number", "text", "SAP-00001")}</div>;
-    case "C6": return <div className="space-y-3">{inp("Notas de producción", "notes")}</div>;
-    case "C7": return <div className="space-y-3">{inp("Número BL", "bl_number", "text", "MSCUXXX")}{inp("Transportista", "carrier")}{inp("Puerto origen", "origin_port")}{inp("Puerto destino", "destination_port")}</div>;
-    case "C8": return <div className="space-y-3">{inp("Monto flete (USD)", "freight_amount", "number", "0")}{inp("Proveedor", "provider")}</div>;
-    case "C9": return <div className="space-y-3">{inp("Agencia aduanal", "customs_agency")}{inp("Número declaración", "declaration_number")}</div>;
-    case "C10": return <div className="space-y-3">{inp("Observaciones", "notes")}</div>;
-    case "C11": return <div className="space-y-3">{inp("Fecha salida MWT", "departure_date", "date")}{inp("Notas", "notes")}</div>;
-    case "C11B": return <div className="space-y-3">{inp("Fecha salida China", "departure_date", "date")}{inp("Notas", "notes")}</div>;
-    case "C12": return <div className="space-y-3">{inp("Fecha llegada", "arrival_date", "date")}{inp("Notas", "notes")}</div>;
-    case "C13": return <div className="space-y-3">{inp("Número factura", "invoice_number", "text", "INV-001")}{inp("Monto cliente (USD)", "total_client_view", "number", "0")}</div>;
-    case "C14": return <div className="space-y-3">{inp("Razón de cierre", "reason")}</div>;
-    case "C15": return (
-      <div className="space-y-3">
-        {inp("Tipo de costo", "cost_type", "text", "freight")}
-        {inp("Monto (USD)", "amount", "number", "0")}
-        {inp("Divisa", "currency", "text", "USD")}
-        <div>
-          <label className="th-label block mb-1">Visibilidad</label>
-          <select
-            className="input w-full"
-            value={String(form.visibility ?? "internal")}
-            onChange={(e) => set("visibility", e.target.value)}
-            disabled={isReadOnly}
-          >
-            <option value="internal">Interna</option>
-            <option value="client">Cliente</option>
-          </select>
-        </div>
-      </div>
-    );
-    case "C16": return <div className="space-y-3">{inp("Razón de cancelación", "reason")}</div>;
-    case "C17": return <div className="space-y-3">{inp("Razón de bloqueo", "reason")}</div>;
-    case "C18": return <div className="space-y-3">{inp("Notas de desbloqueo", "notes")}</div>;
-    case "C21": return (
-      <div className="space-y-3">
-        {inp("Monto (USD)", "amount", "number", "0")}
-        <div>
-          <label className="th-label block mb-1">Método de pago</label>
-          {/*
-            FIX-2026-04-08: form.method se inicializa con "wire" desde COMMAND_DEFAULTS[C21].
-            Antes era undefined → el <select> mostraba "wire" visualmente pero enviaba "" al POST.
-          */}
-          <select
-            className="input w-full"
-            value={String(form.method ?? "wire")}
-            onChange={(e) => set("method", e.target.value)}
-            disabled={isReadOnly}
-          >
-            <option value="wire">Wire transfer</option>
-            <option value="check">Cheque</option>
-            <option value="cash">Efectivo</option>
-            <option value="crypto">Cripto</option>
-          </select>
-        </div>
-        {inp("Referencia", "reference", "text", "REF-001")}
-      </div>
-    );
-    case "C22": return (
-      <div className="space-y-3">
-        {inp("Número factura comisión", "invoice_number", "text", "CINV-001")}
-        {inp("Monto comisión (USD)", "commission_amount", "number", "0")}
-        {inp("Porcentaje comisión", "commission_pct", "number", "0")}
-        {inp("Notas", "notes")}
-      </div>
-    );
-    case "C30": return (
-      <div className="space-y-3">
-        {inp("ID de Opción Logística", "option_id", "text", "OPT-01")}
-      </div>
-    );
-    default: return <p className="text-sm text-text-secondary">Formulario no disponible para {commandKey}.</p>;
-  }
 }
 
 export default function ArtifactModal({
@@ -187,32 +136,56 @@ export default function ArtifactModal({
   isAdmin,
   onNewRecord,
   allArtifacts,
+  builderContext,
 }: ArtifactModalProps) {
   const isReadOnly = readOnlyProp === true;
 
   const [activeTab, setActiveTab] = useState<"form" | "history">("form");
-
-  /**
-   * FIX-2026-04-08: El form se inicializa con los defaults del comando FUSIONADOS
-   * con el payload del artifact (si existe). Esto garantiza que campos tipo <select>
-   * como `method` (C21), `visibility` (C15) y `mode` (C4) siempre tengan un valor
-   * real en el estado antes del primer render, nunca undefined.
-   *
-   * Sin este fix, el <select> mostraba el valor correcto visualmente (via `?? default`)
-   * pero form[key] era undefined → el POST enviaba "" → NOT NULL constraint violada en DB.
-   */
-  const initialForm: FormData = {
-    ...(COMMAND_DEFAULTS[commandKey] ?? {}),
-    ...(artifact?.payload ?? {}),
-  };
-  const [form, setForm] = useState<FormData>(initialForm);
+  const [form, setForm] = useState<FormData>(artifact?.payload || {});
+  const [structureRaw, setStructureRaw] = useState<any>(null);
+  const [modalTitle, setModalTitle] = useState("Cargando artefacto...");
+  const [actualBuilderId, setActualBuilderId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const meta = COMMAND_META[commandKey];
+  // Initialize fields
+  useEffect(() => {
+    if (open) {
+      setForm(artifact?.payload || {});
+      setActiveTab("form");
+    }
+  }, [open, artifact]);
 
-  if (!open || !meta) return null;
+  // Fetch Structure
+  useEffect(() => {
+    if (open && commandKey) {
+      // Find builder ID from context if commandKey is something like "ART-18" or an actual ID
+      let matchedId = commandKey;
+      let matchedTitle = commandKey;
+
+      if (builderContext) {
+        const found = builderContext.find(b => b.id.toString() === commandKey || b.title.startsWith(commandKey));
+        if (found) {
+          matchedId = found.id.toString();
+          matchedTitle = found.title;
+        }
+      }
+
+      setModalTitle(isReadOnly ? `Detalle — ${matchedTitle}` : `Editar — ${matchedTitle}`);
+      setActualBuilderId(matchedId);
+
+      fetchBuilderArtifactStructure(matchedId).then((res) => {
+        if (res && res.structure_json) {
+          setStructureRaw(res.structure_json);
+        } else {
+          setError("No se pudo obtener la estructura de Formulario.");
+        }
+      });
+    }
+  }, [open, commandKey, builderContext, isReadOnly]);
+
+  if (!open) return null;
 
   const historyEntries = (allArtifacts || []).filter(
     (a) => !artifact || a !== artifact
@@ -220,14 +193,21 @@ export default function ArtifactModal({
 
   const handleSubmit = async () => {
     if (!expedienteId) {
-      setError("Error: ID de expediente no disponible. Recarga la página e intenta de nuevo.");
+      setError("Error: ID de expediente no disponible.");
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      await api.post(`/expedientes/${expedienteId}/commands/${meta.endpoint}/`, form);
-      setForm(COMMAND_DEFAULTS[commandKey] ?? {});
+      if (artifact?.artifact_id) {
+        // Edit mode (PUT)
+        await api.put(`/expedientes/${expedienteId}/artifacts/dynamic/${artifact.artifact_id}/`, { payload: form });
+      } else {
+        // Create mode (POST)
+        // Guardamos el tipo como el string principal (ej ART-18 o el ID si no hay de otra)
+        const typeToSave = commandKey; 
+        await api.post(`/expedientes/${expedienteId}/artifacts/dynamic/`, { artifact_type: typeToSave, payload: form });
+      }
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -237,16 +217,12 @@ export default function ArtifactModal({
           ? Object.entries(errData)
             .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
             .join(" | ")
-          : "Error al ejecutar el comando."
+          : "Error al guardar el artefacto."
       );
     } finally {
       setLoading(false);
     }
   };
-
-  const modalTitle = isReadOnly
-    ? `Detalle — ${meta.label} (${commandKey})`
-    : `${meta.label} (${commandKey})`;
 
   const showTabs = isReadOnly && historyEntries.length > 0;
 
@@ -269,11 +245,11 @@ export default function ArtifactModal({
         </button>
         {!isReadOnly && (
           <button
-            className={`btn btn-md text-white ${meta.bgClass}`}
+            className="btn btn-md btn-primary text-white"
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || !structureRaw}
           >
-            {loading ? "Ejecutando..." : meta.label}
+            {loading ? "Guardando..." : "Guardar Registro"}
           </button>
         )}
       </div>
@@ -286,7 +262,7 @@ export default function ArtifactModal({
       title={modalTitle}
       onClose={onClose}
       footer={footerContent}
-      size="sm"
+      size="md"
     >
       {showTabs && (
         <div className="flex gap-1 mb-4 border-b border-divider">
@@ -371,12 +347,17 @@ export default function ArtifactModal({
               {error}
             </div>
           )}
-          <CommandForm
-            commandKey={commandKey}
-            form={form}
-            setForm={setForm}
-            isReadOnly={isReadOnly}
-          />
+
+          {!structureRaw ? (
+            <div className="py-8 text-center text-text-tertiary">Cargando esquema...</div>
+          ) : (
+            <DynamicFormRenderer
+              structure={structureRaw}
+              form={form}
+              setForm={setForm}
+              isReadOnly={isReadOnly}
+            />
+          )}
         </>
       )}
     </FormModal>

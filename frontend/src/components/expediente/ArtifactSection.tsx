@@ -22,6 +22,7 @@ interface ArtifactSectionProps {
   onAddArtifactType?: (artifactType: string) => void;
   /** Admin: quitar un tipo de artefacto de la policy de esta fase */
   onRemoveArtifactType?: (artifactType: string) => void;
+  builderContext?: any[];
 }
 
 // Helper: all artifact types present in the registry
@@ -35,6 +36,7 @@ export default function ArtifactSection({
   isAdmin,
   onAddArtifactType,
   onRemoveArtifactType,
+  builderContext,
 }: ArtifactSectionProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -69,8 +71,21 @@ export default function ArtifactSection({
     const reg = ARTIFACT_UI_REGISTRY[artType];
 
     // Fallback display for unknown artifact types (admin-added custom ones)
-    const label = reg?.label ?? artType;
-    const command = reg?.command ?? artType;
+    let label = reg?.label;
+    let command = reg?.command ?? artType;
+    
+    if (!label) {
+      if (builderContext) {
+        const found = builderContext.find(b => b.id.toString() === artType || b.title.startsWith(artType));
+        if (found) {
+          label = found.title;
+        } else {
+          label = artType;
+        }
+      } else {
+        label = artType;
+      }
+    }
 
     // All records of this type, newest first
     const allOfType = artifacts

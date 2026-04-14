@@ -39,6 +39,7 @@ interface ExpedienteAccordionProps {
   onActionClick?: (commandKey: string, artifact?: any) => void;
   /** Si el usuario autenticado es is_superuser de Django */
   isAdmin?: boolean;
+  builderContext?: any[];
 }
 
 export default function ExpedienteAccordion({
@@ -50,6 +51,7 @@ export default function ExpedienteAccordion({
   currentState,
   onActionClick,
   isAdmin,
+  builderContext,
 }: ExpedienteAccordionProps) {
   // ── Helpers de acciones disponibles ──────────────────────────────────────
   const hasAction = (actionId: string) => {
@@ -349,6 +351,7 @@ export default function ExpedienteAccordion({
                       ? (artType) => removeArtifactType(stateName, artType)
                       : undefined
                   }
+                  builderContext={builderContext}
                 />
               </div>
             )}
@@ -379,6 +382,7 @@ export default function ExpedienteAccordion({
               ? () => setActiveModal({ commandKey: activeModal.commandKey, artifact: undefined })
               : undefined
           }
+          builderContext={builderContext}
         />
       )}
 
