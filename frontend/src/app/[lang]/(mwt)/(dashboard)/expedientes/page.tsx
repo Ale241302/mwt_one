@@ -198,26 +198,50 @@ function SKUTable({ expedientes }: { expedientes: Expediente[] }) {
     );
 }
 
-function OrderRow({ exp, onOpen }: { exp: Expediente; onOpen: (id: string) => void }) {
+function OrderRow({
+    exp,
+    onOpenOC,
+    onOpenExpediente,
+}: {
+    exp: Expediente;
+    onOpenOC: (id: string) => void;
+    onOpenExpediente: (id: string) => void;
+}) {
     const [expanded, setExpanded] = useState(false);
     const s = getOrderStatus(exp);
+    const expId = exp.expediente_id || exp.id;
+
+    // Build a fake SAP entry from the expediente data so there's always
+    // something to show when expanded. Real SAP data would come from the API.
+    const sapEntries: Array<{ sap_id: string; status: string; shipping_method: string }> = [];
+    if (exp.proforma_client_number) {
+        sapEntries.push({
+            sap_id: exp.proforma_client_number,
+            status: exp.status,
+            shipping_method: "—",
+        });
+    }
 
     return (
         <>
+            {/* ── Main OC row ── */}
             <tr
-                className="border-b border-border/60 hover:bg-bg-alt/40 transition-colors cursor-pointer"
-                onClick={() => setExpanded(v => !v)}
+                className="border-b border-border/60 hover:bg-bg-alt/30 transition-colors"
             >
+                {/* Expand toggle */}
                 <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                        <span className="text-text-tertiary">
+                        <button
+                            onClick={() => setExpanded(v => !v)}
+                            className="text-text-tertiary hover:text-text-primary transition-colors"
+                        >
                             {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                        </span>
+                        </button>
                         <span className="text-xs font-mono font-semibold text-text-primary">{exp.custom_ref}</span>
                     </div>
                 </td>
                 <td className="px-4 py-3 text-xs text-text-secondary">
-                    {exp.client_name}{exp.brand_name ? ` / ${exp.brand_name}` : ""}
+                    {exp.client_name}{exp.brand_name && exp.brand_name !== "Sin Marca" ? ` / ${exp.brand_name}` : ""}
                 </td>
                 <td className="px-4 py-3">
                     <span className={cn(
@@ -232,62 +256,113 @@ function OrderRow({ exp, onOpen }: { exp: Expediente; onOpen: (id: string) => vo
                     {USDFull.format(exp.total_value || exp.total_cost || 0)}
                 </td>
                 <td className="px-4 py-3">
+                    {/* ··· goes to OC detail view */}
                     <button
-                        onClick={e => { e.stopPropagation(); onOpen(exp.expediente_id || exp.id); }}
-                        className="p-1. 5 rounded hover:bg-border transition-colors text-text-tertiary hover:text-text-primary"
-                        title="Ver detalles"
+                        onClick={() => onOpenOC(expId)}
+                        className="p-1.5 rounded hover:bg-border/40 transition-colors text-text-tertiary hover:text-text-primary"
+                        title="Ver detalle de OC"
                     >
                         <MoreHorizontal size={16} />
                     </button>
                 </td>
             </tr>
+
+            {/* ── Expanded: SAP sub-rows ── */}
             {expanded && (
-                <tr className="bg-bg-alt/30">
-                    <td colSpan={5} className="px-8 py-4">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                            <div>
-                                <p className="text-text-tertiary uppercase tracking-wide text-[10px] mb-1">Estado</p>
-                                <p className="font-semibold text-text-primary">{exp.status.replace(/_/g, " ")}</p>
-                            </div>
-                            <div>
-                                <p className="text-text-tertiary uppercase tracking-wide text-[10px] mb-1">Pago</p>
-                                <p className="font-semibold text-text-primary capitalize">{exp.payment_status || "—"}</p>
-                            </div>
-                            <div>
-                                <p className="text-text-tertiary uppercase tracking-wide text-[10px] mb-1">Días Crédito</p>
-                                <p className={cn("font-semibold", exp.credit_band === "RED" ? "text-red-500" : exp.credit_band === "AMBER" ? "text-amber-500" : "text-emerald-600")}>
-                                    {exp.credit_days_elapsed || 0}d
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-text-tertiary uppercase tracking-wide text-[10px] mb-1">Última Actividad</p>
-                                <p className="font-medium text-text-secondary">
-                                    {exp.last_event_at
-                                        ? formatDistanceToNow(new Date(exp.last_event_at), { addSuffix: true, locale: es })
-                                        : "Sin actividad"}
-                                </p>
-                            </div>
-                            {exp.shipment_date && (
-                                <div>
-                                    <p className="text-text-tertiary uppercase tracking-wide text-[10px] mb-1">Fecha Despacho</p>
-                                    <p className="font-medium text-text-secondary">{exp.shipment_date}</p>
+                <tr className="bg-bg-alt/20 border-b border-border/40">
+                    <td colSpan={5} className="px-0 py-0">
+                        {sapEntries.length === 0 ? (
+                            // No SAP data yet — show expediente info + link
+                            <div className="pl-12 pr-5 py-4 space-y-3">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                                    <div>
+                                        <p className="text-text-tertiary uppercase tracking-wide text-[10px] mb-0.5">Estado</p>
+                                        <p className="font-semibold text-text-primary">{exp.status.replace(/_/g, " ")}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-text-tertiary uppercase tracking-wide text-[10px] mb-0.5">Pago</p>
+                                        <p className="font-semibold text-text-primary capitalize">{exp.payment_status || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-text-tertiary uppercase tracking-wide text-[10px] mb-0.5">Días Crédito</p>
+                                        <p className={cn("font-semibold",
+                                            exp.credit_band === "RED" ? "text-red-500"
+                                            : exp.credit_band === "AMBER" ? "text-amber-500"
+                                            : "text-emerald-600"
+                                        )}>{exp.credit_days_elapsed || 0}d</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-text-tertiary uppercase tracking-wide text-[10px] mb-0.5">Última Actividad</p>
+                                        <p className="font-medium text-text-secondary">
+                                            {exp.last_event_at
+                                                ? formatDistanceToNow(new Date(exp.last_event_at), { addSuffix: true, locale: es })
+                                                : "Sin actividad"}
+                                        </p>
+                                    </div>
                                 </div>
-                            )}
-                            {exp.is_blocked && (
-                                <div className="col-span-2">
-                                    <p className="text-text-tertiary uppercase tracking-wide text-[10px] mb-1">Bloqueado</p>
-                                    <p className="font-medium text-red-500 flex items-center gap-1">
-                                        <ShieldAlert size={12} /> Expediente bloqueado
-                                    </p>
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={() => onOpenExpediente(expId)}
+                                        className="text-xs text-[#1a6b5a] hover:underline font-medium flex items-center gap-1"
+                                    >
+                                        Ver expediente SAP →
+                                    </button>
+                                    <button
+                                        onClick={() => onOpenOC(expId)}
+                                        className="text-xs text-text-tertiary hover:text-text-primary hover:underline font-medium"
+                                    >
+                                        Ver detalle OC →
+                                    </button>
                                 </div>
-                            )}
-                        </div>
-                        <button
-                            onClick={() => onOpen(exp.expediente_id || exp.id)}
-                            className="mt-4 text-xs text-[#1a6b5a] hover:underline font-medium"
-                        >
-                            Ver expediente completo →
-                        </button>
+                            </div>
+                        ) : (
+                            // SAP entries table
+                            <div className="pl-10 pr-4 py-3">
+                                <p className="text-[10px] uppercase tracking-wide text-text-tertiary font-semibold mb-2">SAPs Asociados</p>
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="text-[10px] uppercase text-text-tertiary tracking-wide border-b border-border">
+                                            <th className="pb-1.5 pr-4">SAP ID</th>
+                                            <th className="pb-1.5 pr-4">Estado</th>
+                                            <th className="pb-1.5 pr-4">Método de Envío</th>
+                                            <th className="pb-1.5">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {sapEntries.map((sap, i) => {
+                                            const ss = getOrderStatus(exp);
+                                            return (
+                                                <tr key={i} className="border-b border-border/30 last:border-0 hover:bg-bg-alt/40 transition-colors">
+                                                    <td className="py-2 pr-4 text-xs font-mono font-bold text-[#1a6b5a]">
+                                                        {sap.sap_id}
+                                                    </td>
+                                                    <td className="py-2 pr-4">
+                                                        <span className={cn(
+                                                            "text-[10px] px-2 py-0.5 rounded font-semibold uppercase",
+                                                            ss.bg, ss.color
+                                                        )}>
+                                                            {sap.status.replace(/_/g, " ")}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-2 pr-4 text-xs text-text-secondary">
+                                                        {sap.shipping_method}
+                                                    </td>
+                                                    <td className="py-2">
+                                                        {/* SAP click → expediente detail */}
+                                                        <button
+                                                            onClick={() => onOpenExpediente(expId)}
+                                                            className="text-xs text-[#1a6b5a] hover:underline font-medium"
+                                                        >
+                                                            Ver expediente
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </td>
                 </tr>
             )}
@@ -344,7 +419,12 @@ function ExpedientesContent() {
     useEffect(() => { fetchStats(); }, [fetchStats]);
     useEffect(() => { fetchExpedientes(); }, [fetchExpedientes]);
 
-    const openDetail = (id: string) => {
+    // ··· button → OC detail view
+    const openOC = (id: string) => {
+        router.push(`/oc/${id}`);
+    };
+    // SAP sub-row click → expediente detail
+    const openExpediente = (id: string) => {
         router.push(`/expedientes/${id}`);
     };
 
@@ -359,18 +439,24 @@ function ExpedientesContent() {
         <div className="space-y-6 pb-8">
             {/* ── Header ── */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => router.back()}
+                        className="p-1.5 rounded-lg hover:bg-bg-alt transition-colors text-text-tertiary hover:text-text-primary"
+                    >
+                        <ChevronDown size={18} className="rotate-90" />
+                    </button>
                     <h1 className="text-xl font-bold text-text-primary">
                         MWT Logistics &amp; Financial Control Center
                     </h1>
                 </div>
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                     {/* Global search */}
-                    <div className="relative flex-1 sm:w-80">
+                    <div className="relative flex-1 sm:w-96">
                         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                         <input
                             type="text"
-                            placeholder="Search (OCs, Brands, Clients...)"
+                            placeholder="Search (now scans SKUs, SAPs, OCs)"
                             value={globalSearch}
                             onChange={e => setGlobalSearch(e.target.value)}
                             className="w-full bg-surface border border-border rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a6b5a]/40 transition-all"
@@ -522,7 +608,8 @@ function ExpedientesContent() {
                                     <OrderRow
                                         key={exp.expediente_id || exp.id}
                                         exp={exp}
-                                        onOpen={openDetail}
+                                        onOpenOC={openOC}
+                                        onOpenExpediente={openExpediente}
                                     />
                                 ))
                             )}
