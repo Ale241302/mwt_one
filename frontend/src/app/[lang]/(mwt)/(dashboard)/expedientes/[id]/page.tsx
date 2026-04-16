@@ -986,23 +986,28 @@ export default function ExpedienteDetailPage() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Toggle Interna / Cliente */}
+          {/* Toggle Interna / Cliente High-Fidelity Slider */}
           {isAdmin && (
-            <div className="flex items-center gap-2 bg-white border border-border shadow-sm rounded-lg px-3 py-1.5">
-              <span className="text-xs text-text-secondary font-semibold">Interna</span>
-              <button
-                onClick={() => setViewMode(v => v === "internal" ? "client" : "internal")}
-                className={cn(
-                  "relative w-9 h-4.5 rounded-full transition-all duration-200",
-                  viewMode === "client" ? "bg-[#1a6b5a]" : "bg-border-strong"
-                )}
-              >
-                <div className={cn(
-                  "absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all duration-200",
-                  viewMode === "client" ? "left-5" : "left-0.5"
-                )} />
-              </button>
-              <span className="text-xs text-text-secondary font-semibold">Cliente</span>
+            <div
+              onClick={() => setViewMode(v => v === "internal" ? "client" : "internal")}
+              className="relative flex items-center bg-white border border-border shadow-sm rounded-full p-1 cursor-pointer select-none h-9"
+              style={{ width: "160px" }}
+            >
+              {/* Sliding background indicator */}
+              <div className={cn(
+                "absolute h-[calc(100%-8px)] rounded-full bg-[#0f2d25] transition-all duration-300 shadow-sm",
+                viewMode === "internal" ? "left-1 w-[76px]" : "left-[80px] w-[76px]"
+              )} />
+              
+              <span className={cn(
+                "relative flex-1 text-center text-[10px] font-extrabold tracking-wider transition-colors duration-300 z-10",
+                viewMode === "internal" ? "text-white" : "text-text-tertiary hover:text-text-primary"
+              )}>INTERNA</span>
+              
+              <span className={cn(
+                "relative flex-1 text-center text-[10px] font-extrabold tracking-wider transition-colors duration-300 z-10",
+                viewMode === "client" ? "text-white" : "text-text-tertiary hover:text-text-primary"
+              )}>CLIENTE</span>
             </div>
           )}
 
