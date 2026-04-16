@@ -196,32 +196,49 @@ function humanizeEvent(ev: any): string {
 
 function TimelineBar({ currentState }: { currentState: string }) {
   const curIdx = CANONICAL_STATES.indexOf(currentState as any);
+  const ARROW = 10; // px depth of chevron
   return (
-    <div className="bg-surface border border-border rounded-xl px-2 py-2 overflow-x-auto">
-      <div className="flex items-center min-w-max">
+    <div className="bg-surface border border-border rounded-xl px-3 py-2.5 overflow-x-auto">
+      <div className="flex items-center min-w-max" style={{ gap: 0 }}>
         {CANONICAL_STATES.map((state, idx) => {
           const isPast    = idx < curIdx;
           const isCurrent = state === currentState;
+          const isFirst   = idx === 0;
+          const isLast    = idx === CANONICAL_STATES.length - 1;
+
+          const bg  = isPast ? "#1a6b5a" : isCurrent ? "#1a3a32" : "#e4e9e4";
+          const txt = isPast || isCurrent ? "#ffffff" : "#728070";
+
+          // clip-path: left notch (except first) + right arrow (except last)
+          const clip = (() => {
+            if (isFirst && isLast) return "none";
+            if (isFirst)  return `polygon(0 0, calc(100% - ${ARROW}px) 0, 100% 50%, calc(100% - ${ARROW}px) 100%, 0 100%)`;
+            if (isLast)   return `polygon(${ARROW}px 0, 100% 0, 100% 100%, ${ARROW}px 100%, 0 50%)`;
+            return `polygon(${ARROW}px 0, calc(100% - ${ARROW}px) 0, 100% 50%, calc(100% - ${ARROW}px) 100%, ${ARROW}px 100%, 0 50%)`;
+          })();
+
           return (
-            <div key={state} className="flex items-center">
-              <div className={cn(
-                "flex items-center justify-center h-9 px-4 text-[11px] font-semibold whitespace-nowrap transition-all",
-                idx === 0 ? "rounded-l-full" : "",
-                idx === CANONICAL_STATES.length - 1 ? "rounded-r-full" : "",
-                isPast    ? "bg-[#1a6b5a] text-white"
-                : isCurrent ? "bg-[#0f2d25] text-white font-bold"
-                : "bg-bg-alt text-text-tertiary"
-              )}>
-                {isPast && <span className="mr-1 text-white/80 text-xs">✓</span>}
-                {state}
-              </div>
-              {idx < CANONICAL_STATES.length - 1 && (
-                <div className={cn(
-                  "w-0 h-0 border-t-[18px] border-b-[18px] border-l-[10px]",
-                  "border-t-transparent border-b-transparent",
-                  isPast ? "border-l-[#1a6b5a]" : isCurrent ? "border-l-[#0f2d25]" : "border-l-bg-alt"
-                )} />
-              )}
+            <div
+              key={state}
+              className="flex items-center justify-center select-none whitespace-nowrap"
+              style={{
+                height: 36,
+                background: bg,
+                color: txt,
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.03em",
+                paddingLeft:  isFirst ? 16 : ARROW + 12,
+                paddingRight: isLast  ? 16 : ARROW + 12,
+                clipPath: clip,
+                // overlap each segment by ARROW px so notch hides behind previous arrow
+                marginLeft: idx > 0 ? -ARROW : 0,
+                position: "relative",
+                zIndex: CANONICAL_STATES.length - idx,
+              }}
+            >
+              {isPast && <span style={{ marginRight: 5, fontSize: 10 }}>✓</span>}
+              {state}
             </div>
           );
         })}
@@ -229,6 +246,7 @@ function TimelineBar({ currentState }: { currentState: string }) {
     </div>
   );
 }
+
 
 // ─── KPI Cards Row ────────────────────────────────────────────────────────────
 
@@ -315,36 +333,39 @@ function AdminArtifactAccordion({
 
           return (
             <div key={phase}>
-              {/* Phase header row */}
-              <button
-                onClick={() => !isLocked && toggle(phase)}
-                disabled={isLocked}
-                className={cn(
-                  "w-full flex items-center justify-between px-5 py-3 text-left transition-colors",
-                  isLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-bg-alt/40"
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  {isPast && <CheckCircle size={13} className="text-emerald-500 flex-shrink-0" />}
-                  {isLocked && <Lock size={12} className="text-text-tertiary flex-shrink-0 opacity-60" />}
-                  <span className={cn(
-                    "text-xs font-bold uppercase tracking-wide",
-                    isPast ? "text-emerald-700" : isCurrent ? "text-text-primary" : "text-text-tertiary"
-                  )}>
-                    {phase}
-                  </span>
-                  {!isLocked && (
+              {/* ── Phase header: LOCKED future → plain div, not interactive ── */}
+              {isLocked ? (
+                <div className="flex items-center justify-between px-5 py-3 cursor-not-allowed select-none">
+                  <div className="flex items-center gap-2">
+                    <Lock size={12} className="text-text-tertiary opacity-50 flex-shrink-0" />
+                    <span className="text-xs font-bold uppercase tracking-wide text-text-tertiary/60">
+                      {phase}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => toggle(phase)}
+                  className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-bg-alt/40 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    {isPast && <CheckCircle size={13} className="text-emerald-500 flex-shrink-0" />}
+                    <span className={cn(
+                      "text-xs font-bold uppercase tracking-wide",
+                      isPast ? "text-emerald-700" : "text-text-primary"
+                    )}>
+                      {phase}
+                    </span>
                     <span className="text-[10px] text-text-tertiary ml-1">
                       {completedCount} completados
                     </span>
-                  )}
-                </div>
-                {!isLocked && (
+                  </div>
                   <span className="text-text-tertiary">
                     {isOpen ? <ChevronDown size={14} /> : <ChevronRightIcon size={14} />}
                   </span>
-                )}
-              </button>
+                </button>
+              )}
+
 
               {/* Phase artifacts */}
               {isOpen && !isLocked && (
@@ -441,8 +462,9 @@ function CostActionsCenter({
   onRefresh: () => void;
 }) {
   const [clientView, setClientView] = useState(false);
+  const [phaseOpen, setPhaseOpen] = useState(true);
 
-  // Pending artifacts for the CURRENT phase (items needing user action)
+  // Pending artifacts for CURRENT phase
   const currentPhaseArtifacts = (bundle.artifacts || []).filter(art => {
     const phase = ARTIFACT_PHASE_MAP[art.artifact_type];
     return phase === currentState && art.status !== "completed";
@@ -452,17 +474,17 @@ function CostActionsCenter({
     <div className="space-y-4">
       {/* ── Tabla de Costos ── */}
       <div className="bg-surface border border-border rounded-xl shadow-sm overflow-hidden">
-        {/* Dark header with phase name */}
-        <div className="px-5 py-3 flex items-center justify-between bg-[#0f2d25]">
-          <h3 className="text-sm font-semibold text-white">Tabla de Costos</h3>
-          {/* Vista Cliente toggle */}
+
+        {/* WHITE header row */}
+        <div className="px-5 py-3.5 flex items-center justify-between border-b border-border">
+          <h3 className="text-sm font-semibold text-text-primary">Tabla de Costos</h3>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-white/60">Vista Cliente</span>
+            <span className="text-xs text-text-tertiary">Vista Cliente</span>
             <button
               onClick={() => setClientView(v => !v)}
               className={cn(
                 "relative w-9 h-5 rounded-full transition-all duration-200",
-                clientView ? "bg-[#1a6b5a]" : "bg-white/20"
+                clientView ? "bg-[#1a6b5a]" : "bg-border-strong"
               )}
             >
               <div className={cn(
@@ -473,51 +495,55 @@ function CostActionsCenter({
           </div>
         </div>
 
-        {/* Current phase pending action items */}
-        {currentPhaseArtifacts.length > 0 && isAdmin && (
+        {/* Dark-teal CURRENT PHASE section (collapsible) */}
+        {isAdmin && (
           <div className="border-b border-border">
-            <div className="px-5 py-2.5 bg-[#0f2d25]/5">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-[#1a6b5a]">{currentState}</p>
-            </div>
-            <div className="px-5 py-2 space-y-1.5">
-              {currentPhaseArtifacts.map(art => {
-                const meta = ARTIFACT_UI_REGISTRY[art.artifact_type];
-                const label = meta?.label ?? art.artifact_type;
-                const cmd = meta?.command;
-                return (
-                  <div key={art.id} className="flex items-center justify-between py-1.5">
-                    <div className="flex items-center gap-2">
-                      <FileText size={13} className="text-text-tertiary" />
-                      <span className="text-xs text-text-secondary">{label}</span>
+            {/* Phase header */}
+            <button
+              onClick={() => setPhaseOpen(v => !v)}
+              className="w-full flex items-center justify-between px-5 py-3 bg-[#0f2d25] text-white hover:bg-[#1a3a32] transition-colors"
+            >
+              <span className="text-sm font-bold uppercase tracking-wide">{currentState}</span>
+              {phaseOpen
+                ? <ChevronDown size={16} />
+                : <ChevronRightIcon size={16} />}
+            </button>
+
+            {/* Pending artifact rows */}
+            {phaseOpen && (
+              <div>
+                {currentPhaseArtifacts.map(art => {
+                  const meta = ARTIFACT_UI_REGISTRY[art.artifact_type];
+                  const label = meta?.label ?? art.artifact_type;
+                  const cmd   = meta?.command;
+                  const isCotizacion = label.toLowerCase().includes("cotizaci") || label.toLowerCase().includes("flet");
+                  return (
+                    <div key={art.id} className="flex items-center justify-between px-5 py-3 border-b border-border/50 last:border-0">
+                      <div className="flex items-center gap-2">
+                        <FileText size={13} className="text-text-tertiary flex-shrink-0" />
+                        <span className="text-sm text-text-secondary">{label}</span>
+                      </div>
+                      {cmd && hasAction(cmd) && (
+                        <button
+                          onClick={() => onActionClick(cmd, art)}
+                          className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold bg-[#0f2d25] text-white rounded-lg hover:bg-[#1a6b5a] transition-colors whitespace-nowrap"
+                        >
+                          {isCotizacion ? "Solicitar" : "Cargar archivo"}
+                        </button>
+                      )}
                     </div>
-                    {cmd && hasAction(cmd) && (
-                      <button
-                        onClick={() => onActionClick(cmd, art)}
-                        className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-[#0f2d25] text-white rounded-lg hover:bg-[#1a6b5a] transition-colors"
-                      >
-                        <Upload size={12} /> Cargar archivo
-                      </button>
-                    )}
-                    {cmd && hasAction(cmd) && label.toLowerCase().includes("cotizaci") && (
-                      <button
-                        onClick={() => onActionClick(cmd, art)}
-                        className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-[#0f2d25] text-white rounded-lg hover:bg-[#1a6b5a] transition-colors"
-                      >
-                        Solicitar
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-              {isAdmin && (
+                  );
+                })}
+
+                {/* + Agregar artefacto */}
                 <button
                   onClick={() => onActionClick("C15")}
-                  className="flex items-center gap-1 text-xs text-[#1a6b5a] hover:underline font-medium mt-1"
+                  className="w-full flex items-center justify-center gap-1.5 py-3 text-sm text-text-tertiary hover:text-text-primary hover:bg-bg-alt/50 border-t border-dashed border-border transition-colors"
                 >
-                  <Plus size={12} /> Agregar artefacto (admin)
+                  <Plus size={14} /> Agregar artefacto (admin)
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -525,12 +551,12 @@ function CostActionsCenter({
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-bg-alt/60 text-[10px] uppercase text-text-tertiary tracking-wider border-b border-border">
-                <th className="px-4 py-2.5">Tipo</th>
-                <th className="px-4 py-2.5">Descripción</th>
-                <th className="px-4 py-2.5">Fase</th>
-                <th className="px-4 py-2.5 text-right">Monto</th>
-                {isAdmin && !clientView && <th className="px-4 py-2.5 text-center">Vis. Cliente</th>}
+              <tr className="text-[10px] uppercase text-text-tertiary tracking-wide border-b border-border bg-bg-alt/40">
+                <th className="px-4 py-2.5 font-semibold">Tipo</th>
+                <th className="px-4 py-2.5 font-semibold">Descripción</th>
+                <th className="px-4 py-2.5 font-semibold">Fase</th>
+                <th className="px-4 py-2.5 font-semibold text-right">Monto</th>
+                {isAdmin && !clientView && <th className="px-4 py-2.5 font-semibold text-center">Vis. Cliente</th>}
               </tr>
             </thead>
             <tbody>
@@ -545,9 +571,9 @@ function CostActionsCenter({
                 </tr>
               ) : (clientView ? bundle.costs.filter(c => c.visible_to_client) : bundle.costs).map(c => (
                 <tr key={c.id} className="border-b border-border/50 last:border-0 hover:bg-bg-alt/30 transition-colors">
-                  <td className="px-4 py-2.5 text-xs font-medium text-text-secondary">{c.cost_type}</td>
+                  <td className="px-4 py-2.5 text-xs text-text-secondary">{c.cost_type}</td>
                   <td className="px-4 py-2.5 text-xs text-text-secondary">{c.description}</td>
-                  <td className="px-4 py-2.5 text-[10px] text-text-tertiary">{c.phase}</td>
+                  <td className="px-4 py-2.5 text-[10px] text-text-tertiary uppercase">{c.phase}</td>
                   <td className="px-4 py-2.5 text-xs font-semibold text-right text-text-primary">
                     {c.currency} ${Number(c.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                   </td>
@@ -567,22 +593,63 @@ function CostActionsCenter({
 
       {/* ── Registro de Pagos ── */}
       <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
-        <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+        <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
           <h3 className="text-sm font-semibold text-text-primary">Registro de Pagos</h3>
           {isAdmin && (
             <button
               onClick={() => onActionClick("C21")}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#0f2d25] text-white rounded-lg hover:bg-[#1a6b5a] transition-colors shadow-sm"
+              className="px-4 py-1.5 text-sm font-semibold bg-[#0f2d25] text-white rounded-lg hover:bg-[#1a6b5a] transition-colors shadow-sm"
             >
               Registrar pago
             </button>
           )}
         </div>
-        <PagosSection
-          expedienteId={expedienteId}
-          isCeo={isAdmin}
-          onCreditRefresh={onRefresh}
-        />
+
+        {/* Simple payment rows from bundle.payments */}
+        {Array.isArray(bundle.payments) && bundle.payments.length > 0 ? (
+          <table className="w-full text-left">
+            <thead>
+              <tr className="text-[10px] uppercase text-text-tertiary tracking-wide border-b border-border bg-bg-alt/40">
+                <th className="px-4 py-2.5 font-semibold">Fecha</th>
+                <th className="px-4 py-2.5 font-semibold">Monto</th>
+                <th className="px-4 py-2.5 font-semibold">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bundle.payments.map((pay: any, i: number) => {
+                const dateVal = pay.payment_date ?? pay.paid_at ?? pay.created_at ?? null;
+                const amount  = pay.amount ?? pay.total ?? 0;
+                const status  = pay.status ?? "procesado";
+                const isPaid  = /pagado|paid|procesado|processed|released/i.test(String(status));
+                return (
+                  <tr key={pay.id ?? i} className="border-b border-border/50 last:border-0 hover:bg-bg-alt/30 transition-colors">
+                    <td className="px-4 py-2.5 text-xs text-text-secondary">
+                      {dateVal
+                        ? new Date(dateVal).toLocaleDateString("es-CR", { day: "2-digit", month: "2-digit", year: "numeric" })
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-2.5 text-xs font-semibold text-text-primary">
+                      ${Number(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 text-xs font-medium",
+                        isPaid ? "text-emerald-600" : "text-amber-600"
+                      )}>
+                        {isPaid
+                          ? <CheckCircle size={13} className="flex-shrink-0" />
+                          : <span className="w-3 h-3 rounded-full border-2 border-amber-400 flex-shrink-0" />}
+                        {isPaid ? "Procesado" : String(status).replace(/_/g, " ")}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <p className="px-5 py-6 text-center text-xs text-text-tertiary">Sin pagos registrados</p>
+        )}
       </div>
     </div>
   );
@@ -597,70 +664,89 @@ function RightPanel({ bundle, expedienteId, isAdmin, onRefresh }: {
   onRefresh: () => void;
 }) {
   const { expediente } = bundle;
+  const deferred = expediente.deferred_total_price;
+
   return (
     <div className="space-y-4">
-      {/* Deferred Price */}
-      {isAdmin && (
-        <DeferredPricePanel
-          expedienteId={expedienteId}
-          deferredTotalPrice={expediente.deferred_total_price ?? null}
-          deferredVisible={expediente.deferred_visible ?? false}
-          isCeo={true}
-          onUpdate={onRefresh}
-        />
-      )}
-      {!isAdmin && expediente.deferred_total_price != null && expediente.deferred_total_price > 0 && (
+
+      {/* ── Precio diferido ── simple card matching mockup */}
+      {(deferred != null && deferred > 0) && (
         <div className="bg-surface border border-border rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-text-primary mb-1">Precio diferido</h3>
-          <p className="text-2xl font-bold text-text-primary">
-            ${Number(expediente.deferred_total_price).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-[#1a6b5a] font-bold text-base">$</span>
+              <p className="text-sm text-text-tertiary font-medium">Precio diferido</p>
+            </div>
+            {isAdmin && (
+              <div className="flex items-center gap-1.5">
+                <button className="p-1.5 rounded-lg hover:bg-bg-alt transition-colors text-text-tertiary hover:text-text-primary">
+                  <EyeOff size={14} />
+                </button>
+                <button
+                  onClick={() => {}}
+                  className="p-1.5 rounded-lg hover:bg-bg-alt transition-colors text-text-tertiary hover:text-text-primary"
+                >
+                  <Pencil size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+          <p className="text-3xl font-bold text-text-primary mt-2">
+            ${Number(deferred).toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </p>
           <p className="text-xs text-text-tertiary mt-1">Vence en 30 días</p>
         </div>
       )}
 
-      {/* Notification logs (admin only) */}
+      {/* ── Notification logs (admin only) ── */}
       {isAdmin && (
         <div className="bg-surface border border-border rounded-xl p-4">
           <NotificationLogsSection expedienteId={expedienteId} isCeo={isAdmin} />
         </div>
       )}
 
-      {/* Events timeline */}
+      {/* ── Historial de eventos ── */}
       <div className="bg-surface border border-border rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-border">
+        <div className="px-5 py-3.5 border-b border-border">
           <h3 className="text-sm font-semibold text-text-primary">Historial de eventos</h3>
         </div>
-        <div className="overflow-y-auto max-h-[480px]">
+        <div className="overflow-y-auto max-h-[520px]">
           {(!Array.isArray(bundle.events) || bundle.events.length === 0) ? (
             <div className="px-5 py-8 text-center text-sm text-text-tertiary">Sin eventos aún.</div>
           ) : (
-            <div className="px-5 py-4 space-y-4">
-              {bundle.events.slice(0, isAdmin ? 100 : 10).map((ev, i) => (
-                <div key={ev.id ?? i} className="flex gap-3">
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <div className={cn(
-                      "w-2.5 h-2.5 rounded-full mt-0.5 border-2 flex-shrink-0",
-                      i === 0 ? "bg-[#1a6b5a] border-[#1a6b5a]" : "bg-white border-border-strong"
-                    )} />
-                    {i < Math.min(bundle.events.length, isAdmin ? 100 : 10) - 1 && (
-                      <div className="w-px flex-1 bg-border mt-1 min-h-[16px]" />
-                    )}
+            <div className="px-5 py-4 space-y-0">
+              {bundle.events.slice(0, isAdmin ? 100 : 10).map((ev, i) => {
+                const total = Math.min(bundle.events.length, isAdmin ? 100 : 10);
+                return (
+                  <div key={ev.id ?? i} className="flex gap-3">
+                    {/* Dot + line */}
+                    <div className="flex flex-col items-center w-5 flex-shrink-0">
+                      <div className={cn(
+                        "w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 border-2",
+                        i === 0
+                          ? "bg-[#1a6b5a] border-[#1a6b5a]"
+                          : "bg-surface border-text-tertiary/40"
+                      )} />
+                      {i < total - 1 && (
+                        <div className="w-px flex-1 bg-border min-h-[20px] mt-0.5" />
+                      )}
+                    </div>
+                    {/* Content */}
+                    <div className="pb-4 flex-1 min-w-0 pt-0.5">
+                      <p className="text-[10px] text-text-tertiary leading-tight">
+                        {ev.occurred_at
+                          ? new Date(ev.occurred_at).toLocaleDateString("es-CR", {
+                              day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+                            })
+                          : "—"}
+                      </p>
+                      <p className="text-xs text-text-secondary font-medium mt-0.5 leading-snug">
+                        {humanizeEvent(ev)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="pb-3 flex-1 min-w-0">
-                    <p className="text-[10px] text-text-tertiary">
-                      {ev.occurred_at
-                        ? new Date(ev.occurred_at).toLocaleDateString("es-CR", {
-                            day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
-                          })
-                        : "—"}
-                    </p>
-                    <p className="text-xs text-text-secondary font-medium mt-0.5">
-                      {humanizeEvent(ev)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -926,7 +1012,7 @@ export default function ExpedienteDetailPage() {
             </div>
           )}
 
-          {/* Admin action buttons (internal only) */}
+          {/* Admin action buttons (internal only) — bloquear/cancelar only */}
           {isAdmin && displayMode === "internal" && (
             <>
               {hasAction("C17") && !expediente.is_blocked && (
@@ -941,18 +1027,6 @@ export default function ExpedienteDetailPage() {
                   <Lock size={11} className="inline mr-1" />Desbloquear
                 </button>
               )}
-              <button
-                onClick={() => setActiveModal({ commandKey: "C15" })}
-                className="px-3 py-1.5 text-xs border border-border text-text-secondary rounded-lg hover:bg-bg-alt transition-colors"
-              >
-                + Costo
-              </button>
-              <button
-                onClick={() => setActiveModal({ commandKey: "C21" })}
-                className="px-4 py-1.5 text-xs bg-[#0f2d25] hover:bg-[#1a6b5a] text-white rounded-lg font-semibold transition-all shadow-sm active:scale-95"
-              >
-                + Pago
-              </button>
               {hasAction("C16") && (
                 <button onClick={() => setActiveModal({ commandKey: "C16" })}
                   className="px-3 py-1.5 text-xs border border-red-300 text-red-600 rounded-lg hover:bg-red-50">
