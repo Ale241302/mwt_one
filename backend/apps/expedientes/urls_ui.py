@@ -21,17 +21,30 @@ from apps.expedientes.views import (
 )
 from apps.expedientes.views_s20 import ProformaCreateView
 from apps.expedientes.views_financial import FinancialDashboardView
+from apps.expedientes.views_ui_dashboard import ExpedientesStatsView
+from apps.expedientes.views_oc import (
+    OCBundleView,
+    OCProformaCreateView,
+    OCProformaDeleteView,
+)
 
 app_name = 'expedientes-ui'
 
 urlpatterns = [
     # FIX-2026-04-08d: alias /api/ui/expedientes/dashboard/financial/
-    # El frontend lo llama con este prefijo desde la página /dashboard/financial.
     path('dashboard/financial/', FinancialDashboardView.as_view(), name='dashboard-financial'),
+
+    # Dashboard KPI stats (role-filtered)
+    path('stats/', ExpedientesStatsView.as_view(), name='stats'),
 
     # Sprint 3: List and Detail (Bundle)
     path('', ListExpedientesView.as_view(), name='list'),
     path('<uuid:pk>/', ExpedienteBundleView.as_view(), name='bundle'),
+
+    # OC Vista — detalle de Orden de Compra
+    path('<uuid:pk>/oc/', OCBundleView.as_view(), name='oc-bundle'),
+    path('<uuid:pk>/oc/proformas/', OCProformaCreateView.as_view(), name='oc-proforma-create'),
+    path('<uuid:pk>/oc/proformas/<int:proforma_id>/', OCProformaDeleteView.as_view(), name='oc-proforma-delete'),
 
     # S20-07: Crear proforma (ART-02) para un expediente
     path('<uuid:pk>/artifacts/proforma/', ProformaCreateView.as_view(), name='proforma-create'),

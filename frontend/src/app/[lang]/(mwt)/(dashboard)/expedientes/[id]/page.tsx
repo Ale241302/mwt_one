@@ -3,20 +3,19 @@
  * S10-03 — Detalle Expediente con acordeón de artefactos.
  * S19-12 — Barrido hex: todos los colores reemplazados por CSS vars.
  * S21    — isAdmin desde bundle.is_admin (is_superuser Django) → panel admin.
- * fix    — guard expedienteId en ArtifactModal; botones Costos/Pagos sin disabled.
  * FIX-2026-04-08  — expedienteId con triple fallback.
  * S25 WIRING      — conecta PagosSection, CreditBar (S25-10), DeferredPricePanel,
  *                   FamilyBanner y PortalPagosTab al detalle del expediente.
- * FIX-2026-04-08b — CostTable recibe costs desde el bundle (no fetch duplicado);
- *                   CreditBar recibe credit_snapshot del bundle (fix $0 bug).
+ * FIX-2026-04-08b — CostTable recibe costs desde el bundle; CreditBar desde credit_snapshot.
+ * REDESIGN-2026-04-16 — Layout renovado: vista admin (3col) vs vista cliente (sidebar crédito circular).
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, RefreshCw, AlertTriangle, Lock,
-  Play, CheckCircle, Clock, XCircle, ArrowRight, Truck,
-  ChevronDown, ChevronRight, Package, Info
+  CheckCircle, XCircle, ArrowRight, Truck,
+  Package, Info, Download, Eye, EyeOff
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
@@ -40,6 +39,8 @@ import DeferredPricePanel from "@/components/expediente/DeferredPricePanel";
 import FamilyBanner from "@/components/expediente/FamilyBanner";
 import { PortalPagosTab } from "@/components/portal/PortalPagosTab";
 import NotificationLogsSection from "@/components/expediente/NotificationLogsSection";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ExpedienteRef {
   expediente_id: string;
@@ -116,7 +117,6 @@ interface ExpedienteBundle {
     started_at: string | null;
     is_ignored: boolean;
   };
-  // FIX-2026-04-08b: credit_snapshot es campo top-level del bundle
   credit_snapshot?: {
     payment_coverage?: "none" | "partial" | "complete";
     coverage_pct?: number;
@@ -126,17 +126,24 @@ interface ExpedienteBundle {
     expediente_total?: number;
     credit_released?: boolean;
   };
-  // FIX-2026-04-08b: costs tipados con visible_to_client (bool)
   costs: CostLine[];
   payments: any[];
   documents: any[];
   is_admin?: boolean;
 }
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const CREDIT_BAND_CLASSES = {
-  MINT: "bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]",
-  AMBER: "bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning)]",
-  RED: "bg-[var(--critical-bg)] text-[var(--critical)] border-[var(--critical)]",
+  MINT: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  AMBER: "bg-amber-50 text-amber-700 border-amber-200",
+  RED: "bg-red-50 text-red-700 border-red-200",
+};
+
+const CREDIT_BAND_RING = {
+  MINT: "#059669",
+  AMBER: "#d97706",
+  RED: "#dc2626",
 };
 
 const STATE_TO_ADVANCE_COMMAND: Record<string, string> = {
@@ -147,6 +154,362 @@ const STATE_TO_ADVANCE_COMMAND: Record<string, string> = {
   'TRANSITO': 'C12',
   'EN_DESTINO': 'C14',
 };
+
+// ─── Credit Ring (for client view) ────────────────────────────────────────────
+
+function CreditRing({ days, band }: { days: number; band: "MINT" | "AMBER" | "RED" }) {
+  const r = 44;
+  const circ = 2 * Math.PI * r;
+  // 0 = full credit (mint), 90 = red
+  const pct = Math.min(1, days / 90);
+  const dash = circ * (1 - pct);
+  const color = CREDIT_BAND_RING[band];
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r={r} fill="none" stroke="var(--border)" strokeWidth="10" />
+        <circle
+          cx="60" cy="60" r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="10"
+          strokeDasharray={circ}
+          strokeDashoffset={dash}
+          strokeLinecap="round"
+          transform="rotate(-90 60 60)"
+          style={{ transition: "stroke-dashoffset 0.8s ease" }}
+        />
+        <text x="60" y="56" textAnchor="middle" fontSize="22" fontWeight="bold" fill="currentColor" className="fill-[var(--text-primary)]">
+          {days}
+        </text>
+        <text x="60" y="72" textAnchor="middle" fontSize="10" fill="currentColor" className="fill-[var(--text-tertiary)]">
+          Días
+        </text>
+        <text x="60" y="84" textAnchor="middle" fontSize="9" fill="currentColor" className="fill-[var(--text-tertiary)]">
+          Restantes
+        </text>
+      </svg>
+    </div>
+  );
+}
+
+// ─── Timeline Bar ────────────────────────────────────────────────────────────
+
+function TimelineBar({ currentState }: { currentState: string }) {
+  return (
+    <div className="bg-surface border border-border rounded-xl px-4 py-3 overflow-x-auto">
+      <div className="flex items-center min-w-max gap-0">
+        {CANONICAL_STATES.map((state, idx) => {
+          const stateIdx = CANONICAL_STATES.indexOf(state as any);
+          const curIdx = CANONICAL_STATES.indexOf(currentState as any);
+          const isPast = stateIdx < curIdx;
+          const isCurrent = state === currentState;
+          const isLocked = stateIdx > curIdx;
+          return (
+            <div key={state} className="flex items-center">
+              <div className={cn(
+                "flex items-center justify-center h-9 px-4 text-[11px] font-semibold whitespace-nowrap transition-all",
+                idx === 0 ? "rounded-l-full" : "",
+                idx === CANONICAL_STATES.length - 1 ? "rounded-r-full" : "",
+                isPast
+                  ? "bg-[#1a6b5a] text-white"
+                  : isCurrent
+                  ? "bg-[#1a3a32] text-white font-bold"
+                  : "bg-bg-alt text-text-tertiary"
+              )}>
+                {isPast && <span className="mr-1.5 text-white/80">✓</span>}
+                {isLocked && !isCurrent && <Lock size={10} className="mr-1 opacity-40" />}
+                {state}
+              </div>
+              {idx < CANONICAL_STATES.length - 1 && (
+                <div className={cn(
+                  "w-0 h-0",
+                  "border-t-[18px] border-b-[18px] border-l-[12px]",
+                  "border-t-transparent border-b-transparent",
+                  isPast ? "border-l-[#1a6b5a]" : isCurrent ? "border-l-[#1a3a32]" : "border-l-bg-alt"
+                )} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── KPI Cards Row ────────────────────────────────────────────────────────────
+
+function KPIRow({ expediente, artifactsCount, creditDays, creditBand }: {
+  expediente: ExpedienteBundle["expediente"];
+  artifactsCount: number;
+  creditDays: number;
+  creditBand: "MINT" | "AMBER" | "RED";
+}) {
+  const creditCls = CREDIT_BAND_CLASSES[creditBand];
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="bg-surface border border-border rounded-xl p-4">
+        <p className="text-[11px] text-text-tertiary uppercase tracking-wide mb-0.5">Estado pago</p>
+        <div className="flex items-center gap-2">
+          <p className="text-lg font-bold text-text-primary capitalize">
+            {expediente.payment_status === "PAID" ? "Pagado"
+              : expediente.payment_status === "PARTIAL" ? "Parcial"
+              : expediente.payment_status ?? "—"}
+          </p>
+          {expediente.payment_status === "PAID" && <CheckCircle size={14} className="text-emerald-500" />}
+        </div>
+      </div>
+      <div className="bg-surface border border-border rounded-xl p-4">
+        <p className="text-[11px] text-text-tertiary uppercase tracking-wide mb-0.5">Artefactos</p>
+        <p className="text-3xl font-bold text-text-primary">{artifactsCount}</p>
+      </div>
+      <div className="bg-surface border border-border rounded-xl p-4">
+        <p className="text-[11px] text-text-tertiary uppercase tracking-wide mb-0.5">Costo Total</p>
+        <p className="text-lg font-bold text-text-primary">
+          ${Number(expediente.total_cost || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+        </p>
+      </div>
+      <div className={cn("border rounded-xl p-4", creditCls)}>
+        <p className="text-[11px] uppercase tracking-wide mb-0.5 font-medium">Crédito ({creditBand})</p>
+        <p className="text-lg font-bold">{creditDays} días restantes</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── CLIENT KPI Row (shows Estado de Crédito differently) ─────────────────────
+
+function ClientKPIRow({ expediente, artifactsCount }: {
+  expediente: ExpedienteBundle["expediente"];
+  artifactsCount: number;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <div className="bg-surface border border-border rounded-xl p-4">
+        <p className="text-[11px] text-text-tertiary uppercase tracking-wide mb-0.5">Estado pago</p>
+        <p className="text-lg font-bold text-text-primary capitalize">
+          {expediente.payment_status === "PAID" ? "Pagado"
+            : expediente.payment_status === "PARTIAL" ? "Parcial"
+            : expediente.payment_status ?? "—"}
+        </p>
+      </div>
+      <div className="bg-surface border border-border rounded-xl p-4">
+        <p className="text-[11px] text-text-tertiary uppercase tracking-wide mb-0.5">Artefactos</p>
+        <p className="text-3xl font-bold text-text-primary">{artifactsCount}</p>
+      </div>
+      <div className="bg-surface border border-border rounded-xl p-4">
+        <p className="text-[11px] text-text-tertiary uppercase tracking-wide mb-0.5">Costo Total</p>
+        <p className="text-lg font-bold text-text-primary">
+          ${Number(expediente.total_cost || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Artifact Phase Map ───────────────────────────────────────────────────────
+// Maps artifact types to their workflow phase for grouping in client view.
+const ARTIFACT_PHASE_MAP: Record<string, string> = {
+  "ART-01": "REGISTRO", "ART-02": "REGISTRO",
+  "ART-03": "PRODUCCION", "ART-04": "PRODUCCION",
+  "ART-05": "PRODUCCION", "ART-06": "PRODUCCION",
+  "ART-07": "PREPARACION", "ART-08": "PREPARACION",
+  "ART-09": "PREPARACION", "ART-12": "PREPARACION",
+  "ART-10": "TRANSITO", "ART-36": "TRANSITO",
+  "ART-11": "EN_DESTINO", "ART-13": "EN_DESTINO",
+  "ART-16": "CERRADO", "ART-19": "DESPACHO",
+  "ART-22": "REGISTRO",
+};
+
+// ─── Client Documents Accordion ───────────────────────────────────────────────
+
+function ClientDocumentsAccordion({
+  artifacts,
+}: {
+  artifacts: ExpedienteBundle["artifacts"];
+}) {
+  const [openPhases, setOpenPhases] = useState<Record<string, boolean>>({ REGISTRO: true, PRODUCCION: true });
+
+  const byPhase: Record<string, typeof artifacts> = {};
+  const PHASE_ORDER = ["REGISTRO", "PRODUCCION", "PREPARACION", "DESPACHO", "TRANSITO", "EN_DESTINO", "CERRADO"];
+
+  for (const art of artifacts) {
+    const phase = ARTIFACT_PHASE_MAP[art.artifact_type] ?? "REGISTRO";
+    if (!byPhase[phase]) byPhase[phase] = [];
+    byPhase[phase].push(art);
+  }
+
+  const toggle = (phase: string) =>
+    setOpenPhases(p => ({ ...p, [phase]: !p[phase] }));
+
+  return (
+    <div className="bg-surface border border-border rounded-xl shadow-sm overflow-hidden">
+      <div className="px-5 py-4 border-b border-border">
+        <h3 className="text-sm font-semibold text-text-primary">Documentos Confirmados</h3>
+      </div>
+      <div className="divide-y divide-border">
+        {PHASE_ORDER.filter(ph => byPhase[ph]?.length).map(phase => {
+          const arts = byPhase[phase] || [];
+          const completed = arts.filter(a => a.status === "completed").length;
+          const isOpen = openPhases[phase] ?? false;
+
+          return (
+            <div key={phase}>
+              <button
+                onClick={() => toggle(phase)}
+                className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-alt/40 transition-colors text-left"
+              >
+                <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
+                  {phase}
+                  {completed > 0 && (
+                    <span className="ml-2 text-emerald-600 font-normal">({completed}/{arts.length})</span>
+                  )}
+                </span>
+                <span className="text-text-tertiary">{isOpen ? "∧" : "∨"}</span>
+              </button>
+              {isOpen && (
+                <div className="px-5 pb-4 space-y-2.5">
+                  {arts.map(art => {
+                    const meta = ARTIFACT_UI_REGISTRY[art.artifact_type];
+                    const label = meta?.label ?? art.artifact_type;
+                    const isCompleted = art.status === "completed";
+                    const fileUrl = art.payload?.file_url ?? art.payload?.url ?? null;
+
+                    return (
+                      <div key={art.id} className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          <span className={cn(
+                            "w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center",
+                            isCompleted ? "bg-emerald-100" : "bg-border"
+                          )}>
+                            {isCompleted
+                              ? <CheckCircle size={12} className="text-emerald-600" />
+                              : <span className="w-2 h-2 rounded-full bg-text-tertiary" />}
+                          </span>
+                          <div className="min-w-0">
+                            <p className={cn("text-xs font-medium truncate", isCompleted ? "text-text-primary" : "text-text-tertiary")}>
+                              {label}
+                            </p>
+                            {art.created_at && (
+                              <p className="text-[10px] text-text-tertiary">
+                                {new Date(art.created_at).toLocaleDateString("es-CR", {
+                                  day: "2-digit", month: "short", year: "numeric"
+                                })}
+                              </p>
+                            )}
+                            {art.payload?.proforma_number && (
+                              <p className="text-[10px] text-text-tertiary font-mono mt-0.5">
+                                PF: {art.payload.proforma_number}
+                              </p>
+                            )}
+                            {art.payload?.count != null && (
+                              <span className="inline-block text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded mt-0.5">
+                                COMPLETADO · {art.payload.count} REGISTRO{art.payload.count !== 1 ? "S" : ""}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {fileUrl && (
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-[#1a6b5a] hover:underline font-medium flex-shrink-0"
+                          >
+                            <Download size={12} /> Descargar
+                          </a>
+                        )}
+                        {isCompleted && !fileUrl && (
+                          <span className="text-[10px] text-emerald-600 font-medium flex-shrink-0">✓ Listo</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Locked phases */}
+        {["DESPACHO", "TRANSITO", "EN_DESTINO", "CERRADO"]
+          .filter(ph => !byPhase[ph]?.length)
+          .map(phase => (
+            <div key={phase} className="flex items-center gap-2 px-5 py-3 text-text-tertiary">
+              <Lock size={12} className="opacity-40" />
+              <span className="text-xs font-semibold uppercase tracking-wide">{phase}</span>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Admin Events Timeline ────────────────────────────────────────────────────
+
+function EventsPanel({ events, isAdmin }: { events: any[]; isAdmin: boolean }) {
+  return (
+    <div className="bg-surface border border-border rounded-xl shadow-sm overflow-hidden">
+      <div className="px-5 py-4 border-b border-border">
+        <h3 className="text-sm font-semibold text-text-primary">
+          {isAdmin ? "Historial de eventos" : "Historial de Eventos"}
+        </h3>
+        {!isAdmin && (
+          <p className="text-[11px] text-text-tertiary">Hitos Clave del Expediente</p>
+        )}
+      </div>
+      <div className="overflow-y-auto max-h-[480px]">
+        {(!Array.isArray(events) || events.length === 0) ? (
+          <div className="px-5 py-8 text-center text-sm text-text-tertiary">Sin eventos aún.</div>
+        ) : (
+          <div className="px-5 py-4 space-y-4">
+            {events.slice(0, isAdmin ? 100 : 10).map((ev, i) => (
+              <div key={ev.id ?? i} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <div className={cn(
+                    "w-2 h-2 rounded-full flex-shrink-0 mt-1",
+                    i === 0 ? "bg-[#1a6b5a]" : "bg-border-strong"
+                  )} />
+                  {i < Math.min(events.length, isAdmin ? 100 : 10) - 1 && (
+                    <div className="w-px flex-1 bg-border mt-1 min-h-[16px]" />
+                  )}
+                </div>
+                <div className="pb-3 flex-1 min-w-0">
+                  <p className="text-[10px] text-text-tertiary">
+                    {ev.occurred_at
+                      ? new Date(ev.occurred_at).toLocaleDateString("es-CR", {
+                          day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+                        })
+                      : "—"}
+                  </p>
+                  {isAdmin ? (
+                    <>
+                      <span className="text-[11px] font-mono font-semibold text-[#1a6b5a] bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                        {ev.event_type}
+                      </span>
+                      {ev.emitted_by && (
+                        <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
+                          {ev.emitted_by}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-xs text-text-secondary">
+                      {ev.event_type?.replace(".", " → ").replace(/_/g, " ") ?? "—"}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ExpedienteDetailPage() {
   const params = useParams();
@@ -160,15 +523,14 @@ export default function ExpedienteDetailPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeModal, setActiveModal] = useState<{ commandKey: string; artifact?: any } | null>(null);
   const [reassignLineId, setReassignLineId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'internal' | 'client'>('internal');
+  // Admin can toggle between internal (full) and client (simplified) view
+  const [viewMode, setViewMode] = useState<"internal" | "client">("internal");
   const [builderContext, setBuilderContext] = useState<any[]>([]);
 
   useEffect(() => {
     fetchBuilderArtifacts().then(data => {
       setBuilderContext(data || []);
-    }).catch(err => {
-      console.error("Error fetching builder artifacts:", err);
-    });
+    }).catch(() => {});
   }, []);
 
   const fetchBundle = useCallback(async (quiet = false) => {
@@ -206,27 +568,38 @@ export default function ExpedienteDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="text-[var(--text-secondary)] text-sm">Cargando expediente…</div>
+        <div className="flex flex-col items-center gap-3 text-text-tertiary">
+          <div className="w-8 h-8 border-2 border-[#1a6b5a] border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm">Cargando expediente…</p>
+        </div>
       </div>
     );
   }
 
   if (error || !bundle) {
     return (
-      <div className="empty-state">
-        <AlertTriangle size={40} />
-        <p>{error ?? "Expediente no encontrado."}</p>
-        <button className="btn btn-sm btn-secondary mt-2" onClick={() => router.back()}>Volver</button>
+      <div className="flex flex-col items-center justify-center min-h-64 gap-4">
+        <AlertTriangle size={40} className="text-red-400" />
+        <p className="text-sm text-text-secondary">{error ?? "Expediente no encontrado."}</p>
+        <button className="text-sm text-[#1a6b5a] hover:underline flex items-center gap-1" onClick={() => router.back()}>
+          <ArrowLeft size={14} /> Volver
+        </button>
       </div>
     );
   }
 
   const { expediente } = bundle;
-  const expedienteId: string = expediente.id || expediente.expediente_id || id || '';
-
+  const expedienteId: string = expediente.id || expediente.expediente_id || id || "";
   const isAdmin = bundle.is_admin === true;
-  const creditCls = CREDIT_BAND_CLASSES[bundle.credit_clock?.band ?? "MINT"];
   const currentState = expediente.status === "ABIERTO" ? "REGISTRO" : expediente.status;
+  const creditBand = bundle.credit_clock?.band ?? "MINT";
+  const creditDays = bundle.credit_clock?.days ?? 0;
+  const creditCls = CREDIT_BAND_CLASSES[creditBand];
+
+  // The active display mode:
+  // - If isAdmin → can toggle between internal (full admin) and client (simplified)
+  // - If not isAdmin → always client view
+  const displayMode = isAdmin ? viewMode : "client";
 
   const hasAction = (actionId: string) => {
     const actions = bundle.available_actions;
@@ -241,18 +614,15 @@ export default function ExpedienteDetailPage() {
 
   const calculateAdvanceValidation = () => {
     if (currentState === "CERRADO" || currentState === "CANCELADO") return { canAdvance: false, errors: [] };
-
     const currentPolicy = bundle.artifact_policy?.[currentState];
     const errors: string[] = [];
-
     if (currentPolicy) {
       const gateArtifacts = currentPolicy.gate_for_advance || [];
       const completedTypes = new Set(
         (bundle.artifacts || [])
-          .filter(a => a.status?.toUpperCase() === 'COMPLETED')
+          .filter(a => a.status?.toUpperCase() === "COMPLETED")
           .map(a => a.artifact_type)
       );
-
       gateArtifacts.forEach((artType: string) => {
         if (!completedTypes.has(artType)) {
           const label = ARTIFACT_UI_REGISTRY[artType]?.label || artType;
@@ -260,35 +630,31 @@ export default function ExpedienteDetailPage() {
         }
       });
     }
-
     if (currentState === "REGISTRO") {
       const orphanLines = (bundle.product_lines || []).filter((l: any) => l.proforma_id === null);
       if (orphanLines.length > 0) errors.push(`${orphanLines.length} línea(s) sin proforma`);
-
       const proformas = (bundle.artifacts || []).filter(
-        a => a.artifact_type === 'ART-02' && a.status?.toUpperCase() === 'COMPLETED'
+        a => a.artifact_type === "ART-02" && a.status?.toUpperCase() === "COMPLETED"
       );
       const noMode = proformas.filter(p => !p.payload?.mode);
       if (noMode.length > 0) errors.push(`${noMode.length} proforma(s) sin modo`);
     }
-
     const gateCommand = STATE_TO_ADVANCE_COMMAND[currentState];
     const canAdvance = errors.length === 0 && !!gateCommand && hasAction(gateCommand);
     return { canAdvance, errors };
   };
 
   const { canAdvance, errors: advanceErrors } = calculateAdvanceValidation();
-  const hasArt06 = bundle.artifacts.some(a => a.artifact_type === 'ART-06' && a.status?.toUpperCase() === 'COMPLETED');
-  const showC11B = currentState === 'DESPACHO' && hasArt06 && hasAction('C11B');
+  const hasArt06 = bundle.artifacts.some(a => a.artifact_type === "ART-06" && a.status?.toUpperCase() === "COMPLETED");
+  const showC11B = currentState === "DESPACHO" && hasArt06 && hasAction("C11B");
 
-  // ── S25: credit_snapshot desde bundle (FIX-2026-04-08b) ──────────────────
+  // S25 credit snapshot
   const snap = bundle.credit_snapshot;
   const paymentCoverage = snap?.payment_coverage ?? "none";
-  const coveragePct    = snap?.coverage_pct     ?? 0;
-  const totalReleased  = snap?.total_released   ?? 0;
-  const creditReleased = snap?.credit_released  ?? false;
+  const coveragePct = snap?.coverage_pct ?? 0;
+  const totalReleased = snap?.total_released ?? 0;
+  const creditReleased = snap?.credit_released ?? false;
 
-  // ── S25: portal meta para PortalPagosTab ─────────────────────────────────
   const portalMeta = {
     expediente_id: expedienteId,
     payment_coverage: paymentCoverage as "none" | "partial" | "complete",
@@ -299,115 +665,130 @@ export default function ExpedienteDetailPage() {
     total_lines_value: expediente.total_cost,
   };
 
+  const artifactsCount = Array.isArray(bundle.artifacts) ? bundle.artifacts.length : 0;
+
   return (
-    <div className="space-y-6">
-      {/* ─── Top bar ─── */}
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <Link href={`/${lang}/expedientes`} className="btn btn-sm btn-ghost p-2 mt-1">
-            <ArrowLeft size={16} />
+    <div className="space-y-5 pb-10">
+
+      {/* ─── Top Bar ────────────────────────────────────────────────────────── */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Link href={`/${lang}/expedientes`} className="p-1.5 rounded-lg hover:bg-bg-alt transition-colors text-text-tertiary hover:text-text-primary">
+            <ArrowLeft size={18} />
           </Link>
           <div>
-            <div className="flex items-center gap-3 mb-1.5">
-              <h1 className="page-title leading-none">
-                Expediente <span className="font-mono text-[var(--interactive)]">{expediente.custom_ref}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold text-text-primary">
+                {isAdmin
+                  ? <>Expediente <span className="font-mono text-[#1a6b5a]">{expediente.custom_ref}</span></>
+                  : <>Expediente: <span className="font-mono">{expediente.custom_ref}</span></>
+                }
               </h1>
+              {/* Status badge */}
               <span className={cn(
-                "badge text-xs font-semibold px-2.5 py-0.5",
-                STATE_BADGE_CLASSES[expediente.status] ?? "bg-[var(--bg)] text-[var(--text-secondary)]"
+                "text-[11px] font-bold px-2.5 py-0.5 rounded-full",
+                STATE_BADGE_CLASSES[expediente.status] ?? "bg-gray-100 text-gray-600"
               )}>
                 {expediente.status}
               </span>
-              {expediente.status === 'CANCELADO' && (
-                <span className="badge badge-critical flex items-center gap-1 text-[10px]"><XCircle size={10} /> CRÍTICO</span>
+              {/* Admin badge */}
+              {isAdmin && displayMode === "internal" && (
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                  ADMIN
+                </span>
               )}
+              {/* Blocked badge */}
               {expediente.is_blocked && (
-                <span className="badge badge-critical flex items-center gap-1 text-[10px]">
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 border flex items-center gap-1">
                   <Lock size={10} /> BLOQUEADO
                 </span>
               )}
-              {isAdmin && (
-                <span className="badge text-[10px] bg-amber-100 text-amber-700 border border-amber-300 px-2 py-0.5">
-                  👑 ADMIN
-                </span>
-              )}
             </div>
-            <p className="page-subtitle">{expediente.client_name || "Sin Cliente"} · {expediente.brand_name || "Sin Marca"}</p>
+            <p className="text-sm text-text-tertiary mt-0.5">
+              {expediente.client_name || "Sin Cliente"} · {expediente.brand_name || "Sin Marca"}
+            </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--bg-alt)] border border-[var(--border)]">
-            <button
-              onClick={() => setViewMode('internal')}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded transition-all",
-                viewMode === 'internal'
-                  ? "bg-[var(--surface)] shadow-sm text-[var(--interactive)]"
-                  : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+        {/* Right actions */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Toggle Interna/Cliente — only for admin */}
+          {isAdmin && (
+            <div className="flex items-center gap-2 bg-bg-alt border border-border rounded-lg px-3 py-1.5">
+              <span className="text-xs text-text-tertiary font-medium">
+                {viewMode === "internal" ? "Interna" : "Cliente"}
+              </span>
+              <button
+                onClick={() => setViewMode(v => v === "internal" ? "client" : "internal")}
+                className={cn(
+                  "relative w-10 h-5 rounded-full transition-all duration-200",
+                  viewMode === "client" ? "bg-[#1a6b5a]" : "bg-border-strong"
+                )}
+              >
+                <div className={cn(
+                  "absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-200",
+                  viewMode === "client" ? "left-5" : "left-0.5"
+                )} />
+              </button>
+              <span className="text-xs text-text-secondary font-medium">
+                {viewMode === "internal" ? "/ Cliente" : "/ Interna"}
+              </span>
+            </div>
+          )}
+
+          {/* Admin action buttons (internal view only) */}
+          {isAdmin && displayMode === "internal" && (
+            <>
+              {hasAction("C17") && !expediente.is_blocked && (
+                <button
+                  className="px-3 py-1.5 text-xs border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                  onClick={() => setActiveModal({ commandKey: "C17" })}
+                >
+                  <Lock size={12} className="inline mr-1" /> Bloquear
+                </button>
               )}
-            >
-              Interna
-            </button>
-            <button
-              onClick={() => setViewMode('client')}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded transition-all",
-                viewMode === 'client'
-                  ? "bg-[var(--surface)] shadow-sm text-[var(--interactive)]"
-                  : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+              {hasAction("C18") && expediente.is_blocked && (
+                <button
+                  className="px-3 py-1.5 text-xs border border-emerald-300 text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors"
+                  onClick={() => setActiveModal({ commandKey: "C18" })}
+                >
+                  <Lock size={12} className="inline mr-1" /> Desbloquear
+                </button>
               )}
-            >
-              Cliente
-            </button>
-          </div>
-
-          <div className="h-6 w-px bg-[var(--border)] mx-1" />
-
-          {hasAction("C17") && !expediente.is_blocked && (
-            <button className="btn btn-sm btn-danger-outline" onClick={() => setActiveModal({ commandKey: "C17" })}>
-              <Lock size={14} /> Bloquear
-            </button>
-          )}
-          {hasAction("C18") && expediente.is_blocked && (
-            <button
-              className="btn btn-sm"
-              style={{ color: "var(--success)", borderColor: "var(--success)", background: "transparent", border: "1px solid" }}
-              onClick={() => setActiveModal({ commandKey: "C18" })}
-            >
-              <Lock size={14} /> Desbloquear
-            </button>
+              <button
+                className="px-3 py-1.5 text-xs border border-border text-text-secondary rounded-lg hover:bg-bg-alt transition-colors"
+                onClick={() => setActiveModal({ commandKey: "C15" })}
+              >
+                + Costo
+              </button>
+              <button
+                className="px-4 py-1.5 text-xs bg-[#1a6b5a] hover:bg-[#155448] text-white rounded-lg font-medium transition-all shadow-sm active:scale-95"
+                onClick={() => setActiveModal({ commandKey: "C21" })}
+              >
+                + Pago
+              </button>
+              {hasAction("C16") && (
+                <button
+                  className="px-3 py-1.5 text-xs border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                  onClick={() => setActiveModal({ commandKey: "C16" })}
+                >
+                  Cancelar
+                </button>
+              )}
+            </>
           )}
 
           <button
-            className="btn btn-sm btn-secondary"
-            onClick={() => setActiveModal({ commandKey: "C15" })}
-          >
-            + Costo
-          </button>
-
-          <button
-            className="btn btn-sm btn-secondary"
-            onClick={() => setActiveModal({ commandKey: "C21" })}
-          >
-            + Pago
-          </button>
-
-          {hasAction("C16") && (
-            <button className="btn btn-sm btn-danger-outline" onClick={() => setActiveModal({ commandKey: "C16" })}>Cancelar</button>
-          )}
-          <button
-            className="btn btn-sm btn-ghost"
+            className="p-1.5 border border-border rounded-lg hover:bg-bg-alt transition-colors text-text-tertiary hover:text-text-primary"
             onClick={() => fetchBundle(true)}
             disabled={refreshing}
-            aria-label="Actualizar"
           >
             <RefreshCw size={15} className={cn(refreshing && "animate-spin")} />
           </button>
         </div>
       </div>
 
-      {/* ─── S25-12: FamilyBanner ─── */}
+      {/* ─── Family Banner ───────────────────────────────────────────────────── */}
       {(expediente.parent_expediente || (expediente.child_expedientes && expediente.child_expedientes.length > 0)) && (
         <FamilyBanner
           currentId={expedienteId}
@@ -418,110 +799,50 @@ export default function ExpedienteDetailPage() {
         />
       )}
 
-      {/* ─── S25-10: CreditBar (vista interna) ─── */}
-      {viewMode === 'internal' && (
-        <div className="animate-in fade-in slide-in-from-top-2 duration-500">
-          <CreditBar
-            paymentCoverage={paymentCoverage}
-            coveragePct={coveragePct}
-            totalReleased={totalReleased}
-            expedienteTotal={expediente.total_cost}
-            creditReleased={creditReleased}
-            isCeo={isAdmin}
-          />
-        </div>
+      {/* ─── Timeline ───────────────────────────────────────────────────────── */}
+      <TimelineBar currentState={currentState} />
+
+      {/* ─── KPI Row ────────────────────────────────────────────────────────── */}
+      {displayMode === "internal" ? (
+        <KPIRow
+          expediente={expediente}
+          artifactsCount={artifactsCount}
+          creditDays={creditDays}
+          creditBand={creditBand}
+        />
+      ) : (
+        <ClientKPIRow expediente={expediente} artifactsCount={artifactsCount} />
       )}
 
-      {/* ─── Metadata Row ─── */}
-      <div className="card p-4 flex flex-wrap gap-x-8 gap-y-4 text-sm">
-        <div><span className="text-[var(--text-tertiary)]">Modalidad:</span> <span className="font-medium text-[var(--interactive)] ml-1">{MODE_LABELS[expediente.mode] || expediente.mode || "—"}</span></div>
-        <div><span className="text-[var(--text-tertiary)]">Flete:</span> <span className="font-medium text-[var(--interactive)] ml-1">{expediente.freight_mode || "—"}</span></div>
-        <div><span className="text-[var(--text-tertiary)]">Transporte:</span> <span className="font-medium text-[var(--interactive)] ml-1">{expediente.transport_mode || "—"}</span></div>
-        <div><span className="text-[var(--text-tertiary)]">Despacho:</span> <span className="font-medium text-[var(--interactive)] ml-1">{expediente.dispatch_mode || "—"}</span></div>
-      </div>
-
-      {/* ─── Timeline ─── */}
-      <div className="card p-5 overflow-x-auto hide-scrollbar">
-        <div className="flex items-center min-w-max">
-          {CANONICAL_STATES.map((state, idx) => {
-            const isPast = CANONICAL_STATES.indexOf(state as any) < CANONICAL_STATES.indexOf(currentState as any);
-            const isCurrent = state === currentState;
-            return (
-              <div key={state} className="flex items-center">
-                <div className={cn(
-                  "flex items-center justify-center h-8 px-4 rounded-full text-xs font-semibold whitespace-nowrap transition-colors",
-                  isPast
-                    ? "bg-[var(--success)] text-[var(--text-inverse)]"
-                    : isCurrent
-                    ? "bg-[var(--interactive)] text-[var(--text-inverse)] shadow-sm"
-                    : "bg-[var(--bg)] text-[var(--text-tertiary)]"
-                )}>
-                  {state}
-                </div>
-                {idx < CANONICAL_STATES.length - 1 && (
-                  <div className={cn(
-                    "w-8 h-0.5 mx-2 rounded",
-                    isPast ? "bg-[var(--success)]" : "bg-[var(--border)]"
-                  )} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ─── KPI row ─── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card p-4">
-          <p className="caption text-[var(--text-tertiary)] mb-1">Estado pago</p>
-          <div className="flex items-center gap-2">
-            <p className="heading-sm font-semibold">{expediente.payment_status ?? "—"}</p>
-            {expediente.payment_status === "PAID" && <CheckCircle size={14} className="text-[var(--success)]" />}
-          </div>
-        </div>
-        <div className="card p-4">
-          <p className="caption text-[var(--text-tertiary)] mb-1">Artefactos</p>
-          <p className="heading-sm font-semibold">{Array.isArray(bundle.artifacts) ? bundle.artifacts.length : 0}</p>
-        </div>
-        <div className="card p-4">
-          <p className="caption text-[var(--text-tertiary)] mb-1">Costo Total</p>
-          <p className="heading-sm font-semibold">${Number(expediente.total_cost || 0).toLocaleString()}</p>
-        </div>
-        <div className={cn("card p-4 border", creditCls)}>
-          <p className="caption mb-1">Crédito ({bundle.credit_clock?.band || "MINT"})</p>
-          <p className="heading-sm font-semibold">{bundle.credit_clock?.days ?? 0} días</p>
-        </div>
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════════════════════
-          VISTA CLIENTE (S25-13 — PortalPagosTab)
-      ════════════════════════════════════════════════════════════════════════ */}
-      {viewMode === 'client' && (
-        <div className="card p-5">
-          <h2 className="heading-sm font-semibold mb-4 text-[var(--interactive)]">Vista del cliente</h2>
-          <PortalPagosTab expedienteMeta={portalMeta} />
-        </div>
+      {/* ─── CreditBar (solo vista interna admin) ───────────────────────────── */}
+      {displayMode === "internal" && isAdmin && (
+        <CreditBar
+          paymentCoverage={paymentCoverage}
+          coveragePct={coveragePct}
+          totalReleased={totalReleased}
+          expedienteTotal={expediente.total_cost}
+          creditReleased={creditReleased}
+          isCeo={isAdmin}
+        />
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          VISTA INTERNA
-      ════════════════════════════════════════════════════════════════════════ */}
-      {viewMode === 'internal' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* ── Left / main column ── */}
-          <div className="lg:col-span-2 space-y-6">
+          LAYOUT ADMIN (vista interna)
+      ══════════════════════════════════════════════════════════════════════ */}
+      {displayMode === "internal" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* ── Left: Artifacts Accordion ── */}
+          <div className="space-y-4">
             <GateMessage requiredToAdvance={advanceErrors} currentState={currentState} />
 
             {!canAdvance && advanceErrors.length > 0 && (
-              <div className="card p-4 bg-amber-50 border-amber-200 mb-6 flex items-start gap-4">
-                <div className="p-2 bg-white rounded-lg shadow-sm border border-amber-100 text-amber-600">
-                  <Info size={20} />
-                </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                <Info size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-amber-900 mb-1">Pendiente para avanzar a la siguiente fase</p>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="text-xs font-semibold text-amber-900 mb-1">Pendiente para avanzar</p>
+                  <div className="flex flex-wrap gap-1.5">
                     {advanceErrors.map((err, i) => (
-                      <span key={i} className="px-2 py-0.5 bg-amber-100/50 text-amber-700 text-[11px] font-medium rounded-full border border-amber-200">
+                      <span key={i} className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full border border-amber-200">
                         {err}
                       </span>
                     ))}
@@ -532,98 +853,23 @@ export default function ExpedienteDetailPage() {
 
             {canAdvance && (
               <button
-                className="w-full btn btn-primary bg-[var(--interactive)] text-white flex items-center justify-center gap-2 py-3 shadow-md hover:shadow-lg transition-all"
+                className="w-full bg-[#1a6b5a] hover:bg-[#155448] text-white rounded-xl py-2.5 text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
                 onClick={() => setActiveModal({ commandKey: STATE_TO_ADVANCE_COMMAND[currentState]! })}
               >
-                Avanzar a la siguiente fase <ArrowRight size={16} />
+                Avanzar a la siguiente fase <ArrowRight size={15} />
               </button>
             )}
 
             {showC11B && (
               <button
-                className="w-full btn btn-secondary flex items-center justify-center gap-2 py-3 shadow-sm mt-4 text-[var(--info)] border-[var(--info)]"
+                className="w-full border border-sky-300 text-sky-700 rounded-xl py-2.5 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-sky-50 transition-colors"
                 onClick={() => setActiveModal({ commandKey: "C11B" })}
               >
-                <Truck size={18} /> Confirmar Salida (China)
+                <Truck size={15} /> Confirmar Salida (China)
               </button>
             )}
 
-            {bundle.product_lines && bundle.product_lines.length > 0 && (
-              <section className="space-y-6 mb-8">
-                <div className="flex items-center justify-between">
-                  <h2 className="heading-sm font-semibold flex items-center gap-2 text-[var(--interactive)]">
-                    <Package size={18} /> Proformas y Líneas
-                  </h2>
-                  {currentState === "REGISTRO" && hasAction("C3") && (
-                    <button
-                      className="btn btn-sm btn-outline text-[var(--interactive)] border-[var(--interactive)] hover:bg-[var(--interactive)]/5 flex items-center gap-1.5"
-                      onClick={() => setActiveModal({ commandKey: "C3" })}
-                    >
-                      + Crear Proforma
-                    </button>
-                  )}
-                </div>
-
-                {(() => {
-                  const proformas = (bundle.artifacts || []).filter(a => a.artifact_type === 'ART-02');
-                  const orphanLines = (bundle.product_lines || []).filter(l => l.proforma_id === null);
-                  return (
-                    <>
-                      {proformas.map(pf => (
-                        <ProformaSection
-                          key={pf.id}
-                          proforma={pf}
-                          brandSlug={expediente.brand_slug}
-                          currentState={currentState}
-                          lines={(bundle.product_lines || []).filter(l => l.proforma_id === pf.id)}
-                          childArtifacts={(bundle.artifacts || []).filter(a => a.parent_proforma_id === pf.id)}
-                          availableActions={bundle.available_actions}
-                          onActionClick={(cmd, art) => setActiveModal({ commandKey: cmd, artifact: art })}
-                          hasAction={hasAction}
-                          onReassignLine={(lineId) => setReassignLineId(lineId)}
-                          isEditable={currentState === 'REGISTRO'}
-                        />
-                      ))}
-                      {orphanLines.length > 0 && (
-                        <div className="card border-dashed border-2 border-red-200 bg-red-50/10 overflow-hidden">
-                          <div className="px-5 py-4 flex items-center justify-between bg-red-50/20">
-                            <div className="flex items-center gap-2 text-red-700">
-                              <AlertTriangle size={16} />
-                              <span className="font-semibold text-sm">Líneas sin asignar a proforma</span>
-                            </div>
-                            <span className="text-[10px] font-bold text-red-500 uppercase px-2 py-0.5 bg-white border border-red-200 rounded">Acción Requerida</span>
-                          </div>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                              <tbody className="divide-y divide-red-100">
-                                {orphanLines.map(line => (
-                                  <tr key={line.id} className="hover:bg-red-50/20 transition-colors">
-                                    <td className="px-5 py-3 flex items-center gap-2">
-                                      <Package size={14} className="text-red-400" />
-                                      <span>{line.product_name}</span>
-                                    </td>
-                                    <td className="px-5 py-3 text-red-600 text-xs font-medium">Sin Proforma</td>
-                                    <td className="px-5 py-3 text-right">
-                                      <button
-                                        className="btn btn-sm btn-ghost text-red-700 hover:bg-red-100"
-                                        onClick={() => setReassignLineId(line.id)}
-                                      >
-                                        Asignar
-                                      </button>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </section>
-            )}
-
+            {/* Accordion de artefactos */}
             <ExpedienteAccordion
               expedienteId={expedienteId}
               expedienteData={{ ...expediente, artifacts: bundle.artifacts, artifact_policy: bundle.artifact_policy }}
@@ -641,17 +887,83 @@ export default function ExpedienteDetailPage() {
               isAdmin={isAdmin}
               builderContext={builderContext}
             />
+          </div>
 
-            {/* FIX-2026-04-08b: CostTable recibe costs del bundle (no fetch duplicado).
-                Después de registrar un costo, onRefresh recarga el bundle completo. */}
+          {/* ── Center: Proformas + CostTable + PagosSection ── */}
+          <div className="space-y-4">
+            {/* Proformas (REGISTRO state) */}
+            {bundle.product_lines && bundle.product_lines.length > 0 && (
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                    <Package size={15} className="text-[#1a6b5a]" /> Proformas y Líneas
+                  </h2>
+                  {currentState === "REGISTRO" && hasAction("C3") && (
+                    <button
+                      className="text-xs text-[#1a6b5a] hover:underline font-medium flex items-center gap-1"
+                      onClick={() => setActiveModal({ commandKey: "C3" })}
+                    >
+                      + Crear Proforma
+                    </button>
+                  )}
+                </div>
+                {(() => {
+                  const proformas = (bundle.artifacts || []).filter(a => a.artifact_type === "ART-02");
+                  const orphanLines = (bundle.product_lines || []).filter(l => l.proforma_id === null);
+                  return (
+                    <>
+                      {proformas.map(pf => (
+                        <ProformaSection
+                          key={pf.id}
+                          proforma={pf}
+                          brandSlug={expediente.brand_slug}
+                          currentState={currentState}
+                          lines={(bundle.product_lines || []).filter(l => l.proforma_id === pf.id)}
+                          childArtifacts={(bundle.artifacts || []).filter(a => a.parent_proforma_id === pf.id)}
+                          availableActions={bundle.available_actions}
+                          onActionClick={(cmd, art) => setActiveModal({ commandKey: cmd, artifact: art })}
+                          hasAction={hasAction}
+                          onReassignLine={(lineId) => setReassignLineId(lineId)}
+                          isEditable={currentState === "REGISTRO"}
+                        />
+                      ))}
+                      {orphanLines.length > 0 && (
+                        <div className="border border-dashed border-red-300 bg-red-50/10 rounded-xl overflow-hidden">
+                          <div className="px-4 py-3 flex items-center justify-between bg-red-50/20">
+                            <span className="text-xs font-semibold text-red-700 flex items-center gap-1.5">
+                              <AlertTriangle size={13} /> {orphanLines.length} línea(s) sin proforma
+                            </span>
+                          </div>
+                          <div className="px-4 py-2 space-y-1">
+                            {orphanLines.map(line => (
+                              <div key={line.id} className="flex items-center justify-between text-xs py-1">
+                                <span className="text-red-600">{line.product_name}</span>
+                                <button
+                                  className="text-red-700 hover:underline font-medium"
+                                  onClick={() => setReassignLineId(line.id)}
+                                >
+                                  Asignar
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </section>
+            )}
+
+            {/* CostTable */}
             <CostTable
               expedienteId={expedienteId}
               costs={bundle.costs}
               onRefresh={() => fetchBundle(true)}
             />
 
-            {/* ── S25-09: PagosSection ── */}
-            <div className="card p-5">
+            {/* PagosSection */}
+            <div className="bg-surface border border-border rounded-xl overflow-hidden">
               <PagosSection
                 expedienteId={expedienteId}
                 isCeo={isAdmin}
@@ -660,8 +972,8 @@ export default function ExpedienteDetailPage() {
             </div>
           </div>
 
-          {/* ── Right column: DeferredPricePanel + events ── */}
-          <div className="space-y-6">
+          {/* ── Right: DeferredPrice + Notifications + Events ── */}
+          <div className="space-y-4">
             {isAdmin && (
               <DeferredPricePanel
                 expedienteId={expedienteId}
@@ -671,59 +983,101 @@ export default function ExpedienteDetailPage() {
                 onUpdate={() => fetchBundle(true)}
               />
             )}
-
             {isAdmin && (
-              <div className="card p-5">
+              <div className="bg-surface border border-border rounded-xl p-4">
                 <NotificationLogsSection expedienteId={expedienteId} isCeo={isAdmin} />
               </div>
             )}
-
-            <div>
-              <h2 className="heading-sm font-semibold mb-3 text-[var(--interactive)]">Historial de eventos</h2>
-              <div className="card overflow-hidden h-[600px] flex flex-col">
-                <div className="flex-1 overflow-y-auto min-h-0 relative">
-                  {(!Array.isArray(bundle.events) || bundle.events.length === 0) ? (
-                    <div className="p-6 text-center text-[var(--text-tertiary)] text-sm absolute inset-0 flex items-center justify-center">
-                      Sin eventos aún.
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-[var(--divider)]">
-                      {bundle.events.map((ev) => (
-                        <div key={ev.id} className="px-5 py-3.5 hover:bg-[var(--surface-hover)] transition-colors group">
-                          <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center justify-between">
-                              <span className="font-mono text-[10px] tracking-tight font-semibold text-[var(--interactive)] bg-[var(--brand-accent-soft)] px-1.5 py-0.5 rounded border border-[var(--border)]">
-                                {ev.event_type}
-                              </span>
-                              <span className="text-[10px] text-[var(--text-tertiary)] whitespace-nowrap">
-                                {ev.occurred_at
-                                  ? new Date(ev.occurred_at).toLocaleDateString("es-CO", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-                                  : "—"}
-                              </span>
-                            </div>
-                            <p className="text-xs text-[var(--text-secondary)] truncate pr-2" title={ev.emitted_by}>
-                              Ref: {ev.emitted_by}
-                            </p>
-                            {ev.payload && Object.keys(ev.payload).length > 0 && (
-                              <details className="mt-1">
-                                <summary className="text-[10px] text-[var(--text-tertiary)] cursor-pointer hover:text-[var(--text-secondary)]">Ver payload</summary>
-                                <pre className="mt-1 text-[9px] bg-[var(--bg-alt)] rounded p-2 overflow-x-auto text-[var(--text-tertiary)] whitespace-pre-wrap break-all">
-                                  {JSON.stringify(ev.payload, null, 2)}
-                                </pre>
-                              </details>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <EventsPanel events={bundle.events} isAdmin={true} />
           </div>
         </div>
       )}
 
+      {/* ═══════════════════════════════════════════════════════════════════════
+          LAYOUT CLIENTE (simplified)
+      ══════════════════════════════════════════════════════════════════════ */}
+      {displayMode === "client" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* ── Left: Documentos Confirmados ── */}
+          <div className="space-y-4">
+            <ClientDocumentsAccordion artifacts={bundle.artifacts} />
+          </div>
+
+          {/* ── Center: Costos + Pagos ── */}
+          <div className="space-y-4">
+            {/* Cost table (client view: no VIS.CLIENT column, no add button) */}
+            <div className="bg-surface border border-border rounded-xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-border bg-[#1a3a32]">
+                <h3 className="text-sm font-semibold text-white">
+                  Detalle de Costos Facturados ({currentState})
+                </h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-bg-alt/60 text-[10px] uppercase text-text-tertiary tracking-wide border-b border-border">
+                      <th className="px-4 py-2.5">Tipo</th>
+                      <th className="px-4 py-2.5">Descripción</th>
+                      <th className="px-4 py-2.5 text-right">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bundle.costs.filter(c => c.visible_to_client).length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-4 py-6 text-center text-xs text-text-tertiary">
+                          Sin costos visibles
+                        </td>
+                      </tr>
+                    ) : bundle.costs.filter(c => c.visible_to_client).map(c => (
+                      <tr key={c.id} className="border-b border-border/50 last:border-0 hover:bg-bg-alt/30 transition-colors">
+                        <td className="px-4 py-2.5 text-xs font-medium text-text-secondary">{c.cost_type}</td>
+                        <td className="px-4 py-2.5 text-xs text-text-secondary">{c.description}</td>
+                        <td className="px-4 py-2.5 text-xs font-semibold text-right">
+                          {c.currency} ${Number(c.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Pagos Section — cliente view via PortalPagosTab */}
+            <div className="bg-surface border border-border rounded-xl p-5">
+              <h3 className="text-sm font-semibold text-text-primary mb-4">Registro de Pagos</h3>
+              <PortalPagosTab expedienteMeta={portalMeta} />
+            </div>
+          </div>
+
+          {/* ── Right: Credit Ring + Deferred + Events ── */}
+          <div className="space-y-4">
+            {/* Estado de Crédito */}
+            <div className="bg-surface border border-border rounded-xl p-5 flex flex-col items-center">
+              <h3 className="text-sm font-semibold text-text-primary mb-4 self-start">Estado de Crédito</h3>
+              <CreditRing days={creditDays} band={creditBand} />
+            </div>
+
+            {/* Próximo Vencimiento Diferido */}
+            {expediente.deferred_total_price != null && expediente.deferred_total_price > 0 && (
+              <div className="bg-surface border border-border rounded-xl p-5">
+                <h3 className="text-sm font-semibold text-text-primary mb-3">Próximo Vencimiento Diferido</h3>
+                <p className="text-xs text-text-secondary">
+                  Monto: <span className="font-semibold text-text-primary">
+                    ${Number(expediente.deferred_total_price).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </span>
+                </p>
+                <p className="text-xs text-text-secondary mt-1">
+                  Fecha: <span className="font-semibold text-text-primary">30 días restantes</span>
+                </p>
+              </div>
+            )}
+
+            <EventsPanel events={bundle.events} isAdmin={false} />
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modals ─────────────────────────────────────────────────────────── */}
       {activeModal?.commandKey === "C2" ? (
         <CreateProformaModal
           open={true}
@@ -751,7 +1105,7 @@ export default function ExpedienteDetailPage() {
           open={true}
           expedienteId={expedienteId}
           lineId={reassignLineId}
-          proformas={(bundle.artifacts || []).filter(a => a.artifact_type === 'ART-02')}
+          proformas={(bundle.artifacts || []).filter(a => a.artifact_type === "ART-02")}
           onClose={() => setReassignLineId(null)}
           onSuccess={() => { setReassignLineId(null); fetchBundle(true); }}
         />

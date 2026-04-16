@@ -155,9 +155,25 @@ class ListExpedientesView(APIView):
         from datetime import timedelta
         from django.utils import timezone
 
-        qs = Expediente.objects.select_related('client').all()
+        qs = Expediente.objects.select_related('client', 'brand').prefetch_related(
+            'product_lines', 'product_lines__product'
+        ).all()
 
-        # Filtering
+        # ── SECURITY: Role-based filtering ─────────────────────────────────
+        # CEO (is_superuser) y INTERNAL (VIEW_EXPEDIENTES_ALL) ven todo.
+        # Cualquier otro usuario (cliente) solo ve sus propios expedientes.
+        is_admin = request.user.is_superuser or getattr(request.user, 'role', '') == 'INTERNAL'
+        if not is_admin:
+            # Filtrar por la legal_entity del usuario autenticado
+            user_entity = getattr(request.user, 'legal_entity_id', None)
+            if user_entity:
+                qs = qs.filter(client_id=user_entity)
+            else:
+                # Sin entidad asignada → sin acceso a expedientes
+                qs = qs.none()
+        # ────────────────────────────────────────────────────────────────────
+
+        # Filtering by query params
         status_filter = request.query_params.get('status')
         if status_filter:
             qs = qs.filter(status=status_filter)

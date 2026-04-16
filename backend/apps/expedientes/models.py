@@ -767,3 +767,60 @@ class LogisticsOption(TimestampMixin):
 
     def __str__(self):
         return f'Option {self.option_id}: {self.mode} via {self.carrier}'
+
+
+# === OC Vista — OCProforma ===
+class OCProforma(models.Model):
+    """
+    Proforma simple asociada a un Expediente en el contexto de la vista OC.
+    Almacena el número de proforma y la URL del archivo (PDF o XLSX).
+    Creada desde la vista OC → 'Añadir Proforma'.
+    """
+    expediente = models.ForeignKey(
+        Expediente,
+        on_delete=models.CASCADE,
+        related_name='oc_proformas',
+        help_text='Expediente (OC) al que pertenece esta proforma.'
+    )
+    proforma_number = models.CharField(
+        max_length=200,
+        help_text='Número de proforma ingresado por el usuario.'
+    )
+    file_url = models.URLField(
+        max_length=1000,
+        null=True, blank=True,
+        help_text='URL del archivo proforma (PDF o XLSX). Puede ser Google Drive, S3, etc.'
+    )
+    filename = models.CharField(
+        max_length=500,
+        null=True, blank=True,
+        help_text='Nombre original del archivo subido.'
+    )
+    file_type = models.CharField(
+        max_length=10,
+        null=True, blank=True,
+        choices=[('pdf', 'PDF'), ('xlsx', 'Excel'), ('other', 'Otro')],
+        help_text='Tipo de archivo: pdf o xlsx.'
+    )
+    notes = models.TextField(
+        null=True, blank=True,
+        help_text='Notas adicionales opcionales.'
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='oc_proformas_created',
+        help_text='Usuario que creó esta proforma.'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'OC Proforma'
+        verbose_name_plural = 'OC Proformas'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'OCProforma {self.proforma_number} → {self.expediente}'
+

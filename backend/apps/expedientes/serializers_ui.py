@@ -32,8 +32,21 @@ class UIExpedienteListSerializer(serializers.Serializer):
     is_blocked = serializers.BooleanField(read_only=True)
     block_reason = serializers.CharField(source='blocked_reason', read_only=True, default='')
 
+    # Extended fields for dashboard view
+    purchase_order_number = serializers.CharField(read_only=True, allow_null=True, default=None)
+    payment_status = serializers.CharField(read_only=True, default='PENDING')
+    proforma_client_number = serializers.CharField(read_only=True, allow_null=True, default=None)
+    shipment_date = serializers.DateField(read_only=True, allow_null=True, default=None)
+    total_value = serializers.SerializerMethodField()
+    product_count = serializers.SerializerMethodField()
+    credit_limit_client = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True, allow_null=True, default=None)
+    credit_exposure = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True, allow_null=True, default=None)
+
     def get_custom_ref(self, obj):
-        return f"EXP-{str(obj.expediente_id)[:8]}"
+        # Usa purchase_order_number si existe, sino genera ref UUID
+        if getattr(obj, 'purchase_order_number', None):
+            return obj.purchase_order_number
+        return f"OC-{str(obj.expediente_id)[:8].upper()}"
 
     def get_brand_name(self, obj):
         """FIX: brand es ForeignKey a Brand, no CharField con get_brand_display."""
@@ -52,6 +65,24 @@ class UIExpedienteListSerializer(serializers.Serializer):
         except Exception:
             pass
         return ''
+
+    def get_total_value(self, obj):
+        """Calcula el valor total de líneas de producto."""
+        try:
+            total = sum(
+                (line.unit_price or Decimal('0')) * (line.quantity or 0)
+                for line in obj.product_lines.all()
+            )
+            return float(total)
+        except Exception:
+            return 0.0
+
+    def get_product_count(self, obj):
+        """Cuenta líneas de producto distintas."""
+        try:
+            return obj.product_lines.count()
+        except Exception:
+            return 0
 
 
 class EventLogSummarySerializer(serializers.Serializer):
