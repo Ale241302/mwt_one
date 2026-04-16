@@ -196,49 +196,43 @@ function humanizeEvent(ev: any): string {
 
 function TimelineBar({ currentState }: { currentState: string }) {
   const curIdx = CANONICAL_STATES.indexOf(currentState as any);
-  const ARROW = 10; // px depth of chevron
+  const DEPTH = 12; // Chevron tip depth in px
+
   return (
-    <div className="bg-surface border border-border rounded-xl px-3 py-2.5 overflow-x-auto">
-      <div className="flex items-center min-w-max" style={{ gap: 0 }}>
+    <div className="bg-[#f0f2f5] p-1.5 rounded-xl mb-4 overflow-x-auto shadow-inner border border-border/50">
+      <div className="flex items-center gap-[4px] min-w-max">
         {CANONICAL_STATES.map((state, idx) => {
-          const isPast    = idx < curIdx;
+          const isPast = idx < curIdx;
           const isCurrent = state === currentState;
-          const isFirst   = idx === 0;
-          const isLast    = idx === CANONICAL_STATES.length - 1;
+          const isFirst = idx === 0;
+          const isLast = idx === CANONICAL_STATES.length - 1;
 
-          const bg  = isPast ? "#1a6b5a" : isCurrent ? "#1a3a32" : "#e4e9e4";
-          const txt = isPast || isCurrent ? "#ffffff" : "#728070";
+          const bg = isPast ? "#28ad5d" : isCurrent ? "#013b53" : "#d3dad3";
+          const color = isPast || isCurrent ? "#ffffff" : "#6c7a6b";
 
-          // clip-path: left notch (except first) + right arrow (except last)
-          const clip = (() => {
-            if (isFirst && isLast) return "none";
-            if (isFirst)  return `polygon(0 0, calc(100% - ${ARROW}px) 0, 100% 50%, calc(100% - ${ARROW}px) 100%, 0 100%)`;
-            if (isLast)   return `polygon(${ARROW}px 0, 100% 0, 100% 100%, ${ARROW}px 100%, 0 50%)`;
-            return `polygon(${ARROW}px 0, calc(100% - ${ARROW}px) 0, 100% 50%, calc(100% - ${ARROW}px) 100%, ${ARROW}px 100%, 0 50%)`;
-          })();
+          // polygon coordinates for the chevron
+          let cp = `polygon(0% 0%, calc(100% - ${DEPTH}px) 0%, 100% 50%, calc(100% - ${DEPTH}px) 100%, 0% 100%, ${DEPTH}px 50%)`;
+          if (isFirst) cp = `polygon(0% 0%, calc(100% - ${DEPTH}px) 0%, 100% 50%, calc(100% - ${DEPTH}px) 100%, 0% 100%)`;
+          if (isLast) cp = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, ${DEPTH}px 50%)`;
 
           return (
             <div
               key={state}
-              className="flex items-center justify-center select-none whitespace-nowrap"
+              className="flex items-center justify-center font-bold text-[10px] tracking-widest uppercase transition-all duration-300 h-9"
               style={{
-                height: 36,
-                background: bg,
-                color: txt,
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: "0.03em",
-                paddingLeft:  isFirst ? 16 : ARROW + 12,
-                paddingRight: isLast  ? 16 : ARROW + 12,
-                clipPath: clip,
-                // overlap each segment by ARROW px so notch hides behind previous arrow
-                marginLeft: idx > 0 ? -ARROW : 0,
-                position: "relative",
-                zIndex: CANONICAL_STATES.length - idx,
+                backgroundColor: bg,
+                color: color,
+                clipPath: cp,
+                paddingLeft: isFirst ? 20 : 32,
+                paddingRight: isLast ? 20 : 32,
+                flex: "1 0 auto",
+                minWidth: "135px"
               }}
             >
-              {isPast && <span style={{ marginRight: 5, fontSize: 10 }}>✓</span>}
-              {state}
+              <div className="flex items-center gap-1.5">
+                {isPast && <CheckCircle size={12} className="text-white fill-emerald-600/20" />}
+                {state.replace(/_/g, " ")}
+              </div>
             </div>
           );
         })}
@@ -261,24 +255,24 @@ function KPIRow({ expediente, artifactsCount, creditDays, creditBand }: {
     : expediente.payment_status === "PARTIAL" ? "Parcial"
     : expediente.payment_status ?? "—";
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <div className="bg-surface border border-border rounded-xl p-4">
-        <p className="text-[10px] text-text-tertiary uppercase tracking-wide mb-0.5">Estado pago</p>
-        <p className="text-lg font-bold text-text-primary">{payLabel}</p>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="bg-white border border-border rounded-xl p-5 shadow-sm">
+        <p className="text-[10px] text-text-tertiary uppercase font-bold tracking-widest mb-1.5">Estado pago</p>
+        <p className="text-xl font-bold text-text-primary">{payLabel}</p>
       </div>
-      <div className="bg-surface border border-border rounded-xl p-4">
-        <p className="text-[10px] text-text-tertiary uppercase tracking-wide mb-0.5">Artefactos</p>
-        <p className="text-3xl font-bold text-text-primary">{artifactsCount}</p>
+      <div className="bg-white border border-border rounded-xl p-5 shadow-sm">
+        <p className="text-[10px] text-text-tertiary uppercase font-bold tracking-widest mb-1.5">Artefactos</p>
+        <p className="text-3xl font-extrabold text-text-primary leading-none">{artifactsCount}</p>
       </div>
-      <div className="bg-surface border border-border rounded-xl p-4">
-        <p className="text-[10px] text-text-tertiary uppercase tracking-wide mb-0.5">Costo Total</p>
-        <p className="text-lg font-bold text-text-primary">
+      <div className="bg-white border border-border rounded-xl p-5 shadow-sm">
+        <p className="text-[10px] text-text-tertiary uppercase font-bold tracking-widest mb-1.5">Costo Total</p>
+        <p className="text-xl font-bold text-text-primary">
           ${Number(expediente.total_cost || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
         </p>
       </div>
-      <div className={cn("border rounded-xl p-4", creditCls)}>
-        <p className="text-[10px] uppercase tracking-wide mb-0.5 font-semibold">Crédito ({creditBand})</p>
-        <p className="text-lg font-bold">{creditDays} días restantes</p>
+      <div className={cn("border rounded-xl p-5 shadow-sm", creditCls)}>
+        <p className="text-[10px] uppercase font-bold tracking-widest mb-1.5">Crédito ({creditBand})</p>
+        <p className="text-xl font-bold">{creditDays} días restantes</p>
       </div>
     </div>
   );
@@ -315,9 +309,9 @@ function AdminArtifactAccordion({
   const toggle = (ph: string) => setOpenPhases(p => ({ ...p, [ph]: !p[ph] }));
 
   return (
-    <div className="bg-surface border border-border rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-3 border-b border-border bg-bg-alt/30">
+      <div className="px-5 py-3.5 border-b border-border">
         <h3 className="text-sm font-semibold text-text-primary">Artifact</h3>
       </div>
 
@@ -592,15 +586,15 @@ function CostActionsCenter({
       </div>
 
       {/* ── Registro de Pagos ── */}
-      <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-border rounded-xl overflow-hidden shadow-sm">
         <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
           <h3 className="text-sm font-semibold text-text-primary">Registro de Pagos</h3>
           {isAdmin && (
             <button
               onClick={() => onActionClick("C21")}
-              className="px-4 py-1.5 text-sm font-semibold bg-[#0f2d25] text-white rounded-lg hover:bg-[#1a6b5a] transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold bg-[#0f2d25] text-white rounded-lg hover:bg-[#1a6b5a] transition-colors"
             >
-              Registrar pago
+              <Plus size={14} /> Registrar pago
             </button>
           )}
         </div>
@@ -712,35 +706,35 @@ function RightPanel({ bundle, expedienteId, isAdmin, onRefresh }: {
         </div>
         <div className="overflow-y-auto max-h-[520px]">
           {(!Array.isArray(bundle.events) || bundle.events.length === 0) ? (
-            <div className="px-5 py-8 text-center text-sm text-text-tertiary">Sin eventos aún.</div>
+            <div className="px-5 py-8 text-center text-sm text-text-tertiary font-medium">Sin eventos aún.</div>
           ) : (
-            <div className="px-5 py-4 space-y-0">
+            <div className="px-5 py-6 space-y-0">
               {bundle.events.slice(0, isAdmin ? 100 : 10).map((ev, i) => {
                 const total = Math.min(bundle.events.length, isAdmin ? 100 : 10);
                 return (
-                  <div key={ev.id ?? i} className="flex gap-3">
+                  <div key={ev.id ?? i} className="flex gap-4 group">
                     {/* Dot + line */}
                     <div className="flex flex-col items-center w-5 flex-shrink-0">
                       <div className={cn(
-                        "w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 border-2",
+                        "w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 transition-all duration-300",
                         i === 0
-                          ? "bg-[#1a6b5a] border-[#1a6b5a]"
-                          : "bg-surface border-text-tertiary/40"
+                          ? "bg-[#1a6b5a] ring-4 ring-emerald-500/20"
+                          : "bg-white border-2 border-text-tertiary/30"
                       )} />
                       {i < total - 1 && (
-                        <div className="w-px flex-1 bg-border min-h-[20px] mt-0.5" />
+                        <div className="w-[1.5px] flex-1 bg-border/50 min-h-[24px] my-1 group-hover:bg-border transition-colors" />
                       )}
                     </div>
                     {/* Content */}
-                    <div className="pb-4 flex-1 min-w-0 pt-0.5">
-                      <p className="text-[10px] text-text-tertiary leading-tight">
+                    <div className="pb-6 flex-1 min-w-0">
+                      <p className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
                         {ev.occurred_at
                           ? new Date(ev.occurred_at).toLocaleDateString("es-CR", {
-                              day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+                              day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit"
                             })
                           : "—"}
                       </p>
-                      <p className="text-xs text-text-secondary font-medium mt-0.5 leading-snug">
+                      <p className="text-[13px] text-text-primary font-semibold mt-1 leading-tight">
                         {humanizeEvent(ev)}
                       </p>
                     </div>
@@ -994,51 +988,27 @@ export default function ExpedienteDetailPage() {
         <div className="flex items-center gap-2 flex-wrap">
           {/* Toggle Interna / Cliente */}
           {isAdmin && (
-            <div className="flex items-center gap-2 bg-bg-alt border border-border rounded-lg px-3 py-1.5">
-              <span className="text-xs text-text-secondary font-medium">Interna</span>
+            <div className="flex items-center gap-2 bg-white border border-border shadow-sm rounded-lg px-3 py-1.5">
+              <span className="text-xs text-text-secondary font-semibold">Interna</span>
               <button
                 onClick={() => setViewMode(v => v === "internal" ? "client" : "internal")}
                 className={cn(
-                  "relative w-10 h-5 rounded-full transition-all duration-200",
+                  "relative w-9 h-4.5 rounded-full transition-all duration-200",
                   viewMode === "client" ? "bg-[#1a6b5a]" : "bg-border-strong"
                 )}
               >
                 <div className={cn(
-                  "absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-200",
+                  "absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all duration-200",
                   viewMode === "client" ? "left-5" : "left-0.5"
                 )} />
               </button>
-              <span className="text-xs text-text-secondary font-medium">Cliente</span>
+              <span className="text-xs text-text-secondary font-semibold">Cliente</span>
             </div>
-          )}
-
-          {/* Admin action buttons (internal only) — bloquear/cancelar only */}
-          {isAdmin && displayMode === "internal" && (
-            <>
-              {hasAction("C17") && !expediente.is_blocked && (
-                <button onClick={() => setActiveModal({ commandKey: "C17" })}
-                  className="px-3 py-1.5 text-xs border border-red-300 text-red-600 rounded-lg hover:bg-red-50">
-                  <Lock size={11} className="inline mr-1" />Bloquear
-                </button>
-              )}
-              {hasAction("C18") && expediente.is_blocked && (
-                <button onClick={() => setActiveModal({ commandKey: "C18" })}
-                  className="px-3 py-1.5 text-xs border border-emerald-300 text-emerald-600 rounded-lg hover:bg-emerald-50">
-                  <Lock size={11} className="inline mr-1" />Desbloquear
-                </button>
-              )}
-              {hasAction("C16") && (
-                <button onClick={() => setActiveModal({ commandKey: "C16" })}
-                  className="px-3 py-1.5 text-xs border border-red-300 text-red-600 rounded-lg hover:bg-red-50">
-                  Cancelar
-                </button>
-              )}
-            </>
           )}
 
           <button
             onClick={() => fetchBundle(true)} disabled={refreshing}
-            className="p-1.5 border border-border rounded-lg hover:bg-bg-alt text-text-tertiary hover:text-text-primary"
+            className="p-1.5 bg-white border border-border shadow-sm rounded-lg hover:bg-bg-alt text-text-tertiary hover:text-text-primary transition-all"
           >
             <RefreshCw size={15} className={cn(refreshing && "animate-spin")} />
           </button>
