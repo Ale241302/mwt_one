@@ -5,6 +5,14 @@ from django.core.exceptions import ValidationError
 
 
 from apps.core.models import TimestampMixin, AppendOnlyModel, LegalEntity, UUIDReferenceField
+from .enums_exp import (
+    ExpedienteStatus, BlockedByType, DispatchMode, 
+    CreditClockStartRule, PaymentStatus, AforoType,
+    AggregateType, CostLineVisibility, CostCategory,
+    CostBehavior, RegisteredByType, LogisticsMode,
+    LogisticsSource
+)
+from .enums_artifacts import ArtifactStatusEnum
 
 class ExpedienteSAP(TimestampMixin):
     expediente_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
