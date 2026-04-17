@@ -8,8 +8,7 @@ from django.db import transaction
 
 from apps.transfers.models import Transfer, TransferLine, Node
 from apps.transfers.enums_exp import TransferStatus, LegalContext
-from apps.expedientes.models import EventLog, ArtifactInstance
-from apps.expedientes.enums_artifacts import ArtifactStatusEnum
+from apps.core.registry import ModuleRegistry
 
 
 class TransferService:
@@ -26,7 +25,12 @@ class TransferService:
     @staticmethod
     def _create_transfer_event(transfer, event_type, emitted_by, payload=None):
         """Create EventLog for transfer domain."""
-        return EventLog.objects.create(
+        event_model = ModuleRegistry.get_model('expedientes', 'EventLog')
+        if not event_model:
+            logger.warning(f"EventLog model not found in registry. Skipping event {event_type}")
+            return None
+            
+        return event_model.objects.create(
             event_type=event_type,
             aggregate_type='transfer',
             aggregate_id=uuid.uuid4(),
@@ -172,12 +176,13 @@ class TransferService:
 
 # ... Keep artifact helpers but maybe they should also be in TransferService or separate ...
 def _create_artifact(transfer, artifact_type, payload, user):
-    from apps.expedientes.models import ArtifactInstance
-    from apps.expedientes.enums_artifacts import ArtifactStatusEnum
-    return ArtifactInstance.objects.create(
+    artifact_model = ModuleRegistry.get_model('expedientes', 'ArtifactInstance')
+    if not artifact_model:
+        return None
+    return artifact_model.objects.create(
         expediente_id=transfer.source_expediente_id,
         artifact_type=artifact_type,
-        status=ArtifactStatusEnum.COMPLETED,
+        status='COMPLETED',
         payload={"transfer_id": transfer.transfer_id, **(payload or {})},
         created_by=str(user),
     )

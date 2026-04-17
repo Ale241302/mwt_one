@@ -1,7 +1,7 @@
 from django.db import models
 
 
-from apps.core.models import BaseModel
+from apps.core.models import BaseModel, UUIDReferenceField
 
 class Supplier(BaseModel):
     name = models.CharField(max_length=255)
@@ -9,10 +9,19 @@ class Supplier(BaseModel):
     country = models.CharField(max_length=100)
     address = models.TextField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
-    # is_active, created_at, updated_at ya vienen de BaseModel
+    legal_entity_id = UUIDReferenceField(
+        target_module='core', 
+        target_model='LegalEntity',
+        db_index=True,
+        null=True, blank=True
+    )
+
+    @property
+    def legal_entity(self):
+        return self.resolve_ref('legal_entity_id')
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.tax_id})"
 
 
 class SupplierContact(models.Model):

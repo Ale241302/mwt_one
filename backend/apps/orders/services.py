@@ -1,6 +1,5 @@
-from apps.orders.models import ClientOrder, ClientOrderLine
-from apps.expedientes.models import ExpedienteSAP
-from apps.historial.models import EventLog
+from .models import ClientOrder, ClientOrderLine
+from apps.core.registry import ModuleRegistry
 from django.db import transaction
 import uuid
 import logging
@@ -48,22 +47,29 @@ class OrderService:
         order.status = 'submitted'
         order.save()
         
-        # TODO: Notificar al CEO para revisión
+        # Publicar evento vía Registry si existe módulo historial/eventos
+        event_model = ModuleRegistry.get_model('expedientes', 'EventLog')
+        if event_model:
+            event_model.objects.create(
+                event_type='order.submitted', aggregate_type='ORDER', aggregate_id=str(order.id),
+                payload={'client_id': str(order.client_id)}, correlation_id=uuid.uuid4()
+            )
         return order
 
     @classmethod
     @transaction.atomic
     def convert_to_sap(cls, order_id, legal_entity_id):
         """
-        Convierte una Orden de Compra aprobada en un Expediente SAP.
+        Convierte una Orden de Compra aprobada en un Expediente SAP resuelto dinámicamente.
         """
         order = ClientOrder.objects.get(pk=order_id)
-        if order.status != 'submitted':
-             # En un flujo real, debería ser 'approved', pero usamos 'submitted' para este demo
-             pass
         
+        sap_model = ModuleRegistry.get_model('expedientes', 'ExpedienteSAP')
+        if not sap_model:
+            raise ValueError("Módulo de Expedientes no disponible en el registro.")
+
         # Crear el SAP vinculándolo a la OC
-        sap = ExpedienteSAP.objects.create(
+        sap = sap_model.objects.create(
             order_id=order.id,
             client_id=order.client_id,
             brand_id=order.brand_id,
@@ -74,5 +80,5 @@ class OrderService:
         order.status = 'converted'
         order.save()
         
-        logger.info(f"Orden {order_id} convertida a SAP {sap.expediente_id}")
+        logger.info(f"Orden {order_id} convertida a SAP {getattr(sap, 'expediente_id', sap.pk)}")
         return sap
