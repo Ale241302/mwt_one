@@ -12,7 +12,7 @@ class NotificationTemplateSerializer(serializers.ModelSerializer):
         model = NotificationTemplate
         fields = [
             'id', 'name', 'template_key', 'subject_template', 'body_template',
-            'is_active', 'brand', 'brand_name', 'language',
+            'is_active', 'brand_id', 'brand_name', 'language',
             'created_at', 'updated_at', 'created_by',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'created_by']
@@ -25,7 +25,7 @@ class NotificationTemplateWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationTemplate
         fields = ['name', 'template_key', 'subject_template', 'body_template',
-                  'is_active', 'brand', 'language']
+                  'is_active', 'brand_id', 'language']
 
 
 class NotificationLogSerializer(serializers.ModelSerializer):
@@ -35,7 +35,7 @@ class NotificationLogSerializer(serializers.ModelSerializer):
         model = NotificationLog
         fields = [
             'id', 'correlation_id', 'template', 'template_key',
-            'event_log', 'expediente', 'expediente_code',
+            'event_log_id', 'expediente_id', 'expediente_code',
             'recipient_email', 'subject', 'body_preview',
             'created_at', 'completed_at', 'status', 'error',
             'trigger_action_source', 'attempt_count',
@@ -53,7 +53,7 @@ class CollectionEmailLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = CollectionEmailLog
         fields = [
-            'id', 'expediente', 'expediente_code', 'proforma', 'pago',
+            'id', 'expediente_id', 'expediente_code', 'proforma_id', 'payment_id',
             'created_at', 'grace_days_used', 'amount_overdue',
             'recipient_email', 'status', 'completed_at', 'error',
         ]

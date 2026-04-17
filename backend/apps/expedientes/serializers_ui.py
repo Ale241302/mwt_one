@@ -20,7 +20,7 @@ class UIExpedienteListSerializer(serializers.Serializer):
     status = serializers.CharField(read_only=True)
     brand_name = serializers.SerializerMethodField()
     brand = serializers.SerializerMethodField()
-    client_name = serializers.CharField(source='client.legal_name', read_only=True, default='')
+    client_name = serializers.SerializerMethodField()
 
     # Annotated fields
     credit_days_elapsed = serializers.IntegerField(read_only=True, default=0)
@@ -62,6 +62,14 @@ class UIExpedienteListSerializer(serializers.Serializer):
         try:
             if obj.brand:
                 return obj.brand.name
+        except Exception:
+            pass
+        return ''
+
+    def get_client_name(self, obj):
+        try:
+            if obj.client:
+                return obj.client.legal_name
         except Exception:
             pass
         return ''

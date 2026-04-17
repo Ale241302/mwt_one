@@ -33,7 +33,7 @@ from apps.transfers.serializers import (
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_nodes_view(request):
-    qs = Node.objects.select_related("legal_entity").order_by("name")
+    qs = Node.objects.all().order_by("name")
     paginator = PageNumberPagination()
     paginator.page_size = 100
     page = paginator.paginate_queryset(qs, request)

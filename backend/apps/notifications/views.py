@@ -124,7 +124,7 @@ class NotificationLogListView(APIView):
 
         expediente_id = request.query_params.get('expediente')
         if expediente_id:
-            qs = qs.filter(expediente__expediente_id=expediente_id)
+            qs = qs.filter(expediente_id=expediente_id)
 
         log_status = request.query_params.get('status')
         if log_status:
@@ -167,7 +167,7 @@ class CollectionEmailLogListView(APIView):
 
         expediente_id = request.query_params.get('expediente')
         if expediente_id:
-            qs = qs.filter(expediente__expediente_id=expediente_id)
+            qs = qs.filter(expediente_id=expediente_id)
 
         date_from = request.query_params.get('date_from')
         if date_from:
@@ -216,12 +216,14 @@ class SendProformaView(APIView):
         proforma_id = serializer.validated_data['proforma_id']
         recipient_override = serializer.validated_data.get('recipient_email_override')
 
+        from apps.core.registry import ModuleRegistry
+        artifact_model = ModuleRegistry.get_model('expedientes', 'ArtifactInstance')
+        if not artifact_model:
+             return Response({'detail': 'Modelo ArtifactInstance no disponible.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         try:
-            from apps.expedientes.models import ArtifactInstance, Expediente
-            proforma = ArtifactInstance.objects.select_related(
-                'expediente', 'expediente__client', 'expediente__brand'
-            ).get(pk=proforma_id)
-        except ArtifactInstance.DoesNotExist:
+            proforma = artifact_model.objects.select_related('expediente').get(pk=proforma_id)
+        except artifact_model.DoesNotExist:
             return Response({'detail': 'Proforma no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
 
         expediente = proforma.expediente
