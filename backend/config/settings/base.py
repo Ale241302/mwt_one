@@ -67,6 +67,9 @@ INSTALLED_APPS = [
     'apps.commercial',
     # Sprint 26
     'apps.notifications',
+    # Refactor: Modulárizado
+    'apps.historial',
+    'apps.dashboard',
     'drf_spectacular',
 ]
 

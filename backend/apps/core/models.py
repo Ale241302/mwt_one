@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+import uuid
 
 
 class TimestampMixin(models.Model):
@@ -91,3 +93,29 @@ class LegalEntity(TimestampMixin):
 
     def __str__(self):
         return f'{self.entity_id} \u2013 {self.legal_name}'
+
+
+class BaseModel(models.Model):
+    """Modelo base para TODOS los módulos del sistema distribuido."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        abstract = True
+    
+    def soft_delete(self):
+        self.is_active = False
+        self.deleted_at = timezone.now()
+        self.save(update_fields=['is_active', 'deleted_at'])
+
+
+class UUIDReferenceField(models.UUIDField):
+    """Campo que almacena UUID de otra entidad SIN ForeignKey."""
+    def __init__(self, *args, **kwargs):
+        kwargs['editable'] = kwargs.get('editable', False)
+        kwargs['null'] = True
+        kwargs['blank'] = True
+        super().__init__(*args, **kwargs)

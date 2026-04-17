@@ -7,6 +7,7 @@ class BrandType(models.TextChoices):
     CLIENT = 'client', 'Client'
 
 class Brand(TimestampMixin):
+    id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     slug = models.CharField(max_length=50, unique=True, primary_key=True)
     name = models.CharField(max_length=255)
     brand_type = models.CharField(max_length=20, choices=BrandType.choices, default=BrandType.CLIENT)
