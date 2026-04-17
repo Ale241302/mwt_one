@@ -27,6 +27,7 @@ from apps.expedientes.serializers_ui import (
     UIExpedienteListSerializer, ExpedienteBundleSerializer,
     CostLineSummarySerializer, ArtifactSummarySerializer,
 )
+from apps.core.registry import ModuleRegistry
 
 
 # ─── Permissions ──────────────────────────────────────────────────
@@ -154,7 +155,7 @@ class ListExpedientesView(APIView):
         from datetime import timedelta
         from django.utils import timezone
 
-        qs = Expediente.objects.select_related('client', 'brand').prefetch_related(
+        qs = Expediente.objects.prefetch_related(
             'product_lines', 'product_lines__product'
         ).all()
 
@@ -187,9 +188,13 @@ class ListExpedientesView(APIView):
 
         search = request.query_params.get('search')
         if search:
-            qs = qs.filter(client__legal_name__icontains=search)
-
-        # Annotate
+            # S26: client is no longer a physical FK, search client IDs manually
+            client_model = ModuleRegistry.get_model('clientes', 'Cliente')
+            if client_model:
+                matching_client_ids = client_model.objects.filter(
+                    legal_name__icontains=search
+                ).values_list('id', flat=True)
+                qs = qs.filter(client_id__in=matching_client_ids)
         qs = qs.annotate(
             total_cost=Sum('cost_lines__amount'),
             artifact_count=Count('artifacts'),
@@ -223,7 +228,7 @@ class ExpedienteBundleView(APIView):
         from django.utils import timezone
 
         try:
-            exp = Expediente.objects.select_related('client').prefetch_related(
+            exp = Expediente.objects.prefetch_related(
                 'artifacts', 'cost_lines', 'payment_lines'
             ).get(pk=pk)
         except Expediente.DoesNotExist:
@@ -468,7 +473,7 @@ class FinancialDashboardView(APIView):
         margin = total_invoiced - total_cost
         active_count = active_expedientes.count()
 
-        brands_qs = active_expedientes.values('brand').annotate(
+        brands_qs = active_expedientes.values('brand_id').annotate(
             count=Count('expediente_id'),
             total_cost=Sum('cost_lines__amount'),
         )
@@ -478,7 +483,7 @@ class FinancialDashboardView(APIView):
             brand_arts = ArtifactInstance.objects.filter(
                 artifact_type='ART-09',
                 status='completed',
-                expediente__brand=b['brand'],
+                expediente__brand_id=b['brand_id'],
                 expediente__in=active_expedientes,
             )
             for art in brand_arts:
@@ -487,12 +492,12 @@ class FinancialDashboardView(APIView):
             brand_paid_s25 = Decimal('0')
             if payment_model:
                 brand_paid_s25 = payment_model.objects.filter(
-                    expediente_id__in=active_expedientes.filter(brand=b['brand']).values_list('expediente_id', flat=True),
+                    expediente_id__in=active_expedientes.filter(brand_id=b['brand_id']).values_list('expediente_id', flat=True),
                     status='credit_released'
                 ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
 
             brand_breakdown.append({
-                'brand': b['brand'] or 'Sin marca',
+                'brand': b['brand_id'] or 'Sin marca',
                 'count': b['count'],
                 'total_cost': float(b['total_cost'] or 0),
                 'total_invoiced': float(brand_invoiced),

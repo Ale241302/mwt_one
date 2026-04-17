@@ -13,7 +13,7 @@ class PricingDashboardView(APIView):
         if request.user.role not in [UserRole.CEO, UserRole.INTERNAL, UserRole.VENDOR]:
             return Response({"error": "Unauthorized"}, status=403)
             
-        assignments = ClientProductAssignment.objects.all().select_related('brand_sku__brand', 'client_subsidiary')
+        assignments = ClientProductAssignment.objects.all().select_related('brand_sku__brand')
         
         # S31 Identify stale prices (>90 days without update)
         ninety_days_ago = timezone.now() - timedelta(days=90)
