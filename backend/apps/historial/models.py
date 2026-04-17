@@ -15,9 +15,9 @@ class Event(BaseModel):
 
     class Meta:
         db_table = 'historial_event'
-        ordering = ['-timestamp']
+        ordering = ['-created_at']
         verbose_name = 'Evento de Historial'
         verbose_name_plural = 'Eventos de Historial'
 
     def __str__(self):
-        return f"[{self.module_source}] {self.entity_type}:{self.entity_id} at {self.timestamp}"
+        return f"[{self.module_source}] {self.entity_type}:{self.entity_id} at {self.created_at}"

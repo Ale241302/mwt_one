@@ -110,7 +110,7 @@ class ClientBrandExternalCode(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('subsidiary', 'brand')
+        unique_together = ('subsidiary', 'brand_id')
 
     def __str__(self):
         return f"{self.sap_code} ({self.subsidiary.alias} - {self.brand.slug})"

@@ -14,7 +14,7 @@ class ConversationLog(models.Model):
     )
     user_role      = models.CharField(max_length=20)
     expediente_ref = models.ForeignKey(
-        'expedientes.Expediente',
+        'expedientes.ExpedienteSAP',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

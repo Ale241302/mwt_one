@@ -72,19 +72,19 @@ class RebateAssignment(BaseModel):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    models.Q(client__isnull=False, subsidiary__isnull=True) |
-                    models.Q(client__isnull=True, subsidiary__isnull=False)
+                    models.Q(client_id__isnull=False, subsidiary_id__isnull=True) |
+                    models.Q(client_id__isnull=True, subsidiary_id__isnull=False)
                 ),
                 name='rebate_assignment_one_level_only'
             ),
             models.UniqueConstraint(
-                fields=['rebate_program', 'client'],
-                condition=models.Q(is_active=True, client__isnull=False),
+                fields=['rebate_program', 'client_id'],
+                condition=models.Q(is_active=True, client_id__isnull=False),
                 name='rebate_assignment_unique_active_client'
             ),
             models.UniqueConstraint(
-                fields=['rebate_program', 'subsidiary'],
-                condition=models.Q(is_active=True, subsidiary__isnull=False),
+                fields=['rebate_program', 'subsidiary_id'],
+                condition=models.Q(is_active=True, subsidiary_id__isnull=False),
                 name='rebate_assignment_unique_active_subsidiary'
             )
         ]
@@ -127,7 +127,7 @@ class RebateAccrualEntry(BaseModel):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = [['ledger', 'factory_order']]
+        unique_together = [['ledger', 'factory_order_id']]
 
 class CommissionRule(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -148,40 +148,40 @@ class CommissionRule(BaseModel):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    (models.Q(brand__isnull=False) & models.Q(client__isnull=True) & models.Q(subsidiary__isnull=True)) |
-                    (models.Q(brand__isnull=True) & models.Q(client__isnull=False) & models.Q(subsidiary__isnull=True)) |
-                    (models.Q(brand__isnull=True) & models.Q(client__isnull=True) & models.Q(subsidiary__isnull=False))
+                    (models.Q(brand_id__isnull=False) & models.Q(client_id__isnull=True) & models.Q(subsidiary_id__isnull=True)) |
+                    (models.Q(brand_id__isnull=True) & models.Q(client_id__isnull=False) & models.Q(subsidiary_id__isnull=True)) |
+                    (models.Q(brand_id__isnull=True) & models.Q(client_id__isnull=True) & models.Q(subsidiary_id__isnull=False))
                 ),
                 name='commission_one_level_only'
             ),
             models.UniqueConstraint(
-                fields=['brand'],
-                condition=models.Q(is_active=True, product_key__isnull=True, client__isnull=True, subsidiary__isnull=True),
+                fields=['brand_id'],
+                condition=models.Q(is_active=True, product_key__isnull=True, client_id__isnull=True, subsidiary_id__isnull=True),
                 name='unique_active_brand_default_commission'
             ),
             models.UniqueConstraint(
-                fields=['brand', 'product_key'],
-                condition=models.Q(is_active=True, client__isnull=True, subsidiary__isnull=True, product_key__isnull=False),
+                fields=['brand_id', 'product_key'],
+                condition=models.Q(is_active=True, client_id__isnull=True, subsidiary_id__isnull=True, product_key__isnull=False),
                 name='unique_active_brand_product_commission'
             ),
             models.UniqueConstraint(
-                fields=['client'],
-                condition=models.Q(is_active=True, product_key__isnull=True, brand__isnull=True, subsidiary__isnull=True),
+                fields=['client_id'],
+                condition=models.Q(is_active=True, product_key__isnull=True, brand_id__isnull=True, subsidiary_id__isnull=True),
                 name='unique_active_client_default_commission'
             ),
             models.UniqueConstraint(
-                fields=['client', 'product_key'],
-                condition=models.Q(is_active=True, brand__isnull=True, subsidiary__isnull=True, product_key__isnull=False),
+                fields=['client_id', 'product_key'],
+                condition=models.Q(is_active=True, brand_id__isnull=True, subsidiary_id__isnull=True, product_key__isnull=False),
                 name='unique_active_client_product_commission'
             ),
             models.UniqueConstraint(
-                fields=['subsidiary'],
-                condition=models.Q(is_active=True, product_key__isnull=True, brand__isnull=True, client__isnull=True),
+                fields=['subsidiary_id'],
+                condition=models.Q(is_active=True, product_key__isnull=True, brand_id__isnull=True, client_id__isnull=True),
                 name='unique_active_subsidiary_default_commission'
             ),
             models.UniqueConstraint(
-                fields=['subsidiary', 'product_key'],
-                condition=models.Q(is_active=True, brand__isnull=True, client__isnull=True, product_key__isnull=False),
+                fields=['subsidiary_id', 'product_key'],
+                condition=models.Q(is_active=True, brand_id__isnull=True, client_id__isnull=True, product_key__isnull=False),
                 name='unique_active_subsidiary_product_commission'
             ),
         ]
@@ -201,12 +201,12 @@ class BrandArtifactPolicyVersion(BaseModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['brand'],
+                fields=['brand_id'],
                 condition=models.Q(is_active=True),
                 name='brand_artifact_policy_one_active_per_brand'
             ),
             models.UniqueConstraint(
-                fields=['brand', 'version'],
+                fields=['brand_id', 'version'],
                 name='brand_artifact_policy_unique_version'
             ),
         ]

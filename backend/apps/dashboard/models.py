@@ -19,7 +19,7 @@ class DashboardKPI(BaseModel):
         db_table = 'dashboard_kpi'
         verbose_name = 'KPI de Dashboard'
         verbose_name_plural = 'KPIs de Dashboard'
-        ordering = ['-calculated_at']
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.metric_name}: {self.metric_value} ({self.dimensions})"

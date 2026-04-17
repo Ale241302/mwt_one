@@ -199,7 +199,7 @@ class EarlyPaymentPolicy(TimestampMixin):
 
     class Meta:
         db_table = 'pricing_earlypaymentpolicy'
-        unique_together = ('client_subsidiary', 'brand')
+        unique_together = ('client_subsidiary', 'brand_id')
 
     def __str__(self):
         return f"EarlyPaymentPolicy {self.client_subsidiary_id} - {self.brand_id}"
