@@ -124,8 +124,9 @@ class BaseModel(models.Model):
 
 class UUIDReferenceField(models.UUIDField):
     """Campo que almacena UUID de otra entidad SIN ForeignKey."""
-    def __init__(self, target_module=None, *args, **kwargs):
+    def __init__(self, target_module=None, target_model=None, *args, **kwargs):
         self.target_module = target_module
+        self.target_model = target_model
         kwargs['editable'] = kwargs.get('editable', True)
         kwargs['null'] = kwargs.get('null', True)
         kwargs['blank'] = kwargs.get('blank', True)
