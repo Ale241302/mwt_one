@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from apps.core.models import BaseModel, UUIDReferenceField
 from apps.liquidations.enums_exp import (
     LiquidationStatus, LiquidationLineConcept, MatchStatus
