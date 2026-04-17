@@ -326,9 +326,6 @@ class ExpedienteSAP(TimestampMixin):
         )
     )
 
-# Compatibility alias
-Expediente = ExpedienteSAP
-
     # --- Propiedades de Compatibilidad (Fase 1) ---
     @property
     def brand(self):
@@ -351,7 +348,7 @@ Expediente = ExpedienteSAP
 class ExpedienteProductLine(models.Model):
     """Line item linking an Expediente to a ProductMaster SKU."""
     expediente = models.ForeignKey(
-        Expediente, on_delete=models.CASCADE, related_name='product_lines'
+        'ExpedienteSAP', on_delete=models.CASCADE, related_name='product_lines'
     )
     product = models.ForeignKey(
         'productos.Product',
@@ -389,7 +386,7 @@ class ExpedienteProductLine(models.Model):
         help_text='Razón del cambio de cantidad o precio'
     )
     separated_to_expediente = models.ForeignKey(
-        Expediente,
+        'ExpedienteSAP',
         null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='received_lines',
@@ -449,7 +446,7 @@ class ExpedienteProductLine(models.Model):
 # === S17-10: FactoryOrder ===
 class FactoryOrder(models.Model):
     expediente = models.ForeignKey(
-        Expediente, on_delete=models.CASCADE, related_name='factory_orders'
+        'ExpedienteSAP', on_delete=models.CASCADE, related_name='factory_orders'
     )
     order_number = models.CharField(
         max_length=100,
@@ -486,7 +483,7 @@ class FactoryOrder(models.Model):
 
 class ArtifactInstance(TimestampMixin):
     artifact_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    expediente = models.ForeignKey(Expediente, on_delete=models.CASCADE, related_name='artifacts')
+    expediente = models.ForeignKey('ExpedienteSAP', on_delete=models.CASCADE, related_name='artifacts')
     artifact_type = models.CharField(max_length=20, help_text='ART-01 to ART-19')
     status = models.CharField(max_length=20, choices=ArtifactStatusEnum.choices(), default=ArtifactStatusEnum.DRAFT)
     payload = models.JSONField(default=dict)
@@ -554,7 +551,7 @@ class EventLog(models.Model):
         help_text='S21: Proforma (ART-02) relacionada con el evento. NULL si no aplica.'
     )
     expediente = models.ForeignKey(
-        'Expediente',
+        'ExpedienteSAP',
         null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='event_logs',
@@ -610,7 +607,7 @@ class UserNotificationState(models.Model):
 class CostLine(AppendOnlyModel):
     cost_line_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     expediente = models.ForeignKey(
-        Expediente,
+        'ExpedienteSAP',
         on_delete=models.PROTECT,
         related_name='cost_lines',
         null=True, blank=True,
@@ -661,7 +658,7 @@ class CostLine(AppendOnlyModel):
 
 class PaymentLine(AppendOnlyModel):
     payment_line_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    expediente = models.ForeignKey(Expediente, on_delete=models.PROTECT, related_name='payment_lines')
+    expediente = models.ForeignKey('ExpedienteSAP', on_delete=models.PROTECT, related_name='payment_lines')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=3, help_text='ISO 4217')
     method = models.CharField(max_length=50)
@@ -710,7 +707,7 @@ class OCProforma(models.Model):
     Creada desde la vista OC → 'Añadir Proforma'.
     """
     expediente = models.ForeignKey(
-        Expediente,
+        'ExpedienteSAP',
         on_delete=models.CASCADE,
         related_name='oc_proformas',
         help_text='Expediente (OC) al que pertenece esta proforma.'
@@ -759,4 +756,3 @@ class OCProforma(models.Model):
 
 # Compatibility alias
 Expediente = ExpedienteSAP
-
