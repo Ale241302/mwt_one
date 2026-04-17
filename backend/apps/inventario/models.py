@@ -1,9 +1,7 @@
 from django.db import models
-from apps.core.models import TimestampMixin
+from apps.core.models import BaseModel, UUIDReferenceField
 
-from apps.core.models import TimestampMixin, UUIDReferenceField
-
-class InventoryEntry(TimestampMixin):
+class InventoryEntry(BaseModel):
     product_id = UUIDReferenceField(target_module='productos', db_index=True)
     node_id = UUIDReferenceField(target_module='nodos', db_index=True)
     quantity = models.IntegerField(default=0)

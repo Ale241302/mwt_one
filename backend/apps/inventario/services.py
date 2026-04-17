@@ -1,6 +1,9 @@
 import uuid
+import logging
 from django.utils import timezone
 from django.db import transaction
+
+logger = logging.getLogger(__name__)
 from apps.inventario.models import InventoryEntry
 from apps.core.registry import ModuleRegistry
 

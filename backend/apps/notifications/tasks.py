@@ -185,12 +185,12 @@ def send_notification(
         logger.warning(f"[NOTIF] Expediente not found: {expediente_id}")
         return
 
-        try:
-            subsidiary_model = ModuleRegistry.get_model('clientes', 'ClientSubsidiary')
-            subsidiary = subsidiary_model.objects.filter(
-                legal_entity=expediente.client, is_active=True
-            ).first()
-            language = (getattr(subsidiary, 'preferred_language', None) or 'es') if subsidiary else 'es'
+    try:
+        subsidiary_model = ModuleRegistry.get_model('clientes', 'ClientSubsidiary')
+        subsidiary = subsidiary_model.objects.filter(
+            legal_entity=expediente.client, is_active=True
+        ).first()
+        language = (getattr(subsidiary, 'preferred_language', None) or 'es') if subsidiary else 'es'
     except Exception:
         language = 'es'
 
