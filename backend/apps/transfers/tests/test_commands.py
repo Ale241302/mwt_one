@@ -1,7 +1,8 @@
 import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
-from apps.transfers.models import Transfer, TransferLine, Node
+from apps.transfers.models import Transfer, TransferLine
+from apps.nodos.models import Node
 from apps.transfers.enums_exp import NodeStatus, NodeType, LegalContext, TransferStatus
 from django.contrib.auth import get_user_model
 User = get_user_model()

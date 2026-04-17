@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from apps.transfers.models import Transfer, TransferLine, Node
+from apps.transfers.models import Transfer, TransferLine
+from apps.nodos.models import Node
 from apps.core.models import LegalEntity
 
 

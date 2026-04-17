@@ -1,5 +1,6 @@
 from django.contrib import admin
-from apps.transfers.models import Node, Transfer, TransferLine
+from apps.transfers.models import Transfer, TransferLine
+from apps.nodos.models import Node
 
 
 @admin.register(Node)

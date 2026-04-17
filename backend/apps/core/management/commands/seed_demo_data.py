@@ -21,7 +21,8 @@ class Command(BaseCommand):
         from apps.expedientes.models import (
             Expediente, ArtifactInstance, CostLine, PaymentLine, EventLog
         )
-        from apps.transfers.models import Transfer, TransferLine, Node
+        from apps.transfers.models import Transfer, TransferLine
+        from apps.nodos.models import Node
         from apps.core.models import LegalEntity
 
         try:

@@ -6,7 +6,8 @@ import uuid
 from django.utils import timezone
 from django.db import transaction
 
-from apps.transfers.models import Transfer, TransferLine, Node
+from apps.transfers.models import Transfer, TransferLine
+from apps.nodos.models import Node
 from apps.transfers.enums_exp import TransferStatus, LegalContext
 from apps.core.registry import ModuleRegistry
 

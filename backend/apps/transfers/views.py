@@ -11,7 +11,8 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ValidationError as DjangoValidationError
 
-from apps.transfers.models import Transfer, Node
+from apps.transfers.models import Transfer
+from apps.nodos.models import Node
 from apps.core.models import LegalEntity
 from apps.transfers.services import (
     TransferService,

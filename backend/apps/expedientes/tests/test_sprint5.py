@@ -14,7 +14,7 @@ from rest_framework.test import APITestCase
 from apps.expedientes.models import (
     Expediente, ArtifactInstance, EventLog, PaymentLine, LegalEntity,
 )
-from apps.transfers.models import Node
+from apps.nodos.models import Node
 from apps.expedientes.enums_exp import ExpedienteStatus, DispatchMode
 from apps.expedientes.tests.factories import create_user, create_expediente, create_legal_entity
 

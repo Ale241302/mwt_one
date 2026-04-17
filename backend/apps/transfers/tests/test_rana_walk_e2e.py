@@ -2,7 +2,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.transfers.models import Transfer, Node
+from apps.transfers.models import Transfer
+from apps.nodos.models import Node
 from apps.expedientes.models import Expediente, ArtifactInstance, LegalEntity
 from apps.expedientes.enums_exp import ExpedienteStatus
 from apps.expedientes.tests.factories import create_user, create_expediente, create_legal_entity

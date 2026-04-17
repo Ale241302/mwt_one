@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from apps.transfers.models import Transfer, Node
+from apps.transfers.models import Transfer
+from apps.nodos.models import Node
 from apps.transfers.serializers import TransferListSerializer, NodeSerializer
 
 
