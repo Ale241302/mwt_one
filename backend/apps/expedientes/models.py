@@ -326,6 +326,9 @@ class ExpedienteSAP(TimestampMixin):
         )
     )
 
+# Compatibility alias
+Expediente = ExpedienteSAP
+
     # --- Propiedades de Compatibilidad (Fase 1) ---
     @property
     def brand(self):
