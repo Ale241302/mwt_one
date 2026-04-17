@@ -1,6 +1,8 @@
-from apps.core.models import UUIDReferenceField
+import uuid
+from django.db import models
+from apps.core.models import BaseModel, UUIDReferenceField
 
-class RebateProgram(models.Model):
+class RebateProgram(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     name = models.CharField(max_length=255)
@@ -50,14 +52,14 @@ class RebateProgram(models.Model):
             ),
         ]
 
-class RebateProgramProduct(models.Model):
+class RebateProgramProduct(BaseModel):
     rebate_program = models.ForeignKey(RebateProgram, on_delete=models.CASCADE, related_name='products')
     product_key = models.CharField(max_length=100)
 
     class Meta:
         unique_together = [['rebate_program', 'product_key']]
 
-class RebateAssignment(models.Model):
+class RebateAssignment(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     rebate_program = models.ForeignKey(RebateProgram, on_delete=models.PROTECT)
     client_id = UUIDReferenceField(target_module='clientes', null=True, blank=True)
@@ -87,7 +89,7 @@ class RebateAssignment(models.Model):
             )
         ]
 
-class RebateLedger(models.Model):
+class RebateLedger(BaseModel):
     STATUS_CHOICES = [
         ('accruing', 'Accruing'),
         ('pending_review', 'Pending Review'),
@@ -107,7 +109,7 @@ class RebateLedger(models.Model):
     class Meta:
         unique_together = [['rebate_assignment', 'period_start', 'period_end']]
 
-class RebateAccrualEntry(models.Model):
+class RebateAccrualEntry(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     ledger = models.ForeignKey(
         RebateLedger,
@@ -127,7 +129,7 @@ class RebateAccrualEntry(models.Model):
     class Meta:
         unique_together = [['ledger', 'factory_order']]
 
-class CommissionRule(models.Model):
+class CommissionRule(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     brand_id = UUIDReferenceField(target_module='brands', null=True, blank=True, db_index=True)
     client_id = UUIDReferenceField(target_module='clientes', null=True, blank=True)
@@ -184,7 +186,7 @@ class CommissionRule(models.Model):
             ),
         ]
 
-class BrandArtifactPolicyVersion(models.Model):
+class BrandArtifactPolicyVersion(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     version = models.PositiveIntegerField()
