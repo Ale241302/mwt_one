@@ -11,8 +11,8 @@ from .models import (
 
 @admin.register(NotificationTemplate)
 class NotificationTemplateAdmin(admin.ModelAdmin):
-    list_display = ['name', 'template_key', 'language', 'brand', 'is_active', 'created_at']
-    list_filter = ['is_active', 'language', 'brand']
+    list_display = ['name', 'template_key', 'language', 'brand_id', 'is_active', 'created_at']
+    list_filter = ['is_active', 'language', 'brand_id']
     search_fields = ['name', 'template_key']
     readonly_fields = ['id', 'created_at', 'updated_at', 'created_by']
     ordering = ['template_key', 'language']

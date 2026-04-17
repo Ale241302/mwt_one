@@ -38,7 +38,7 @@ class BrandClientAgreement(TimestampMixin, CommercialFilterMixin):
             ExclusionConstraint(
                 name='exclude_overlapping_agreements',
                 expressions=[
-                    ('brand', '='),
+                    ('brand_id', '='),
                     ('party_type', '='),
                     ('party_id', '='),
                     ('valid_daterange', RangeOperators.OVERLAPS),
@@ -64,7 +64,7 @@ class BrandClientPriceAgreement(TimestampMixin):
             ExclusionConstraint(
                 name='exclude_overlapping_price_agreements',
                 expressions=[
-                    ('brand', '='),
+                    ('brand_id', '='),
                     ('party_type', '='),
                     ('party_id', '='),
                     ('sku', '='),
@@ -200,7 +200,7 @@ class CreditOverride(TimestampMixin):
     """S16-01B: CEO authorization to bypass credit block per command."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     expediente = models.ForeignKey(
-        'expedientes.Expediente', on_delete=models.CASCADE,
+        'expedientes.ExpedienteSAP', on_delete=models.CASCADE,
         related_name='credit_overrides'
     )
     brand_id = UUIDReferenceField(target_module='brands', null=True, blank=True, db_index=True)
