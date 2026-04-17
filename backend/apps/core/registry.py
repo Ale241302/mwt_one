@@ -123,3 +123,11 @@ class ModuleRegistry:
             return getattr(module, class_name)
         except (ImportError, AttributeError):
             return None
+    @classmethod
+    def get_model(cls, app_label, model_name):
+        """Resuelve dinámicamente un modelo de Django para evitar imports circulares."""
+        from django.apps import apps
+        try:
+            return apps.get_model(app_label, model_name)
+        except Exception:
+            return None
