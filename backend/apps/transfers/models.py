@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from apps.transfers.enums_exp import (
     NodeType, NodeStatus, LegalContext, TransferStatus, TransferLineCondition
 )
-from apps.core.models import LegalEntity, UUIDReferenceField
+from apps.core.models import BaseModel, UUIDReferenceField
 from datetime import date
 
 def generate_transfer_id():
@@ -18,7 +18,7 @@ def generate_transfer_id():
     count = Transfer.objects.filter(transfer_id__startswith=f'TRF-{today}').count()
     return f'TRF-{today}-{str(count + 1).zfill(3)}'
 
-class Transfer(models.Model):
+class Transfer(BaseModel):
     transfer_id = models.CharField(
         max_length=30, unique=True, editable=False, default=generate_transfer_id
     )
@@ -40,8 +40,6 @@ class Transfer(models.Model):
     )
     cancel_reason = models.TextField(blank=True)
     exception_reason = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     approved_at = models.DateTimeField(null=True, blank=True)
     dispatched_at = models.DateTimeField(null=True, blank=True)
     received_at = models.DateTimeField(null=True, blank=True)
@@ -99,7 +97,7 @@ class Transfer(models.Model):
         )
 
 
-class TransferLine(models.Model):
+class TransferLine(BaseModel):
     transfer = models.ForeignKey(
         Transfer, on_delete=models.CASCADE, related_name='lines'
     )

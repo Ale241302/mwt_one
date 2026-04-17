@@ -5,14 +5,7 @@ import uuid
 from datetime import timezone as dt_timezone
 from django.utils import timezone
 
-post_command_hooks = []  # Lista modulo-level. Registrar hooks aqui.
-
-
-def register_hook(fn):
-    """Registrar una funcion hook. Sera invocada post-command exitoso."""
-    if fn not in post_command_hooks:
-        post_command_hooks.append(fn)
-    return fn
+from apps.core.dispatcher import post_command_hooks, register_hook
 
 
 def dispatch_with_hooks(expediente, command_code, user, handler_fn, **kwargs):

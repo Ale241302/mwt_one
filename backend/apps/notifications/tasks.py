@@ -16,6 +16,7 @@ import uuid as uuid_module
 
 from celery import shared_task, Task
 from django.conf import settings
+from apps.core.registry import ModuleRegistry
 from django.db import transaction, connection
 from django.utils import timezone
 from datetime import timedelta
@@ -184,12 +185,12 @@ def send_notification(
         logger.warning(f"[NOTIF] Expediente not found: {expediente_id}")
         return
 
-    try:
-        from apps.clientes.models import ClientSubsidiary
-        subsidiary = ClientSubsidiary.objects.filter(
-            legal_entity=expediente.client, is_active=True
-        ).first()
-        language = (getattr(subsidiary, 'preferred_language', None) or 'es') if subsidiary else 'es'
+        try:
+            subsidiary_model = ModuleRegistry.get_model('clientes', 'ClientSubsidiary')
+            subsidiary = subsidiary_model.objects.filter(
+                legal_entity=expediente.client, is_active=True
+            ).first()
+            language = (getattr(subsidiary, 'preferred_language', None) or 'es') if subsidiary else 'es'
     except Exception:
         language = 'es'
 
@@ -367,8 +368,8 @@ def check_overdue_payments():
 
         # Días de gracia
         try:
-            from apps.clientes.models import ClientSubsidiary
-            subsidiary = ClientSubsidiary.objects.filter(
+            subsidiary_model = ModuleRegistry.get_model('clientes', 'ClientSubsidiary')
+            subsidiary = subsidiary_model.objects.filter(
                 legal_entity=expediente.client, # client is property resolve_ref
                 is_active=True,
             ).first()

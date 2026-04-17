@@ -1,4 +1,4 @@
-from apps.expedientes.services.dispatcher import register_hook
+from apps.core.dispatcher import register_hook
 from apps.inventario.services import InventoryService
 
 @register_hook

@@ -1,20 +1,15 @@
-import uuid
 from django.db import models
-from apps.core.models import TimestampMixin
+from django.utils import timezone
+from apps.core.models import BaseModel
 
 class BrandType(models.TextChoices):
     OWN = 'own', 'Own'
     CLIENT = 'client', 'Client'
 
-class Brand(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+class Brand(BaseModel):
     slug = models.CharField(max_length=50, unique=True, db_index=True)
     name = models.CharField(max_length=255)
     brand_type = models.CharField(max_length=20, choices=BrandType.choices, default=BrandType.CLIENT)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    deleted_at = models.DateTimeField(null=True, blank=True)
     
     # S22-04: Alerta de margen mínimo. Solo activa si tiene valor (nullable).
     min_margin_alert_pct = models.DecimalField(
@@ -28,17 +23,12 @@ class Brand(models.Model):
     def __str__(self):
         return self.name
 
-    def soft_delete(self):
-        self.is_active = False
-        self.deleted_at = timezone.now()
-        self.save(update_fields=['is_active', 'deleted_at'])
-
 class DestinationChoices(models.TextChoices):
     CR = 'CR', 'Costa Rica'
     USA = 'USA', 'United States'
     ALL = 'ALL', 'All destinations'
 
-class BrandArtifactRule(TimestampMixin):
+class BrandArtifactRule(BaseModel):
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='artifact_rules')
     artifact_type = models.CharField(max_length=20)
     destination = models.CharField(max_length=10, choices=DestinationChoices.choices, default=DestinationChoices.ALL)
@@ -55,7 +45,7 @@ class ArchProfile(models.TextChoices):
     MED = 'MED', 'Medium'
     HGH = 'HGH', 'High'
 
-class BrandSKU(TimestampMixin):
+class BrandSKU(BaseModel):
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='skus')
     product_key = models.CharField(max_length=3)
     arch = models.CharField(max_length=3, choices=ArchProfile.choices)
@@ -65,7 +55,7 @@ class BrandSKU(TimestampMixin):
     def __str__(self):
         return self.sku_code
 
-class BrandConfigVersion(TimestampMixin):
+class BrandConfigVersion(BaseModel):
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='config_versions')
     version = models.CharField(max_length=20) # semver
     default_currency = models.CharField(max_length=3, default='USD')
@@ -84,7 +74,7 @@ class BrandConfigVersion(TimestampMixin):
     def __str__(self):
         return f"{self.brand.slug} Config {self.version}"
 
-class CatalogVersion(TimestampMixin):
+class CatalogVersion(BaseModel):
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='catalogs')
     version = models.CharField(max_length=20)
     valid_from = models.DateTimeField()
@@ -94,7 +84,7 @@ class CatalogVersion(TimestampMixin):
     def __str__(self):
         return f"{self.brand.slug} Catalog {self.version}"
 
-class BrandTechnicalSheet(TimestampMixin):
+class BrandTechnicalSheet(BaseModel):
     """
     S31: ENT_MARCA_FICHA_TECNICA. 
     Contenedor de especificaciones técnicas por modelo.

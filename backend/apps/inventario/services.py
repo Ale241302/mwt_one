@@ -9,9 +9,13 @@ class InventoryService:
 
     @staticmethod
     def _create_inventory_event(product_id, node_id, quantity, action, emitted_by):
-        """Helper para registrar movimientos en el EventLog."""
-        from apps.expedientes.models import EventLog
-        EventLog.objects.create(
+        """Helper para registrar movimientos en el EventLog resuelto dinámicamente."""
+        event_model = ModuleRegistry.get_model('expedientes', 'EventLog')
+        if not event_model:
+            logger.warning("EventLog no disponible para el registro de inventario.")
+            return
+
+        event_model.objects.create(
             event_type='inventory.moved',
             aggregate_type='INV',
             aggregate_id=uuid.uuid4(),

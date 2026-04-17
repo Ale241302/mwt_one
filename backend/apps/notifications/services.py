@@ -6,6 +6,7 @@ resolve_collection_recipient() — para cobranza (usa proforma del pago)
 resolve_template() — busca template con fallback
 build_notification_context() — contexto Jinja2 para render
 """
+from apps.core.registry import ModuleRegistry
 import logging
 from django.conf import settings
 
@@ -24,7 +25,9 @@ def resolve_template(template_key: str, brand, language: str = 'es'):
     3. (template_key, brand=null, 'es')
     Usa .filter().first() — nunca .get() para evitar MultipleObjectsReturned.
     """
-    from apps.notifications.models import NotificationTemplate
+    template_model = ModuleRegistry.get_model('notifications', 'NotificationTemplate')
+    if not template_model:
+        return None
 
     if brand is not None:
         # 1. Buscar override específico por brand + language
@@ -70,12 +73,7 @@ def resolve_notification_recipient(expediente, proforma_id=None) -> str | None:
     """
     Mode C (operado por MWT) → CEO_EMAIL.
     Mode B (operado por cliente) → client contact_email.
-
-    Nota: Expediente.client es FK a LegalEntity, no a ClientSubsidiary directamente.
-    Intentamos obtener contact_email del expediente vía client_subsidiary si existe.
     """
-    from apps.expedientes.models import ArtifactInstance
-
     mode = _resolve_mode(expediente, proforma_id)
 
     if mode == 'C':
@@ -85,7 +83,6 @@ def resolve_notification_recipient(expediente, proforma_id=None) -> str | None:
         return ceo_email
     else:
         # Mode B: email del contacto del cliente
-        # Intentar vía client_subsidiary si el expediente lo tiene
         subsidiary = getattr(expediente, 'client_subsidiary', None)
         if subsidiary:
             email = getattr(subsidiary, 'contact_email', None)
@@ -94,8 +91,8 @@ def resolve_notification_recipient(expediente, proforma_id=None) -> str | None:
 
         # Fallback: buscar en ClientSubsidiary por client (LegalEntity)
         try:
-            from apps.clientes.models import ClientSubsidiary
-            subsidiary = ClientSubsidiary.objects.filter(
+            subsidiary_model = ModuleRegistry.get_model('clientes', 'ClientSubsidiary')
+            subsidiary = subsidiary_model.objects.filter(
                 legal_entity=expediente.client,
                 is_active=True,
                 contact_email__isnull=False,
@@ -112,9 +109,6 @@ def resolve_notification_recipient(expediente, proforma_id=None) -> str | None:
 def resolve_collection_recipient(pago) -> tuple:
     """
     Resuelve destinatario para email de cobranza.
-    Usa proforma del pago (si FK existe), no proforma del expediente global.
-    Si pago no tiene proforma → Mode B por defecto (cobrar al cliente).
-    Retorna: (email: str|None, proforma: ArtifactInstance|None)
     """
     mode = 'B'
     proforma = None
@@ -138,8 +132,8 @@ def resolve_collection_recipient(pago) -> tuple:
 
         # Fallback: buscar vía LegalEntity
         try:
-            from apps.clientes.models import ClientSubsidiary
-            subsidiary = ClientSubsidiary.objects.filter(
+            subsidiary_model = ModuleRegistry.get_model('clientes', 'ClientSubsidiary')
+            subsidiary = subsidiary_model.objects.filter(
                 legal_entity=pago.expediente.client,
                 is_active=True,
                 contact_email__isnull=False,
@@ -161,13 +155,15 @@ def _resolve_mode(expediente, proforma_id=None) -> str:
     """
     Determina el modo (C/B) a partir de proforma_id o de las proformas del expediente.
     """
-    from apps.expedientes.models import ArtifactInstance
+    artifact_model = ModuleRegistry.get_model('expedientes', 'ArtifactInstance')
+    if not artifact_model:
+        return 'B'
 
     if proforma_id:
         try:
-            proforma = ArtifactInstance.objects.get(pk=proforma_id)
+            proforma = artifact_model.objects.get(pk=proforma_id)
             return proforma.payload.get('mode', 'B')
-        except ArtifactInstance.DoesNotExist:
+        except artifact_model.DoesNotExist:
             return 'B'
     else:
         # Revisar proformas del expediente (ART-02)
@@ -187,9 +183,8 @@ def _resolve_mode(expediente, proforma_id=None) -> str:
 def build_notification_context(expediente, proforma_id=None, extra_context=None) -> dict:
     """
     Construye el contexto de variables para render de templates Jinja2.
-    Usa client.name desde LegalEntity (la estructura real del modelo).
     """
-    from apps.expedientes.models import ArtifactInstance
+    artifact_model = ModuleRegistry.get_model('expedientes', 'ArtifactInstance')
 
     # client.name desde LegalEntity
     client_name = getattr(expediente.client, 'legal_name', None) or \
@@ -204,12 +199,12 @@ def build_notification_context(expediente, proforma_id=None, extra_context=None)
         'mwt_signature': 'Muito Work Limitada — Gestión Comercial B2B',
     }
 
-    if proforma_id:
+    if proforma_id and artifact_model:
         try:
-            proforma = ArtifactInstance.objects.get(pk=proforma_id)
+            proforma = artifact_model.objects.get(pk=proforma_id)
             ctx['proforma_number'] = proforma.payload.get('number', 'N/A')
             ctx['proforma_mode'] = proforma.payload.get('mode', 'N/A')
-        except ArtifactInstance.DoesNotExist:
+        except artifact_model.DoesNotExist:
             pass
 
     if extra_context:
