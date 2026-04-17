@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'corsheaders',
     'apps.core',
+    'apps.nodos',
     'apps.expedientes',
     'apps.sizing',   # Sprint 18
     # Sprint 5
