@@ -7,9 +7,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from django.utils import timezone
 from .models import Expediente, FactoryOrder, ExpedienteProductLine
-from .serializers import FactoryOrderSerializer, BundleSerializer
+from .serializers import FactoryOrderSerializer, BundleSerializer, PagoSerializer
 from .services.credit import recalculate_expediente_credit
+from apps.core.registry import ModuleRegistry
 
 
 # ─────────────── HELPER ───────────────
@@ -292,3 +294,61 @@ def split_expediente(request, pk):
         'original': BundleSerializer(original_locked).data,
         'new_expediente': BundleSerializer(new_exp).data,
     }, status=status.HTTP_201_CREATED)
+# ─────────────── T1.4: Pagos ───────────────
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def pagos_list(request, pk):
+    exp = _get_expediente(request, pk)
+    if exp is None:
+        return Response({'detail': 'No encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+    payment_model = ModuleRegistry.get_model('finance', 'Payment')
+    if not payment_model:
+        return Response({'detail': 'Servicio de finanzas no disponible.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    if request.method == 'GET':
+        qs = payment_model.objects.filter(expediente_id=exp.expediente_id).order_by('-created_at')
+        return Response(PagoSerializer(qs, many=True).data)
+
+    # POST - Registrar pago desde Expediente
+    serializer = PagoSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(expediente_id=exp.expediente_id)
+        # Recalcular crédito si es necesario
+        recalculate_expediente_credit(exp)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def pago_confirmar(request, pk, pago_id):
+    exp = _get_expediente(request, pk)
+    if exp is None:
+        return Response({'detail': 'No encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+    payment_model = ModuleRegistry.get_model('finance', 'Payment')
+    if not payment_model:
+        return Response({'detail': 'Servicio de finanzas no disponible.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    try:
+        pago = payment_model.objects.get(pk=pago_id, expediente_id=exp.expediente_id)
+    except payment_model.DoesNotExist:
+        return Response({'detail': 'Pago no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+    action = request.data.get('action', 'verify') # 'verify' or 'release_credit'
+    
+    with transaction.atomic():
+        if action == 'verify':
+            pago.status = 'verified'
+            pago.verified_by = request.user
+            pago.verified_at = timezone.now()
+        elif action == 'release_credit':
+            pago.status = 'credit_released'
+            pago.credit_released_by = request.user
+            pago.credit_released_at = timezone.now()
+        
+        pago.save()
+        recalculate_expediente_credit(exp)
+
+    return Response(PagoSerializer(pago).data)
