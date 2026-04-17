@@ -86,7 +86,7 @@ class DashboardView(APIView):
 
         active_qs = Expediente.objects.exclude(
             status__in=[ExpedienteStatus.CERRADO, ExpedienteStatus.CANCELADO]
-        ).select_related('client').prefetch_related('artifacts', 'cost_lines')
+        ).prefetch_related('artifacts', 'cost_lines')
 
         active_list = list(active_qs)
 
