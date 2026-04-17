@@ -1,9 +1,7 @@
 from django.db import models
-from apps.core.models import TimestampMixin
+from apps.core.models import BaseModel, UUIDReferenceField
 
-from apps.core.models import TimestampMixin, UUIDReferenceField
-
-class Product(TimestampMixin):
+class Product(BaseModel):
     sku_base = models.CharField(max_length=50, unique=True, help_text="SKU base del producto")
     brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     name = models.CharField(max_length=255)

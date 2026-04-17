@@ -1,6 +1,6 @@
 import uuid
 from django.db import models
-from apps.core.models import BaseModel, LegalEntity
+from apps.core.models import BaseModel, LegalEntity, UUIDReferenceField
 from .enums import NodeType, NodeStatus
 
 class Node(BaseModel):
