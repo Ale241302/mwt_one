@@ -14,8 +14,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from apps.transfers.models import Transfer, Node
 from apps.core.models import LegalEntity
 from apps.transfers.services import (
-    create_transfer, approve_transfer, dispatch_transfer,
-    receive_transfer, reconcile_transfer, cancel_transfer,
+    TransferService,
     create_preparation_artifact, create_dispatch_artifact, create_reception_artifact,
     create_pricing_approval_artifact
 )
@@ -127,7 +126,7 @@ def create_transfer_view(request):
     if not ser.is_valid():
         return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
-        transfer = create_transfer(ser.validated_data, request.user)
+        transfer = TransferService.create_transfer(ser.validated_data, request.user)
         return Response(
             TransferDetailSerializer(transfer).data, status=status.HTTP_201_CREATED
         )
@@ -213,7 +212,7 @@ def delete_transfer_view(request, transfer_id):
 @permission_classes([IsAdminUser])
 def approve_transfer_view(request, transfer_id):
     transfer = Transfer.objects.get(transfer_id=transfer_id)
-    transfer = approve_transfer(transfer, request.user)
+    transfer = TransferService.approve_transfer(transfer, request.user)
     return Response(TransferDetailSerializer(transfer).data)
 
 
@@ -222,7 +221,7 @@ def approve_transfer_view(request, transfer_id):
 @permission_classes([IsAdminUser])
 def dispatch_transfer_view(request, transfer_id):
     transfer = Transfer.objects.get(transfer_id=transfer_id)
-    transfer = dispatch_transfer(transfer, request.user)
+    transfer = TransferService.dispatch_transfer(transfer, request.user)
     return Response(TransferDetailSerializer(transfer).data)
 
 
@@ -233,7 +232,7 @@ def receive_transfer_view(request, transfer_id):
     transfer = Transfer.objects.get(transfer_id=transfer_id)
     ser = ReceiveTransferSerializer(data=request.data)
     ser.is_valid(raise_exception=True)
-    transfer = receive_transfer(transfer, ser.validated_data["lines"], request.user)
+    transfer = TransferService.receive_transfer(transfer, ser.validated_data["lines"], request.user)
     return Response(TransferDetailSerializer(transfer).data)
 
 
@@ -244,7 +243,7 @@ def reconcile_transfer_view(request, transfer_id):
     transfer = Transfer.objects.get(transfer_id=transfer_id)
     ser = ReconcileTransferSerializer(data=request.data)
     ser.is_valid(raise_exception=True)
-    transfer = reconcile_transfer(
+    transfer = TransferService.reconcile_transfer(
         transfer, request.user, ser.validated_data.get("exception_reason")
     )
     return Response(TransferDetailSerializer(transfer).data)
@@ -257,7 +256,7 @@ def cancel_transfer_view(request, transfer_id):
     transfer = Transfer.objects.get(transfer_id=transfer_id)
     ser = CancelTransferSerializer(data=request.data)
     ser.is_valid(raise_exception=True)
-    transfer = cancel_transfer(transfer, request.user, ser.validated_data["reason"])
+    transfer = TransferService.cancel_transfer(transfer, request.user, ser.validated_data["reason"])
     return Response(TransferDetailSerializer(transfer).data)
 
 

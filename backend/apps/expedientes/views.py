@@ -14,7 +14,6 @@ from rest_framework.exceptions import PermissionDenied
 
 from apps.expedientes.models import (
     Expediente, ArtifactInstance, CostLine, PaymentLine, EventLog, LogisticsOption,
-    ExpedientePago,
 )
 from apps.expedientes.services import (
     create_expediente, can_execute_command, execute_command,
@@ -455,10 +454,13 @@ class FinancialDashboardView(APIView):
             expediente__in=active_expedientes
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
-        total_paid_s25 = ExpedientePago.objects.filter(
-            expediente__in=active_expedientes,
-            payment_status='credit_released'
-        ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
+        payment_model = ModuleRegistry.get_model('finance', 'Payment')
+        total_paid_s25 = Decimal('0')
+        if payment_model:
+            total_paid_s25 = payment_model.objects.filter(
+                expediente_id__in=active_expedientes.values_list('expediente_id', flat=True),
+                status='credit_released'
+            ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
 
         total_paid = total_paid_legacy + total_paid_s25
 
@@ -482,11 +484,12 @@ class FinancialDashboardView(APIView):
             for art in brand_arts:
                 payload = getattr(art, 'payload', {}) or {}
                 brand_invoiced += _safe_decimal(payload.get('total_client_view'))
-            brand_paid_s25 = ExpedientePago.objects.filter(
-                expediente__brand=b['brand'],
-                expediente__in=active_expedientes,
-                payment_status='credit_released'
-            ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
+            brand_paid_s25 = Decimal('0')
+            if payment_model:
+                brand_paid_s25 = payment_model.objects.filter(
+                    expediente_id__in=active_expedientes.filter(brand=b['brand']).values_list('expediente_id', flat=True),
+                    status='credit_released'
+                ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
 
             brand_breakdown.append({
                 'brand': b['brand'] or 'Sin marca',
@@ -593,23 +596,28 @@ class FinancialSummaryView(APIView):
             for p in exp.payment_lines.all()
         ]
 
-        payments_s25 = [
-            {
-                'payment_id': str(p.pk),
-                'amount': float(p.amount_paid),
-                'currency': 'USD', # Default
-                'method': p.metodo_pago,
-                'reference': 'S25-PAY',
-                'registered_at': p.created_at,
-                'status': p.payment_status,
-            }
-            for p in exp.pagos.all()
-        ]
+        payment_model = ModuleRegistry.get_model('finance', 'Payment')
+        payments_s25 = []
+        total_paid_s25 = Decimal('0')
+        if payment_model:
+            p_qs = payment_model.objects.filter(expediente_id=exp.expediente_id)
+            payments_s25 = [
+                {
+                    'payment_id': str(p.pk),
+                    'amount': float(p.amount_paid),
+                    'currency': 'USD', # Default
+                    'method': p.metodo_pago,
+                    'reference': 'S25-PAY',
+                    'registered_at': p.created_at,
+                    'status': p.status,
+                }
+                for p in p_qs
+            ]
+            total_paid_s25 = p_qs.filter(status='credit_released').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
 
         payments_data = payments_legacy + payments_s25
 
         total_paid_legacy = exp.payment_lines.aggregate(total=Sum('amount'))['total'] or Decimal('0')
-        total_paid_s25 = exp.pagos.filter(payment_status='credit_released').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
         total_paid = total_paid_legacy + total_paid_s25
 
         # Factura ART-09

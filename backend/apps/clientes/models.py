@@ -101,9 +101,11 @@ class ClientSubsidiary(models.Model):
     def __str__(self):
         return self.name
 
+from apps.core.models import LegalEntity, UUIDReferenceField
+
 class ClientBrandExternalCode(models.Model):
     subsidiary = models.ForeignKey(ClientSubsidiary, on_delete=models.CASCADE, related_name='external_codes')
-    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE)
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     sap_code = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 

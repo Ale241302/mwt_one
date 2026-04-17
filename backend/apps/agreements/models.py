@@ -16,8 +16,10 @@ class PartyType(models.TextChoices):
     GROUP = 'group', 'Group'
     SUBSIDIARY = 'subsidiary', 'Subsidiary'
 
+from apps.core.models import TimestampMixin, UUIDReferenceField
+
 class BrandClientAgreement(TimestampMixin, CommercialFilterMixin):
-    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE)
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     party_type = models.CharField(max_length=20, choices=PartyType.choices)
     party_id = models.IntegerField()  # ID of Group or Subsidiary
     version = models.CharField(max_length=20)
@@ -46,7 +48,7 @@ class BrandClientAgreement(TimestampMixin, CommercialFilterMixin):
         ]
 
 class BrandClientPriceAgreement(TimestampMixin):
-    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE)
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     party_type = models.CharField(max_length=20, choices=PartyType.choices)
     party_id = models.IntegerField()
     sku = models.CharField(max_length=50)
@@ -75,8 +77,8 @@ class BrandClientPriceAgreement(TimestampMixin):
         ]
 
 class BrandSupplierAgreement(TimestampMixin):
-    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE)
-    supplier_id = models.IntegerField()
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
+    supplier_id = UUIDReferenceField(target_module='suppliers', db_index=True)
     version = models.CharField(max_length=20)
     valid_daterange = DateTimeRangeField(null=True, blank=True)
     status = models.CharField(max_length=20, default='draft')
@@ -85,7 +87,7 @@ class BrandSupplierAgreement(TimestampMixin):
         db_table = 'agreements_brandsupplieragreement'
 
 class AssortmentPolicy(TimestampMixin):
-    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE)
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     party_type = models.CharField(max_length=20, choices=PartyType.choices)
     party_id = models.IntegerField()
     channel = models.CharField(max_length=50)
@@ -100,7 +102,7 @@ class AssortmentPolicy(TimestampMixin):
             ExclusionConstraint(
                 name='exclude_overlapping_assortment',
                 expressions=[
-                    ('brand', '='),
+                    ('brand_id', '='),
                     ('party_type', '='),
                     ('party_id', '='),
                     ('channel', '='),
@@ -114,7 +116,7 @@ class CreditPolicy(TimestampMixin):
     scope_type = models.CharField(max_length=50)
     subject_type = models.CharField(max_length=50)
     subject_id = models.IntegerField()
-    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE)
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     currency = models.CharField(max_length=3)
     max_amount = models.DecimalField(max_digits=14, decimal_places=2)
     valid_daterange = DateTimeRangeField(null=True, blank=True)
@@ -129,7 +131,7 @@ class CreditPolicy(TimestampMixin):
                     ('scope_type', '='),
                     ('subject_type', '='),
                     ('subject_id', '='),
-                    ('brand', '='),
+                    ('brand_id', '='),
                     ('currency', '='),
                     ('valid_daterange', RangeOperators.OVERLAPS),
                 ],
@@ -146,9 +148,9 @@ class CreditExposure(TimestampMixin):
         db_table = 'agreements_creditexposure'
 
     @classmethod
-    def calculate(cls, brand, subject_type, subject_id):
+    def calculate(cls, brand_id, subject_type, subject_id):
         policy = CreditPolicy.objects.filter(
-            brand=brand, 
+            brand_id=brand_id, 
             subject_type=subject_type, 
             subject_id=subject_id,
             status='active'
@@ -181,7 +183,7 @@ class CreditExposure(TimestampMixin):
 
 class CreditClockRule(TimestampMixin):
     """S16-01: Rule to determine when the credit clock starts for a brand/mode."""
-    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE, related_name='credit_clock_rules')
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     freight_mode = models.CharField(max_length=20) # e.g. SEA, AIR, LAND
     start_event = models.CharField(max_length=20, choices=[
         ('on_departure', 'On Departure (China)'),
@@ -192,7 +194,7 @@ class CreditClockRule(TimestampMixin):
 
     class Meta:
         db_table = 'agreements_creditclockrule'
-        unique_together = ('brand', 'freight_mode')
+        unique_together = ('brand_id', 'freight_mode')
 
 class CreditOverride(TimestampMixin):
     """S16-01B: CEO authorization to bypass credit block per command."""
@@ -201,7 +203,7 @@ class CreditOverride(TimestampMixin):
         'expedientes.Expediente', on_delete=models.CASCADE,
         related_name='credit_overrides'
     )
-    brand = models.ForeignKey('brands.Brand', on_delete=models.PROTECT, null=True, blank=True)
+    brand_id = UUIDReferenceField(target_module='brands', null=True, blank=True, db_index=True)
     command_code = models.CharField(
         max_length=10,
         help_text='Command authorized: C1, C6, C8, C9, C14'
@@ -223,7 +225,7 @@ class CreditOverride(TimestampMixin):
 
 class PaymentTermPricingVersion(TimestampMixin):
     SCOPE_CHOICES = [('agreement', 'Agreement'), ('brand_default', 'Brand Default')]
-    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE)
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     scope_type = models.CharField(max_length=20, choices=SCOPE_CHOICES)
     agreement = models.ForeignKey(BrandClientAgreement, null=True, blank=True, on_delete=models.CASCADE)
     version = models.CharField(max_length=20)
@@ -236,7 +238,7 @@ class PaymentTermPricingVersion(TimestampMixin):
             ExclusionConstraint(
                 name='exclude_overlapping_paymentterm',
                 expressions=[
-                    ('brand', '='),
+                    ('brand_id', '='),
                     ('scope_type', '='),
                     ('agreement', '='), # This works even with nulls if properly configured, but Postgres handles nulls distinctively.
                     ('valid_daterange', RangeOperators.OVERLAPS),
@@ -257,7 +259,7 @@ class PaymentTermPricingTerm(models.Model):
 
 
 class BrandWorkflowPolicy(TimestampMixin):
-    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE, related_name='workflow_policies')
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     valid_daterange = DateTimeRangeField(null=True, blank=True)
     status = models.CharField(max_length=20, default='draft')
 
@@ -267,7 +269,7 @@ class BrandWorkflowPolicy(TimestampMixin):
             ExclusionConstraint(
                 name='exclude_overlapping_workflow_policy',
                 expressions=[
-                    ('brand', '='),
+                    ('brand_id', '='),
                     ('valid_daterange', RangeOperators.OVERLAPS),
                 ],
                 condition=models.Q(status='active'),

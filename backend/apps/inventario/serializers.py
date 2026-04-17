@@ -9,7 +9,7 @@ class InventoryEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = InventoryEntry
         fields = [
-            'id', 'product', 'product_name', 'product_sku',
-            'node', 'node_name', 'quantity', 'reserved',
+            'id', 'product_id', 'product_name', 'product_sku',
+            'node_id', 'node_name', 'quantity', 'reserved',
             'lot_number', 'received_at', 'created_at', 'updated_at'
         ]

@@ -9,6 +9,7 @@ ImmutableManager: bloquea QuerySet.update/delete en modelos de audit trail
 import uuid
 from django.db import models
 from django.conf import settings
+from apps.core.models import UUIDReferenceField
 
 
 # =============================================================================
@@ -44,13 +45,15 @@ class NotificationTemplate(models.Model):
     subject_template = models.TextField(help_text='Jinja2 — asunto del email')
     body_template = models.TextField(help_text='Jinja2 — cuerpo plain text, no HTML para MVP')
     is_active = models.BooleanField(default=True)
-    brand = models.ForeignKey(
-        'brands.Brand',
+    brand_id = UUIDReferenceField(
+        target_module='brands',
         null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='notification_templates',
         help_text='brand=null → default. brand=X → override por marca.'
     )
+
+    @property
+    def brand(self):
+        return self.resolve_ref('brand_id')
     language = models.CharField(max_length=5, default='es', help_text='ISO 639-1')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -69,12 +72,12 @@ class NotificationTemplate(models.Model):
             # NULL != NULL en PostgreSQL rompe unique_together con brand null.
             models.UniqueConstraint(
                 fields=['template_key', 'language'],
-                condition=models.Q(brand__isnull=True),
+                condition=models.Q(brand_id__isnull=True),
                 name='uniq_default_template_per_key_lang'
             ),
             models.UniqueConstraint(
-                fields=['template_key', 'brand', 'language'],
-                condition=models.Q(brand__isnull=False),
+                fields=['template_key', 'brand_id', 'language'],
+                condition=models.Q(brand_id__isnull=False),
                 name='uniq_brand_template_per_key_lang'
             ),
         ]
@@ -96,24 +99,21 @@ class NotificationAttempt(models.Model):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     correlation_id = models.UUIDField(db_index=True, help_text='Agrupa attempts con su log terminal.')
-    event_log = models.ForeignKey(
-        'expedientes.EventLog',
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='notification_attempts'
-    )
-    expediente = models.ForeignKey(
-        'expedientes.Expediente',
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name='notification_attempts'
-    )
-    proforma = models.ForeignKey(
-        'expedientes.ArtifactInstance',
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='notification_attempts'
-    )
+    event_log_id = UUIDReferenceField(target_module='expedientes', null=True, blank=True)
+    expediente_id = UUIDReferenceField(target_module='expedientes', null=True, blank=True)
+    proforma_id = UUIDReferenceField(target_module='expedientes', null=True, blank=True)
+
+    @property
+    def event_log(self):
+        return self.resolve_ref('event_log_id')
+
+    @property
+    def expediente(self):
+        return self.resolve_ref('expediente_id')
+
+    @property
+    def proforma(self):
+        return self.resolve_ref('proforma_id')
     recipient_email = models.EmailField()
     template_key = models.CharField(max_length=50, blank=True, default='')
     trigger_action_source = models.CharField(max_length=32, blank=True, default='')
@@ -168,24 +168,21 @@ class NotificationLog(models.Model):
         on_delete=models.SET_NULL,
         related_name='notification_logs'
     )
-    event_log = models.ForeignKey(
-        'expedientes.EventLog',
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='notification_logs'
-    )
-    expediente = models.ForeignKey(
-        'expedientes.Expediente',
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name='notification_logs'
-    )
-    proforma = models.ForeignKey(
-        'expedientes.ArtifactInstance',
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='notification_logs'
-    )
+    event_log_id = UUIDReferenceField(target_module='expedientes', null=True, blank=True)
+    expediente_id = UUIDReferenceField(target_module='expedientes', null=True, blank=True)
+    proforma_id = UUIDReferenceField(target_module='expedientes', null=True, blank=True)
+
+    @property
+    def event_log(self):
+        return self.resolve_ref('event_log_id')
+
+    @property
+    def expediente(self):
+        return self.resolve_ref('expediente_id')
+
+    @property
+    def proforma(self):
+        return self.resolve_ref('proforma_id')
     recipient_email = models.EmailField()
     subject = models.TextField(default='')
     body_preview = models.TextField(max_length=500, default='')
@@ -246,23 +243,21 @@ class CollectionEmailLog(models.Model):
     Dedup se basa en completed_at (7 días).
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    expediente = models.ForeignKey(
-        'expedientes.Expediente',
-        on_delete=models.CASCADE,
-        related_name='collection_email_logs'
-    )
-    proforma = models.ForeignKey(
-        'expedientes.ArtifactInstance',
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='collection_email_logs'
-    )
-    pago = models.ForeignKey(
-        'expedientes.ExpedientePago',
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name='collection_email_logs'
-    )
+    expediente_id = UUIDReferenceField(target_module='expedientes', null=True, blank=True)
+    proforma_id = UUIDReferenceField(target_module='expedientes', null=True, blank=True)
+    payment_id = UUIDReferenceField(target_module='finance', null=True, blank=True)
+
+    @property
+    def expediente(self):
+        return self.resolve_ref('expediente_id')
+
+    @property
+    def proforma(self):
+        return self.resolve_ref('proforma_id')
+
+    @property
+    def payment(self):
+        return self.resolve_ref('payment_id')
     created_at = models.DateTimeField(auto_now_add=True)
     grace_days_used = models.IntegerField()
     amount_overdue = models.DecimalField(max_digits=12, decimal_places=2)

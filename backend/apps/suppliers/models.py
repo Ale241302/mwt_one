@@ -1,15 +1,15 @@
 from django.db import models
 
 
-class Supplier(models.Model):
+from apps.core.models import BaseModel
+
+class Supplier(BaseModel):
     name = models.CharField(max_length=255)
     tax_id = models.CharField(max_length=100, unique=True)
     country = models.CharField(max_length=100)
     address = models.TextField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    # is_active, created_at, updated_at ya vienen de BaseModel
 
     def __str__(self):
         return self.name

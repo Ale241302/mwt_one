@@ -1,5 +1,5 @@
 # Sprint 18 - T1.2, T1.3, T1.4, T1.5, T1.6
-# PATCH state endpoints, FactoryOrder CRUD, pagos, merge, split
+# PATCH state endpoints, FactoryOrder CRUD, merge, split
 from django.db import transaction
 from django.db.models import Q
 from rest_framework import status
@@ -7,9 +7,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Expediente, FactoryOrder, ExpedientePago, ExpedienteProductLine
-from .serializers import FactoryOrderSerializer, PagoSerializer, BundleSerializer
-from .services.credit import sync_credit_exposure_and_log, recalculate_expediente_credit
+from .models import Expediente, FactoryOrder, ExpedienteProductLine
+from .serializers import FactoryOrderSerializer, BundleSerializer
+from .services.credit import recalculate_expediente_credit
 
 
 # ─────────────── HELPER ───────────────
@@ -147,50 +147,6 @@ def factory_orders_detail(request, pk, fo_id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# ─────────────── T1.4: Pagos ───────────────
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def pagos_list(request, pk):
-    exp = _get_expediente(request, pk)
-    if exp is None:
-        return Response({'detail': 'No encontrado.'}, status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        return Response(PagoSerializer(exp.pagos.all(), many=True).data)
-
-    data = request.data.copy()
-    # Pago siempre inicia PENDING - nunca auto-libera credito
-    serializer = PagoSerializer(data=data)
-    if serializer.is_valid():
-        pago = serializer.save(expediente=exp, credit_status='PENDING')
-        return Response(PagoSerializer(pago).data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
-def pago_confirmar(request, pk, pago_id):
-    """CEO confirma pago PENDING -> CONFIRMED + recalcula credito."""
-    exp = _get_expediente(request, pk)
-    if exp is None:
-        return Response({'detail': 'No encontrado.'}, status=status.HTTP_404_NOT_FOUND)
-    try:
-        pago = exp.pagos.get(pk=pago_id)
-    except ExpedientePago.DoesNotExist:
-        return Response({'detail': 'Pago no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
-
-    if pago.credit_status != 'PENDING':
-        return Response(
-            {'detail': f'Pago ya esta en estado: {pago.credit_status}.'},
-            status=status.HTTP_409_CONFLICT,
-        )
-
-    pago.credit_status = 'CONFIRMED'
-    pago.save(update_fields=['credit_status'])
-    sync_credit_exposure_and_log(exp, user=request.user)
-    return Response(PagoSerializer(pago).data)
-
-
 # ─────────────── T1.5: Merge ───────────────
 PRE_PRODUCTION_STATUSES = {'REGISTRO', 'PI_SOLICITADA', 'CONFIRMADO'}
 
@@ -237,19 +193,6 @@ def merge_expedientes(request, pk):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def split_expediente(request, pk):
-    """
-    S18: separate-products
-    S25-07: extendido con invert_parent (default False).
-
-    invert_parent=False (default):
-      nuevo expediente = hijo (parent_expediente = original)
-    invert_parent=True:
-      original = hijo (parent_expediente = nuevo, is_inverted_child = True)
-      Restricción: 409 si original ya tiene parent_expediente (ya es child).
-
-    EventLog en AMBOS expedientes.
-    Backward compat: llamadas sin invert_parent → comportamiento S18.
-    """
     original = _get_expediente(request, pk)
     if original is None:
         return Response({'detail': 'No encontrado.'}, status=status.HTTP_404_NOT_FOUND)
@@ -267,13 +210,11 @@ def split_expediente(request, pk):
 
     invert_parent = bool(request.data.get('invert_parent', False))
 
-    # S25-07 M4: Restricción dura — no invertir si original ya es child
     if invert_parent and original.parent_expediente_id is not None:
         return Response(
             {
                 'error': (
-                    'Cannot invert parent on an expediente that is already a child. '
-                    'Split normally or create a new top-level expediente.'
+                    'Cannot invert parent on an expediente that is already a child.'
                 )
             },
             status=status.HTTP_409_CONFLICT,
@@ -286,8 +227,8 @@ def split_expediente(request, pk):
 
         new_exp = Expediente.objects.create(
             legal_entity=original_locked.legal_entity,
-            brand=original_locked.brand,
-            client=original_locked.client,
+            brand_id=original_locked.brand_id,
+            client_id=original_locked.client_id,
             destination=original_locked.destination,
             dispatch_mode=original_locked.dispatch_mode,
             incoterms=original_locked.incoterms,
@@ -305,33 +246,26 @@ def split_expediente(request, pk):
             id__in=line_ids,
         ).update(expediente=new_exp, separated_to_expediente=new_exp)
 
-        # S25-07: Genealogía parent/child
         if invert_parent:
-            # Nuevo = padre (parent_expediente = NULL)
-            # Original = hijo (parent_expediente = nuevo, is_inverted_child = True)
             original_locked.parent_expediente = new_exp
             original_locked.is_inverted_child = True
             original_locked.save(update_fields=['parent_expediente', 'is_inverted_child'])
             parent_id = str(new_exp.expediente_id)
             child_id = str(original_locked.expediente_id)
         else:
-            # Nuevo = hijo (parent_expediente = original)
             new_exp.parent_expediente = original_locked
             new_exp.save(update_fields=['parent_expediente'])
             parent_id = str(original_locked.expediente_id)
             child_id = str(new_exp.expediente_id)
 
-        # S25-07: EventLog en AMBOS expedientes
+        # EventLog 
         import uuid as _uuid
         from django.utils import timezone as _tz
         from apps.expedientes.models import EventLog
         now = _tz.now()
         moved_line_ids = [str(l.id) for l in moved_lines]
 
-        for exp, role in [
-            (original_locked, 'original'),
-            (new_exp, 'new'),
-        ]:
+        for exp, role in [(original_locked, 'original'), (new_exp, 'new')]:
             EventLog.objects.create(
                 event_type='expediente.split',
                 aggregate_type='EXPEDIENTE',
@@ -358,4 +292,3 @@ def split_expediente(request, pk):
         'original': BundleSerializer(original_locked).data,
         'new_expediente': BundleSerializer(new_exp).data,
     }, status=status.HTTP_201_CREATED)
-

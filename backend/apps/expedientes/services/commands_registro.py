@@ -5,7 +5,6 @@ from apps.expedientes.enums_exp import ExpedienteStatus, CostBehavior, Aggregate
 from apps.expedientes.enums_artifacts import ArtifactStatusEnum
 from apps.expedientes.exceptions import CommandValidationError, ArtifactMissingError
 from apps.expedientes.models import CostLine, EventLog
-from apps.productos.models import ProductMaster
 from .helpers import _has_artifact
 
 def handle_c2(expediente, payload):

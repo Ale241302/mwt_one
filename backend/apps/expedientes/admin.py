@@ -2,7 +2,7 @@
 from django.contrib import admin
 from .models import (
     Expediente, ArtifactInstance, EventLog, CostLine, PaymentLine, LogisticsOption,
-    ExpedienteProductLine, FactoryOrder, ExpedientePago,
+    ExpedienteProductLine, FactoryOrder,
     UserNotificationState,  # S21-02
 )
 
@@ -49,13 +49,6 @@ class FactoryOrderInline(admin.TabularInline):
     show_change_link = True
 
 
-class ExpedientePagoInline(admin.TabularInline):
-    model = ExpedientePago
-    extra = 0
-    readonly_fields = ('created_at', 'verified_by', 'credit_released_by')
-    show_change_link = True
-
-
 @admin.register(Expediente)
 class ExpedienteAdmin(admin.ModelAdmin):
     list_display = ('expediente_id', 'status', 'destination', 'client', 'is_blocked', 'created_at')
@@ -68,7 +61,6 @@ class ExpedienteAdmin(admin.ModelAdmin):
         PaymentLineInline,
         ExpedienteProductLineInline,
         FactoryOrderInline,
-        ExpedientePagoInline,
     ]
     fieldsets = (
         ('Core', {
@@ -158,40 +150,6 @@ class ExpedienteProductLineAdmin(admin.ModelAdmin):
 class FactoryOrderAdmin(admin.ModelAdmin):
     list_display = ('expediente', 'order_number', 'purchase_number', 'created_at')
     readonly_fields = ('created_at', 'updated_at')
-
-
-@admin.register(ExpedientePago)
-class ExpedientePagoAdmin(admin.ModelAdmin):
-    list_display = (
-        'expediente', 'tipo_pago', 'metodo_pago', 'amount_paid',
-        'payment_status', 'payment_date', 'created_at',
-    )
-    list_filter = ('tipo_pago', 'metodo_pago', 'payment_status')  # S25-01: filtrable
-    search_fields = ('expediente__expediente_id',)
-    readonly_fields = (
-        'created_at',
-        'verified_by', 'credit_released_by',   # S25-01: read-only (auditoria)
-    )
-    fieldsets = (
-        ('Datos del pago', {
-            'fields': (
-                'expediente', 'tipo_pago', 'metodo_pago', 'amount_paid',
-                'payment_date', 'additional_info', 'url_comprobante', 'credit_status',
-            )
-        }),
-        ('S25-01 — Payment Status Machine', {
-            'fields': (
-                'payment_status', 'rejection_reason',
-                'verified_at', 'verified_by',
-                'credit_released_at', 'credit_released_by',
-            ),
-            'classes': ('collapse',),
-        }),
-        ('Timestamps', {
-            'fields': ('created_at',),
-            'classes': ('collapse',),
-        }),
-    )
 
 
 # === S21-02: EventLog admin extendido con campos S21 ===

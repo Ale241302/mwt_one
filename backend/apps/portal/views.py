@@ -2,10 +2,9 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from apps.expedientes.models import Expediente, ExpedientePago
+from apps.core.registry import ModuleRegistry
 from apps.users.models import UserRole
-from apps.expedientes.serializers import PagoClienteSerializer
-from .serializers import ExpedientePortalSerializer
+from .serializers import ExpedientePortalSerializer, ArtifactPortalSerializer
 
 class PortalExpedienteViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ExpedientePortalSerializer
@@ -21,21 +20,26 @@ class PortalExpedienteViewSet(viewsets.ReadOnlyModelViewSet):
         elif user.role == UserRole.CLIENT_TECMATER:
             brand_slug = 'tecmater'
             
+        expediente_model = ModuleRegistry.get_model('expedientes', 'Expediente')
+        if not expediente_model:
+            return [] # O manejar error
+            
         if user.role == UserRole.CEO or user.role == UserRole.INTERNAL:
-            return Expediente.objects.all()
+            return expediente_model.objects.all()
             
         if brand_slug:
-            return Expediente.objects.filter(brand_id=brand_slug)
+            return expediente_model.objects.filter(brand_id=brand_slug)
             
-        return Expediente.objects.none()
+        return expediente_model.objects.none()
 
     @action(detail=True, methods=['get'])
     def artifacts(self, request, pk=None):
         expediente = self.get_object()
-        from apps.expedientes.models import ArtifactInstance
-        from .serializers import ArtifactPortalSerializer
-        
-        artifacts = ArtifactInstance.objects.filter(expediente=expediente)
+        artifact_model = ModuleRegistry.get_model('expedientes', 'ArtifactInstance')
+        if not artifact_model:
+            return Response({"error": "Artifacts module unavailable"}, status=503)
+            
+        artifacts = artifact_model.objects.filter(expediente_id=expediente.expediente_id)
         serializer = ArtifactPortalSerializer(artifacts, many=True)
         return Response(serializer.data)
 
@@ -46,25 +50,32 @@ class PortalExpedienteViewSet(viewsets.ReadOnlyModelViewSet):
         Retorna pagos con campos restringidos para el portal del cliente.
         """
         expediente = self.get_object()
-        pagos = ExpedientePago.objects.filter(
-            expediente=expediente
-        ).order_by('-payment_date', '-created_at')
-        serializer = PagoClienteSerializer(pagos, many=True)
-        return Response(serializer.data)
+        payment_model = ModuleRegistry.get_model('finance', 'Payment')
+        if not payment_model:
+            return Response({"error": "Finance module unavailable"}, status=503)
 
+        pagos = payment_model.objects.filter(expediente_id=expediente.expediente_id).order_by('-payment_date')
+        
+        data = [{
+            "id": str(p.id),
+            "amount_paid": p.amount_paid,
+            "payment_date": p.payment_date,
+            "status": p.status,
+            "metodo_pago": p.metodo_pago
+        } for p in pagos]
+        
+        return Response(data)
 
 class CatalogView(APIView):
     """S14-14: GET /api/portal/catalog/"""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        from apps.productos.models import ProductMaster
+        from apps.productos.models import Product
         from apps.pricing.services import resolve_client_price
-        from decimal import Decimal
         from django.utils import timezone
         
         user = request.user
-        
         brand_slug = None
         if user.role == UserRole.CLIENT_MARLUVAS:
             brand_slug = 'marluvas'
@@ -74,14 +85,11 @@ class CatalogView(APIView):
         if not brand_slug:
             return Response({"error": "No brand associated with client"}, status=403)
             
-        products = ProductMaster.objects.filter(brand_id=brand_slug)
-        
+        products = Product.objects.filter(brand_id=brand_slug)
         context = {
             'brand': brand_slug,
-            'client_subsidiary_id': user.id, # mock resolution
             'date': timezone.now().date(),
             'currency': 'USD',
-            'channel': 'distributor' # simplified generic for portal
         }
         
         catalog = []
@@ -91,13 +99,11 @@ class CatalogView(APIView):
                 party_type='subsidiary', 
                 party_id=user.id,
                 sku=product.sku_base,
-                mode='FOB', # Default for catalog
+                mode='FOB',
                 currency=context['currency'],
                 date=context['date']
             )
-            
             price = price_data['price'] if price_data else 0
-            
             catalog.append({
                 'sku': product.sku_base,
                 'name': product.name,
@@ -105,17 +111,14 @@ class CatalogView(APIView):
                 'currency': context['currency'],
                 'pricing_source': price_data.get('source', 'none') if price_data else 'none'
             })
-            
         return Response(catalog)
 
 class PortalContactsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-
     def post(self, request):
         return Response({"detail": "Contact saved"}, status=status.HTTP_201_CREATED)
 
 class PortalPreferencesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-
     def patch(self, request):
         return Response({"detail": "Preferences updated"}, status=status.HTTP_200_OK)

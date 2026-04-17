@@ -1,14 +1,23 @@
-from .models import Brand, BrandArtifactRule
+from apps.core.services import ModuleService
+from .models import Brand
 
-class BrandService:
-    @staticmethod
-    def get_artifact_flow(brand_slug, destination):
-        # returns required artifact types for a brand and destination
-        rules = BrandArtifactRule.objects.filter(
-            brand_id=brand_slug,
-            is_required=True,
-            destination__in=[destination, 'ALL']
-        )
-        if not rules.exists():
-            return None
-        return list(rules.values_list('artifact_type', flat=True))
+class BrandService(ModuleService):
+    @classmethod
+    def get_entity(cls, entity_id):
+        """
+        Obtiene una marca por ID o por Slug.
+        En este sistema, Brand usa Slug como PK.
+        """
+        try:
+            return Brand.objects.get(slug=entity_id, is_active=True)
+        except Brand.DoesNotExist:
+            try:
+                # Intento por ID si viene en formato UUID
+                return Brand.objects.get(id=entity_id, is_active=True)
+            except (Brand.DoesNotExist, ValueError):
+                return None
+
+    @classmethod
+    def get_brand_name(cls, brand_id):
+        brand = cls.get_entity(brand_id)
+        return brand.name if brand else "Marca Desconocida"

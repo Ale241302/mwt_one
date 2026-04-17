@@ -1,5 +1,5 @@
 from apps.expedientes.exceptions import CommandValidationError
-from apps.productos.models import ProductMaster
+from apps.productos.models import Product
 from apps.agreements.models import BrandClientAgreement, PartyType
 from django.utils import timezone
 
@@ -22,9 +22,9 @@ def handle_c2(expediente, payload, env=None):
             raise CommandValidationError("SKU is required in proforma items")
         
         if expediente.brand:
-            product = ProductMaster.objects.filter(sku=sku, brand=expediente.brand).first()
+            product = Product.objects.filter(sku_base=sku, brand_id=expediente.brand_id).first()
             if not product:
-                raise CommandValidationError(f"SKU {sku} not found in ProductMaster for this brand")
+                raise CommandValidationError(f"SKU {sku} not found in Product catalog for this brand")
 
         # Apply defaults if missing in payload
         if agreement:

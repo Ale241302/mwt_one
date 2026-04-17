@@ -70,12 +70,17 @@ class PortalExpedienteDetailSerializer(serializers.ModelSerializer):
         ]
 
     def get_payment_coverage(self, obj):
+        from apps.core.registry import ModuleRegistry
         from apps.expedientes.services.credit import compute_coverage
         from decimal import Decimal
-        total_released = sum(
-            p.amount_paid or Decimal('0.00')
-            for p in obj.pagos.filter(payment_status='credit_released')
-        ) or Decimal('0.00')
+        
+        payment_model = ModuleRegistry.get_model('finance', 'Payment')
+        total_released = Decimal('0.00')
+        if payment_model:
+            total_released = sum(
+                p.amount_paid or Decimal('0.00')
+                for p in payment_model.objects.filter(expediente_id=obj.expediente_id, status='credit_released')
+            ) or Decimal('0.00')
 
         total_lines = sum(
             (l.unit_price or Decimal('0.00')) * (l.quantity or 0)
@@ -87,12 +92,17 @@ class PortalExpedienteDetailSerializer(serializers.ModelSerializer):
         return coverage
 
     def get_coverage_pct(self, obj):
+        from apps.core.registry import ModuleRegistry
         from apps.expedientes.services.credit import compute_coverage
         from decimal import Decimal
-        total_released = sum(
-            p.amount_paid or Decimal('0.00')
-            for p in obj.pagos.filter(payment_status='credit_released')
-        ) or Decimal('0.00')
+        
+        payment_model = ModuleRegistry.get_model('finance', 'Payment')
+        total_released = Decimal('0.00')
+        if payment_model:
+            total_released = sum(
+                p.amount_paid or Decimal('0.00')
+                for p in payment_model.objects.filter(expediente_id=obj.expediente_id, status='credit_released')
+            ) or Decimal('0.00')
 
         total_lines = sum(
             (l.unit_price or Decimal('0.00')) * (l.quantity or 0)

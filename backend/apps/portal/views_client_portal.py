@@ -1,7 +1,8 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from apps.expedientes.models import Expediente, ExpedientePago, ArtifactInstance
+from apps.expedientes.models import Expediente, ArtifactInstance
+from apps.core.registry import ModuleRegistry
 from apps.expedientes.enums_exp import ExpedienteStatus, ArtifactType
 from apps.users.models import UserRole
 from apps.portal.serializers import ExpedientePortalSerializer
@@ -42,9 +43,14 @@ class ClientPortalViewSet(viewsets.ReadOnlyModelViewSet):
         qs = self.get_queryset()
         exp_ids = list(qs.values_list('expediente_id', flat=True))
         
-        pagos = ExpedientePago.objects.filter(expediente_id__in=exp_ids)
-        total_due = sum([p.amount for p in pagos if p.status in ['pending', 'partial']])
-        total_credited = sum([p.amount for p in pagos if p.status == 'cleared'])
+        payment_model = ModuleRegistry.get_model('finance', 'Payment')
+        if not payment_model:
+            return Response({"error": "Finance module unavailable"}, status=503)
+
+        pagos = payment_model.objects.filter(expediente_id__in=exp_ids)
+        total_due = sum([p.amount_paid for p in pagos if p.status in ['pending', 'partial']])
+        # S25/S26 Verified/Released
+        total_credited = sum([p.amount_paid for p in pagos if p.status in ['verified', 'credit_released']])
         
         return Response({
             "total_due_balance": total_due,

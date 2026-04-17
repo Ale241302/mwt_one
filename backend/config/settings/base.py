@@ -70,6 +70,8 @@ INSTALLED_APPS = [
     # Refactor: Modulárizado
     'apps.historial',
     'apps.dashboard',
+    'apps.finance',
+    'apps.cobros',
     'drf_spectacular',
 ]
 

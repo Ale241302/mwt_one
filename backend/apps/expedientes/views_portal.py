@@ -12,7 +12,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Expediente, ArtifactInstance, ExpedientePago
+from apps.core.registry import ModuleRegistry
+from .models import Expediente, ArtifactInstance
 from .serializers_portal import PortalExpedienteListSerializer, PortalExpedienteDetailSerializer
 
 
@@ -40,7 +41,6 @@ class PortalExpedienteListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # NEVER .all() — always scope to authenticated user's tenant
         if not hasattr(request.user, 'legal_entity'):
             return Response([], status=status.HTTP_200_OK)
         expedientes = Expediente.objects.filter(
@@ -61,7 +61,6 @@ class PortalExpedienteDetailView(APIView):
     def get(self, request, pk):
         exp = _get_expediente_for_user(pk, request.user)
         if exp is None:
-            # Uniform 404 — do not distinguish between 'not found' and 'not yours'
             return Response(
                 {'detail': 'Not found.'},
                 status=status.HTTP_404_NOT_FOUND
@@ -87,7 +86,6 @@ class PortalExpedienteArtifactsView(APIView):
             )
         artifacts = ArtifactInstance.objects.filter(
             expediente=exp,
-            # Only expose public-facing visibility levels
         ).values(
             'artifact_id', 'artifact_type', 'status', 'payload', 'created_at'
         )
@@ -98,15 +96,11 @@ class PortalExpedientePagosView(APIView):
     """
     FIX-2026-04-08c — GET /api/portal/expedientes/<pk>/pagos/
     Retorna pagos del expediente en formato PagoClienteSerializer (CLIENT_* tier).
-    Campos restringidos: id, payment_date, amount_paid, payment_status.
-    NUNCA expone: rejection_reason, verified_by, credit_released_by.
-    Tenant-isolated: mismo control que PortalExpedienteDetailView.
+    Tenant-isolated. Recupera datos de forma distribuida desde la app finance.
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        # Para la vista admin/interna que usa el mismo endpoint,
-        # permitimos si el user es staff o si el expediente le pertenece.
         try:
             exp = Expediente.objects.get(expediente_id=pk)
         except Expediente.DoesNotExist:
@@ -118,8 +112,12 @@ class PortalExpedientePagosView(APIView):
                 return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         from apps.expedientes.serializers import PagoClienteSerializer
-        pagos = ExpedientePago.objects.filter(
-            expediente=exp
-        ).order_by('-payment_date', '-created_at')
+        payment_model = ModuleRegistry.get_model('finance', 'Payment')
+        pagos = []
+        if payment_model:
+            pagos = payment_model.objects.filter(
+                expediente_id=exp.expediente_id
+            ).order_by('-payment_date', '-created_at')
+            
         serializer = PagoClienteSerializer(pagos, many=True)
         return Response(serializer.data)

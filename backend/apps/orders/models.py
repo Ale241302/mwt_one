@@ -1,6 +1,8 @@
 from django.db import models
 from apps.core.models import TimestampMixin
 
+from apps.core.models import TimestampMixin, UUIDReferenceField
+
 class ClientOrder(TimestampMixin):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
@@ -16,13 +18,13 @@ class ClientOrder(TimestampMixin):
         ('brand_default', 'Brand Default')
     ]
 
-    client = models.ForeignKey('clientes.Cliente', on_delete=models.CASCADE)
-    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE)
+    client_id = UUIDReferenceField(target_module='clientes')
+    brand_id = UUIDReferenceField(target_module='brands')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     
     content_fingerprint = models.CharField(max_length=64, blank=True, null=True)
     
-    resolved_agreement = models.ForeignKey('agreements.BrandClientAgreement', null=True, blank=True, on_delete=models.SET_NULL)
+    agreement_id = UUIDReferenceField(target_module='agreements', null=True, blank=True)
     agreement_resolution_level = models.CharField(max_length=20, choices=RESOLUTION_LEVEL_CHOICES, blank=True, null=True)
     
     resolved_max_revisions = models.IntegerField(default=0)

@@ -1,14 +1,14 @@
 from rest_framework import viewsets, filters
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Producto
-from .serializers import ProductoSerializer
+from .models import Product
+from .serializers import ProductSerializer
 
-class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all()
-    serializer_class = ProductoSerializer
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['brand', 'category']
+    filterset_fields = ['brand_id', 'category']
     search_fields = ['name', 'sku_base', 'description']
     ordering_fields = ['name', 'created_at']
 

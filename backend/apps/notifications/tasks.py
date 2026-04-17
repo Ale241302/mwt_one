@@ -125,8 +125,8 @@ class SendNotificationTask(Task):
             return
 
         try:
-            from apps.expedientes.models import Expediente
-            expediente = Expediente.objects.get(pk=expediente_id)
+            expediente_model = ModuleRegistry.get_model('expedientes', 'Expediente')
+            expediente = expediente_model.objects.get(pk=expediente_id)
         except Exception:
             return
 
@@ -135,7 +135,7 @@ class SendNotificationTask(Task):
             log_base = {
                 'correlation_id': correlation_id,
                 'event_log_id': event_log_id,
-                'expediente': expediente,
+                'expediente_id': expediente_id,
                 'proforma_id': proforma_id,
                 'recipient_email': recipient,
                 'template_key': template_key,
@@ -176,8 +176,8 @@ def send_notification(
     Flujo: kill-switch → dedup → resolve → render → send → log terminal.
     """
     try:
-        from apps.expedientes.models import Expediente
-        expediente = Expediente.objects.select_related(
+        expediente_model = ModuleRegistry.get_model('expedientes', 'Expediente')
+        expediente = expediente_model.objects.select_related(
             'brand', 'client'
         ).get(pk=expediente_id)
     except Exception:
@@ -211,7 +211,7 @@ def send_notification(
     attempt_base = {
         'correlation_id': correlation_id,
         'event_log_id': event_log_id,
-        'expediente': expediente,
+        'expediente_id': expediente_id,
         'proforma_id': proforma_id,
         'recipient_email': recipient or 'N/A',
         'template_key': template_key,
@@ -220,7 +220,7 @@ def send_notification(
     log_base = {
         'correlation_id': correlation_id,
         'event_log_id': event_log_id,
-        'expediente': expediente,
+        'expediente_id': expediente_id,
         'proforma_id': proforma_id,
         'recipient_email': recipient or 'N/A',
         'template_key': template_key,
@@ -343,30 +343,33 @@ def check_overdue_payments():
         logger.info("[COLLECTION_DISABLED] MWT_NOTIFICATION_ENABLED=False — no action taken")
         return
 
-    from apps.expedientes.models import ExpedientePago
+    payment_model = ModuleRegistry.get_model('finance', 'Payment')
+    if not payment_model:
+        logger.error("[COLLECTION_ERROR] Finance module not found")
+        return
 
     today = timezone.now().date()
 
-    # select_related incluye proforma solo si FK existe (_meta introspection)
-    qs = ExpedientePago.objects.filter(
-        payment_status__in=['pending', 'verified'],
-    ).select_related('expediente', 'expediente__client', 'expediente__brand')
-
-    pago_field_names = {f.name for f in ExpedientePago._meta.get_fields()}
-    if 'proforma' in pago_field_names:
-        qs = qs.select_related('proforma')
+    # S25/S26 Status Mapping: pending, partial, verified
+    qs = payment_model.objects.filter(
+        status__in=['pending', 'partial', 'verified'],
+    )
 
     for pago in qs:
-        # Revalidar estado en caliente
-        pago.refresh_from_db(fields=['payment_status'])
-        if pago.payment_status not in ['pending', 'verified']:
+        # Revalidar estado
+        pago.refresh_from_db(fields=['status'])
+        if pago.status not in ['pending', 'partial', 'verified']:
+            continue
+
+        expediente = pago.expediente # Property resolve_ref
+        if not expediente:
             continue
 
         # Días de gracia
         try:
             from apps.clientes.models import ClientSubsidiary
             subsidiary = ClientSubsidiary.objects.filter(
-                legal_entity=pago.expediente.client,
+                legal_entity=expediente.client, # client is property resolve_ref
                 is_active=True,
             ).first()
             grace_days = (getattr(subsidiary, 'payment_grace_days', None) or 30) if subsidiary else 30
@@ -379,9 +382,9 @@ def check_overdue_payments():
         if today <= due_date:
             continue
 
-        # Dedup: no enviar si ya se envió en los últimos 7 días (based on completed_at)
+        # Dedup: no enviar si ya se envió en los últimos 7 días
         recent = CollectionEmailLog.objects.filter(
-            pago=pago,
+            payment_id=pago.id,
             status='sent',
             completed_at__gte=timezone.now() - timedelta(days=7)
         ).exists()
@@ -393,15 +396,15 @@ def check_overdue_payments():
             logger.warning(f"[COLLECTION_SKIP] No recipient for pago={pago.pk}")
             continue
 
-        template = resolve_template('payment.overdue', pago.expediente.brand, lang)
+        template = resolve_template('payment.overdue', expediente.brand, lang)
         if not template:
-            logger.warning(f"[COLLECTION_SKIP] No template for brand={pago.expediente.brand}")
+            logger.warning(f"[COLLECTION_SKIP] No template for brand={expediente.brand}")
             continue
 
-        # --- Render (try/except — crea audit trail si falla) ---
+        # --- Render ---
         try:
             from jinja2.sandbox import SandboxedEnvironment
-            context = build_notification_context(pago.expediente, extra_context={
+            context = build_notification_context(expediente, extra_context={
                 'pago_amount': str(pago.amount_paid),
                 'pago_fecha': pago.payment_date.isoformat(),
                 'days_overdue': (today - due_date).days,
@@ -413,9 +416,9 @@ def check_overdue_payments():
         except Exception as exc:
             try:
                 CollectionEmailLog.objects.create(
-                    expediente=pago.expediente,
-                    proforma=proforma,
-                    pago=pago,
+                    expediente_id=pago.expediente_id,
+                    proforma_id=pago.proforma_id,
+                    payment_id=pago.id,
                     grace_days_used=grace_days,
                     amount_overdue=pago.amount_paid,
                     recipient_email=recipient,
@@ -428,16 +431,16 @@ def check_overdue_payments():
             logger.error(f"[COLLECTION_RENDER_FAIL] pago={pago.pk}: {exc}")
             continue
 
-        # --- Send (fix B1 R11+R12: SendResult branching + catch-all) ---
+        # --- Send ---
         backend = get_email_backend()
         try:
             send_result = backend.send(to=recipient, subject=subject, body=body)
         except Exception as exc:
             try:
                 CollectionEmailLog.objects.create(
-                    expediente=pago.expediente,
-                    proforma=proforma,
-                    pago=pago,
+                    expediente_id=pago.expediente_id,
+                    proforma_id=pago.proforma_id,
+                    payment_id=pago.id,
                     grace_days_used=grace_days,
                     amount_overdue=pago.amount_paid,
                     recipient_email=recipient,
@@ -450,7 +453,6 @@ def check_overdue_payments():
             logger.error(f"[COLLECTION_BACKEND_FAIL] pago={pago.pk}: {exc}")
             continue
 
-        # Mapear SendResult a status
         if send_result is SendResult.SENT:
             status = 'sent'
             error_msg = ''
@@ -459,7 +461,7 @@ def check_overdue_payments():
             error_msg = 'Retryable failure — will retry next cron run'
         elif send_result is SendResult.PERMANENT:
             status = 'failed'
-            error_msg = 'Permanent failure — recipient rejected or invalid'
+            error_msg = 'Permanent failure'
         else:
             status = 'failed'
             error_msg = f'Unknown SendResult: {send_result}'
@@ -470,9 +472,8 @@ def check_overdue_payments():
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT pg_advisory_xact_lock(%s)", [lock_key])
 
-                # Re-check dedup dentro del lock
                 recent_sent = CollectionEmailLog.objects.filter(
-                    pago=pago,
+                    payment_id=pago.id,
                     status='sent',
                     completed_at__gte=timezone.now() - timedelta(days=7)
                 ).exists()
@@ -480,9 +481,9 @@ def check_overdue_payments():
                     continue
 
                 CollectionEmailLog.objects.create(
-                    expediente=pago.expediente,
-                    proforma=proforma,
-                    pago=pago,
+                    expediente_id=pago.expediente_id,
+                    proforma_id=pago.proforma_id,
+                    payment_id=pago.id,
                     grace_days_used=grace_days,
                     amount_overdue=pago.amount_paid,
                     recipient_email=recipient,
@@ -493,9 +494,9 @@ def check_overdue_payments():
         except Exception as exc:
             try:
                 CollectionEmailLog.objects.create(
-                    expediente=pago.expediente,
-                    proforma=proforma,
-                    pago=pago,
+                    expediente_id=pago.expediente_id,
+                    proforma_id=pago.proforma_id,
+                    payment_id=pago.id,
                     grace_days_used=grace_days,
                     amount_overdue=pago.amount_paid,
                     recipient_email=recipient,

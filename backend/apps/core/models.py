@@ -12,6 +12,14 @@ class TimestampMixin(models.Model):
     class Meta:
         abstract = True
 
+    def resolve_ref(self, field_name):
+        """Helper para resolver una referencia UUID a su objeto real."""
+        field = self._meta.get_field(field_name)
+        if isinstance(field, UUIDReferenceField):
+            val = getattr(self, field_name)
+            return field.resolve(val)
+        return None
+
 
 class AppendOnlyModel(TimestampMixin):
     """
@@ -107,15 +115,29 @@ class BaseModel(models.Model):
         abstract = True
     
     def soft_delete(self):
+        """Borrado lógico de la entidad."""
         self.is_active = False
         self.deleted_at = timezone.now()
         self.save(update_fields=['is_active', 'deleted_at'])
 
 
+
 class UUIDReferenceField(models.UUIDField):
     """Campo que almacena UUID de otra entidad SIN ForeignKey."""
-    def __init__(self, *args, **kwargs):
-        kwargs['editable'] = kwargs.get('editable', False)
-        kwargs['null'] = True
-        kwargs['blank'] = True
+    def __init__(self, target_module=None, *args, **kwargs):
+        self.target_module = target_module
+        kwargs['editable'] = kwargs.get('editable', True)
+        kwargs['null'] = kwargs.get('null', True)
+        kwargs['blank'] = kwargs.get('blank', True)
         super().__init__(*args, **kwargs)
+
+    def resolve(self, value):
+        """Resuelve el valor UUID usando el ModuleRegistry."""
+        if not value or not self.target_module:
+            return None
+        
+        from apps.core.registry import ModuleRegistry
+        service_class = ModuleRegistry.get_service_class(self.target_module)
+        if service_class and hasattr(service_class, 'get_entity'):
+            return service_class.get_entity(value)
+        return None

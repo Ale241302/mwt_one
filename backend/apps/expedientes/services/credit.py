@@ -41,36 +41,41 @@ def compute_coverage(total_paid: Decimal, expediente_total) -> tuple:
     return payment_coverage, coverage_pct
 
 
+from apps.core.registry import ModuleRegistry
+
 def recalculate_expediente_credit(expediente):
     """
     ÚNICA fuente de verdad para credit_exposure, credit_released y credit_snapshot.
-    S25-05: solo suma pagos con payment_status='credit_released'.
-    Backward compat: la data migration de S25-01 ya clasificó pagos legacy.
-    CreditOverride intocable: si existe, lo respeta.
+    S25-05: solo suma pagos con status='credit_released'.
+    Desacoplado: Obtiene pagos desde la app finance vía ModuleRegistry.
     """
     total_lines = sum(
         (line.unit_price * line.quantity)
         for line in expediente.product_lines.all()
     ) or Decimal('0.00')
 
-    # Solo pagos credit_released cuentan (S25-05)
-    total_released = sum(
-        p.amount_paid
-        for p in expediente.pagos.filter(payment_status='credit_released')
-        if p.amount_paid
-    ) or Decimal('0.00')
+    payment_model = ModuleRegistry.get_model('finance', 'Payment')
+    total_released = Decimal('0.00')
+    total_pending = Decimal('0.00')
+    total_rejected = Decimal('0.00')
 
-    total_pending = sum(
-        p.amount_paid
-        for p in expediente.pagos.filter(payment_status__in=['pending', 'verified'])
-        if p.amount_paid
-    ) or Decimal('0.00')
+    if payment_model:
+        pagos = payment_model.objects.filter(expediente_id=expediente.expediente_id)
+        
+        total_released = sum(
+            p.amount_paid for p in pagos.filter(status='credit_released')
+            if p.amount_paid
+        ) or Decimal('0.00')
 
-    total_rejected = sum(
-        p.amount_paid
-        for p in expediente.pagos.filter(payment_status='rejected')
-        if p.amount_paid
-    ) or Decimal('0.00')
+        total_pending = sum(
+            p.amount_paid for p in pagos.filter(status__in=['pending', 'verified'])
+            if p.amount_paid
+        ) or Decimal('0.00')
+
+        total_rejected = sum(
+            p.amount_paid for p in pagos.filter(status='rejected')
+            if p.amount_paid
+        ) or Decimal('0.00')
 
     expediente_total = getattr(expediente, 'total_value', None) or total_lines
 

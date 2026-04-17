@@ -46,8 +46,8 @@ from apps.expedientes.views_admin import (
     AddArtifactToPolicyView,
     RemoveArtifactFromPolicyView,
 )
-# S25: Payment status machine + deferred price
-from apps.expedientes.views.payment_status import (
+# finance: Payment status machine + deferred price
+from apps.finance.views import (
     list_pagos,
     verify_payment,
     reject_payment,

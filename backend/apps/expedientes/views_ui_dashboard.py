@@ -16,7 +16,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count, Q
 from decimal import Decimal
 
-from apps.expedientes.models import Expediente, ExpedientePago
+from apps.core.registry import ModuleRegistry
+from apps.expedientes.models import Expediente
 
 
 class ExpedientesStatsView(APIView):
@@ -76,23 +77,27 @@ class ExpedientesStatsView(APIView):
                     'total_credit_used': 0.0,
                 }
 
-        # Pagos realizados (últimos 5 del queryset filtrado)
+        # Pagos realizados (últimos 5 del queryset filtrado via finance app)
         recent_payments = []
         try:
-            pagos = ExpedientePago.objects.filter(
-                expediente__in=qs,
-                payment_status='credit_released'
-            ).select_related('expediente').order_by('-payment_date')[:5]
+            payment_model = ModuleRegistry.get_model('finance', 'Payment')
+            if payment_model:
+                exp_ids = qs.values_list('expediente_id', flat=True)
+                pagos = payment_model.objects.filter(
+                    expediente_id__in=exp_ids,
+                    status='credit_released'
+                ).order_by('-payment_date')[:5]
 
-            for p in pagos:
-                exp = p.expediente
-                recent_payments.append({
-                    'order_ref': exp.purchase_order_number or f"OC-{str(exp.expediente_id)[:8].upper()}",
-                    'sap_id': exp.proforma_client_number or f"SAP-{str(exp.expediente_id)[:4].upper()}",
-                    'paid_amount': float(p.amount_paid),
-                    'payment_date': p.payment_date.strftime('%d/%m/%Y') if p.payment_date else None,
-                    'method': p.metodo_pago,
-                })
+                for p in pagos:
+                    # Resolvemos la referencia al expediente
+                    exp = p.resolve_ref('expediente_id')
+                    recent_payments.append({
+                        'order_ref': exp.purchase_order_number if exp else f"ID-{str(p.expediente_id)[:8]}",
+                        'sap_id': exp.proforma_client_number if exp else "N/A",
+                        'paid_amount': float(p.amount_paid),
+                        'payment_date': p.payment_date.strftime('%d/%m/%Y') if p.payment_date else None,
+                        'method': p.metodo_pago,
+                    })
         except Exception:
             pass
 

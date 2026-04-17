@@ -6,12 +6,16 @@ class BrandType(models.TextChoices):
     OWN = 'own', 'Own'
     CLIENT = 'client', 'Client'
 
-class Brand(TimestampMixin):
-    id = models.UUIDField(null=True, editable=False)
-    slug = models.CharField(max_length=50, unique=True, primary_key=True)
+class Brand(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    slug = models.CharField(max_length=50, unique=True, db_index=True)
     name = models.CharField(max_length=255)
     brand_type = models.CharField(max_length=20, choices=BrandType.choices, default=BrandType.CLIENT)
     is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    
     # S22-04: Alerta de margen mínimo. Solo activa si tiene valor (nullable).
     min_margin_alert_pct = models.DecimalField(
         max_digits=5,
@@ -23,6 +27,11 @@ class Brand(TimestampMixin):
 
     def __str__(self):
         return self.name
+
+    def soft_delete(self):
+        self.is_active = False
+        self.deleted_at = timezone.now()
+        self.save(update_fields=['is_active', 'deleted_at'])
 
 class DestinationChoices(models.TextChoices):
     CR = 'CR', 'Costa Rica'

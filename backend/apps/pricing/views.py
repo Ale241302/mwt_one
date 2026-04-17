@@ -493,7 +493,7 @@ class CatalogBrandSKUView(APIView):
     def get(self, request):
         from apps.brands.models import BrandSKU
         from apps.pricing.services import resolve_client_price
-        from apps.productos.models import ProductMaster, Producto
+        from apps.productos.models import Product
         
         brand_id = request.query_params.get('brand_id')
         if not brand_id:
@@ -503,7 +503,7 @@ class CatalogBrandSKUView(APIView):
         
         product_keys = set(s.product_key for s in skus)
         products_by_key = {
-            p.sku_base: p for p in ProductMaster.objects.filter(brand=brand_id, sku_base__in=product_keys)
+            p.sku_base: p for p in Product.objects.filter(brand_id=brand_id, sku_base__in=product_keys)
         }
         
         results = []
@@ -532,12 +532,13 @@ class CatalogBrandSKUView(APIView):
                 'price_resolved': res
             })
 
-        # Inject raw Productos from CRUD so they appear in catalog
-        productos = Producto.objects.filter(brand=brand_id)
-        for p in productos:
+        # Inject raw Products from CRUD so they appear in catalog
+        # Since Producto is now Product, we just use Product
+        remaining_products = Product.objects.filter(brand_id=brand_id)
+        for p in remaining_products:
             if p.sku_base not in added_refs:
                 results.append({
-                    'id': -p.id,  # Negative ID to avoid React key collision with BrandSKU
+                    'id': str(p.id),  # IDs are UUIDs now
                     'sku_code': p.sku_base,
                     'reference_code': p.sku_base,
                     'description': p.name,

@@ -4,23 +4,15 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 
-from apps.core.models import TimestampMixin, AppendOnlyModel, LegalEntity
-from .enums_artifacts import ArtifactStatusEnum
-from .enums_exp import (
-    ExpedienteStatus, BlockedByType, DispatchMode, PaymentStatus,
-    CreditClockStartRule, AggregateType,
-    RegisteredByType, CostLineVisibility, LogisticsMode, LogisticsSource,
-    CostCategory, CostBehavior, AforoType,
-)
+from apps.core.models import TimestampMixin, AppendOnlyModel, LegalEntity, UUIDReferenceField
 
-
-
-class Expediente(TimestampMixin):
+class ExpedienteSAP(TimestampMixin):
     expediente_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order_id = UUIDReferenceField(target_module='orders', null=True, blank=True, db_index=True)
     legal_entity = models.ForeignKey(LegalEntity, on_delete=models.PROTECT, related_name='expedientes_emitidos', help_text='Entidad emisora')
-    brand = models.ForeignKey('brands.Brand', on_delete=models.PROTECT, null=True, blank=True, db_index=True)
+    brand_id = UUIDReferenceField(target_module='brands', null=True, blank=True, db_index=True)
     destination = models.CharField(max_length=10, choices=[('CR', 'Costa Rica'), ('USA', 'United States')], default='CR')
-    client = models.ForeignKey(LegalEntity, on_delete=models.PROTECT, related_name='expedientes_como_cliente', help_text='Cliente', db_index=True)
+    client_id = UUIDReferenceField(target_module='clientes', null=True, blank=True, db_index=True)
     status = models.CharField(max_length=20, choices=ExpedienteStatus.choices, default=ExpedienteStatus.REGISTRO, db_index=True)
     is_blocked = models.BooleanField(default=False)
     blocked_reason = models.TextField(blank=True, null=True)
@@ -38,11 +30,9 @@ class Expediente(TimestampMixin):
     payment_registered_at = models.DateTimeField(blank=True, null=True)
     payment_registered_by_type = models.CharField(max_length=10, choices=BlockedByType.choices, blank=True, null=True)
     payment_registered_by_id = models.CharField(max_length=255, blank=True, null=True)
-    nodo_destino = models.ForeignKey(
-        'transfers.Node',
-        on_delete=models.SET_NULL,
+    destination_node_id = UUIDReferenceField(
+        target_module='nodos',
         null=True, blank=True,
-        related_name='expedientes_destino',
         help_text='Target node (triggers transfer suggestion on close)'
     )
     external_fiscal_refs = models.JSONField(
@@ -58,6 +48,22 @@ class Expediente(TimestampMixin):
         default=dict, blank=True,
         help_text='Immutable snapshot of pricing, incoterms, payment terms, and agreements (S14-05)'
     )
+
+    @property
+    def brand(self):
+        return self.resolve_ref('brand_id')
+
+    @property
+    def client(self):
+        return self.resolve_ref('client_id')
+
+    @property
+    def order(self):
+        return self.resolve_ref('order_id')
+
+    @property
+    def nodo_destino(self):
+        return self.resolve_ref('destination_node_id')
 
     # S16: Credit Management
     credit_blocked = models.BooleanField(
@@ -312,6 +318,15 @@ class Expediente(TimestampMixin):
         )
     )
 
+    # --- Propiedades de Compatibilidad (Fase 1) ---
+    @property
+    def brand(self):
+        return self.resolve_ref('brand_id')
+
+    @property
+    def nodo_destino(self):
+        return self.resolve_ref('destination_node_id')
+
     class Meta:
         verbose_name = 'Expediente'
         verbose_name_plural = 'Expedientes'
@@ -328,10 +343,10 @@ class ExpedienteProductLine(models.Model):
         Expediente, on_delete=models.CASCADE, related_name='product_lines'
     )
     product = models.ForeignKey(
-        'productos.ProductMaster',
+        'productos.Product',
         on_delete=models.PROTECT,
         related_name='expediente_lines',
-        help_text='SKU from ProductMaster — never free text'
+        help_text='SKU from Product — never free text'
     )
     quantity = models.PositiveIntegerField(
         help_text='Cantidad original pedida'
@@ -456,99 +471,6 @@ class FactoryOrder(models.Model):
         return f'FO-{self.order_number} → {self.expediente}'
 
 
-# === S17-11: ExpedientePago ===
-class ExpedientePago(models.Model):
-    expediente = models.ForeignKey(
-        Expediente, on_delete=models.CASCADE, related_name='pagos'
-    )
-    tipo_pago = models.CharField(
-        max_length=20,
-        choices=[('COMPLETO', 'Pago Completo'), ('PARCIAL', 'Pago Parcial')],
-    )
-    metodo_pago = models.CharField(
-        max_length=30,
-        choices=[
-            ('TRANSFERENCIA', 'Transferencia Bancaria'),
-            ('NOTA_CREDITO', 'Nota de Crédito'),
-        ],
-    )
-    payment_date = models.DateField()
-    amount_paid = models.DecimalField(max_digits=12, decimal_places=2)
-    additional_info = models.TextField(null=True, blank=True)
-    url_comprobante = models.URLField(max_length=500, null=True, blank=True)
-    credit_status = models.CharField(
-        max_length=20, null=True, blank=True,
-        choices=[
-            ('PENDING', 'Pending'),
-            ('CONFIRMED', 'Confirmed'),
-            ('REJECTED', 'Rejected'),
-        ],
-        default='PENDING',
-    )
-
-    # === S25-01: Payment Status Machine ===
-    PAYMENT_STATUS_CHOICES = [
-        ('pending', 'Pendiente verificación'),
-        ('verified', 'Verificado'),
-        ('credit_released', 'Crédito liberado'),
-        ('rejected', 'Rechazado'),
-    ]
-    payment_status = models.CharField(
-        max_length=20,
-        choices=PAYMENT_STATUS_CHOICES,
-        default='pending',
-        help_text=(
-            "Estado del pago dentro de su ciclo de vida. "
-            "pending → verificado por CEO → crédito liberado. "
-            "Pagos legacy (pre-S25) migrados según regla C2."
-        )
-    )
-    verified_at = models.DateTimeField(
-        null=True, blank=True,
-        help_text="Timestamp de verificación por CEO."
-    )
-    verified_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='verified_payments',
-        help_text="Usuario que verificó el pago."
-    )
-    credit_released_at = models.DateTimeField(
-        null=True, blank=True,
-        help_text="Timestamp de liberación de crédito."
-    )
-    credit_released_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='released_payments',
-        help_text="Usuario que liberó el crédito."
-    )
-    rejection_reason = models.TextField(
-        blank=True, default='',
-        help_text="Motivo de rechazo si payment_status='rejected'."
-    )
-
-    # S26-02b: FK proforma — para resolve_collection_recipient()
-    proforma = models.ForeignKey(
-        'ArtifactInstance',
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='payments',
-        limit_choices_to={'artifact_type': 'ART-02'},
-        help_text='S26-02b: Proforma (ART-02) del pago. Null para pagos legacy pre-S26.'
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-payment_date']
-        verbose_name = 'Expediente Pago'
-        verbose_name_plural = 'Expediente Pagos'
-
-    def __str__(self):
-        return f'Pago {self.tipo_pago} {self.amount_paid} — {self.expediente}'
 
 
 class ArtifactInstance(TimestampMixin):
@@ -823,4 +745,7 @@ class OCProforma(models.Model):
 
     def __str__(self):
         return f'OCProforma {self.proforma_number} → {self.expediente}'
+
+# Compatibility alias
+Expediente = ExpedienteSAP
 

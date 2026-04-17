@@ -18,7 +18,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 from apps.expedientes.models import (
-    Expediente, EventLog, OCProforma, ExpedientePago, FactoryOrder,
+    Expediente, EventLog, OCProforma, FactoryOrder,
 )
 
 
@@ -133,14 +133,20 @@ class OCBundleView(APIView):
             })
 
         # ── Financials ──
+        from apps.core.registry import ModuleRegistry
         total_oc = sum(
             (line.unit_price or Decimal('0')) * (line.quantity or 0)
             for line in exp.product_lines.all()
         )
-        total_paid = sum(
-            p.amount_paid or Decimal('0')
-            for p in exp.pagos.filter(payment_status='credit_released')
-        )
+        
+        payment_model = ModuleRegistry.get_model('finance', 'Payment')
+        total_paid = Decimal('0')
+        if payment_model:
+            total_paid = sum(
+                p.amount_paid or Decimal('0')
+                for p in payment_model.objects.filter(expediente_id=exp.expediente_id, status='credit_released')
+            )
+            
         remaining = total_oc - total_paid
 
         # ── Progreso general ──

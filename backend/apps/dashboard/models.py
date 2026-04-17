@@ -8,11 +8,12 @@ class DashboardKPI(BaseModel):
     Se actualiza de forma asíncrona mediante el procesamiento de eventos del bus.
     Evita joins complejos entre módulos en tiempo de ejecución.
     """
+    module = models.CharField(max_length=50, db_index=True, null=True)
     metric_name = models.CharField(max_length=100, db_index=True)
     metric_value = models.DecimalField(max_digits=20, decimal_places=4)
     metric_currency = models.CharField(max_length=3, null=True, blank=True)
     dimensions = models.JSONField(default=dict, help_text="Dimensiones para filtrado (e.g., brand_id, client_id, node_id)")
-    calculated_at = models.DateTimeField(auto_now_add=True)
+    # calculated_at mapeado a created_at de BaseModel
 
     class Meta:
         db_table = 'dashboard_kpi'

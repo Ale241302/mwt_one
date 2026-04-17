@@ -1,9 +1,8 @@
-import uuid
-from django.db import models
+from apps.core.models import UUIDReferenceField
 
 class RebateProgram(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    brand = models.ForeignKey('brands.Brand', on_delete=models.PROTECT)
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     name = models.CharField(max_length=255)
     period_type = models.CharField(max_length=20, choices=[
         ('quarterly', 'Quarterly'), ('annual', 'Annual')
@@ -61,8 +60,8 @@ class RebateProgramProduct(models.Model):
 class RebateAssignment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     rebate_program = models.ForeignKey(RebateProgram, on_delete=models.PROTECT)
-    client = models.ForeignKey('clientes.Cliente', null=True, blank=True, on_delete=models.PROTECT)
-    subsidiary = models.ForeignKey('clientes.ClientSubsidiary', null=True, blank=True, on_delete=models.PROTECT)
+    client_id = UUIDReferenceField(target_module='clientes', null=True, blank=True)
+    subsidiary_id = UUIDReferenceField(target_module='clientes', null=True, blank=True)
     custom_threshold_value = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -115,10 +114,10 @@ class RebateAccrualEntry(models.Model):
         on_delete=models.PROTECT,
         related_name='entries'
     )
-    factory_order = models.ForeignKey(
-        'expedientes.FactoryOrder',
-        on_delete=models.PROTECT,
-        related_name='rebate_accrual_entries'
+    factory_order_id = UUIDReferenceField(
+        target_module='expedientes',
+        null=True, blank=True,
+        help_text='ID de la Factory Order legada o relacionada'
     )
     qualifying_amount = models.DecimalField(max_digits=14, decimal_places=4)
     qualifying_units = models.DecimalField(max_digits=14, decimal_places=4)
@@ -130,9 +129,9 @@ class RebateAccrualEntry(models.Model):
 
 class CommissionRule(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    brand = models.ForeignKey('brands.Brand', null=True, blank=True, on_delete=models.PROTECT)
-    client = models.ForeignKey('clientes.Cliente', null=True, blank=True, on_delete=models.PROTECT)
-    subsidiary = models.ForeignKey('clientes.ClientSubsidiary', null=True, blank=True, on_delete=models.PROTECT)
+    brand_id = UUIDReferenceField(target_module='brands', null=True, blank=True, db_index=True)
+    client_id = UUIDReferenceField(target_module='clientes', null=True, blank=True)
+    subsidiary_id = UUIDReferenceField(target_module='clientes', null=True, blank=True)
     product_key = models.CharField(max_length=100, null=True, blank=True)
     commission_type = models.CharField(max_length=20, choices=[
         ('percentage', 'Percentage'), ('fixed_amount', 'Fixed Amount')
@@ -187,7 +186,7 @@ class CommissionRule(models.Model):
 
 class BrandArtifactPolicyVersion(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    brand = models.ForeignKey('brands.Brand', on_delete=models.PROTECT)
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     version = models.PositiveIntegerField()
     artifact_policy = models.JSONField()
     is_active = models.BooleanField(default=True)

@@ -10,68 +10,30 @@ from django.core.exceptions import ValidationError
 from apps.transfers.enums_exp import (
     NodeType, NodeStatus, LegalContext, TransferStatus, TransferLineCondition
 )
-from apps.core.models import LegalEntity
-from apps.expedientes.models import Expediente
-
+from apps.core.models import LegalEntity, UUIDReferenceField
+from datetime import date
 
 def generate_transfer_id():
     today = date.today().strftime('%Y%m%d')
     count = Transfer.objects.filter(transfer_id__startswith=f'TRF-{today}').count()
     return f'TRF-{today}-{str(count + 1).zfill(3)}'
 
-
-class Node(models.Model):
-    node_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=200)
-    legal_entity = models.ForeignKey(
-        LegalEntity, on_delete=models.PROTECT, related_name='nodes'
-    )
-    node_type = models.CharField(max_length=30, choices=NodeType.choices)
-    location = models.CharField(max_length=500, blank=True)
-    status = models.CharField(
-        max_length=20, choices=NodeStatus.choices, default=NodeStatus.ACTIVE
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'transfers_node'
-        verbose_name = 'Node'
-
-    def __str__(self):
-        return f'{self.name} ({self.node_type})'
-
-
 class Transfer(models.Model):
     transfer_id = models.CharField(
         max_length=30, unique=True, editable=False, default=generate_transfer_id
     )
-    from_node = models.ForeignKey(
-        Node, on_delete=models.PROTECT, related_name='transfers_from'
-    )
-    to_node = models.ForeignKey(
-        Node, on_delete=models.PROTECT, related_name='transfers_to'
-    )
-    ownership_before = models.ForeignKey(
-        LegalEntity,
-        on_delete=models.PROTECT,
-        related_name='transfers_ownership_before',
-        null=True, blank=True,
-    )
-    ownership_after = models.ForeignKey(
-        LegalEntity,
-        on_delete=models.PROTECT,
-        related_name='transfers_ownership_after',
-        null=True, blank=True,
-    )
+    from_node_id = UUIDReferenceField(target_module='nodos')
+    to_node_id = UUIDReferenceField(target_module='nodos')
+    ownership_before_id = UUIDReferenceField(target_module='clientes', null=True, blank=True)
+    ownership_after_id = UUIDReferenceField(target_module='clientes', null=True, blank=True)
     ownership_changes = models.BooleanField(default=False)
     legal_context = models.CharField(max_length=30, choices=LegalContext.choices)
     customs_required = models.BooleanField(default=False)
     pricing_context = models.JSONField(null=True, blank=True)
-    source_expediente = models.ForeignKey(
-        Expediente,
-        on_delete=models.SET_NULL,
+    source_expediente_id = UUIDReferenceField(
+        target_module='expedientes',
         null=True, blank=True,
-        related_name='transfers',
+        help_text='Expediente de origen'
     )
     status = models.CharField(
         max_length=20, choices=TransferStatus.choices, default=TransferStatus.PLANNED
@@ -86,6 +48,31 @@ class Transfer(models.Model):
     reconciled_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
 
+    @property
+    def source_expediente(self):
+        return self.resolve_ref('source_expediente_id')
+
+    @property
+    def ownership_before(self):
+        return self.resolve_ref('ownership_before_id')
+
+    @property
+    def ownership_after(self):
+        return self.resolve_ref('ownership_after_id')
+
+    @property
+    def from_node(self):
+        # Nota: Transfer no hereda de BaseModel, así que usamos el registro manual o helper
+        from apps.core.registry import ModuleRegistry
+        service = ModuleRegistry.get_service_class('nodos')
+        return service.get_entity(self.from_node_id) if service else None
+
+    @property
+    def to_node(self):
+        from apps.core.registry import ModuleRegistry
+        service = ModuleRegistry.get_service_class('nodos')
+        return service.get_entity(self.to_node_id) if service else None
+
     def clean(self):
         if self.from_node_id == self.to_node_id:
             raise ValidationError('from_node and to_node must be different.')
@@ -98,8 +85,14 @@ class Transfer(models.Model):
         return f'{self.transfer_id} [{self.status}]'
 
     def compute_ownership_fields(self):
-        self.ownership_before = self.from_node.legal_entity
-        self.ownership_after = self.to_node.legal_entity
+        f_node = self.from_node
+        t_node = self.to_node
+        if f_node:
+            # Asumimos que f_node.legal_entity_id es el UUID de la entidad legal
+            self.ownership_before_id = f_node.legal_entity_id
+        if t_node:
+            self.ownership_after_id = t_node.legal_entity_id
+        
         self.ownership_changes = (self.ownership_before_id != self.ownership_after_id)
         self.customs_required = self.legal_context in (
             LegalContext.NATIONALIZATION, LegalContext.REEXPORT

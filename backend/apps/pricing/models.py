@@ -8,8 +8,10 @@ from apps.core.models import TimestampMixin
 # Modelos existentes (S14) - NO MODIFICAR
 # -------------------------------------------------------------------
 
+from apps.core.models import TimestampMixin, UUIDReferenceField
+
 class PriceList(TimestampMixin):
-    brand = models.ForeignKey('brands.Brand', on_delete=models.CASCADE)
+    brand_id = UUIDReferenceField(target_module='brands', db_index=True)
     name = models.CharField(max_length=100)
     currency = models.CharField(max_length=3, default='USD')
     valid_from = models.DateTimeField(null=True, blank=True)
@@ -46,10 +48,9 @@ class PriceListVersion(TimestampMixin):
     Versión de pricelist por brand. N versiones pueden estar activas
     simultáneamente (norma S22 Sección 2.1).
     """
-    brand = models.ForeignKey(
-        'brands.Brand',
-        on_delete=models.PROTECT,
-        related_name='pricelist_versions',
+    brand_id = UUIDReferenceField(
+        target_module='brands',
+        db_index=True,
     )
     version_label = models.CharField(max_length=100)
     # NO file_url - usar storage_key
@@ -188,10 +189,9 @@ class EarlyPaymentPolicy(TimestampMixin):
         on_delete=models.CASCADE,
         related_name='early_payment_policies_client',
     )
-    brand = models.ForeignKey(
-        'brands.Brand',
-        on_delete=models.PROTECT,
-        related_name='early_payment_policies_brand',
+    brand_id = UUIDReferenceField(
+        target_module='brands',
+        db_index=True,
     )
     base_payment_days = models.PositiveIntegerField(default=90)
     base_commission_pct = models.DecimalField(max_digits=5, decimal_places=2, default='10.00')

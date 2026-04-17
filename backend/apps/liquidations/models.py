@@ -3,11 +3,10 @@ Sprint 5 S5-03: ART-10 Liquidation models
 Ref: LOTE_SM_SPRINT5 Item 1
 """
 from django.conf import settings
-from django.db import models
+from apps.core.models import UUIDReferenceField
 from apps.liquidations.enums_exp import (
     LiquidationStatus, LiquidationLineConcept, MatchStatus
 )
-from apps.expedientes.models import Expediente, ArtifactInstance
 
 
 def generate_liquidation_id(period: str):
@@ -74,19 +73,24 @@ class LiquidationLine(models.Model):
     commission_amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.CharField(max_length=3, default="USD")
     is_partial_payment = models.BooleanField(default=False)
-    matched_proforma = models.ForeignKey(
-        ArtifactInstance,
-        on_delete=models.SET_NULL,
+    proforma_id = UUIDReferenceField(
+        target_module='expedientes',
         null=True, blank=True,
-        related_name="liquidation_matches",
-        limit_choices_to={"artifact_type": "ART-02"},
+        help_text='ID de la proforma (ART-02)'
     )
-    matched_expediente = models.ForeignKey(
-        Expediente,
-        on_delete=models.SET_NULL,
+    expediente_id = UUIDReferenceField(
+        target_module='expedientes',
         null=True, blank=True,
-        related_name="liquidation_matches",
     )
+
+    @property
+    def proforma(self):
+        return self.resolve_ref('proforma_id')
+
+    @property
+    def expediente(self):
+        return self.resolve_ref('expediente_id')
+
     commission_pct_expected = models.DecimalField(
         max_digits=5, decimal_places=2, null=True, blank=True
     )
