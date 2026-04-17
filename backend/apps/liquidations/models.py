@@ -1,9 +1,5 @@
-"""
-Sprint 5 S5-03: ART-10 Liquidation models
-Ref: LOTE_SM_SPRINT5 Item 1
-"""
-from django.conf import settings
-from apps.core.models import UUIDReferenceField
+from django.db import models
+from apps.core.models import BaseModel, UUIDReferenceField
 from apps.liquidations.enums_exp import (
     LiquidationStatus, LiquidationLineConcept, MatchStatus
 )
@@ -15,7 +11,7 @@ def generate_liquidation_id(period: str):
     return f"LIQ-{period}-{str(count + 1).zfill(3)}"
 
 
-class Liquidation(models.Model):
+class Liquidation(BaseModel):
     """
     ART-10 – Artefacto CROSS (transversal). No tiene FK a expediente.
     Relaciona con expedientes INDIRECTAMENTE a través de LiquidationLine.
@@ -57,7 +53,7 @@ class Liquidation(models.Model):
         return f"{self.liquidation_id} [{self.status}]"
 
 
-class LiquidationLine(models.Model):
+class LiquidationLine(BaseModel):
     """Línea individual del Excel de Marluvas."""
     liquidation = models.ForeignKey(
         Liquidation, on_delete=models.CASCADE, related_name="lines"
