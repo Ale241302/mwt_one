@@ -135,7 +135,7 @@ class NotificationAttempt(models.Model):
         verbose_name = 'Notification Attempt'
         verbose_name_plural = 'Notification Attempts'
         indexes = [
-            models.Index(fields=['event_log', '-attempted_at']),
+            models.Index(fields=['event_log_id', '-attempted_at']),
             models.Index(fields=['correlation_id']),
         ]
 
@@ -208,14 +208,14 @@ class NotificationLog(models.Model):
         verbose_name = 'Notification Log'
         verbose_name_plural = 'Notification Logs'
         indexes = [
-            models.Index(fields=['expediente', '-created_at']),
+            models.Index(fields=['expediente_id', '-created_at']),
             models.Index(fields=['recipient_email', '-created_at']),
             models.Index(fields=['correlation_id']),
         ]
         constraints = [
             models.UniqueConstraint(
-                fields=['event_log', 'recipient_email'],
-                condition=models.Q(event_log__isnull=False),
+                fields=['event_log_id', 'recipient_email'],
+                condition=models.Q(event_log_id__isnull=False),
                 name='uniq_notification_per_event_recipient'
             )
         ]
