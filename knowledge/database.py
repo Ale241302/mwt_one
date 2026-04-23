@@ -1,4 +1,4 @@
-"""Sprint 8 S8-07: Conexión PostgreSQL + pgvector."""
+"""Sprint 8 S8-07 + S28-GH-SYNC: Conexión PostgreSQL + pgvector."""
 import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -11,7 +11,7 @@ Base = declarative_base()
 
 
 def init_db():
-    """Crea la extensión pgvector y la tabla knowledge_chunks."""
+    """Crea la extensión pgvector, la tabla knowledge_chunks y kb_sync_state."""
     with engine.connect() as conn:
         conn.execute(text('CREATE EXTENSION IF NOT EXISTS vector'))
         conn.execute(text('''
@@ -30,6 +30,23 @@ def init_db():
         conn.execute(text('''
             CREATE INDEX IF NOT EXISTS idx_chunks_hnsw
             ON knowledge_chunks USING hnsw (embedding vector_cosine_ops)
+        '''))
+        # S28-GH-SYNC: estado del sync con mwt-knowledge-hub
+        conn.execute(text('''
+            CREATE TABLE IF NOT EXISTS kb_sync_state (
+                id               INTEGER PRIMARY KEY DEFAULT 1,
+                repo_url         TEXT,
+                branch           TEXT,
+                last_sha         TEXT,
+                last_synced_at   TIMESTAMPTZ,
+                last_status      TEXT,
+                last_error       TEXT,
+                CONSTRAINT kb_sync_state_singleton CHECK (id = 1)
+            )
+        '''))
+        conn.execute(text('''
+            INSERT INTO kb_sync_state (id) VALUES (1)
+            ON CONFLICT (id) DO NOTHING
         '''))
         conn.commit()
 

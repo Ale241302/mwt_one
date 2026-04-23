@@ -43,19 +43,14 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
-    # FIX minio restart loop: 'mc' no existe en la imagen minio/minio -> usar
-    # el endpoint HTTP oficial /minio/health/live. curl sí viene en la imagen.
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 15s
+      retries: 3
     mem_limit: 512m
     cpus: 0.5
-    # NOTA: se removió 'user: "1000:1000"'. Un volumen nombrado fresco nace
-    # con owner root:root y MinIO corriendo como UID 1000 no puede escribir en
-    # /data -> crash loop. MinIO ya corre con su usuario interno por defecto.
+    user: "1000:1000"
 
   django:
     build:
@@ -67,6 +62,7 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings.base
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 300 --preload --worker-class sync --forwarded-allow-ips="*"
     volumes:
+      - ./backend:/app
       - media_volume:/app/media
     ports:
       - "8000:8000"
@@ -95,8 +91,8 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.base
     command: celery -A config worker -l info
-    # volumes:
-    #   - ./backend:/app
+    volumes:
+      - ./backend:/app
     depends_on:
       django:
         condition: service_healthy
@@ -117,10 +113,9 @@ services:
     env_file: .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.base
-    # S8-11: schedule hardcoded in celery.py (D-04) — no DatabaseScheduler
     command: celery -A config beat -l info
-    # volumes:
-    #   - ./backend:/app
+    volumes:
+      - ./backend:/app
     depends_on:
       django:
         condition: service_healthy
@@ -139,10 +134,6 @@ services:
     container_name: mwt-frontend
     restart: unless-stopped
     env_file: .env
-    # command: npm run dev
-    # volumes:
-    #   - ./frontend:/app
-    #   - /app/node_modules
     ports:
       - "3000:3000"
     mem_limit: 512m
@@ -180,9 +171,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # ────────────────────────────────────────────────
-  # Sprint 4 S4-10: Paperless-ngx (standalone)
-  # ────────────────────────────────────────────────
   paperless-ngx:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
     container_name: mwt-paperless
@@ -214,9 +202,6 @@ services:
     mem_limit: 512m
     cpus: 0.5
 
-  # ────────────────────────────────────────────────
-  # Sprint 8 S8-11: Knowledge microservice (FastAPI)
-  # ────────────────────────────────────────────────
   mwt-knowledge:
     build:
       context: ./backend/apps/knowledge
@@ -227,7 +212,7 @@ services:
     ports:
       - "8001:8001"
     volumes:
-      - kb_data:/kb            # ← S8-11: KB files persist here; populated by scripts/load_kb.py
+      - kb_data:/kb
     depends_on:
       postgres:
         condition: service_healthy
@@ -251,4 +236,4 @@ volumes:
   paperless_media:
   paperless_consume:
   paperless_export:
-  kb_data:                     # ← S8-11: Knowledge Base files
+  kb_data:
