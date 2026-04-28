@@ -164,6 +164,7 @@ services:
     volumes:
       - ./nginx/mwt.conf:/etc/nginx/conf.d/default.conf
       - ./Infra/nginx/go-ranawalk.conf:/etc/nginx/conf.d/go-ranawalk.conf
+      - ./nginx/minio.conf:/etc/nginx/conf.d/minio.conf
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     restart: always
